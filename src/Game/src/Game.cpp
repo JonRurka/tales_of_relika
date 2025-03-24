@@ -1,0 +1,39 @@
+#include "Game.h"
+
+#include "Test_Scene.h"
+#include "Game_Resources.h"
+
+void Game::Init()
+{
+	//Init_Resources<Game_Resources>();
+
+	Logger::LogInfo(LOG_POS("Init"), "Load container diffuse");
+	Resources::Load_Texture(Game_Resources::Textures::CONTAINER_DIFFUSE);
+	
+	Logger::LogInfo(LOG_POS("Init"), "Load container specular");
+	Resources::Load_Texture(Game_Resources::Textures::CONTAINER_SPECULAR);
+
+	init_shaders();
+	
+	
+
+	Logger::LogInfo(LOG_POS("Init"), "Game Initialized.");
+
+	Scene* s = Load_Scene<Test_Scene>("test");
+	s->Activate(true);
+}
+
+void Game::init_shaders()
+{
+	Shader* std_shader = Shader::Create("standard", Game_Resources::Shaders::Graphics::STANDARD_VERT, Game_Resources::Shaders::Graphics::STANDARD_FRAG);
+	std_shader->Init_Lights();
+
+	/*std_shader->Set_Textures({
+		{"material.diffuse",Resources::Get_Texture(Game_Resources::Textures::CONTAINER_DIFFUSE)},
+		{"material.specular",Resources::Get_Texture(Game_Resources::Textures::CONTAINER_SPECULAR)},
+	});*/
+}
+
+void Game::Update(float dt)
+{
+}
