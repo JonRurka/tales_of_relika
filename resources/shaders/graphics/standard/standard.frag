@@ -16,25 +16,13 @@ struct Material {
 	sampler2D specular;
     vec3 ambientColor;
     vec3 diffuseColor;
+	vec2 scale;
     //vec3 specular;
 	float specular_intensity;
     float shininess;
 };
 
-/*struct Light{
-	int enabled;
-	int allocated;
-	int type;
-	vec3 position;
-	vec3 lightColor;
-	vec3 direction;
-	float strength;
-	float constant;
-    float linear;
-    float quadratic;
-	float cutOff;
-	float outerCutOff;
-};*/
+
 #define NUM_LIGHTS(data) (data[0].int_options_1.w)
 #define OPTIONS_ENABLED(data) ((data).int_options_1.x)
 #define OPTIONS_ALLOCATED(data) ((data).int_options_1.y)
@@ -162,12 +150,12 @@ vec3 get_light(Light p_light){
 	
 	// diffuse
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = intensity * lightColor * material.diffuseColor * diff * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse = intensity * lightColor * material.diffuseColor * diff * vec3(texture(material.diffuse, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
 	
 	// specular
 	vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = intensity * material.specular_intensity * lightColor * spec /*material.specular*/ * vec3(texture(material.specular, TexCoords));
+    vec3 specular = intensity * material.specular_intensity * lightColor * spec /*material.specular*/ * vec3(texture(material.specular, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
 	
 	return vec3(diffuse + specular);
 }
@@ -177,7 +165,7 @@ void main()
 	vec3 resColor = vec3(0.0f);
 	
 	// ambient
-	vec3 ambient = globalAmbientIntensity * globalAmbientLightColor * material.ambientColor * vec3(texture(material.diffuse, TexCoords));
+	vec3 ambient = globalAmbientIntensity * globalAmbientLightColor * material.ambientColor * vec3(texture(material.diffuse, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
 	//vec3 ambient = 1.0 * globalAmbientLightColor * vec3(1.0f) * vec3(texture(material.diffuse, TexCoords));
 	resColor += ambient;
 	

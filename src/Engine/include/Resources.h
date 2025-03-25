@@ -15,6 +15,15 @@ public:
 		Binary,
 		Filesystem
 	};
+
+	struct Asset {
+	public:
+		std::string name;
+		std::string path;
+		bool loaded;
+		void* handle;
+		void* data;
+	};
 	
 	Resources();
 	
@@ -23,8 +32,8 @@ public:
 	static void Load_Shader(std::string name) { m_instance->load_shader(name); }
 	static void Load_Shader(std::vector<std::string> names) { m_instance->load_shader(names); }
 
-	static void Load_Texture(std::string name) { m_instance->load_texture(name); }
-	static void Load_Texture(std::vector<std::string> names){ m_instance->load_texture(names);}
+	static void Load_Texture(std::string name, bool flip = true) { m_instance->load_texture(name, flip); }
+	static void Load_Texture(std::vector<std::string> names, bool flip = true){ m_instance->load_texture(names, flip);}
 
 	static void Load_Model(std::string name) { m_instance->load_model(name); }
 	static void Load_Model(std::vector<std::string> names){ m_instance->load_model(names);}
@@ -32,6 +41,27 @@ public:
 	static Texture* Get_Texture(std::string name) { return m_instance->get_texture(name); }
 	static std::string Get_Shader_File(std::string name){ return m_instance->get_shader_file(name);}
 	static Model* Get_Model(std::string name) { return m_instance->get_model(name); }
+
+	static Asset Get_Texture_Asset(std::string name) {
+		if (!Has_Texture(name))
+			return Asset();
+		Load_Texture(name);
+		return m_instance->m_texture_assets[name];
+	}
+
+	static Asset Get_Shader_Asset(std::string name) {
+		if (!Has_Shader(name))
+			return Asset();
+		Load_Shader(name);
+		return m_instance->m_shader_assets[name];
+	}
+
+	static Asset Get_Model_Asset(std::string name) {
+		if (!Has_Model(name))
+			return Asset();
+		Load_Model(name);
+		return m_instance->m_models_assets[name];
+	}
 	
 	static bool Has_Texture(std::string name) { return m_instance->has_texture(name); }
 
@@ -42,14 +72,6 @@ public:
 	static std::string Get_Resources_Director();
 
 private:
-
-	struct Asset {
-	public:
-		std::string name;
-		std::string path;
-		bool loaded;
-		void* handle;
-	};
 
 	LoadMode m_mode;
 
@@ -73,8 +95,8 @@ private:
 	void load_shader(std::string name);
 	void load_shader(std::vector<std::string> names);
 
-	void load_texture(std::string name);
-	void load_texture(std::vector<std::string> names);
+	void load_texture(std::string name, bool flip = true);
+	void load_texture(std::vector<std::string> names, bool flip = true);
 
 	void load_model(std::string name);
 	void load_model(std::vector<std::string> names);

@@ -67,7 +67,7 @@ void Resources::load_shader(std::vector<std::string> names)
     }
 }
 
-void Resources::load_texture(std::string name)
+void Resources::load_texture(std::string name, bool flip)
 {
     if (!Has_Texture(name)) {
         Logger::LogError(LOG_POS("Load_Texture"), "Texture not found: %s \n", name.c_str());
@@ -76,8 +76,9 @@ void Resources::load_texture(std::string name)
 
     Asset* asset = &m_texture_assets[name];
     if (!asset->loaded) {
-        Texture* tex = new Texture(asset->path);
+        Texture* tex = new Texture(asset->path, flip);
         asset->handle = tex;
+        asset->data = tex->Data();
         if (tex->Initialized()) {
             asset->loaded = true;
         }
@@ -87,11 +88,11 @@ void Resources::load_texture(std::string name)
     }
 }
 
-void Resources::load_texture(std::vector<std::string> names)
+void Resources::load_texture(std::vector<std::string> names, bool flip)
 {
     for (const auto& elem : names)
     {
-        Load_Shader(elem);
+        load_texture(elem, flip);
     }
 }
 
@@ -119,7 +120,7 @@ void Resources::load_model(std::vector<std::string> names)
 {
     for (const auto& elem : names)
     {
-        Load_Shader(elem);
+        load_model(elem);
     }
 }
 

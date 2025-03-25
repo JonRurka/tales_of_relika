@@ -27,11 +27,13 @@ public:
 		CLAMP
 	};
 
-	Texture(const std::string path);
+	Texture(const std::string path, bool flip = true);
 
 	Texture(const int width, const int height);
 
 	GLuint Tex() { return m_texture; }
+
+	unsigned char* Data() { return m_raw_data; }
 
 	void type(Type value) { m_type = value; }
 	Type type() { return m_type; }
@@ -64,6 +66,8 @@ private:
 	int m_height{ 0 };
 	bool m_initialized{ false };
 	bool m_resizable{ false };
+	unsigned char* m_raw_data{nullptr};
+	size_t m_data_size{ 0 };
 
 	std::vector<Framebuffer*> m_linked_framebuffers;
 

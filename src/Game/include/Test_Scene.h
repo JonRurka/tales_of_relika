@@ -16,6 +16,9 @@ protected:
 private:
 
 	Standard_Material* standard_mat{nullptr};
+	Standard_Material* floor_mat{ nullptr };
+	WorldObject* Camera_obj{ nullptr };
+	Camera* camera{ nullptr };
 
 	void create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color);
 

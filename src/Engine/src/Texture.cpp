@@ -7,7 +7,7 @@
 #include "Framebuffer.h"
 
 
-Texture::Texture(const std::string path)
+Texture::Texture(const std::string path, bool flip)
 {
 	bool success = true;
 
@@ -29,8 +29,11 @@ Texture::Texture(const std::string path)
 	m_path = path;
 
 	int width, height, nrChannels;
-	stbi_set_flip_vertically_on_load(true);
+	stbi_set_flip_vertically_on_load(flip);
 	unsigned char* data = stbi_load(path_ptr, &width, &height, &nrChannels, 0);
+	m_data_size = width * height * nrChannels;
+	m_raw_data = new unsigned char[m_data_size];
+	memcpy(m_raw_data, data, m_data_size);
 
 	m_width = width;
 	m_height = height;

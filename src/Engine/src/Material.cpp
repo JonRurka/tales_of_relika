@@ -25,6 +25,12 @@ do {													\
 
 void Material::Set_Shader(Shader* shader)
 {
+	if (shader == nullptr ||
+		!shader->Initialized()) {
+		Logger::LogError(LOG_POS("Set_Shader"), "Material '%s' set to invalid shader.", Name().c_str());
+		return;
+	}
+
 	m_shader = shader;
 	m_shader->Register_Material(this);
 }
@@ -199,41 +205,57 @@ void Material::Internal_Update(float dt)
 
 void Material::setBool_internal(const std::string& name, bool value) const
 {
+	if (m_shader == nullptr)
+		return;
 	m_shader->setBool(name, value);
 }
 
 void Material::setInt_internal(const std::string& name, int value) const
 {
+	if (m_shader == nullptr)
+		return;
 	m_shader->setInt(name, value);
 }
 
 void Material::setFloat_internal(const std::string& name, float value) const
 {
+	if (m_shader == nullptr)
+		return;
 	m_shader->setFloat(name, value);
 }
 
 void Material::SetVec2_internal(const std::string& name, glm::vec2 value) const
 {
+	if (m_shader == nullptr)
+		return;
 	m_shader->SetVec2(name, value);
 }
 
 void Material::SetVec3_internal(const std::string& name, glm::vec3 value) const
 {
+	if (m_shader == nullptr)
+		return;
 	m_shader->SetVec3(name, value);
 }
 
 void Material::SetVec4_internal(const std::string& name, glm::vec4 value) const
 {
+	if (m_shader == nullptr)
+		return;
 	m_shader->SetVec4(name, value);
 }
 
 void Material::setMat3x3_internal(const std::string& name, glm::mat3 value) const
 {
+	if (m_shader == nullptr)
+		return;
 	m_shader->setMat3x3(name, value);
 }
 
 void Material::setMat4x4_internal(const std::string& name, glm::mat4 value) const
 {
+	if (m_shader == nullptr)
+		return;
 	m_shader->setMat4x4(name, value);
 }
 

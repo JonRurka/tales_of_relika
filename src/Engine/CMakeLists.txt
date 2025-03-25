@@ -27,6 +27,7 @@ set(${module}_headers
 	include/Shader.h
 	include/stb_image.h
 	include/Texture.h
+	include/Cubemap.h
 	include/Transform.h
 	include/Utilities.h
 	include/window.h
@@ -54,6 +55,7 @@ set(${module}_sources
 	src/Renderer.cpp
 	src/Shader.cpp
 	src/Texture.cpp
+	src/Cubemap.cpp
 	src/Transform.cpp
 	src/Utilities.cpp
 	src/window.cpp

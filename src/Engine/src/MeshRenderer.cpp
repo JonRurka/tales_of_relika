@@ -7,6 +7,7 @@
 #include "Transform.h"
 #include "Camera.h"
 #include "Graphics.h"
+#include "Logger.h"
 
 MeshRenderer::MeshRenderer(WorldObject* obj)
 {
@@ -50,9 +51,15 @@ void MeshRenderer::Set_Shader(Shader* shader)
 
 void MeshRenderer::Set_Material(Material* material)
 {
+	if (material->Get_Shader() == nullptr) {
+		Logger::LogError(LOG_POS("Set_Material"), "Attempt to set material with invalid shader.");
+		return;
+	}
+
 	m_source_material = material;
 	if (m_source_material != nullptr) {
 		has_material = true;
+
 		m_source_material->Get_Shader()->Register_Renderer(this);
 
 		m_bound_material = m_source_material->Copy();

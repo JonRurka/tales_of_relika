@@ -7,6 +7,11 @@
 #include "Shader.h"
 #include "Renderer.h"
 #include "Graphics.h"
+#include "Mesh.h"
+#include "Cubemap.h"
+
+#define SKYBOX_VERT_SHADER "graphics.engine.skybox.skybox.vert"
+#define SKYBOX_FRAG_SHADER "graphics.engine.skybox.skybox.frag"
 
 Camera* Camera::m_active_camera{nullptr};
 
@@ -35,6 +40,64 @@ void Camera::Load(json data)
 	data["far"].get_to(m_far);
 	data["active"].get_to(m_isActive);
 	update_projection_matrix();
+}
+
+void Camera::Set_Skybox(Cubemap* value)
+{
+	if (m_cubemap_mesh == nullptr) {
+		std::vector<glm::vec3> skyboxVertices = {
+			// positions          
+			glm::vec3(-1.0f,  1.0f, -1.0f),
+			glm::vec3(-1.0f, -1.0f, -1.0f),
+			glm::vec3( 1.0f, -1.0f, -1.0f),
+			glm::vec3( 1.0f, -1.0f, -1.0f),
+			glm::vec3( 1.0f,  1.0f, -1.0f),
+			glm::vec3(-1.0f,  1.0f, -1.0f),
+										 
+			glm::vec3(-1.0f, -1.0f,  1.0f),
+			glm::vec3(-1.0f, -1.0f, -1.0f),
+			glm::vec3(-1.0f,  1.0f, -1.0f),
+			glm::vec3(-1.0f,  1.0f, -1.0f),
+			glm::vec3(-1.0f,  1.0f,  1.0f),
+			glm::vec3(-1.0f, -1.0f,  1.0f),
+										 
+			glm::vec3( 1.0f, -1.0f, -1.0f),
+			glm::vec3( 1.0f, -1.0f,  1.0f),
+			glm::vec3( 1.0f,  1.0f,  1.0f),
+			glm::vec3( 1.0f,  1.0f,  1.0f),
+			glm::vec3( 1.0f,  1.0f, -1.0f),
+			glm::vec3( 1.0f, -1.0f, -1.0f),
+										 
+			glm::vec3(-1.0f, -1.0f,  1.0f),
+			glm::vec3(-1.0f,  1.0f,  1.0f),
+			glm::vec3( 1.0f,  1.0f,  1.0f),
+			glm::vec3( 1.0f,  1.0f,  1.0f),
+			glm::vec3( 1.0f, -1.0f,  1.0f),
+			glm::vec3(-1.0f, -1.0f,  1.0f),
+										 
+			glm::vec3(-1.0f,  1.0f, -1.0f),
+			glm::vec3( 1.0f,  1.0f, -1.0f),
+			glm::vec3( 1.0f,  1.0f,  1.0f),
+			glm::vec3( 1.0f,  1.0f,  1.0f),
+			glm::vec3(-1.0f,  1.0f,  1.0f),
+			glm::vec3(-1.0f,  1.0f, -1.0f),
+										 
+			glm::vec3(-1.0f, -1.0f, -1.0f),
+			glm::vec3(-1.0f, -1.0f,  1.0f),
+			glm::vec3( 1.0f, -1.0f, -1.0f),
+			glm::vec3( 1.0f, -1.0f, -1.0f),
+			glm::vec3(-1.0f, -1.0f,  1.0f),
+			glm::vec3( 1.0f, -1.0f,  1.0f)
+		};
+		m_cubemap_mesh = new Mesh();
+		m_cubemap_mesh->Vertices(skyboxVertices);
+		m_cubemap_shader = Shader::Create("skybox", SKYBOX_VERT_SHADER, SKYBOX_FRAG_SHADER);
+		if (!m_cubemap_shader->Initialized()) {
+			Logger::LogError(LOG_POS("Set_Skybox"), "Failed to create skybox shader.");
+			return;
+		}
+	}
+	m_cubemap = value;
 }
 
 Texture* Camera::FrameTexture()
@@ -88,6 +151,29 @@ void Camera::update_projection_matrix()
 	m_projection = glm::perspective(glm::radians(m_FOV), Screen_Width() / (float)Screen_Height(), m_near, m_far);
 }
 
+void Camera::render_cubemap()
+{
+	if (m_cubemap == nullptr) {
+		return;
+	}
+
+	glDepthFunc(GL_LEQUAL);
+	m_cubemap_shader->use(false);
+
+	//m_cubemap->Bind();
+
+	m_cubemap_shader->setInt("skybox", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_cubemap->Tex());
+	glm::mat4 view = glm::mat4(glm::mat3(m_view));
+	m_cubemap_shader->setMat4x4("projection", m_projection);
+	m_cubemap_shader->setMat4x4("view", view);
+
+	m_cubemap_mesh->Draw();
+
+	glDepthFunc(GL_LESS);
+}
+
 void Camera::render(float dt)
 {
 	m_framebuffer->Use(true);
@@ -96,7 +182,18 @@ void Camera::render(float dt)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
+
 	std::vector<unsigned int> shader_ids = Shader::Get_Shader_ID_List();
+	for (const auto& ID : shader_ids) {
+		Shader* shader = Shader::Get_Shader(ID);
+		shader->use(true);
+
+
+	}
+
+
+
+	/*std::vector<unsigned int> shader_ids = Shader::Get_Shader_ID_List();
 	for (const auto& ID : shader_ids)
 	{
 		Shader* shader = Shader::Get_Shader(ID);
@@ -107,7 +204,9 @@ void Camera::render(float dt)
 		for (const auto& rend : renderers) {
 			rend->Draw(dt);
 		}
-	}
+	}*/
+
+	render_cubemap();
 
 	m_framebuffer->Use(false);
 }

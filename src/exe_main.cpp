@@ -12,11 +12,6 @@ using namespace LuaCpp::Engine;
 
 int main()
 {
-	//printf("%s\n", (Resources::Get_Resources_Director()).c_str());
-	//Resources res(Resources::LoadMode::Filesystem);
-	
-	//Game_Resources* res = new Game_Resources();
-
 	Game game;
 	return game.Run();
 }

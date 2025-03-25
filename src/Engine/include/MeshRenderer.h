@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 
 #include "opengl.h"
 #include "Renderer.h";
@@ -48,6 +49,8 @@ private:
 	bool has_material = false;
 
 	void update_model_matrix();
+
+	inline static const std::string LOG_LOC{ "MESH_RENDERER" };
 
 };
 

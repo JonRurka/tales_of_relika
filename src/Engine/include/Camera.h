@@ -12,6 +12,9 @@ class WorldObject;
 class Transform;
 class Framebuffer;
 class Texture;
+class Cubemap;
+class Mesh;
+class Shader;
 
 class Camera : public Component
 {
@@ -40,7 +43,9 @@ public:
 	}
 
 	glm::vec4 Clear_Color() { return m_clear_color; }
-	glm::vec4 Clear_Color(glm::vec4 value) { m_clear_color = value; }
+	void Clear_Color(glm::vec4 value) { m_clear_color = value; }
+
+	void Set_Skybox(Cubemap* value);
 
 	Texture* FrameTexture();
 
@@ -67,6 +72,10 @@ private:
 	bool m_isActive{ false };
 	glm::vec4 m_clear_color{glm::ivec4(0.0f, 0.0f, 0.0f, 1.0f)};
 
+	Cubemap* m_cubemap{nullptr};
+	Mesh* m_cubemap_mesh{ nullptr };
+	Shader* m_cubemap_shader{ nullptr };
+
 	Framebuffer* m_framebuffer{nullptr};
 
 	unsigned int Screen_Width() { return m_screen_width; }
@@ -81,6 +90,7 @@ private:
 	void update_view_matrix();
 	void update_projection_matrix();
 
+	void render_cubemap();
 	void render(float dt);
 
 
