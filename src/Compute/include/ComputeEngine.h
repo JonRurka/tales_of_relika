@@ -2,10 +2,23 @@
 
 #include "stdafx.h"
 #include "vulkan/vulkan.h"
+
+#ifdef WIN32
+//#define WIN32_LEAN_AND_MEAN
+//#include <windows.h>
+#include <vulkan/vulkan_win32.h>
+#endif
+
 #include "vulkan_utils.h"
 #include "PlatformStructures_private.h"
 
+#include "../../Engine/include/glad.h"
+#include <GLFW/glfw3.h>
+
+#include <queue>
+
 #define DEFAULT_WORK_GROUP_SIZE 16
+#define DEFAULT_AVAILABLE_SEMAPHORE 100
 
 namespace DynamicCompute {
     namespace Compute {
@@ -31,6 +44,8 @@ namespace DynamicCompute {
 
             private:
 
+                
+
                 ComputeContext* mContext{nullptr};
                 Buffer_Type mType{};
                 VkBuffer mBuffer{};
@@ -53,6 +68,15 @@ namespace DynamicCompute {
 
                 bool mDestroyed{ false };
                 bool mCanCallDispose{ false };
+
+                unsigned int mExternalBuffer{0};
+                unsigned int mExternalMemObj{ 0 };
+
+#ifdef WIN32
+                void* mFD;
+#else
+                int mFD{ 0 };
+#endif
 
             public:
                 ComputeBuffer() : mCanCallDispose(false) {}
@@ -81,15 +105,23 @@ namespace DynamicCompute {
                     return &mBuffer;
                 }
 
+
+                unsigned int External_GL_Buffer() { return mExternalBuffer; }
+                unsigned int External_Memory() { return mExternalMemObj; }
+
+
                 VkDeviceSize GetSize() { return mSize; };
 
                 void Dispose();
 
             private:
-                ComputeBuffer(ComputeContext* context, Buffer_Type type, VkDeviceSize size);
+                ComputeBuffer(ComputeContext* context, Buffer_Type type, VkDeviceSize size, bool external = false);
 
                 void getAllQueueFamilies();
 
+                void initExternalCopy();
+
+                VkResult QueryVkExternalMemoryProperties();
             };
 
             class ComputeKernel {
@@ -111,12 +143,16 @@ namespace DynamicCompute {
                 VkPipelineLayout mComputePipelineLayout{};
                 VkPipeline mComputePipeline{};
 
+                VkFence mFinished_fence{ nullptr };
+                std::queue<VkSemaphore> mAvailable_Semaphore;
+
                 VkQueue* mComputeQueue{ nullptr };
                 VkQueue* mTransferQueue{ nullptr };
                 VkCommandBuffer* mComputeCmdBuffer{ nullptr };
                 VkCommandBuffer* mTransferCmdBuffer{ nullptr };
 
-                uint32_t mWorkGroupSize{ DEFAULT_WORK_GROUP_SIZE };
+                //uint32_t mWorkGroupSize{ DEFAULT_WORK_GROUP_SIZE };
+                glm::uvec3 mWorkGroupSize{ glm::uvec3(DEFAULT_WORK_GROUP_SIZE, DEFAULT_WORK_GROUP_SIZE, DEFAULT_WORK_GROUP_SIZE) };
 
                 std::vector<BoundBuffer> mBoundBuffers;
 
@@ -132,9 +168,11 @@ namespace DynamicCompute {
 
                 VkResult BuildKernel();
 
-                void SetWorkGroupSize(int newSize) { mWorkGroupSize = newSize; }
+                void SetWorkGroupSize(glm::uvec3 newSize) { mWorkGroupSize = newSize; }
 
                 int Execute(uint32_t x, uint32_t y, uint32_t z);
+
+                int ExecuteBatch(uint32_t num, uint32_t x, uint32_t y, uint32_t z);
 
                 void Dispose();
 
@@ -161,7 +199,8 @@ namespace DynamicCompute {
 
                 std::map<std::string, ComputeKernel*> kernels;
 
-                uint32_t mKernelsWorkGroupSize{ DEFAULT_WORK_GROUP_SIZE };
+                //uint32_t mKernelsWorkGroupSize{ DEFAULT_WORK_GROUP_SIZE };
+                glm::uvec3 mKernelsWorkGroupSize{ glm::uvec3(DEFAULT_WORK_GROUP_SIZE, DEFAULT_WORK_GROUP_SIZE, DEFAULT_WORK_GROUP_SIZE) };
 
                 bool mInitialized{ false };
                 bool mCanCallDispose{ false };
@@ -188,7 +227,7 @@ namespace DynamicCompute {
                     return &mProgramModule;
                 }
 
-                void SetWorkGroupSize(int newSize) { mKernelsWorkGroupSize = newSize; }
+                void SetWorkGroupSize(glm::uvec3 newSize) { mKernelsWorkGroupSize = newSize; }
 
                 int Set_Source(const char* source);
 
@@ -232,12 +271,23 @@ namespace DynamicCompute {
                 VkCommandBuffer mComputeCmdBuffer{};
                 VkCommandBuffer mTransferCmdBuffer{};
 
+                VkFence mWaitFence{ nullptr };
+
                 bool mDestroyed{ false };
                 bool mCanCallDispose{ false };
 
                 const std::vector<const char*> DeviceExtensions = {
-                    
+                    VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
+#ifdef WIN32
+                    "VK_KHR_external_memory_win32",
+#else
+                    "VK_KHR_external_memory_fd",
+#endif
                 };
+
+#ifdef WIN32
+                PFN_vkGetMemoryWin32HandleKHR vkGetMemoryWin32HandleKHR;
+#endif
 
             public:
                 ComputeContext() : mCanCallDispose(false) {}
@@ -265,6 +315,10 @@ namespace DynamicCompute {
                     return &mDevice;
                 }
 
+                VkFence* GetWaitFence() {
+                    return &mWaitFence;
+                }
+
                 ComputeProgram* Add_Program(std::string name);
                 ComputeProgram* Add_Program_Source(std::string name, const char* source);
                 ComputeProgram* Add_Program_SPIRV(std::string name, const void* binary, size_t length);
@@ -272,7 +326,11 @@ namespace DynamicCompute {
                 ComputeProgram* Programs(std::string name);
 
                 ComputeKernel* GetKernel(std::string p_name, std::string name);
-                ComputeBuffer* CreateBuffer(ComputeBuffer::Buffer_Type type, size_t size);
+                ComputeBuffer* CreateBuffer(ComputeBuffer::Buffer_Type type, size_t size, bool external = false);
+
+#ifdef WIN32
+                PFN_vkGetMemoryWin32HandleKHR get_GetMemoryWin32_func() { return vkGetMemoryWin32HandleKHR;}
+#endif
 
                 void Dispose();
 
@@ -303,6 +361,10 @@ namespace DynamicCompute {
                 static std::string mApp_dir;
 
                 static std::list<ComputeContext*> mContexts;
+
+                inline static const std::vector<const char*> InstanceExtensions = {
+                    VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME
+                };
 
             public:
                 static int Init(std::string dir);

@@ -3,11 +3,15 @@
 #include "stdafx.h"
 #include "vulkan/vulkan.h"
 
+#include "vk_mem_alloc.h"
 
 namespace DynamicCompute {
     namespace Compute {
         namespace VK {
             namespace Utilities {
+
+                VmaAllocator allocator;
+                void Create_VMA_Allocator(VkInstance inst, VkPhysicalDevice physicalDevice, VkDevice device);
 
                 // structures
 
@@ -144,7 +148,10 @@ namespace DynamicCompute {
                     VkDeviceSize size,
                     VkBufferUsageFlags usage,
                     VkSharingMode sharingMode,
+                    bool external,
                     VkBufferCreateFlags flags,
+                    VmaAllocationCreateFlags vma_flags,
+                    VmaMemoryUsage vma_usage,
                     VkMemoryPropertyFlags properties,
                     std::vector<uint32_t>& queueFamilies,
                     VkBuffer& buffer,
@@ -157,7 +164,10 @@ namespace DynamicCompute {
                     size_t num_elements,
                     VkBufferUsageFlags usage,
                     VkSharingMode sharingMode,
+                    bool external,
                     VkBufferCreateFlags flags,
+                    VmaAllocationCreateFlags vma_flags,
+                    VmaMemoryUsage vma_usage,
                     VkMemoryPropertyFlags properties,
                     std::vector<uint32_t>& queueFamilies,
                     VkBuffer& buffer,
@@ -183,11 +193,11 @@ namespace DynamicCompute {
 
                 // Buffer utilities
 
-                void CopyBuffer(VkQueue& queue, VkCommandBuffer& commandBuffer, VkBuffer& srcBuffer, VkBuffer& dstBuffer, int src_start, int dst_start, VkDeviceSize size);
+                void CopyBuffer(VkDevice& device, VkQueue& queue, VkCommandBuffer& commandBuffer, VkFence& wait_fence, VkBuffer& srcBuffer, VkBuffer& dstBuffer, int src_start, int dst_start, VkDeviceSize size);
 
                 void FlushToBuffer(VkDevice& device, VkDeviceMemory& memory, VkDeviceSize size, void*& data, void* src, bool unmap);
             
-                void CopyBufferToImage(VkDevice& device, VkQueue& queue, VkCommandPool& cmdPool, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+                void CopyBufferToImage(VkDevice& device, VkQueue& queue, VkCommandPool& cmdPool, VkFence& wait_fence, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
                 
                 // Command utilities
 
@@ -199,7 +209,7 @@ namespace DynamicCompute {
 
                 VkCommandBuffer beginSingleTimeCommands(VkCommandPool& cmdPool, VkDevice device);
 
-                void endSingleTimeCommands(VkCommandBuffer& cmdBuffer, VkQueue& p_queue);
+                void endSingleTimeCommands(VkDevice& device, VkCommandBuffer& cmdBuffer, VkQueue& p_queue, VkFence& p_fence);
             
 
                 // Shader utilities

@@ -50,7 +50,7 @@ public:
 
 	bool Supports_Lighting() { return m_supports_lighting; }
 
-	void Internal_Update(float dt);
+	void Internal_Update(float dt, bool force = false);
 
 	virtual Material* Copy() { return nullptr; }
 	virtual void Update(float dt) {};

@@ -1,29 +1,45 @@
 #include "Mesh.h"
 
 #include "opengl.h"
+#include "dynamic_compute.h"
 
 #include "Logger.h"
+
+#ifdef WIN32
+//#define WIN32_LEAN_AND_MEAN
+//#include <Windows.h>
+#endif
 
 #define RECENTER_THRESHOLD 0.1f
 
 Mesh::Mesh()
 {
+	
+
 	glGenBuffers(1, &VBO);
+	glCheckError();
+
 	glGenBuffers(1, &EBO);
+	glCheckError();
+
 	glGenVertexArrays(1, &VAO);
+	glCheckError();
 
 	glBindVertexArray(VAO);
-
+	glCheckError();
 	
 	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	/*glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	// color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	// normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-	// texture coord attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	// color attribute
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
+	// texture coord attribute
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
+	glEnableVertexAttribArray(3);*/
 	
 
 	/*
@@ -41,12 +57,159 @@ Mesh::Mesh()
 	m_num_indices = 0;
 }
 
+void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer)
+{
+	
+	size_t size = buffer->GetSize();
+	//Logger::LogDebug(LOG_POS("Load"), "Load buffer size: %i", (int)size);
+
+	GLuint glBuffer = buffer->External_Buffer();
+
+
+	//glBindBuffer(GL_COPY_WRITE_BUFFER, VBO);
+	//glBindBuffer(GL_COPY_READ_BUFFER, glBuffer);
+	//glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, size);
+	//glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+	//glBindBuffer(GL_COPY_READ_BUFFER, 0);
+
+	glBindVertexArray(VAO);
+	glCheckError();
+
+	//glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glCheckError();
+
+	//glBufferStorageMemEXT(GL_ARRAY_BUFFER, size, buffer->External_Memory(), 0);
+	//glCheckError();
+
+	//glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
+	//glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_DRAW);
+
+	//glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
+
+	
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	// color attribute
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+	// texture coord attribute
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
+	glEnableVertexAttribArray(3);
+
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+	/*glCreateMemoryObjectsEXT(1, &m_extMemoryObject);
+
+	//GL_HANDLE_TYPE_OPAQUE_FD_EXT
+
+#ifdef WIN32
+	void* fd = buffer->External_Descriptor();
+	glImportMemoryWin32HandleEXT(m_extMemoryObject, size, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, fd);
+#else
+	int fd = buffer->External_Descriptor();
+	glImportMemoryFdEXT(m_extMemoryObject, size, GL_HANDLE_TYPE_OPAQUE_FD_EXT, fd);
+#endif
+
+	// You can now create an OpenGL buffer using this memory object
+	//GLuint glBuffer = buffer->External_Buffer();
+	glGenBuffers(1, &glBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
+	glBufferStorageMemEXT(GL_ARRAY_BUFFER, size, m_extMemoryObject, 0);
+	glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_STATIC_READ);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	//glBindVertexArray(VAO);
+	//glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	// Copy data from glBuffer to the new VBO
+	//glBindBuffer(GL_ARRAY_BUFFER, glBuffer);   // Source buffer (from Vulkan import)
+
+	//glMapNamedBuffer(glBuffer, GL_READ_ONLY);
+
+	//GLuint tmp_buff;
+	//glGenBuffers(1, &tmp_buff);
+	//glNamedBufferStorage(tmp_buff, size, NULL, GL_MAP_READ_BIT);
+
+	//glBindBuffer(GL_COPY_WRITE_BUFFER, tmp_buff);
+	//glBindBuffer(GL_COPY_READ_BUFFER, glBuffer);
+	//glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, size);
+
+	//glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+
+	//void* data = glMapNamedBufferRange(glBuffer, 0, size, GL_MAP_READ_BIT);
+
+	//float* data = (float*)malloc(size);
+	//memset(data, 0, size);
+
+	//glGetBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+	//glGetNamedBufferSubData(glBuffer, 0, size, data);
+
+	if (data) {
+		float* floatData = data;
+		int numFloats = size / sizeof(float);
+		int num_elem = numFloats / 11;
+		for (int i = 0; i < num_elem; i++)
+		{
+			int b = i * 11;
+			Logger::LogDebug(LOG_POS("Load"), "\t Vert:(%f, %f, %f), norm:(%f, %f, %f), color:(%f, %f, %f), tex:(%f, %f)",
+				floatData[b + 0], floatData[b + 1], floatData[b + 2],
+				floatData[b + 3], floatData[b + 4], floatData[b + 5],
+				floatData[b + 6], floatData[b + 7], floatData[b + 8],
+				floatData[b + 9], floatData[b + 10]
+			);
+		}
+		//glUnmapBuffer(GL_ARRAY_BUFFER);
+		//glUnmapNamedBuffer(tmp_buff);
+	}
+	else {
+		Logger::LogError(LOG_POS("Load"), "Failed to map buffer.");
+	}
+
+	return;
+
+
+	glBindVertexArray(VAO);
+
+
+	//glBindBuffer(GL_COPY_WRITE_BUFFER, VBO);      // Destination buffer (new VBO)
+	//glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, size);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// color attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	// texture coord attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_COPY_READ_BUFFER, 0);
+	glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+
+	*/
+
+}
+
 void Mesh::Set_Raw_Vertex_Data(float* data, size_t size)
 {
 	delete[] raw_vert_data;
 	raw_vert_data = data;
 
 	glBindVertexArray(VAO);
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, size, raw_vert_data, GL_STATIC_DRAW);
 

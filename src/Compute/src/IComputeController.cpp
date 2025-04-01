@@ -23,19 +23,19 @@ IComputeProgram* DynamicCompute::Compute::IComputeController::GetProgram(std::st
 	return new IComputeProgram(p_inst->GetProgram(name));
 }
 
-IComputeBuffer* DynamicCompute::Compute::IComputeController::NewReadBuffer(size_t numElements, size_t stride)
+IComputeBuffer* DynamicCompute::Compute::IComputeController::NewReadBuffer(size_t numElements, size_t stride, bool external)
 {
-	return new IComputeBuffer(p_inst->NewReadBuffer(numElements, stride));
+	return new IComputeBuffer(p_inst->NewReadBuffer(numElements, stride, external));
 }
 
-IComputeBuffer* DynamicCompute::Compute::IComputeController::NewWriteBuffer(size_t numElements, size_t stride)
+IComputeBuffer* DynamicCompute::Compute::IComputeController::NewWriteBuffer(size_t numElements, size_t stride, bool external)
 {
-	return new IComputeBuffer(p_inst->NewWriteBuffer(numElements, stride));
+	return new IComputeBuffer(p_inst->NewWriteBuffer(numElements, stride, external));
 }
 
-IComputeBuffer* DynamicCompute::Compute::IComputeController::NewReadWriteBuffer(size_t numElements, size_t stride)
+IComputeBuffer* DynamicCompute::Compute::IComputeController::NewReadWriteBuffer(size_t numElements, size_t stride, bool external)
 {
-	return new IComputeBuffer(p_inst->NewReadWriteBuffer(numElements, stride));
+	return new IComputeBuffer(p_inst->NewReadWriteBuffer(numElements, stride, external));
 }
 
 void DynamicCompute::Compute::IComputeController::Dispose()

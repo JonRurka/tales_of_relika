@@ -4,6 +4,12 @@
 #include "vulkan_utils.h"
 #include "vk_mem_alloc.h"
 
+#include "../../Engine/include/opengl.h"
+
+#ifdef WIN32
+#include <vulkan/vulkan_win32.h>
+#endif
+
 using namespace DynamicCompute::Compute::VK;
 
 std::vector<VkExtensionProperties> ComputeEngine::mExtensions;
@@ -99,6 +105,8 @@ VkResult ComputeEngine::createInstance()
 		printf("vkCreateInstance Failed: %i\n", res);
 	}
 
+
+
 	return res;
 }
 
@@ -123,6 +131,8 @@ std::vector<const char*> ComputeEngine::getRequiredExtensions()
 	if (mEnableValidationLayers) {
 		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 	}
+
+	extensions.insert(extensions.end(), ComputeEngine::InstanceExtensions.begin(), ComputeEngine::InstanceExtensions.end());
 
 	return extensions;
 }
@@ -293,9 +303,9 @@ ComputeKernel* ComputeContext::GetKernel(std::string p_name, std::string name) {
 	return Programs(p_name)->GetKernel(name);
 }
 
-ComputeBuffer* ComputeContext::CreateBuffer(ComputeBuffer::Buffer_Type type, size_t size) {
+ComputeBuffer* ComputeContext::CreateBuffer(ComputeBuffer::Buffer_Type type, size_t size, bool external) {
 
-	mBuffers.emplace_back(new ComputeBuffer(this, type, size));
+	mBuffers.emplace_back(new ComputeBuffer(this, type, size, external));
 	auto& buf = mBuffers.back();
 	buf->mCanCallDispose = true;
 	return buf;
@@ -347,6 +357,16 @@ VkResult ComputeContext::createLogicalDevice()
 	if (res != VK_SUCCESS) {
 		printf("vkCreateDevice Failed: %i\n", res);
 	}
+
+	VkFenceCreateInfo fence_info{};
+	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	if (vkCreateFence(mDevice, &fence_info, nullptr, &mWaitFence) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create fence!");
+	}
+
+#ifdef WIN32
+	vkGetMemoryWin32HandleKHR = (PFN_vkGetMemoryWin32HandleKHR)vkGetDeviceProcAddr(mDevice, "vkGetMemoryWin32HandleKHR");
+#endif
 
 	return res;
 }
@@ -540,7 +560,7 @@ ComputeKernel::ComputeKernel(std::string name, ComputeProgram* program) {
 	mComputeCmdBuffer = context->GetPreferedComputeCmdBuffer();
 	mTransferCmdBuffer = context->GetPreferedTransferCmdBuffer();
 
-	mWorkGroupSize = DEFAULT_WORK_GROUP_SIZE;
+	mWorkGroupSize = glm::uvec3(DEFAULT_WORK_GROUP_SIZE);
 }
 
 int ComputeKernel::SetBuffer(ComputeBuffer* buffer, int arg)
@@ -584,6 +604,23 @@ VkResult ComputeKernel::BuildKernel()
 
 	mBoundBuffers.clear();
 
+	/*VkFenceCreateInfo fence_info{};
+	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	if (vkCreateFence(*mDevice, &fence_info, nullptr, &mFinished_fence) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create fence!");
+	}*/
+	mFinished_fence = *mProgram->GetContext()->GetWaitFence();
+
+	VkSemaphoreCreateInfo semaphore_info{};
+	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	for (int i = 0; i < DEFAULT_AVAILABLE_SEMAPHORE; i++) {
+		VkSemaphore semaphore;
+		if (vkCreateSemaphore(*mDevice, &semaphore_info, VK_NULL_HANDLE, &semaphore) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to create semaphore!");
+		}
+		mAvailable_Semaphore.push(semaphore);
+	}
+
 	//printf("BuildKernel() complete!\n");
 
 	mInitialized = true;
@@ -597,7 +634,7 @@ int ComputeKernel::Execute(uint32_t x, uint32_t y, uint32_t z)
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
 
-	vkQueueWaitIdle(*mComputeQueue);
+	//vkQueueWaitIdle(*mComputeQueue);
 	if (vkBeginCommandBuffer(*mComputeCmdBuffer, &beginInfo) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to begin recording command buffer!");
 	}
@@ -615,9 +652,9 @@ int ComputeKernel::Execute(uint32_t x, uint32_t y, uint32_t z)
 
 	vkCmdDispatch(
 		*mComputeCmdBuffer, 
-		std::max((int)std::ceilf((float)x / (float)mWorkGroupSize), 1), 
-		std::max((int)std::ceilf((float)y / (float)mWorkGroupSize), 1),
-		std::max((int)std::ceilf((float)z / (float)mWorkGroupSize), 1));
+		std::max((int)std::ceilf((float)x / (float)mWorkGroupSize.x), 1),
+		std::max((int)std::ceilf((float)y / (float)mWorkGroupSize.y), 1),
+		std::max((int)std::ceilf((float)z / (float)mWorkGroupSize.z), 1));
 
 	if (vkEndCommandBuffer(*mComputeCmdBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to record command buffer!");
@@ -628,12 +665,99 @@ int ComputeKernel::Execute(uint32_t x, uint32_t y, uint32_t z)
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = mComputeCmdBuffer;
 
-	if (vkQueueSubmit(*mComputeQueue, 1, &submitInfo, nullptr) != VK_SUCCESS) {
+	if (vkQueueSubmit(*mComputeQueue, 1, &submitInfo, mFinished_fence) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to submit compute command buffer!");
 	}
 	//printf("ComputeKernel::Execute: Finish execute submit '%s'\n", mName);
-	vkQueueWaitIdle(*mComputeQueue);
+	//vkQueueWaitIdle(*mComputeQueue);
+	vkWaitForFences(*mDevice, 1, &mFinished_fence, VK_TRUE, UINT64_MAX);
+	vkResetFences(*mDevice, 1, &mFinished_fence);
 	//printf("ComputeKernel::Execute: Finish execute wait '%s'\n", mName);
+
+	return 0;
+}
+
+int ComputeKernel::ExecuteBatch(uint32_t num, uint32_t x, uint32_t y, uint32_t z)
+{
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+
+	vkQueueWaitIdle(*mComputeQueue);
+	if (vkBeginCommandBuffer(*mComputeCmdBuffer, &beginInfo) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to begin recording command buffer!");
+	}
+	//printf("ComputeKernel::Execute: Start execute '%s'\n", mName);
+
+	std::vector<VkSemaphore> semaphores;
+	for (int i = 0; i < num; i++) {
+		semaphores.push_back(mAvailable_Semaphore.front());
+		mAvailable_Semaphore.pop();
+	}
+
+
+	vkCmdBindPipeline(*mComputeCmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, mComputePipeline);
+
+	vkCmdBindDescriptorSets(
+		*mComputeCmdBuffer,
+		VK_PIPELINE_BIND_POINT_COMPUTE,
+		mComputePipelineLayout,
+		0, 1,
+		&mComputeDescriptorSet,
+		0, 0);
+
+	vkCmdDispatch(
+		*mComputeCmdBuffer,
+		std::max((int)std::ceilf((float)x / (float)mWorkGroupSize.x), 1),
+		std::max((int)std::ceilf((float)y / (float)mWorkGroupSize.y), 1),
+		std::max((int)std::ceilf((float)z / (float)mWorkGroupSize.z), 1));
+
+	if (vkEndCommandBuffer(*mComputeCmdBuffer) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to record command buffer!");
+	}
+
+	std::vector<VkSubmitInfo> submits;
+
+	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT };
+
+	for (int i = 0; i < num; i++) {
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = mComputeCmdBuffer;
+
+		if (i != 0) {
+			submitInfo.pWaitSemaphores = &semaphores[i - 1];
+			submitInfo.waitSemaphoreCount = 1;
+			submitInfo.pWaitDstStageMask = waitStages;
+		}
+
+		submitInfo.pSignalSemaphores = &semaphores[i];
+		submitInfo.signalSemaphoreCount = 1;
+
+		submits.push_back(submitInfo);
+	}
+	
+	/*for (int i = 0; i < num; i++) {
+		VkFence f_fence = (i == num - 1) ? mFinished_fence : nullptr;
+		if (vkQueueSubmit(*mComputeQueue, 1, &submits[i], f_fence) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to submit compute command buffer!");
+		}
+	}*/
+
+	if (vkQueueSubmit(*mComputeQueue, num, submits.data(), mFinished_fence) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to submit compute command buffer!");
+	}
+
+
+	//printf("ComputeKernel::Execute: Finish execute submit '%s'\n", mName);
+	//vkQueueWaitIdle(*mComputeQueue);
+	vkWaitForFences(*mDevice, 1, &mFinished_fence, VK_TRUE, UINT64_MAX);
+	vkResetFences(*mDevice, 1, &mFinished_fence);
+	//printf("ComputeKernel::Execute: Finish execute wait '%s'\n", mName);
+
+	return 0;
+
 
 	return 0;
 }
@@ -749,7 +873,7 @@ ComputeKernel::~ComputeKernel() {
 
 // Compute Buffer
 
-ComputeBuffer::ComputeBuffer(ComputeContext* context, Buffer_Type type, VkDeviceSize size) {
+ComputeBuffer::ComputeBuffer(ComputeContext* context, Buffer_Type type, VkDeviceSize size, bool external) {
 	mContext = context;
 	mType = type;
 	mSize = size;
@@ -787,10 +911,12 @@ ComputeBuffer::ComputeBuffer(ComputeContext* context, Buffer_Type type, VkDevice
 		*mPhysicalDevice,
 		*mLogicalDevice,
 		mSize,
-		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | mTransfer_flag,
-		VK_SHARING_MODE_CONCURRENT,
+		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | mTransfer_flag,
+		VK_SHARING_MODE_CONCURRENT, external,
 		0,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		0,
+		VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
 		mAllQueueFamilies,
 		mBuffer,
 		mBufferMemory
@@ -801,13 +927,18 @@ ComputeBuffer::ComputeBuffer(ComputeContext* context, Buffer_Type type, VkDevice
 		*mLogicalDevice,
 		mSize,
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT | mStage_transfer_flag,
-		VK_SHARING_MODE_CONCURRENT,
+		VK_SHARING_MODE_CONCURRENT, false,
 		0,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		0,
+		VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
 		mAllQueueFamilies,
 		stagingBuffer,
 		stagingBufferMemory
 	);
+
+	if (external)
+		initExternalCopy();
 
 	//printf("ComputeBuffer parameter constructor called,\n");
 }
@@ -850,27 +981,27 @@ int ComputeBuffer::GetData(void* outData) {
 	return GetData(outData, mSize);
 }
 
-int DynamicCompute::Compute::VK::ComputeBuffer::SetData(void* src_data, int size)
+int ComputeBuffer::SetData(void* src_data, int size)
 {
 	return SetData(src_data, 0, size);
 }
 
-int DynamicCompute::Compute::VK::ComputeBuffer::GetData(void* outData, int size)
+int ComputeBuffer::GetData(void* outData, int size)
 {
 	return GetData(outData, 0, size);
 }
 
-int DynamicCompute::Compute::VK::ComputeBuffer::SetData(void* src_data, int DstStart, int size)
+int ComputeBuffer::SetData(void* src_data, int DstStart, int size)
 {
 	// TODO: implement start offset.
 
 	void* maped_data;
 
 	//printf("ComputeBuffer::SetData: Start: %i\n", size);
-	vkQueueWaitIdle(*mTransferQueue);
+	//vkQueueWaitIdle(*mTransferQueue);
 	Utilities::FlushToBuffer(*mLogicalDevice, stagingBufferMemory, static_cast<uint64_t>(size), maped_data, src_data, true);
 
-	Utilities::CopyBuffer(*mTransferQueue, *mTransferCmdBuffer, stagingBuffer, mBuffer, 0, DstStart, static_cast<uint64_t>(size));
+	Utilities::CopyBuffer(*mLogicalDevice, *mTransferQueue, *mTransferCmdBuffer, *mContext->GetWaitFence(), stagingBuffer, mBuffer, 0, DstStart, static_cast<uint64_t>(size));
 	//printf("ComputeBuffer::SetData: Finish.\n");
 	//vkDestroyBuffer(*mLogicalDevice, stagingBuffer, nullptr);
 	//vkFreeMemory(*mLogicalDevice, stagingBufferMemory, nullptr);
@@ -878,11 +1009,11 @@ int DynamicCompute::Compute::VK::ComputeBuffer::SetData(void* src_data, int DstS
 	return 0;
 }
 
-int DynamicCompute::Compute::VK::ComputeBuffer::GetData(void* outData, int SrcStart, int size)
+int ComputeBuffer::GetData(void* outData, int SrcStart, int size)
 {
 	//printf("ComputeBuffer::GetData: Start: %i'\n", size);
-	vkQueueWaitIdle(*mTransferQueue);
-	Utilities::CopyBuffer(*mTransferQueue, *mTransferCmdBuffer, mBuffer, stagingBuffer, SrcStart, 0, static_cast<uint64_t>(size));
+	//vkQueueWaitIdle(*mTransferQueue);
+	Utilities::CopyBuffer(*mLogicalDevice, *mTransferQueue, *mTransferCmdBuffer, *mContext->GetWaitFence(), mBuffer, stagingBuffer, SrcStart, 0, static_cast<uint64_t>(size));
 
 	void* maped_data;
 	vkMapMemory(*mLogicalDevice, stagingBufferMemory, 0, size, 0, &maped_data);
@@ -896,28 +1027,28 @@ int DynamicCompute::Compute::VK::ComputeBuffer::GetData(void* outData, int SrcSt
 	return 0;
 }
 
-int DynamicCompute::Compute::VK::ComputeBuffer::CopyTo(ComputeBuffer* other)
+int ComputeBuffer::CopyTo(ComputeBuffer* other)
 {
 	int size = std::min(mSize, other->mSize);
 	return CopyTo(other, 0, 0, size);
 }
 
-int DynamicCompute::Compute::VK::ComputeBuffer::CopyTo(ComputeBuffer* other, int size)
+int ComputeBuffer::CopyTo(ComputeBuffer* other, int size)
 {
 	return CopyTo(other, 0, 0, size);
 }
 
-int DynamicCompute::Compute::VK::ComputeBuffer::CopyTo(ComputeBuffer* other, int srcStart, int dstStart, int size)
+int ComputeBuffer::CopyTo(ComputeBuffer* other, int srcStart, int dstStart, int size)
 {
 	if (mTransferQueue == other->mTransferQueue)
 	{
-		vkQueueWaitIdle(*mTransferQueue);
+		//vkQueueWaitIdle(*mTransferQueue);
 	}
 	else {
 		vkQueueWaitIdle(*mTransferQueue);
 		vkQueueWaitIdle(*other->mTransferQueue);
 	}
-	Utilities::CopyBuffer(*mTransferQueue, *mTransferCmdBuffer, mBuffer, other->mBuffer, srcStart, dstStart, static_cast<uint64_t>(size));
+	Utilities::CopyBuffer(*mLogicalDevice, *mTransferQueue, *mTransferCmdBuffer, *mContext->GetWaitFence(), mBuffer, other->mBuffer, srcStart, dstStart, static_cast<uint64_t>(size));
 	return 0;
 }
 
@@ -936,6 +1067,108 @@ void ComputeBuffer::getAllQueueFamilies()
 			i++;
 		}
 	}
+}
+
+void ComputeBuffer::initExternalCopy()
+{
+	glCreateMemoryObjectsEXT(1, &mExternalMemObj);
+
+	VkMemoryRequirements req{};
+	vkGetBufferMemoryRequirements(*mLogicalDevice, mBuffer, &req);
+	printf("Memory: %i\n", (int)req.size);
+	
+#ifdef WIN32
+
+	PFN_vkGetMemoryWin32HandleKHR vkGetMemoryWin32HandleKHR = mContext->get_GetMemoryWin32_func();
+
+	VkMemoryGetWin32HandleInfoKHR handleInfo = {
+		.sType = VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR,
+		.pNext = NULL,
+		.memory = mBufferMemory,
+		.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT_KHR
+	};
+
+	VkResult res = vkGetMemoryWin32HandleKHR(*mLogicalDevice, &handleInfo, &mFD);
+	if (res != VK_SUCCESS) {
+		printf("Failed to get external memory handle.\n");
+	}
+	else {
+		//printf("Handle created: %08x\n", mFD);
+	}
+
+	glImportMemoryWin32HandleEXT(mExternalMemObj, req.size, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, mFD);
+
+#else
+	VkMemoryGetFdInfoKHR fdInfo = {
+		.sType = VK_STRUCTURE_TYPE_MEMORY_GET_FD_INFO_KHR,
+		.memory = mBufferMemory,
+		.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT
+	};
+
+	vkGetMemoryFdKHR(*mLogicalDevice, &fdInfo, &mFD);
+
+	glImportMemoryFdEXT(mExternalMemObj, mSize, GL_HANDLE_TYPE_OPAQUE_FD_EXT, mFD);
+#endif
+
+	//glGenBuffers(1, &mExternalBuffer);
+	//glBindBuffer(GL_ARRAY_BUFFER, mExternalBuffer);
+	//glBufferStorageMemEXT(GL_ARRAY_BUFFER, mSize, mExternalMemObj, 0);
+	//glBufferData(GL_ARRAY_BUFFER, mSize, NULL, GL_STATIC_READ);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glGenBuffers(1, &mExternalBuffer);
+	//glNamedBufferStorage(mExternalBuffer, mSize, NULL, GL_MAP_READ_BIT);
+	//glNamedBufferStorageMemEXT(mExternalBuffer, req.size, mExternalMemObj, 0);
+
+}
+
+VkResult ComputeBuffer::QueryVkExternalMemoryProperties()
+{
+	VkPhysicalDeviceImageFormatInfo2 format_info_2 = {
+	  .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2,
+	  .format = VK_FORMAT_UNDEFINED,
+	  .type = VK_IMAGE_TYPE_1D,
+	  .tiling = VK_IMAGE_TILING_LINEAR,
+	  .usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+	  //.flags = flags,
+	};
+
+	VkPhysicalDeviceExternalImageFormatInfo external_info = {
+	  .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO,
+	  .handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT,
+	};
+	format_info_2.pNext = &external_info;
+
+	VkImageFormatProperties2 image_format_properties_2 = {
+	  .sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2,
+	};
+	VkExternalImageFormatProperties external_image_format_properties = {
+		.sType = VK_STRUCTURE_TYPE_EXTERNAL_IMAGE_FORMAT_PROPERTIES,
+	};
+	VkExternalBufferProperties external_buffer_properties = {
+		.sType = VK_STRUCTURE_TYPE_EXTERNAL_BUFFER_PROPERTIES
+	};
+
+	image_format_properties_2.pNext = &external_buffer_properties;
+	//VkResult result = vkGetPhysicalDeviceImageFormatProperties2(*mContext->GetPhysicalDevice(), &format_info_2, &image_format_properties_2);
+
+
+	VkPhysicalDeviceExternalBufferInfo external_buffer_info{};
+	external_buffer_info.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO;
+	external_buffer_info.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+	//external_buffer_info.flags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	external_buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+	vkGetPhysicalDeviceExternalBufferProperties(*mContext->GetPhysicalDevice(), &external_buffer_info, &external_buffer_properties);
+
+	//if (result != VK_SUCCESS) {
+
+	//}
+
+	printf("External mem feature: %08x\n", external_buffer_properties.externalMemoryProperties.externalMemoryFeatures);
+
+	//external_image_format_properties.externalMemoryProperties
+	return VK_SUCCESS;
 }
 
 void ComputeBuffer::Dispose() {

@@ -93,6 +93,7 @@ void MeshRenderer::Use()
 void MeshRenderer::Draw(float dt)
 {
 	update_model_matrix();
+	m_source_material->Internal_Update(dt, true);
 	m_bound_material->Internal_Update(dt);
 
 	bool enable_transparency = m_bound_material->Transparent();// && !graphics->Active_Options().transparency_enabled;

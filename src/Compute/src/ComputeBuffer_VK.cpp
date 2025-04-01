@@ -66,3 +66,14 @@ void* ComputeBuffer_VK::Get_Native_Ptr()
 {
 	return m_buffer->Get_VK_Mem();
 }
+
+
+unsigned int ComputeBuffer_VK::External_Buffer()
+{
+	return m_buffer->External_GL_Buffer();
+}
+
+unsigned int ComputeBuffer_VK::External_Memory()
+{
+	return m_buffer->External_Memory();
+}

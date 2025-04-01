@@ -9,6 +9,12 @@
 #include "Graphics.h"
 #include "Mesh.h"
 #include "Cubemap.h"
+#include "Scene.h"
+#include "GPUSort.h"
+
+#include <math.h>
+
+
 
 #define SKYBOX_VERT_SHADER "graphics.engine.skybox.skybox.vert"
 #define SKYBOX_FRAG_SHADER "graphics.engine.skybox.skybox.frag"
@@ -25,6 +31,7 @@ void Camera::Init()
 	if (Get_Active() == nullptr) {
 		Activate(true);
 	}
+	m_sort = new GPUSort(1024);
 }
 
 void Camera::Update(float dt)
@@ -151,7 +158,7 @@ void Camera::update_projection_matrix()
 	m_projection = glm::perspective(glm::radians(m_FOV), Screen_Width() / (float)Screen_Height(), m_near, m_far);
 }
 
-void Camera::render_cubemap()
+void Camera::render_skybox(float dt)
 {
 	if (m_cubemap == nullptr) {
 		return;
@@ -174,6 +181,46 @@ void Camera::render_cubemap()
 	glDepthFunc(GL_LESS);
 }
 
+std::vector<Renderer*> alpha_renderers;
+std::vector<glm::vec4> alpha_object_idx;
+
+void Camera::render_opaque(float dt)
+{
+	//alpha_renderers.clear();
+	//alpha_renderers.reserve(Object()->scene()->Objects().size());
+
+	alpha_object_idx.clear();
+	alpha_object_idx.reserve(Object()->scene()->Objects().size());
+	
+	int i = 0;
+	std::vector<unsigned int> shader_ids = Shader::Get_Shader_ID_List();
+	for (const auto& ID : shader_ids) {
+		Shader* shader = Shader::Get_Shader(ID);
+		shader->use(true);
+		std::vector<Renderer*> renderers = Shader::Get_Shader_Renderer_List(ID);
+		for (const auto& rend : renderers) {
+			if (rend->Transparent()) {
+				alpha_renderers.push_back(rend);
+				float dist = glm::distance(Object()->Get_Transform()->Position(), rend->worldObject()->Get_Transform()->Position());
+				glm::vec4 a_map = glm::vec4((float)i++, dist, 0.0f, 0.0f);
+				alpha_object_idx.push_back(a_map);
+				continue;
+			}
+			//rend->Draw(dt);
+		}
+
+	}
+}
+
+void Camera::render_transparent(float dt)
+{
+	for (const auto& elem : alpha_object_idx) {
+		int i = lround(elem.x);
+		Renderer* rend = alpha_renderers[i];
+		rend->Draw(dt);
+	}
+}
+
 void Camera::render(float dt)
 {
 	m_framebuffer->Use(true);
@@ -182,31 +229,9 @@ void Camera::render(float dt)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-
-	std::vector<unsigned int> shader_ids = Shader::Get_Shader_ID_List();
-	for (const auto& ID : shader_ids) {
-		Shader* shader = Shader::Get_Shader(ID);
-		shader->use(true);
-
-
-	}
-
-
-
-	/*std::vector<unsigned int> shader_ids = Shader::Get_Shader_ID_List();
-	for (const auto& ID : shader_ids)
-	{
-		Shader* shader = Shader::Get_Shader(ID);
-		shader->use(true);
-		//shader->Bind_Textures();
-		shader->Update_Source_Materials(dt);
-		std::vector<Renderer*> renderers = Shader::Get_Shader_Renderer_List(ID);
-		for (const auto& rend : renderers) {
-			rend->Draw(dt);
-		}
-	}*/
-
-	render_cubemap();
+	render_opaque(dt);
+	render_transparent(dt);
+	render_skybox(dt);
 
 	m_framebuffer->Use(false);
 }

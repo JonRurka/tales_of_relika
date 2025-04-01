@@ -32,6 +32,7 @@ set(${module}_headers
 	include/Utilities.h
 	include/window.h
 	include/WorldObject.h
+	include/GPUSort.h
 )
 
 set(${module}_sources
@@ -60,6 +61,7 @@ set(${module}_sources
 	src/Utilities.cpp
 	src/window.cpp
 	src/WorldObject.cpp
+	src/GPUSort.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
@@ -74,7 +76,7 @@ target_link_libraries(${module}
 	lua::lua
 	Bullet::Bullet
 	vulkan-headers::vulkan-headers
-	vulkan-memory-allocator::vulkan-memory-allocator
+	#GPUOpen::VulkanMemoryAllocator
 )
 
 target_link_libraries(${module} LuaCpp Compute VoxelEngine)

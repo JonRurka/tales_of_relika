@@ -25,6 +25,8 @@ public:
 
 	static float Run_Time();
 
+	static float FPS() { return m_instance->m_fps; }
+
 	static Graphics* graphics() { return m_instance->m_graphics; }
 
 	static Resources* resources() { return m_instance->m_resources;}
@@ -71,6 +73,8 @@ private:
 	std::unordered_map<std::string, Scene*> m_scenes;
 	bool m_running{ false };
 	float m_deltaTime{ 0 };
+	float m_avg_deltaTime{ 0 };
+	float m_fps{ 0 };
 
 	Scene* m_active_scene{ nullptr };
 	Graphics* m_graphics{nullptr};

@@ -5,11 +5,11 @@
 #include "Texture.h"
 #include "Resources.h"
 
-#define Update_Uniforms(func, u_map)				\
+#define Update_Uniforms(func, u_map, force)			\
 do {												\
 	for (const auto& pair : u_map) {				\
 		if (pair.second.sync ||						\
-			pair.second.bound_update) {			\
+			pair.second.bound_update || force) {	\
 			func(pair.first, pair.second.value);	\
 			u_map[pair.first].sync = false;			\
 		}											\
@@ -180,20 +180,20 @@ void Material::Supports_Lighting(bool value)
 	m_supports_lighting = true;
 }
 
-void Material::Internal_Update(float dt)
+void Material::Internal_Update(float dt, bool force)
 {
-	Update_Uniforms(setBool_internal, m_bools);
-	Update_Uniforms(setInt_internal, m_ints);
-	Update_Uniforms(setFloat_internal, m_floats);
-	Update_Uniforms(SetVec2_internal, m_vec2s);
-	Update_Uniforms(SetVec3_internal, m_vec3s);
-	Update_Uniforms(SetVec4_internal, m_vec4s);
-	Update_Uniforms(setMat3x3_internal, m_mat3s);
-	Update_Uniforms(setMat4x4_internal, m_mat4s);
+	Update_Uniforms(setBool_internal, m_bools, force);
+	Update_Uniforms(setInt_internal, m_ints, force);
+	Update_Uniforms(setFloat_internal, m_floats, force);
+	Update_Uniforms(SetVec2_internal, m_vec2s, force);
+	Update_Uniforms(SetVec3_internal, m_vec3s, force);
+	Update_Uniforms(SetVec4_internal, m_vec4s, force);
+	Update_Uniforms(setMat3x3_internal, m_mat3s, force);
+	Update_Uniforms(setMat4x4_internal, m_mat4s, force);
 
 	// Bind textures
 	for (const auto& pair : m_tex) {
-		if (pair.second.do_bind) {
+		if (pair.second.do_bind || force) {
 			m_shader->setInt(pair.second.name, pair.second.bind_index);
 			pair.second.texture->Bind(GL_TEXTURE0 + pair.second.bind_index);
 		}

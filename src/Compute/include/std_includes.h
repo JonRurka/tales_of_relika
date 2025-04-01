@@ -23,6 +23,8 @@
 #include <algorithm>
 #include <iomanip>
 
+#include <glm/glm.hpp>
+
 
 #if defined(WIN32) || defined(WIN64)
 #define WINDOWS_PLATFROM

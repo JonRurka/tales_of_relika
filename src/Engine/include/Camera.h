@@ -3,6 +3,8 @@
 #include "opengl.h"
 #include "Component.h"
 
+#include "dynamic_compute.h"
+
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,6 +17,7 @@ class Texture;
 class Cubemap;
 class Mesh;
 class Shader;
+class GPUSort;
 
 class Camera : public Component
 {
@@ -78,6 +81,9 @@ private:
 
 	Framebuffer* m_framebuffer{nullptr};
 
+	GPUSort* m_sort{ nullptr };
+
+
 	unsigned int Screen_Width() { return m_screen_width; }
 	unsigned int Screen_Height() { return m_screen_height; }
 
@@ -90,7 +96,9 @@ private:
 	void update_view_matrix();
 	void update_projection_matrix();
 
-	void render_cubemap();
+	void render_skybox(float dt);
+	void render_opaque(float dt);
+	void render_transparent(float dt);
 	void render(float dt);
 
 

@@ -50,7 +50,7 @@ int ComputeProgram_VK::GetKernelID(std::string name)
 	return m_kernel_name_to_id[name];
 }
 
-void DynamicCompute::Compute::VK::ComputeProgram_VK::KernelSetWorkGroupSize(std::string k_name, int size)
+void DynamicCompute::Compute::VK::ComputeProgram_VK::KernelSetWorkGroupSize(std::string k_name, glm::uvec3 size)
 {
 	if (m_kernel_name_to_id.count(k_name) <= 0) {
 		printf("Kernel not found: %s\n", k_name.c_str());
@@ -98,6 +98,29 @@ int ComputeProgram_VK::RunKernel(int kernel_id, int size_x, int size_y, int size
 	}
 
 	return m_kernel_entries[kernel_id].kernel->Execute(size_x, size_y, size_z);
+}
+
+int DynamicCompute::Compute::VK::ComputeProgram_VK::RunKernel(std::string k_name, int num, int size_x, int size_y, int size_z)
+{
+	if (m_kernel_name_to_id.count(k_name) <= 0) {
+		printf("Kernel not found: %s\n", k_name.c_str());
+		return -1;
+	}
+
+	int K_ID = GetKernelID(k_name);
+
+	return RunKernel(K_ID, num, size_x, size_y, size_z);
+}
+
+int DynamicCompute::Compute::VK::ComputeProgram_VK::RunKernel(int kernel_id, int num, int size_x, int size_y, int size_z)
+{
+	if (kernel_id >= m_num_kernels)
+	{
+		printf("Kernel ID not found: %i\n", kernel_id);
+		return -1;
+	}
+
+	return m_kernel_entries[kernel_id].kernel->ExecuteBatch(num, size_x, size_y, size_z);
 }
 
 void* ComputeProgram_VK::GetKernelFunction(int kernel_id)

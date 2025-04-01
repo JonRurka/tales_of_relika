@@ -29,7 +29,7 @@ int DynamicCompute::Compute::IComputeProgram::GetKernelID(std::string name)
 	return p_inst->GetKernelID(name);
 }
 
-void DynamicCompute::Compute::IComputeProgram::KernelSetWorkGroupSize(std::string k_name, int size)
+void DynamicCompute::Compute::IComputeProgram::KernelSetWorkGroupSize(std::string k_name, glm::uvec3 size)
 {
 	p_inst->KernelSetWorkGroupSize(k_name, size);
 }
@@ -47,6 +47,16 @@ int DynamicCompute::Compute::IComputeProgram::RunKernel(std::string k_name, int 
 int DynamicCompute::Compute::IComputeProgram::RunKernel(int kernel_id, int size_x, int size_y, int size_z)
 {
 	return p_inst->RunKernel(kernel_id, size_x, size_y, size_z);
+}
+
+int DynamicCompute::Compute::IComputeProgram::RunKernel(std::string k_name, int num, int size_x, int size_y, int size_z)
+{
+	return p_inst->RunKernel(k_name, num, size_x, size_y, size_z);
+}
+
+int DynamicCompute::Compute::IComputeProgram::RunKernel(int kernel_id, int num, int size_x, int size_y, int size_z)
+{
+	return p_inst->RunKernel(kernel_id, num, size_x, size_y, size_z);
 }
 
 void* DynamicCompute::Compute::IComputeProgram::GetKernelFunction(int kernel_id)

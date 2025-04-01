@@ -1,5 +1,6 @@
 #include "WorldObject.h"
 
+#include "Engine.h"
 #include "Transform.h"
 #include "MeshRenderer.h"
 #include "Component.h"
@@ -11,17 +12,19 @@
 
 std::vector<WorldObject*> WorldObject::m_all_objects;
 
-WorldObject::WorldObject()
+WorldObject::WorldObject(Scene* scene)
 {
 	m_name = DEFAULT_NAME;
+	m_scene = scene;
 	m_transform = new Transform(this);
 	m_renderer = new MeshRenderer(this);
 	Add_Object(this);
 }
 
-WorldObject::WorldObject(std::string name)
+WorldObject::WorldObject(Scene* scene, std::string name)
 {
 	m_name = name;
+	m_scene = scene;
 	m_transform = new Transform(this);
 	m_renderer = new MeshRenderer(this);
 	Add_Object(this);
@@ -66,7 +69,7 @@ void WorldObject::Initialize_Component(Component* comp)
 
 WorldObject* WorldObject::Instantiate(Model* model, Material* mat, WorldObject* parent)
 {
-	WorldObject* obj = new WorldObject(model->Name());
+	WorldObject* obj = new WorldObject(Engine::Active_Scene(), model->Name());
 	if (parent != nullptr) {
 		obj->Parent(parent);
 		obj->Get_Transform()->set_position(model->mesh()[0]->Center());
@@ -89,7 +92,7 @@ WorldObject* WorldObject::Load(json data)
 {
 	std::string name;
 	data["name"].get_to(name);
-	WorldObject* obj = new WorldObject(name);
+	WorldObject* obj = new WorldObject(Engine::Active_Scene(), name);
 
 	json components = data["components"];
 	for (auto& el : components.items())

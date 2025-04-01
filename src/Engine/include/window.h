@@ -1,6 +1,7 @@
 #pragma once
 
 #include "opengl.h"
+#include <string>
 
 class window
 {
@@ -12,5 +13,7 @@ public:
 
 private:
 	GLFWwindow* m_window;
+
+	inline static const std::string LOG_LOC{ "WINDOW" };
 };
 

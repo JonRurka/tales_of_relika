@@ -5,6 +5,7 @@ include_directories(include)
 
 set(${module}_headers
 	include/ForwardDeclarations.h
+	include/vk_mem_alloc.h
 	include/vulkan_utils.h
 	include/ComputeEngine.h
 	include/ComputeController_VK.h
@@ -36,6 +37,7 @@ set(${module}_sources
 	src/IComputeBuffer.cpp
 	src/IComputeProgram.cpp
 	src/IComputeController.cpp
+	src/ComputeInterface_private.cpp
 	src/ComputeInterface.cpp
 )
 
@@ -51,7 +53,7 @@ target_link_libraries(${module}
 	lua::lua
 	Bullet::Bullet
 	vulkan-headers::vulkan-headers
-	vulkan-memory-allocator::vulkan-memory-allocator
+	#GPUOpen::VulkanMemoryAllocator
 )
 
 

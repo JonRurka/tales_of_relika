@@ -28,6 +28,6 @@ target_link_libraries(${PROJECT_NAME}
 	lua::lua
 	Bullet::Bullet
 	vulkan-headers::vulkan-headers
-	vulkan-memory-allocator::vulkan-memory-allocator
+	#GPUOpen::VulkanMemoryAllocator
 )
 target_link_libraries(${PROJECT_NAME} LuaCpp Compute VoxelEngine Engine Game)

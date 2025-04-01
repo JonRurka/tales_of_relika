@@ -34,6 +34,8 @@ public:
 	static void LogInfo(std::string source, const std::string format, ...);
 	static void LogDebug(std::string source, const std::string format, ...);
 
+	static unsigned int glCheckError_(const char* file, int line);
+
 	static std::vector<LogEntry> GetLogEntries();
 
 	static void Update();
@@ -42,7 +44,10 @@ private:
 
 	static Logger m_logger;
 	std::vector<LogEntry> m_entries;
+
+	
+
 	//std::vector<LogEntry> m_entries_processing;
 };
 
-
+#define glCheckError() Logger::glCheckError_(__FILE__, __LINE__) 

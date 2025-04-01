@@ -1,8 +1,28 @@
 #include "vulkan_utils.h"
 
+#define WIN32_LEAN_AND_MEAN
+#define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
 using namespace DynamicCompute::Compute::VK;
+
+void DynamicCompute::Compute::VK::Utilities::Create_VMA_Allocator(VkInstance inst, VkPhysicalDevice physicalDevice, VkDevice device)
+{
+    VmaVulkanFunctions vulkanFunctions = {};
+    vulkanFunctions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+    vulkanFunctions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
+
+    VmaAllocatorCreateInfo allocatorCreateInfo = {};
+    allocatorCreateInfo.flags = VMA_ALLOCATOR_CREATE_KHR_EXTERNAL_MEMORY_WIN32_BIT;
+    allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+    allocatorCreateInfo.physicalDevice = physicalDevice;
+    allocatorCreateInfo.device = device;
+    allocatorCreateInfo.instance = inst;
+    allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
+
+    VmaAllocator allocator;
+    vmaCreateAllocator(&allocatorCreateInfo, &allocator);
+}
 
 std::vector<char> Utilities::readFile(const std::string& filename)
 {
@@ -485,8 +505,11 @@ void Utilities::CreateBuffer(
     VkDevice& device, 
     VkDeviceSize size, 
     VkBufferUsageFlags usage, 
-    VkSharingMode sharingMode, 
-    VkBufferCreateFlags flags, 
+    VkSharingMode sharingMode,
+    bool external,
+    VkBufferCreateFlags flags,
+    VmaAllocationCreateFlags vma_flags,
+    VmaMemoryUsage vma_usage,
     VkMemoryPropertyFlags properties, 
     std::vector<uint32_t>& queueFamilies, 
     VkBuffer& buffer, 
@@ -495,6 +518,47 @@ void Utilities::CreateBuffer(
     VkBufferCreateInfo bufferInfo = Utilities::getBufferCreateInfo(
         size, usage, sharingMode, flags, queueFamilies);
 
+#ifdef WIN32
+    VkExternalMemoryHandleTypeFlags type = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT_KHR;
+#else
+    VkExternalMemoryHandleTypeFlags type = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT_KHR;
+#endif
+
+    VkExternalMemoryBufferCreateInfo externalInfo = {
+        .sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO,
+        .pNext = NULL,
+        .handleTypes = type
+    };
+
+    if (external)
+        bufferInfo.pNext = &externalInfo;
+
+    VmaAllocationCreateInfo allocInfo = {};
+    allocInfo.usage = vma_usage;
+    allocInfo.flags = vma_flags;
+
+    VmaAllocation allocation;
+    vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
+
+    /*VkBufferCreateInfo bufferInfo = Utilities::getBufferCreateInfo(
+        size, usage, sharingMode, flags, queueFamilies);
+
+#ifdef WIN32
+    VkExternalMemoryHandleTypeFlags type = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT_KHR;
+#else
+    VkExternalMemoryHandleTypeFlags type = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT_KHR;
+#endif
+
+    VkExternalMemoryBufferCreateInfo externalInfo = {
+        .sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO,
+        .pNext = NULL,
+        .handleTypes = type
+    };
+
+    if (external)
+        bufferInfo.pNext = &externalInfo;
+
+
     if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create buffer!");
     }
@@ -502,16 +566,27 @@ void Utilities::CreateBuffer(
     VkMemoryRequirements memRequirements;
     vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
 
+    //VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT
+    //VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT
+
+    VkExportMemoryAllocateInfo exportInfo = {
+        .sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO,
+        .handleTypes = type
+    };
+
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
 
+    if (external)
+        allocInfo.pNext = &exportInfo;
+
     if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
         throw std::runtime_error("Failed to allocate buffer memory!");
     }
 
-    vkBindBufferMemory(device, buffer, bufferMemory, 0);
+    vkBindBufferMemory(device, buffer, bufferMemory, 0);*/
 }
 
 void Utilities::CreateBuffer(
@@ -520,8 +595,11 @@ void Utilities::CreateBuffer(
     size_t stride, 
     size_t num_elements, 
     VkBufferUsageFlags usage, 
-    VkSharingMode sharingMode, 
+    VkSharingMode sharingMode,
+    bool external,
     VkBufferCreateFlags flags, 
+    VmaAllocationCreateFlags vma_flags,
+    VmaMemoryUsage vma_usage,
     VkMemoryPropertyFlags properties,
     std::vector<uint32_t>& queueFamilies,
     VkBuffer& buffer, 
@@ -533,7 +611,10 @@ void Utilities::CreateBuffer(
         stride * num_elements,
         usage,
         sharingMode,
+        external,
         flags,
+        vma_flags,
+        vma_usage, 
         properties,
         queueFamilies,
         buffer,
@@ -604,7 +685,7 @@ uint32_t Utilities::findMemoryType(VkPhysicalDevice& physicalDevice, uint32_t ty
     throw std::runtime_error("Failed to find suitable memory type!");
 }
 
-void Utilities::CopyBuffer(VkQueue& queue, VkCommandBuffer& commandBuffer, VkBuffer& srcBuffer, VkBuffer& dstBuffer, int src_start, int dst_start, VkDeviceSize size)
+void Utilities::CopyBuffer(VkDevice& device, VkQueue& queue, VkCommandBuffer& commandBuffer, VkFence& wait_fence, VkBuffer& srcBuffer, VkBuffer& dstBuffer, int src_start, int dst_start, VkDeviceSize size)
 {
     Utilities::beginSingleTimeCommands(commandBuffer);
 
@@ -614,7 +695,7 @@ void Utilities::CopyBuffer(VkQueue& queue, VkCommandBuffer& commandBuffer, VkBuf
     copyRegion.size = size;
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-    Utilities::endSingleTimeCommands(commandBuffer, queue);
+    Utilities::endSingleTimeCommands(device, commandBuffer, queue, wait_fence);
 }
 
 void Utilities::FlushToBuffer(VkDevice& device, VkDeviceMemory& memory, VkDeviceSize size, void*& data, void* src, bool unmap)
@@ -627,7 +708,7 @@ void Utilities::FlushToBuffer(VkDevice& device, VkDeviceMemory& memory, VkDevice
     }
 }
 
-void Utilities::CopyBufferToImage(VkDevice& device, VkQueue& queue, VkCommandPool& cmdPool, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+void Utilities::CopyBufferToImage(VkDevice& device, VkQueue& queue, VkCommandPool& cmdPool, VkFence& wait_fence, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 {
     VkCommandBuffer cmdBuf = Utilities::beginSingleTimeCommands(cmdPool, device);
 
@@ -658,7 +739,7 @@ void Utilities::CopyBufferToImage(VkDevice& device, VkQueue& queue, VkCommandPoo
     );
 
 
-    Utilities::endSingleTimeCommands(cmdBuf, queue);
+    Utilities::endSingleTimeCommands(device, cmdBuf, queue, wait_fence);
 }
 
 void Utilities::CreateCommandBuffer(VkCommandPool& cmdPool, VkDevice device, VkCommandBuffer& commandBuffer)
@@ -697,7 +778,7 @@ VkCommandBuffer Utilities::beginSingleTimeCommands(VkCommandPool& cmdPool, VkDev
     return commandBuffer;
 }
 
-void Utilities::endSingleTimeCommands(VkCommandBuffer& cmdBuffer, VkQueue& p_queue)
+void Utilities::endSingleTimeCommands(VkDevice& device, VkCommandBuffer& cmdBuffer, VkQueue& p_queue, VkFence& p_fence)
 {
     vkEndCommandBuffer(cmdBuffer);
 
@@ -706,8 +787,10 @@ void Utilities::endSingleTimeCommands(VkCommandBuffer& cmdBuffer, VkQueue& p_que
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &cmdBuffer;
 
-    vkQueueSubmit(p_queue, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(p_queue);
+    vkQueueSubmit(p_queue, 1, &submitInfo, p_fence);
+    vkWaitForFences(device, 1, &p_fence, VK_TRUE, UINT64_MAX);
+    vkResetFences(device, 1, &p_fence);
+    //vkQueueWaitIdle(p_queue);
 }
 
 VkShaderModule Utilities::createShaderModule(VkDevice& device, const std::vector<char>& code)

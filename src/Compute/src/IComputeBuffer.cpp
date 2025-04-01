@@ -61,3 +61,14 @@ void* DynamicCompute::Compute::IComputeBuffer::Get_Native_Ptr()
 {
 	return p_inst->Get_Native_Ptr();
 }
+
+unsigned int DynamicCompute::Compute::IComputeBuffer::External_Buffer()
+{
+	return p_inst->External_Buffer();
+}
+
+unsigned int DynamicCompute::Compute::IComputeBuffer::External_Memory()
+{
+	return p_inst->External_Memory();
+}
+

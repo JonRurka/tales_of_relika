@@ -2,6 +2,7 @@
 
 #include "ForwardDeclarations.h"
 
+
 namespace DynamicCompute {
     namespace Compute {
 
@@ -30,6 +31,10 @@ namespace DynamicCompute {
             virtual void Dispose() = 0;
 
             virtual void* Get_Native_Ptr() = 0;
+
+            virtual unsigned int External_Buffer() = 0;
+
+            virtual unsigned int External_Memory() = 0;
         };
 
     }

@@ -28,6 +28,8 @@ public:
 
 	WorldObject* Instantiate(std::string name);
 
+	std::vector<WorldObject*> Objects() { return m_objects; }
+
 protected:
 	virtual void Init() {};
 	virtual void Update(float dt) {};

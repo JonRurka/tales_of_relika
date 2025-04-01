@@ -93,3 +93,53 @@ double Utilities::Get_Time()
 {
 	return glfwGetTime();
 }
+
+int Utilities::Is_Extension_Supported(const std::string extension)
+{
+	GLint numExtensions = 0;
+	glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+
+	for (GLint i = 0; i < numExtensions; i++) {
+		const char* ext = (const char*)glGetStringi(GL_EXTENSIONS, i);
+		if (ext && strcmp(ext, extension.c_str()) == 0) {
+			return 1; // Supported
+		}
+	}
+	return 0; // Not supported
+}
+
+std::vector<glm::vec4> Utilities::vec2_to_vec4_arr(std::vector<glm::vec2> arr)
+{
+	std::vector<glm::vec4> res;
+	res.reserve(arr.size());
+
+	for (const auto& elem : arr) {
+		res.push_back(glm::vec4(elem, 0.0f, 0.0f));
+	}
+
+	return res;
+}
+
+std::vector<glm::vec4> Utilities::vec3_to_vec4_arr(std::vector<glm::vec3> arr)
+{
+	std::vector<glm::vec4> res;
+	res.reserve(arr.size());
+
+	for (const auto& elem : arr) {
+		res.push_back(glm::vec4(elem, 0.0f));
+	}
+
+	return res;
+}
+
+std::vector<glm::vec3> Utilities::vec4_to_vec3_arr(std::vector<glm::vec4> arr)
+{
+	std::vector<glm::vec3> res;
+	res.reserve(arr.size());
+
+	for (const auto& elem : arr) {
+		res.push_back(glm::vec3(elem));
+	}
+
+	return res;
+}

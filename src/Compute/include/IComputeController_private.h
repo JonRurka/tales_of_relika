@@ -18,11 +18,11 @@ namespace DynamicCompute {
 
 			virtual IComputeProgram_private* GetProgram(std::string name) = 0;
 
-			virtual IComputeBuffer_private* NewReadBuffer(size_t numElements, size_t stride) = 0;
+			virtual IComputeBuffer_private* NewReadBuffer(size_t numElements, size_t stride, bool external = false) = 0;
 
-			virtual IComputeBuffer_private* NewWriteBuffer(size_t numElements, size_t stride) = 0;
+			virtual IComputeBuffer_private* NewWriteBuffer(size_t numElements, size_t stride, bool external = false) = 0;
 
-			virtual IComputeBuffer_private* NewReadWriteBuffer(size_t numElements, size_t stride) = 0;
+			virtual IComputeBuffer_private* NewReadWriteBuffer(size_t numElements, size_t stride, bool external = false) = 0;
 
 			virtual void Dispose() = 0;
 		};

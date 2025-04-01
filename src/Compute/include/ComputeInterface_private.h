@@ -14,11 +14,11 @@ namespace DynamicCompute {
 		class ComputeInterface_private {
 		public:
 			enum Compute_SDK {
-				//OpenCL,
-				VULKAN,
+				//OpenCL = 0,
+				VULKAN = 1,
 #ifdef WINDOWS_PLATFROM
-				//DIRECTX,
-				//CUDA
+				//DIRECTX = 2,
+				//CUDA = 3
 #endif
 			};
 

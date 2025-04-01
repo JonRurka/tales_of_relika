@@ -13,20 +13,23 @@ class Transform;
 class MeshRenderer;
 class Material;
 class Model;
+class Scene;
 
 class WorldObject
 {
 public:
 
-	WorldObject();
+	WorldObject(Scene* scene);
 
-	WorldObject(std::string name);
+	WorldObject(Scene* scene,std::string name);
 
 	Transform* Get_Transform() { return m_transform; }
 	MeshRenderer* Get_MeshRenderer() { return m_renderer; }
 
 	void Parent(WorldObject* value);
 	WorldObject* Parent() { return m_parent; }
+
+	Scene* scene() { return m_scene; }
 
 	void Name(std::string value) { m_name = value; }
 	std::string Name() { return m_name; }
@@ -59,6 +62,7 @@ public:
 
 private:
 	std::string m_name;
+	Scene* m_scene{ nullptr };
 	Transform* m_transform{nullptr};
 	MeshRenderer* m_renderer{ nullptr };
 	WorldObject* m_parent{ nullptr };

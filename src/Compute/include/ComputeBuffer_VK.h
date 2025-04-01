@@ -37,6 +37,9 @@ namespace DynamicCompute {
 
                 void* Get_Native_Ptr();
 
+                unsigned int External_Buffer();
+
+                unsigned int External_Memory();
 
                 // Non-interface methods:
 

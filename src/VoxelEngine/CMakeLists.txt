@@ -43,7 +43,7 @@ target_link_libraries(${module}
 	lua::lua
 	Bullet::Bullet
 	vulkan-headers::vulkan-headers
-	vulkan-memory-allocator::vulkan-memory-allocator
+	#GPUOpen::VulkanMemoryAllocator
 )
 
 target_link_libraries(${module} Compute Engine)

@@ -78,27 +78,27 @@ IComputeProgram_private* ComputeController_VK::GetProgram(std::string name)
 	return m_programs[name];
 }
 
-IComputeBuffer_private* ComputeController_VK::NewReadBuffer(size_t numElements, size_t stride)
+IComputeBuffer_private* ComputeController_VK::NewReadBuffer(size_t numElements, size_t stride, bool external)
 {
-	ComputeBuffer* bf = ComputeController_VK::NewBuffer((uint32_t)ComputeBuffer::Buffer_Type::READ, numElements * stride);
+	ComputeBuffer* bf = ComputeController_VK::NewBuffer((uint32_t)ComputeBuffer::Buffer_Type::READ, numElements * stride, external);
 	ComputeBuffer_VK* bf_vk = new ComputeBuffer_VK(bf);
 	return bf_vk;
 }
 
-IComputeBuffer_private* ComputeController_VK::NewWriteBuffer(size_t numElements, size_t stride)
+IComputeBuffer_private* ComputeController_VK::NewWriteBuffer(size_t numElements, size_t stride, bool external)
 {
-	ComputeBuffer* bf = ComputeController_VK::NewBuffer((uint32_t)ComputeBuffer::Buffer_Type::Write, numElements * stride);
+	ComputeBuffer* bf = ComputeController_VK::NewBuffer((uint32_t)ComputeBuffer::Buffer_Type::Write, numElements * stride, external);
 	return new ComputeBuffer_VK(bf);
 }
 
-IComputeBuffer_private* ComputeController_VK::NewReadWriteBuffer(size_t numElements, size_t stride)
+IComputeBuffer_private* ComputeController_VK::NewReadWriteBuffer(size_t numElements, size_t stride, bool external)
 {
-	return new ComputeBuffer_VK(ComputeController_VK::NewBuffer((uint32_t)ComputeBuffer::Buffer_Type::Read_Write, numElements * stride));
+	return new ComputeBuffer_VK(ComputeController_VK::NewBuffer((uint32_t)ComputeBuffer::Buffer_Type::Read_Write, numElements * stride, external));
 }
 
-ComputeBuffer* ComputeController_VK::NewBuffer(uint32_t type, size_t length)
+ComputeBuffer* ComputeController_VK::NewBuffer(uint32_t type, size_t length, bool external)
 {
-	return m_context->CreateBuffer((ComputeBuffer::Buffer_Type)type, length);
+	return m_context->CreateBuffer((ComputeBuffer::Buffer_Type)type, length, external);
 }
 
 void ComputeController_VK::Dispose()

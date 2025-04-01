@@ -7,6 +7,8 @@
 namespace DynamicCompute {
 	namespace Compute {
 
+		class IComputeController_private;
+
 		class IComputeController {
 			friend class ComputeInterface;
 		public:
@@ -19,11 +21,11 @@ namespace DynamicCompute {
 			
 			IComputeProgram* GetProgram(std::string name);
 			
-			IComputeBuffer* NewReadBuffer(size_t numElements, size_t stride);
+			IComputeBuffer* NewReadBuffer(size_t numElements, size_t stride, bool external = false);
 			
-			IComputeBuffer* NewWriteBuffer(size_t numElements, size_t stride);
+			IComputeBuffer* NewWriteBuffer(size_t numElements, size_t stride, bool external = false);
 			
-			IComputeBuffer* NewReadWriteBuffer(size_t numElements, size_t stride);
+			IComputeBuffer* NewReadWriteBuffer(size_t numElements, size_t stride, bool external = false);
 			
 			void Dispose();
 

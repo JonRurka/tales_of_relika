@@ -9,6 +9,12 @@
 
 class Model;
 
+namespace DynamicCompute {
+	namespace Compute {
+		class IComputeBuffer;
+	}
+}
+
 class Mesh
 {
 	friend class Model;
@@ -18,6 +24,8 @@ public:
 
 	void Name(std::string value) { m_name = value; }
 	std::string Name() { return m_name; }
+
+	void Load(DynamicCompute::Compute::IComputeBuffer* buffer);
 
 	void Vertices(std::vector<glm::vec3> value) 
 	{ 
@@ -115,13 +123,15 @@ private:
 	void sync_vertices(Vert_Update_Mode mode);
 	void sync_indices();
 	
-	GLuint VBO; // vertex buffer object
-	GLuint EBO; // element buffer object
-	GLuint VAO; // vertex array object
+	GLuint VBO{ 0 }; // vertex buffer object
+	GLuint EBO{ 0 }; // element buffer object
+	GLuint VAO{ 0 }; // vertex array object
 
-	size_t m_num_vertices;
-	size_t m_num_indices;
-	bool m_active;
+	GLuint m_extMemoryObject{ 0 };
+
+	size_t m_num_vertices{ 0 };
+	size_t m_num_indices{ 0 };
+	bool m_active{ false };
 
 	bool m_has_verts{ false };
 

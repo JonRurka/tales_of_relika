@@ -7,6 +7,8 @@
 #include "Resources.h"
 #include "Light.h"
 
+#include <queue>
+
 Engine* Engine::m_instance{nullptr};
 
 void Engine::Activate_Scene(Scene* value)
@@ -77,11 +79,13 @@ void Engine::initialize()
 
 void Engine::game_loop()
 {
+	std::vector<float> previous_frame_times;
+	previous_frame_times.reserve(10);
 
 	float lastFrame = (float)Utilities::Get_Time();
 	while (m_running && !m_graphics->Window_Should_Close())
 	{
-
+		/*
 		if (Active_Scene() != nullptr)
 		{
 			Active_Scene()->Update_internal(m_deltaTime);
@@ -92,6 +96,8 @@ void Engine::game_loop()
 
 		Light::Update_Lights(m_deltaTime);
 		m_graphics->Update(m_deltaTime);
+		*/
+
 		Logger::Update();
 
 		glfwPollEvents();
@@ -99,5 +105,16 @@ void Engine::game_loop()
 		float newTime = (float)Utilities::Get_Time();
 		m_deltaTime = newTime - lastFrame;
 		lastFrame = newTime;
+
+		previous_frame_times.push_back(m_deltaTime);
+		if (previous_frame_times.size() > 10) {
+			previous_frame_times.erase(previous_frame_times.begin());
+		}
+		float time_sum = 0;
+		for (const auto& t : previous_frame_times) {
+			time_sum += t;
+		}
+		m_avg_deltaTime = time_sum / previous_frame_times.size();
+		m_fps = 1.0f / m_avg_deltaTime;
 	}
 }

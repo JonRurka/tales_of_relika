@@ -40,14 +40,14 @@ void Scene::Load_File(std::string file)
 
 WorldObject* Scene::Instantiate()
 {
-	WorldObject* obj = new WorldObject();
+	WorldObject* obj = new WorldObject(this);
 	m_objects.push_back(obj);
 	return obj;
 }
 
 WorldObject* Scene::Instantiate(std::string name)
 {
-	WorldObject* obj = new WorldObject(name);
+	WorldObject* obj = new WorldObject(this, name);
 	m_objects.push_back(obj);
 	return obj;
 }

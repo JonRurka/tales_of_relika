@@ -27,11 +27,11 @@ namespace DynamicCompute {
 
 				IComputeProgram_private* GetProgram(std::string name);
 
-				IComputeBuffer_private* NewReadBuffer(size_t numElements, size_t stride);
+				IComputeBuffer_private* NewReadBuffer(size_t numElements, size_t stride, bool external = false);
 
-				IComputeBuffer_private* NewWriteBuffer(size_t numElements, size_t stride);
+				IComputeBuffer_private* NewWriteBuffer(size_t numElements, size_t stride, bool external = false);
 
-				IComputeBuffer_private* NewReadWriteBuffer(size_t numElements, size_t stride);
+				IComputeBuffer_private* NewReadWriteBuffer(size_t numElements, size_t stride, bool external = false);
 
 				void Dispose();
 
@@ -39,7 +39,7 @@ namespace DynamicCompute {
 
 				// Non-interface methods:
 
-				ComputeBuffer* NewBuffer(uint32_t type, size_t length);
+				ComputeBuffer* NewBuffer(uint32_t type, size_t length, bool external);
 
 				~ComputeController_VK();
 				ComputeController_VK() {}

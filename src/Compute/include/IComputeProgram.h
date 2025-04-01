@@ -82,13 +82,17 @@ namespace DynamicCompute {
 			// Removed from Interface because it is not compatible with all frameworks, but is usefull in OpenCL/CUDA
 			//int KernelAddBuffer(std::string k_name, IComputeBuffer_private* buffer) = 0;
 
-			void KernelSetWorkGroupSize(std::string k_name, int size);
+			void KernelSetWorkGroupSize(std::string k_name, glm::uvec3 size);
 
 			int KernelSetBuffer(std::string k_name, IComputeBuffer* buffer, BindIndex arg);
 
 			int RunKernel(std::string k_name, int size_x, int size_y, int size_z);
 
 			int RunKernel(int kernel_id, int size_x, int size_y, int size_z);
+
+			int RunKernel(std::string k_name, int num, int size_x, int size_y, int size_z);
+
+			int RunKernel(int kernel_id, int num, int size_x, int size_y, int size_z);
 
 			void* GetKernelFunction(int kernel_id);
 

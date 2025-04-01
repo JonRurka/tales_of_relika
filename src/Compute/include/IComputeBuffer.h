@@ -34,6 +34,10 @@ namespace DynamicCompute {
 
             void* Get_Native_Ptr();
 
+            unsigned int External_Buffer();
+
+            unsigned int External_Memory();
+
         private:
 
             IComputeBuffer(IComputeBuffer_private* p) { p_inst = p; }
