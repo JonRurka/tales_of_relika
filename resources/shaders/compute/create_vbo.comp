@@ -40,7 +40,7 @@ void insert(uvec3 id)
 	set_buffer_scalar(out_vbo, vert_ptr + 7 , color.y);     
 	set_buffer_scalar(out_vbo, vert_ptr + 8 , color.z);     
 	set_buffer_scalar(out_vbo, vert_ptr + 9 , texcoord.x);  
-	set_buffer_scalar(out_vbo, vert_ptr + 10, texcoord.y);  
+	set_buffer_scalar(out_vbo, vert_ptr + 10, texcoord.y);
 	
 }
 

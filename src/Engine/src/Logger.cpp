@@ -82,6 +82,7 @@ void Logger::LogDebug(std::string source, const std::string format, ...)
 unsigned int Logger::glCheckError_(const char* file, int line)
 {
 	GLenum errorCode;
+	int num_runs = 0;
 	while ((errorCode = glGetError()) != GL_NO_ERROR)
 	{
 		std::string error;
@@ -97,6 +98,12 @@ unsigned int Logger::glCheckError_(const char* file, int line)
 		}
 		std::cout << error << " | " << file << " (" << line << ")" << std::endl;
 		//LogError("GL_ERROR", "%s (%i): %s", file, line, error.c_str());
+		num_runs++;
+
+		if (num_runs > 10) {
+			std::cout << "glCheckError errors exceeded 10; breaking..." << std::endl;
+			break;
+		}
 	}
 	return errorCode;
 }

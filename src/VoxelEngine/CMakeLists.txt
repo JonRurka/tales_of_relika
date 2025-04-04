@@ -37,12 +37,12 @@ target_link_libraries(${module}
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
 	boost::boost
-	Vulkan-1
+	Vulkan::Vulkan
 	glm::glm
 	glfw
 	lua::lua
 	Bullet::Bullet
-	vulkan-headers::vulkan-headers
+	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
 )
 

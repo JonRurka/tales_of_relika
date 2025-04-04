@@ -1,19 +1,53 @@
 #pragma once
 
 #include "stdafx.h"
+
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #include "vulkan/vulkan.h"
+#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.hpp>
+
+#ifdef WIN32
+//#define WIN32_LEAN_AND_MEAN
+//#include <windows.h>
+#include <vulkan/vulkan_win32.h>
+#endif
 
 #include "vk_mem_alloc.h"
+
+#include "nvvk/context_vk.hpp"
+#include "nvvk/resourceallocator_vk.hpp"
 
 namespace DynamicCompute {
     namespace Compute {
         namespace VK {
             namespace Utilities {
 
-                VmaAllocator allocator;
+                
                 void Create_VMA_Allocator(VkInstance inst, VkPhysicalDevice physicalDevice, VkDevice device);
+                void Create_NVVK_Allocator(VkPhysicalDevice physicalDevice, VkDevice device);
+
+                VmaAllocator* Get_VMA_Allocator();
+                nvvk::ExportResourceAllocatorDedicated* Get_NVVK_Allocator();
 
                 // structures
+
+                                // #VKGL Extra for Interop
+                struct BufferVkGL
+                {
+                    nvvk::Buffer bufVk;  // The allocated buffer
+
+#ifdef WIN32
+                    void* handle = nullptr;  // The Win32 handle
+#else
+                    int fd = -1;
+#endif
+                    unsigned int memoryObject = 0;  // OpenGL memory object
+                    unsigned int oglId = 0;  // OpenGL object ID
+
+                    void destroy();
+                };
+
 
                 struct DescriptorBufferInfo {
                     VkBuffer buffer;

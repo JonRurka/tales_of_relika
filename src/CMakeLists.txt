@@ -22,12 +22,13 @@ target_link_libraries(${PROJECT_NAME}
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
 	boost::boost
-	Vulkan-1
+	Vulkan::Vulkan
 	glm::glm
 	glfw
 	lua::lua
 	Bullet::Bullet
-	vulkan-headers::vulkan-headers
+	#vulkan-headers::vulkan-headers
+	nvpro_core
 	#GPUOpen::VulkanMemoryAllocator
 )
 target_link_libraries(${PROJECT_NAME} LuaCpp Compute VoxelEngine Engine Game)

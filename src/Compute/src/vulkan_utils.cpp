@@ -1,12 +1,23 @@
 #include "vulkan_utils.h"
 
+#include "nvgl/extensions_gl.hpp"
+
 #define WIN32_LEAN_AND_MEAN
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
+#include "nvvk/resourceallocator_vk.hpp"
+
+VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
+
 using namespace DynamicCompute::Compute::VK;
 
-void DynamicCompute::Compute::VK::Utilities::Create_VMA_Allocator(VkInstance inst, VkPhysicalDevice physicalDevice, VkDevice device)
+namespace {
+    VmaAllocator vma_allocator;
+    nvvk::ExportResourceAllocatorDedicated nvvk_allocator;
+}
+
+void Utilities::Create_VMA_Allocator(VkInstance inst, VkPhysicalDevice physicalDevice, VkDevice device)
 {
     VmaVulkanFunctions vulkanFunctions = {};
     vulkanFunctions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
@@ -20,8 +31,22 @@ void DynamicCompute::Compute::VK::Utilities::Create_VMA_Allocator(VkInstance ins
     allocatorCreateInfo.instance = inst;
     allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
 
-    VmaAllocator allocator;
-    vmaCreateAllocator(&allocatorCreateInfo, &allocator);
+    vmaCreateAllocator(&allocatorCreateInfo, &vma_allocator);
+}
+
+void Utilities::Create_NVVK_Allocator(VkPhysicalDevice physicalDevice, VkDevice device)
+{
+    nvvk_allocator.init(device, physicalDevice);
+}
+
+VmaAllocator* Utilities::Get_VMA_Allocator()
+{
+    return &vma_allocator;
+}
+
+nvvk::ExportResourceAllocatorDedicated* Utilities::Get_NVVK_Allocator()
+{
+    return &nvvk_allocator;
 }
 
 std::vector<char> Utilities::readFile(const std::string& filename)
@@ -515,6 +540,7 @@ void Utilities::CreateBuffer(
     VkBuffer& buffer, 
     VkDeviceMemory& bufferMemory)
 {
+    /*
     VkBufferCreateInfo bufferInfo = Utilities::getBufferCreateInfo(
         size, usage, sharingMode, flags, queueFamilies);
 
@@ -538,9 +564,9 @@ void Utilities::CreateBuffer(
     allocInfo.flags = vma_flags;
 
     VmaAllocation allocation;
-    vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);
+    vmaCreateBuffer(vma_allocator, &bufferInfo, &allocInfo, &buffer, &allocation, nullptr);*/
 
-    /*VkBufferCreateInfo bufferInfo = Utilities::getBufferCreateInfo(
+    VkBufferCreateInfo bufferInfo = Utilities::getBufferCreateInfo(
         size, usage, sharingMode, flags, queueFamilies);
 
 #ifdef WIN32
@@ -586,7 +612,7 @@ void Utilities::CreateBuffer(
         throw std::runtime_error("Failed to allocate buffer memory!");
     }
 
-    vkBindBufferMemory(device, buffer, bufferMemory, 0);*/
+    vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
 void Utilities::CreateBuffer(
@@ -807,6 +833,22 @@ VkShaderModule Utilities::createShaderModule(VkDevice& device, const std::vector
     }
 
     return shaderModule;
+}
+
+void Utilities::BufferVkGL::destroy()
+{
+    nvvk_allocator.destroy(bufVk);
+#ifdef WIN32
+    CloseHandle(handle);
+#else
+    if (fd != -1)
+    {
+        close(fd);
+        fd = -1;
+    }
+#endif
+    glDeleteBuffers(1, &oglId);
+    glDeleteMemoryObjectsEXT(1, &memoryObject);
 }
 
 

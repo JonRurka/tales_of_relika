@@ -21,6 +21,7 @@ class Mesh
 public:
 
 	Mesh();
+	Mesh(size_t size);
 
 	void Name(std::string value) { m_name = value; }
 	std::string Name() { return m_name; }
@@ -132,6 +133,8 @@ private:
 	size_t m_num_vertices{ 0 };
 	size_t m_num_indices{ 0 };
 	bool m_active{ false };
+	bool m_virtual_mesh{ false };
+	size_t m_initial_size{ 0 };
 
 	bool m_has_verts{ false };
 

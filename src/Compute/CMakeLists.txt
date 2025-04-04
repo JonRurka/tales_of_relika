@@ -2,6 +2,8 @@ set(module "Compute")
 
 
 include_directories(include)
+include_directories(include/nvpro_core/nvp)
+include_directories(include/nvpro_core)
 
 set(${module}_headers
 	include/ForwardDeclarations.h
@@ -25,6 +27,8 @@ set(${module}_headers
 	include/IComputeProgram.h
 	include/IComputeController.h
 	include/ComputeInterface.h
+	
+	include/nvpro_core/nvgl/extensions_gl.hpp
 )
 
 set(${module}_sources
@@ -39,21 +43,31 @@ set(${module}_sources
 	src/IComputeController.cpp
 	src/ComputeInterface_private.cpp
 	src/ComputeInterface.cpp
+	
+	#include/nvpro_core/nvgl/extensions_gl.cpp
 )
+
+if(WIN32)
+  #target_compile_definitions(nvpro_core PRIVATE WIN32_LEAN_AND_MEAN)
+  LIST(APPEND PLATFORM_LIBRARIES DbgHelp)
+endif()
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
 
-target_link_libraries(${module} 
+target_link_libraries(${module}
+	${PLATFORM_LIBRARIES} 
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
 	boost::boost
-	Vulkan-1
+	Vulkan::Vulkan
 	glm::glm
 	glfw
 	lua::lua
 	Bullet::Bullet
-	vulkan-headers::vulkan-headers
+	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
+	nvpro_core
+	fmt::fmt
 )
 
 

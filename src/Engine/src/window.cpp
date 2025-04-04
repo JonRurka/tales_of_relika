@@ -3,44 +3,65 @@
 #include <cstdio>
 #include <iostream>
 
+#include "opengl.h"
+
 #include <Graphics.h>
+
+#ifdef WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
+//#include <GL/wgl.h>
+
+#include "resources.h"
+#include <windows.h>
+#include <windowsx.h>
+#elif defined LINUX
+#define GLFW_EXPOSE_NATIVE_GLX
+#define GLFW_EXPOSE_NATIVE_X11
+#include <GL/glx.h>
+#include <GLFW/glfw3native.h>
+#endif
 
 #include "Logger.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-	glViewport(0, 0, width, height);
+namespace {
+    static HMODULE s_module = NULL;
 
-	static_cast<Graphics*>(glfwGetWindowUserPointer(window))->OnWindowResize(width, height);
-}
-
-void APIENTRY glDebugOutput(GLenum source,
-    GLenum type,
-    unsigned int id,
-    GLenum severity,
-    GLsizei length,
-    const char* message,
-    const void* userParam)
-{
-    // ignore non-significant error/warning codes
-    if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
-
-    std::cout << "---------------" << std::endl;
-    std::cout << "Debug message (" << id << "): " << message << std::endl;
-
-    switch (source)
+    void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     {
+        glViewport(0, 0, width, height);
+
+        static_cast<Graphics*>(glfwGetWindowUserPointer(window))->OnWindowResize(width, height);
+    }
+
+    void APIENTRY glDebugOutput(GLenum source,
+        GLenum type,
+        unsigned int id,
+        GLenum severity,
+        GLsizei length,
+        const char* message,
+        const void* userParam)
+    {
+        // ignore non-significant error/warning codes
+        if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
+
+        std::cout << "---------------" << std::endl;
+        std::cout << "Debug message (" << id << "): " << message << std::endl;
+
+        switch (source)
+        {
         case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
         case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
         case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
         case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
         case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
         case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
-    } 
-    std::cout << std::endl;
+        }
+        std::cout << std::endl;
 
-    switch (type)
-    {
+        switch (type)
+        {
         case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
         case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
         case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break;
@@ -50,22 +71,23 @@ void APIENTRY glDebugOutput(GLenum source,
         case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
         case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
         case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
-    } 
-    std::cout << std::endl;
+        }
+        std::cout << std::endl;
 
-    switch (severity)
-    {
+        switch (severity)
+        {
         case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
         case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
         case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
         case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
-    } 
-    std::cout << std::endl;
-    std::cout << "---------------" << std::endl;
-    std::cout << std::endl;
+        }
+        std::cout << std::endl;
+        std::cout << "---------------" << std::endl;
+        std::cout << std::endl;
+    }
 }
 
-GLFWwindow* window::Create_Window(const char* title, GLsizei width, GLsizei height, void* user_obj)
+GLFWwindow* window::Create_Window(const char* title, int width, int height, void* user_obj)
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -105,6 +127,16 @@ GLFWwindow* window::Create_Window(const char* title, GLsizei width, GLsizei heig
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 	}
 
+#ifdef WIN32
+    if (!s_module)
+    {
+        s_module = LoadLibraryA("opengl32.dll");
+        if (s_module) {
+            printf("Found opengl32.dll\n");
+        }
+    }
+#endif
+
     return m_window;
 }
 
@@ -112,3 +144,23 @@ bool window::Should_Close()
 {
 	return glfwWindowShouldClose(m_window);
 }
+
+#ifdef WIN32
+void* window::sysGetProcAddress(const char* name)
+{
+    void* p = (void*)wglGetProcAddress(name);
+    if (p == 0 || (p == (void*)0x1) || (p == (void*)0x2) || (p == (void*)0x3) || (p == (void*)-1))
+    {
+        p = (void*)GetProcAddress(s_module, name);
+    }
+
+    return p;
+}
+#else
+void* window::sysGetProcAddress(const char* name)
+{
+    void* p = (void*)glfwGetProcAddress(name);
+
+    return p;
+}
+#endif

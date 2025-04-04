@@ -1,19 +1,31 @@
 #include "ComputeEngine.h"
 
-#include "vulkan/vulkan.h"
+#include "nvgl/extensions_gl.hpp"
+
 #include "vulkan_utils.h"
 #include "vk_mem_alloc.h"
 
-#include "../../Engine/include/opengl.h"
+//#include "../../Engine/include/opengl.h"
+
+
 
 #ifdef WIN32
 #include <vulkan/vulkan_win32.h>
 #endif
 
+#include "../../Engine/include/window.h"
+
+#include "nvvk/gl_vk_vertex_buffer.h"
+
+#include "Logger.h"
+
+//VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
+
 using namespace DynamicCompute::Compute::VK;
 
 std::vector<VkExtensionProperties> ComputeEngine::mExtensions;
 VkInstance ComputeEngine::mInstance;
+nvvk::Context ComputeEngine::mVkctx;
 VkDebugUtilsMessengerEXT ComputeEngine::mDebugMessenger;
 bool ComputeEngine::mEnableValidationLayers;
 
@@ -66,6 +78,53 @@ std::string ComputeEngine::Get_VK_Version()
 
 VkResult ComputeEngine::createInstance()
 {
+
+	nvvk::ContextCreateInfo deviceInfo;
+
+	deviceInfo.verboseAvailable = false;
+	deviceInfo.verboseUsed = false;
+
+	deviceInfo.addInstanceExtension(VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME);
+	deviceInfo.addInstanceExtension(VK_KHR_EXTERNAL_SEMAPHORE_CAPABILITIES_EXTENSION_NAME);
+	deviceInfo.addDeviceExtension(VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME);
+	deviceInfo.addDeviceExtension(VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME);
+#ifdef WIN32
+	deviceInfo.addDeviceExtension(VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME);
+	deviceInfo.addDeviceExtension(VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME);
+#else
+	deviceInfo.addDeviceExtension(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME);
+	deviceInfo.addDeviceExtension(VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME);
+#endif
+
+	if (mEnableValidationLayers && !Utilities::checkValidationLayerSupport(validationLayers))
+	{
+		mEnableValidationLayers = false;
+	}
+
+	// Creating the Vulkan instance and device
+	if (!mVkctx.init(deviceInfo))
+	{
+		printf("Could not initialize the Vulkan instance and device! See the above messages for more info.\n");
+		return VK_ERROR_INITIALIZATION_FAILED;
+	}
+
+	// Initialize function pointers
+#if VK_HEADER_VERSION >= 304
+	vk::detail::DynamicLoader dl;
+#else
+	vk::DynamicLoader dl;
+#endif
+	PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+	VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
+	VULKAN_HPP_DEFAULT_DISPATCHER.init(mVkctx.m_instance, mVkctx.m_device);
+
+	mInstance = mVkctx.m_instance;
+
+	mExtensions = Utilities::EnumerateInstanceExtensionProperties();
+
+	return VK_SUCCESS;
+
+	/*
 	if (mEnableValidationLayers && !Utilities::checkValidationLayerSupport(validationLayers))
 	{
 		mEnableValidationLayers = false;
@@ -104,10 +163,10 @@ VkResult ComputeEngine::createInstance()
 	if (res != VK_SUCCESS) {
 		printf("vkCreateInstance Failed: %i\n", res);
 	}
+	*/
+	//nvvk::run_test();
 
-
-
-	return res;
+	//return res;
 }
 
 void ComputeEngine::setupDebugMessenger()
@@ -193,9 +252,15 @@ VKAPI_ATTR VkBool32 VKAPI_CALL ComputeEngine::debugCallback(VkDebugUtilsMessageS
 // Compute Context
 
 ComputeContext::ComputeContext(VkInstance* instance, Vulkan_Device_Info device) {
-	mInstance = instance;
+	mVkctx = ComputeEngine::NVVK_Context();
 
-	std::vector<VkPhysicalDevice> devices = Utilities::EnumeratePhysicalDevices(*instance);
+	bool deviceFound = false;
+
+	mInstance = instance;
+	mPhysicalDevice = mVkctx->m_physicalDevice;
+	deviceFound = true;
+
+	/*std::vector<VkPhysicalDevice> devices = Utilities::EnumeratePhysicalDevices(*instance);
 	
 	bool deviceFound = false;
 	for (VkPhysicalDevice dvs : devices) {
@@ -208,7 +273,7 @@ ComputeContext::ComputeContext(VkInstance* instance, Vulkan_Device_Info device) 
 			deviceFound = true;
 			break;
 		}
-	}
+	}*/
 
 	if (!deviceFound) {
 		printf("Physical device not found!\n");
@@ -218,7 +283,14 @@ ComputeContext::ComputeContext(VkInstance* instance, Vulkan_Device_Info device) 
 		printf("Found device '%s'\n", device.Name);
 	}
 
-	mIndices = Utilities::findQueueFamilies(mPhysicalDevice);
+	//mIndices = Utilities::findQueueFamilies(mPhysicalDevice);
+
+	Utilities::QueueFamilyIndices indices;
+	indices.shouldIncludeGraphics = false;
+	indices.computeFamily = mVkctx->m_queueGCT.familyIndex;
+	indices.transferFamily = mVkctx->m_queueGCT.familyIndex;
+	indices.graphicsFamily = mVkctx->m_queueGCT.familyIndex;
+	mIndices = indices;
 
 	VkResult res = createLogicalDevice();
 
@@ -313,6 +385,29 @@ ComputeBuffer* ComputeContext::CreateBuffer(ComputeBuffer::Buffer_Type type, siz
 
 VkResult ComputeContext::createLogicalDevice()
 {
+
+	mDevice = mVkctx->m_device;
+
+	VkFenceCreateInfo fence_info{};
+	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	if (vkCreateFence(mDevice, &fence_info, nullptr, &mWaitFence) != VK_SUCCESS) {
+		throw std::runtime_error("Failed to create fence!");
+	}
+
+#ifdef WIN32
+	vkGetMemoryWin32HandleKHR = (PFN_vkGetMemoryWin32HandleKHR)vkGetDeviceProcAddr(mDevice, "vkGetMemoryWin32HandleKHR");
+#endif
+
+	Utilities::Create_NVVK_Allocator(mPhysicalDevice, mDevice);
+	load_GL(window::sysGetProcAddress);
+
+	//nvvk::run_test(*mInstance, mDevice, mPhysicalDevice);
+	//printf("executed glCreateBuffers\n");
+
+	VkResult res = VK_SUCCESS;
+	return res;
+
+	/*
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
 
@@ -368,15 +463,31 @@ VkResult ComputeContext::createLogicalDevice()
 	vkGetMemoryWin32HandleKHR = (PFN_vkGetMemoryWin32HandleKHR)vkGetDeviceProcAddr(mDevice, "vkGetMemoryWin32HandleKHR");
 #endif
 
-	return res;
+	//Utilities::Create_VMA_Allocator(*mInstance, mPhysicalDevice, mDevice);
+	//Utilities::Create_NVVK_Allocator(mPhysicalDevice, mDevice);
+	//load_GL(window::sysGetProcAddress);
+
+	//nvvk::run_test();
+	nvvk::run_test(*mInstance, mDevice, mPhysicalDevice);
+
+	return res;*/
 }
 
 void ComputeContext::getQueueInstances()
 {
+	vk::Device device = mVkctx->m_device;
+	if (IncludeGraphics)
+	{
+		mGraphicsQueue = device.getQueue(mIndices.graphicsFamily.value(), 0);
+	}
+	mComputeQueue = device.getQueue(mIndices.computeFamily.value(), 0);
+	mTransferQueue = device.getQueue(mIndices.transferFamily.value(), 0);
+	/*
 	if (IncludeGraphics)
 		vkGetDeviceQueue(mDevice, mIndices.graphicsFamily.value(), 0, &mGraphicsQueue);
 	vkGetDeviceQueue(mDevice, mIndices.computeFamily.value(), 0, &mComputeQueue);
 	vkGetDeviceQueue(mDevice, mIndices.transferFamily.value(), 0, &mTransferQueue);
+	*/
 }
 
 bool ComputeContext::createCommandPools()
@@ -886,6 +997,8 @@ ComputeBuffer::ComputeBuffer(ComputeContext* context, Buffer_Type type, VkDevice
 
 	getAllQueueFamilies();
 
+	mIs_External = external;
+
 	// Marks whether this is tranfering from or to the staging buffer.
 	// If it Read Only, it should be the destination (DST) from the staging buffer. (Host -> Buffer_DST)
 	// If it is Write Only, it should be the src of the staging buffer. (Buffer_SRC -> Host)
@@ -907,38 +1020,57 @@ ComputeBuffer::ComputeBuffer(ComputeContext* context, Buffer_Type type, VkDevice
 		break;
 	}
 
-	Utilities::CreateBuffer(
-		*mPhysicalDevice,
-		*mLogicalDevice,
-		mSize,
-		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | mTransfer_flag,
-		VK_SHARING_MODE_CONCURRENT, external,
-		0,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-		0,
-		VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
-		mAllQueueFamilies,
-		mBuffer,
-		mBufferMemory
-	);
+	if (external) {
+		nvvk::ExportResourceAllocatorDedicated* alloc = Utilities::Get_NVVK_Allocator();
+
+		// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+
+
+		m_gl_vk_buffer.bufVk = alloc->createBuffer(
+			mSize, 
+			VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		);
+		nvvk::MemAllocator::MemInfo info = alloc->getMemoryAllocator()->getMemoryInfo(m_gl_vk_buffer.bufVk.memHandle);
+		mBuffer = m_gl_vk_buffer.bufVk.buffer;
+		mBufferMemory = info.memory;
+		
+		initExternalCopy();
+	}
+	else {
+		Utilities::CreateBuffer(
+			*mPhysicalDevice,
+			*mLogicalDevice,
+			mSize,
+			VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | mTransfer_flag,
+			VK_SHARING_MODE_CONCURRENT,
+			external,
+			(VkBufferCreateFlags)0,
+			(VmaAllocationCreateFlags)0,
+			VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, //VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+			mAllQueueFamilies,
+			mBuffer,
+			mBufferMemory
+		);
+	}
 
 	Utilities::CreateBuffer(
 		*mPhysicalDevice,
 		*mLogicalDevice,
 		mSize,
 		VK_BUFFER_USAGE_TRANSFER_DST_BIT | mStage_transfer_flag,
-		VK_SHARING_MODE_CONCURRENT, false,
-		0,
-		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		0,
+		VK_SHARING_MODE_CONCURRENT, 
+		false,
+		(VkBufferCreateFlags)0,
+		(VmaAllocationCreateFlags)0,
 		VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 		mAllQueueFamilies,
 		stagingBuffer,
 		stagingBufferMemory
 	);
-
-	if (external)
-		initExternalCopy();
 
 	//printf("ComputeBuffer parameter constructor called,\n");
 }
@@ -1071,6 +1203,75 @@ void ComputeBuffer::getAllQueueFamilies()
 
 void ComputeBuffer::initExternalCopy()
 {
+	nvvk::ExportResourceAllocatorDedicated* alloc = Utilities::Get_NVVK_Allocator();
+	nvvk::MemAllocator::MemInfo info = alloc->getMemoryAllocator()->getMemoryInfo(m_gl_vk_buffer.bufVk.memHandle);
+
+#ifdef WIN32
+	PFN_vkGetMemoryWin32HandleKHR vkGetMemoryWin32HandleKHR = mContext->get_GetMemoryWin32_func();
+
+	VkMemoryGetWin32HandleInfoKHR handleInfo = {
+		.sType = VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR,
+		.memory = info.memory,
+		.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT_KHR
+	};
+
+	VkResult res = vkGetMemoryWin32HandleKHR(*mLogicalDevice, &handleInfo, &m_gl_vk_buffer.handle);
+	if (res != VK_SUCCESS) {
+		printf("Failed to get external memory handle.\n");
+	}
+	else {
+		//printf("Handle created: %08x\n", mFD);
+	}
+	mFD = m_gl_vk_buffer.handle;
+#else
+
+	VkMemoryGetFdInfoKHR fdInfo = {
+		.sType = VK_STRUCTURE_TYPE_MEMORY_GET_FD_INFO_KHR,
+		.memory = info.memory,
+		.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT
+	};
+
+	VkResult res = vkGetMemoryFdKHR(*mLogicalDevice, &fdInfo, &m_gl_vk_buffer.fd);
+	if (res != VK_SUCCESS) {
+		printf("Failed to get external memory handle.\n");
+	}
+	else {
+		//printf("Handle created: %08x\n", mFD);
+	}
+	mFD = m_gl_vk_buffer.fd;
+#endif
+
+	VkMemoryRequirements req{};
+	vkGetBufferMemoryRequirements(*mLogicalDevice, m_gl_vk_buffer.bufVk.buffer, &req);
+
+	glCreateBuffers(1, &m_gl_vk_buffer.oglId);
+	mExternalBuffer = m_gl_vk_buffer.oglId;
+	glCheckError();
+	printf("executed glCreateBuffers\n");
+
+	glCreateMemoryObjectsEXT(1, &m_gl_vk_buffer.memoryObject);
+	mExternalMemObj = m_gl_vk_buffer.memoryObject;
+	glCheckError();
+	printf("executed glCreateMemoryObjectsEXT\n");
+
+#ifdef WIN32
+	glImportMemoryWin32HandleEXT(m_gl_vk_buffer.memoryObject, req.size, GL_HANDLE_TYPE_OPAQUE_WIN32_EXT, m_gl_vk_buffer.handle);
+	glCheckError();
+	printf("executed glImportMemoryWin32HandleEXT\n");
+#else
+	glImportMemoryFdEXT(m_gl_vk_buffer.memoryObject, req.size, GL_HANDLE_TYPE_OPAQUE_FD_EXT, m_gl_vk_buffer.fd);
+	// fd got consumed
+	m_gl_vk_buffer.fd = -1;
+#endif
+
+	glNamedBufferStorageMemEXT(m_gl_vk_buffer.oglId, req.size, m_gl_vk_buffer.memoryObject, info.offset);
+	glCheckError();
+	printf("executed glNamedBufferStorageMemEXT\n");
+
+
+	printf("Created external buffer copy\n");
+
+	/*
 	glCreateMemoryObjectsEXT(1, &mExternalMemObj);
 
 	VkMemoryRequirements req{};
@@ -1119,7 +1320,7 @@ void ComputeBuffer::initExternalCopy()
 	glGenBuffers(1, &mExternalBuffer);
 	//glNamedBufferStorage(mExternalBuffer, mSize, NULL, GL_MAP_READ_BIT);
 	//glNamedBufferStorageMemEXT(mExternalBuffer, req.size, mExternalMemObj, 0);
-
+	*/
 }
 
 VkResult ComputeBuffer::QueryVkExternalMemoryProperties()
@@ -1176,10 +1377,15 @@ void ComputeBuffer::Dispose() {
 	if (mDestroyed || !mCanCallDispose)
 		return;
 
-	//printf("Dispose buffer and buffer memory.\n");
-	vkDestroyBuffer(*mLogicalDevice, mBuffer, nullptr);
-	vkFreeMemory(*mLogicalDevice, mBufferMemory, nullptr);
-
+	if (mIs_External) {
+		m_gl_vk_buffer.destroy();
+	}
+	else {
+		//printf("Dispose buffer and buffer memory.\n");
+		vkDestroyBuffer(*mLogicalDevice, mBuffer, nullptr);
+		vkFreeMemory(*mLogicalDevice, mBufferMemory, nullptr);
+	}
+	
 	//printf("Dispose staging buffer and buffer memory.\n");
 	vkDestroyBuffer(*mLogicalDevice, stagingBuffer, nullptr);
 	vkFreeMemory(*mLogicalDevice, stagingBufferMemory, nullptr);
@@ -1192,3 +1398,5 @@ void ComputeBuffer::Dispose() {
 ComputeBuffer::~ComputeBuffer() {
 	Dispose();
 }
+
+

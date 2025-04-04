@@ -176,7 +176,7 @@ void Test_Scene::Init()
 
 	std::vector<glm::vec3> cubePositions = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
-		/*glm::vec3(1.0f,  0.0f,  0.0f),
+		glm::vec3(1.0f,  0.0f,  0.0f),
 		glm::vec3(2.0f,  5.0f, -15.0f),
 		glm::vec3(-1.5f, -2.2f, -2.5f),
 		glm::vec3(-3.8f, -2.0f, -12.3f),
@@ -185,7 +185,7 @@ void Test_Scene::Init()
 		glm::vec3(1.3f, -2.0f, -2.5f),
 		glm::vec3(1.5f,  2.0f, -2.5f),
 		glm::vec3(1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f),*/
+		glm::vec3(-1.3f,  1.0f, -1.5f),
 	};
 
 	const int duplicate = 0;
@@ -214,13 +214,13 @@ void Test_Scene::Init()
 	in_colors->SetData(cube_colors.data());
 	in_texcoords->SetData(Utilities::vec2_to_vec4_arr(tex_coords).data());
 
-
+	Mesh* cube_mesh_test = new Mesh();//out_vbo->GetSize()
 	Logger::LogDebug(LOG_POS("Init"), "Mumber of vertices: %i", (int)vertices.size());
 
 	float start = Utilities::Get_Time();
 	m_program->RunKernel(KERNEL_NAME, vertices.size(), 1, 1);
 
-	Mesh* cube_mesh_test = new Mesh();
+	cube_mesh_test->Name("GPU Mesh");
 	cube_mesh_test->Load(out_vbo);
 	float stop = Utilities::Get_Time();
 
@@ -377,7 +377,9 @@ void Test_Scene::Update(float dt)
 	}
 	
 	//Camera_obj->Get_Transform()->Rotate(glm::vec3(0, 25.0f * dt, 0.0f));
-
+	//out_vbo->Dispose();
+	//delete out_vbo;
+	//out_vbo = m_controller->NewReadWriteBuffer(1000, sizeof(float) * 11, true);
 
 }
 
@@ -428,7 +430,7 @@ void Test_Scene::Setup_gpu_program(int size)
 	in_texcoords = m_controller->NewReadBuffer(size, sizeof(float) * 4);
 
 	out_vbo = m_controller->NewReadWriteBuffer(size, sizeof(float) * 11, true);
-
+	
 	IComputeProgram::BindIndex ind{};
 	ind.GlobalIndex = 0;
 	m_program->KernelSetBuffer(KERNEL_NAME, in_vertices, ind);

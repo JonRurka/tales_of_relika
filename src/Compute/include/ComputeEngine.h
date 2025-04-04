@@ -1,19 +1,12 @@
 #pragma once
 
 #include "stdafx.h"
-#include "vulkan/vulkan.h"
 
-#ifdef WIN32
-//#define WIN32_LEAN_AND_MEAN
-//#include <windows.h>
-#include <vulkan/vulkan_win32.h>
-#endif
 
 #include "vulkan_utils.h"
 #include "PlatformStructures_private.h"
 
-#include "../../Engine/include/glad.h"
-#include <GLFW/glfw3.h>
+#include "nvvk/resourceallocator_vk.hpp"
 
 #include <queue>
 
@@ -44,6 +37,8 @@ namespace DynamicCompute {
 
             private:
 
+
+
                 
 
                 ComputeContext* mContext{nullptr};
@@ -53,6 +48,9 @@ namespace DynamicCompute {
                 VkBuffer stagingBuffer{};
                 VkDeviceMemory stagingBufferMemory{};
                 VkDeviceSize mSize{};
+
+                Utilities::BufferVkGL m_gl_vk_buffer;
+                bool mIs_External{ false };
 
                 VkBufferUsageFlags mTransfer_flag{ 0 };
                 VkBufferUsageFlags mStage_transfer_flag{ 0 };
@@ -253,6 +251,8 @@ namespace DynamicCompute {
             private:
 
                 const bool IncludeGraphics = false;
+
+                nvvk::Context* mVkctx;
                 
                 std::map<std::string, ComputeProgram*> programs;
                 std::list<ComputeBuffer*> mBuffers;
@@ -278,10 +278,13 @@ namespace DynamicCompute {
 
                 const std::vector<const char*> DeviceExtensions = {
                     VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
+                    VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME,
 #ifdef WIN32
-                    "VK_KHR_external_memory_win32",
+                    VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME,
+                    VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME,
 #else
-                    "VK_KHR_external_memory_fd",
+                    VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME,
+                    VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME
 #endif
                 };
 
@@ -353,6 +356,7 @@ namespace DynamicCompute {
             {
                 static std::vector<VkExtensionProperties> mExtensions;
                 static VkInstance mInstance;
+                static nvvk::Context mVkctx;
                 static VkDebugUtilsMessengerEXT mDebugMessenger;
                 static bool mEnableValidationLayers;
 
@@ -363,7 +367,8 @@ namespace DynamicCompute {
                 static std::list<ComputeContext*> mContexts;
 
                 inline static const std::vector<const char*> InstanceExtensions = {
-                    VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME
+                    VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME,
+                    VK_KHR_EXTERNAL_SEMAPHORE_CAPABILITIES_EXTENSION_NAME
                 };
 
             public:
@@ -381,6 +386,9 @@ namespace DynamicCompute {
                 static bool ValidationEnabled() {
                     return mEnableValidationLayers;
                 }
+
+                static VkInstance Instance() { return mInstance; }
+                static nvvk::Context* NVVK_Context() { return &mVkctx; }
 
                 static bool IsInitialized() {
                     return mInitialized;

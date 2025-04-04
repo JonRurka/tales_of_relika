@@ -85,7 +85,7 @@ void Engine::game_loop()
 	float lastFrame = (float)Utilities::Get_Time();
 	while (m_running && !m_graphics->Window_Should_Close())
 	{
-		/*
+		
 		if (Active_Scene() != nullptr)
 		{
 			Active_Scene()->Update_internal(m_deltaTime);
@@ -96,7 +96,7 @@ void Engine::game_loop()
 
 		Light::Update_Lights(m_deltaTime);
 		m_graphics->Update(m_deltaTime);
-		*/
+		
 
 		Logger::Update();
 
