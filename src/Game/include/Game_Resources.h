@@ -37,6 +37,8 @@ public:
 		inline static const std::string CONTAINER_DIFFUSE = "container.container2_diffuse.png";
 		inline static const std::string CONTAINER_SPECULAR = "container.container2_specular.png";
 
+		inline static const std::string WHITE = "Engine.white.png";
+
 		inline static const std::string SKYBOX_BACK = "skybox.back.jpg";
 		inline static const std::string SKYBOX_BOTTOM = "skybox.bottom.jpg";
 		inline static const std::string SKYBOX_FRONT = "skybox.front.jpg";

@@ -1,0 +1,27 @@
+#version 450
+
+struct Data{
+	vec4 values;
+};
+
+layout(std140, binding = 0) readonly buffer SSBO_In{
+	Data in_data[ ];
+};
+
+layout(std140, binding = 1) buffer SSBO_Out{
+	Data out_data[ ];
+};
+
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	uint index = gl_GlobalInvocationID.x;
+	
+	uint buffer_index = index / 4;
+	uint access_index = index % 4;
+	
+	float val = in_data[buffer_index].values[access_index];
+	
+	out_data[buffer_index].values[access_index] = val * val;
+	//out_data[buffer_index].values = vec4(4, 4, 4, 4);
+}

@@ -5,16 +5,20 @@ include_directories(include)
 set(${module}_headers
 	include/game_imp.h
 	include/Game.h
-	include/Test_Scene.h
 	include/Game_Resources.h
 	include/Standard_Material.h
+	
+	include/Test_Scene.h
+	include/Voxel_Test_Scene.h
 )
 
 set(${module}_sources
 	src/Game.cpp
-	src/Test_Scene.cpp
 	src/Game_Resources.cpp
 	src/Standard_Material.cpp
+	
+	src/Test_Scene.cpp
+	src/Voxel_Test_Scene.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})

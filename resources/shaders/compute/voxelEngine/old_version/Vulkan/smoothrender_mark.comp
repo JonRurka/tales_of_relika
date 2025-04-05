@@ -1,0 +1,89 @@
+#version 450
+
+struct Data{
+	vec4 values;
+};
+
+struct i_Data{
+	ivec4 values;
+};
+
+struct Static_Settings{
+    vec4 VoxelsPerMeter;
+    ivec4 ChunkMeterSize;
+    ivec4 ChunkSize;
+    ivec4 FullChunkSize;
+    vec4 skipDist;
+    vec4 half_;
+    vec4 SideLength;
+    ivec4 batches;
+};
+
+layout(std140, binding = 0) buffer readonly SSBO_Static_Settings_In{
+	Static_Settings in_static_settings[ ];
+};
+
+layout(std140, binding = 1) buffer readonly SSBO_counts_In{
+	i_Data in_counts_data[ ];
+};
+
+layout(std140, binding = 2) buffer SSBO_stitch_map_Out{
+	i_Data out_stitch_map_data[ ];
+};
+
+layout(std140, binding = 3) buffer SSBO_counts_Out{
+	i_Data out_counts_data[ ];
+};
+
+void SetStitchMap(int voxel_index, int poly_buffer_index){
+
+    //out_stitch_map_data[voxel_index].values = ivec4(buffer_index, num);
+
+    uint buffer_index = voxel_index / 4;
+	uint access_index = voxel_index % 4;
+
+    out_stitch_map_data[buffer_index].values[access_index] = poly_buffer_index;
+}
+
+int GetCount(int index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_counts_data[buffer_index].values[access_index];
+}
+
+void CreateStitchMap(int batch_index, int batchesPerGroup){
+
+    int FullChunkSize = in_static_settings[0].FullChunkSize[0];
+    int batch_offset = (batch_index) * FullChunkSize;
+
+    int buffer_index = 0;
+
+    for (int v_index = 0; v_index < FullChunkSize; v_index++){
+        
+        int poly_count = GetCount(batch_offset + v_index);
+
+        if (poly_count == 0){
+            continue;
+        }
+
+        SetStitchMap(batch_offset + v_index, buffer_index);
+        
+        buffer_index += poly_count;
+    }
+
+    out_counts_data[batch_index].values = ivec4(buffer_index, 0, batch_index, 0);
+}
+
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+    uint batch_index = gl_GlobalInvocationID.x;
+
+    Static_Settings static_settings = in_static_settings[0];
+
+    // TODO: disable with run settings if location.w is -1.
+
+    CreateStitchMap(int(batch_index), static_settings.batches[0]);
+}
+

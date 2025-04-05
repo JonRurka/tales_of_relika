@@ -1,0 +1,228 @@
+#version 450
+
+/*struct Static_Settings{
+    float VoxelsPerMeter;
+    int ChunkMeterSizeX;
+    int ChunkMeterSizeY;
+    int ChunkMeterSizeZ;
+    int ChunkSizeX;
+    int ChunkSizeY;
+    int ChunkSizeZ;
+    int FullChunkSize;
+    float skipDist;
+    float half_;
+    float xSideLength;
+    float ySideLength;
+    float zSideLength;
+};*/
+
+struct Static_Settings{
+    vec4 VoxelsPerMeter;
+    ivec4 ChunkMeterSize;
+    ivec4 ChunkSize;
+    ivec4 FullChunkSize;
+    vec4 skipDist;
+    vec4 half_;
+    vec4 SideLength;
+};
+
+/*struct Run_Settings{
+    int X;
+    int Y;
+    int Z;
+};*/
+
+struct Run_Settings{
+    ivec4 Location;
+};
+
+struct Data{
+	vec4 values;
+};
+
+struct i_Data{
+	ivec4 values;
+};
+
+layout(std140, binding = 0) buffer readonly SSBO_Static_Settings_In{
+	Static_Settings in_static_settings[ ];
+};
+
+layout(std140, binding = 1) buffer readonly SSBO_Run_Settings_In{
+	Run_Settings in_run_settings[ ];
+};
+
+/*layout(std140, binding = 2) buffer readonly SSBO_TriTable_In{
+	i_Data in_TriTable_data[ ];
+};
+
+layout(std140, binding = 3) buffer readonly SSBO_edgeTable_In{
+	i_Data in_edgeTable_data[ ];
+};
+
+layout(std140, binding = 4) buffer readonly SSBO_vertList_In{
+	Data in_vertList_data[ ];
+};
+
+layout(std140, binding = 5) buffer SSBO_cubeIndex_In{
+	i_Data in_cubeIndex_data[ ];
+};*/
+
+layout(std140, binding = 2) buffer readonly SSBO_vertex_In{
+	Data in_vertex_data[ ];
+};
+
+layout(std140, binding = 3) buffer readonly SSBO_normal_In{
+	Data in_normal_data[ ];
+};
+
+layout(std140, binding = 4) buffer readonly SSBO_tris_In{
+	i_Data in_tris_data[ ];
+};
+
+layout(std140, binding = 5) buffer readonly SSBO_counts_In {
+    i_Data in_counts_data[ ];
+};
+
+layout(std140, binding = 6) buffer SSBO_vertex_Out{
+	Data out_vertex_data[ ];
+};
+
+layout(std140, binding = 7) buffer SSBO_normal_Out{
+	Data out_normal_data[ ];
+};
+
+layout(std140, binding = 8) buffer SSBO_triangles_Out{
+	i_Data out_triangles_data[ ];
+};
+
+layout(std140, binding = 9) buffer SSBO_counts_Out{
+	i_Data out_counts_data[ ];
+};
+
+
+vec4 normalSample(vec4 point){
+    return vec4(0, 0, 0, 0);
+}
+
+void SetTriangle(int index, int tris){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    out_triangles_data[buffer_index].values[access_index] = tris;
+}
+
+int Get_Edgetable(int index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return 0;//in_edgeTable_data[buffer_index].values[access_index];
+}
+
+ivec4 AddMeshEntry(vec4 vert, vec4 norm, int tris, ivec4 counts){
+
+    out_vertex_data[counts.x].values = vert;
+    out_normal_data[counts.y].values = norm;
+
+    SetTriangle(counts.z, tris);
+
+    counts.x++;
+    counts.y++;
+    counts.z++;
+
+    return counts;
+}
+
+int Get_CubeIndex(uint index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return 0;// in_cubeIndex_data[buffer_index].values[access_index];
+}
+
+void Set_CubeIndex(uint index, int value){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    //in_cubeIndex_data[buffer_index].values[access_index] = value;
+}
+
+int Get_Tritable(uint index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return 0;// in_TriTable_data[buffer_index].values[access_index];
+}
+
+vec4 GetVertList(int voxelIndex, int vertIndex){
+    
+    int index = (voxelIndex * 12) + vertIndex;
+
+    return vec4(0, 0, 0, 0);//in_vertList_data[index].values;
+}
+
+int GetTriangle(int index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_tris_data[buffer_index].values[access_index];
+}
+
+int GetCount(int index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_counts_data[buffer_index].values[access_index];
+}
+
+
+ivec4 Process_Voxel(int v_index, ivec4 counts){
+
+    int this_count = GetCount(v_index);
+
+    if (this_count == 0){
+        return counts;
+    }
+
+    int tri_start = counts.z;
+
+    for (int i = 0; i < this_count; i++){
+
+        int index = (v_index * 15) + i;
+
+        vec4 vert = in_vertex_data[index].values;
+        vec4 norm = in_normal_data[index].values;
+        int tris = tri_start + GetTriangle(index);
+
+        counts = AddMeshEntry(vert, norm, tris, counts);
+
+    }
+
+
+    return counts;
+}
+
+void CreateMesh(){
+    int FullChunkSize = in_static_settings[0].FullChunkSize[0];
+
+    ivec4 counts = ivec4(0, 0, 0, 0);
+    for (int c_index = 0; c_index < FullChunkSize; c_index++){
+        counts = Process_Voxel(c_index, counts);
+    }
+
+    out_counts_data[0].values = counts;
+}
+
+
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+    uint index = gl_GlobalInvocationID.x;
+
+    if (index != 0){
+        return;
+    }
+
+    CreateMesh();
+}

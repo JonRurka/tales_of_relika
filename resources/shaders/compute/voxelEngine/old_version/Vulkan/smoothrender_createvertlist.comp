@@ -1,0 +1,300 @@
+#version 450
+
+/*struct Static_Settings{
+    float VoxelsPerMeter;
+    int ChunkMeterSizeX;
+    int ChunkMeterSizeY;
+    int ChunkMeterSizeZ;
+    int ChunkSizeX;
+    int ChunkSizeY;
+    int ChunkSizeZ;
+    int FullChunkSize;
+    float skipDist;
+    float half_;
+    float xSideLength;
+    float ySideLength;
+    float zSideLength;
+};*/
+
+struct Static_Settings{
+    vec4 VoxelsPerMeter;
+    ivec4 ChunkMeterSize;
+    ivec4 ChunkSize;
+    ivec4 FullChunkSize;
+    vec4 skipDist;
+    vec4 half_;
+    vec4 SideLength;
+};
+
+/*struct Run_Settings{
+    int X;
+    int Y;
+    int Z;
+};*/
+
+struct Run_Settings{
+    ivec4 Location;
+};
+
+struct Data{
+	vec4 values;
+};
+
+struct i_Data{
+	ivec4 values;
+};
+
+struct ISO_Material{
+    vec4 final_iso;
+    ivec4 material_types;
+    vec4 material_ratios;
+};
+
+layout(std140, binding = 0) buffer readonly SSBO_Static_Settings_In{
+	Static_Settings in_static_settings[ ];
+};
+
+layout(std140, binding = 1) buffer readonly SSBO_Run_Settings_In{
+	Run_Settings in_run_settings[ ];
+};
+
+layout(std140, binding = 2) buffer readonly SSBO_locOffset_In{
+	Data in_locOffset[ ];
+};
+
+layout(std140, binding = 3) buffer readonly SSBO_globalOffsets_In{
+	Data in_globalOffsets[ ];
+};
+
+layout(std140, binding = 4) buffer readonly SSBO_directionOffsets_In{
+	i_Data in_directionOffsets[ ];
+};
+
+layout(std140, binding = 5) buffer readonly SSBO_edgeTable_In{
+	i_Data in_edgeTable_data[ ];
+};
+
+layout(std140, binding = 6) buffer readonly SSBO_ISO_Material_In{
+	ISO_Material in_iso_mat_data[ ];
+};
+
+layout(std140, binding = 7) buffer SSBO_vertList_Out{
+	Data out_vertList_data[ ];
+};
+
+layout(std140, binding = 8) buffer SSBO_cubeIndex_Out{
+	i_Data out_cubeIndex_data[ ];
+};
+
+/*layout(std140, binding = 9) buffer SSBO_Debug_Grid_Out {
+    Data out_Debug_Grid_data[ ];
+};*/
+
+ivec3 C_1D_to_3D(int i, int width, int height) {
+	int z = i / (width * height);
+	int y = (i % (width * height)) / width;
+	int x = i % width;
+
+	return ivec3(x, y, z);
+}
+
+int C_3D_to_1D(int x, int y, int z, int width, int height) {
+	return z * width * height + y * width + x;
+}
+
+/*ISO_Material get_iso_mat(uint index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_iso_mat_data[buffer_index].values[access_index];
+}*/
+
+void Set_CubeIndex(uint index, int val){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    out_cubeIndex_data[buffer_index].values[access_index] = val;
+}
+
+int Get_Edgetable(int index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_edgeTable_data[buffer_index].values[access_index];
+}
+
+/*int Get_Tritable(uint index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_triTable_data[buffer_index].values[access_index];
+}*/
+
+void SetVertList(int voxelIndex, int vertIndex, vec4 vert){
+    
+    int index = (voxelIndex * 12) + vertIndex;
+
+    out_vertList_data[index].values = vert;
+}
+
+void SetDebug_Grid(int voxelIndex, int GridIndex, vec4 grid){
+    
+    int index = (voxelIndex * 8) + GridIndex;
+
+    //out_Debug_Grid_data[index].values = grid;
+}
+
+vec4 GetGridPoint(int index, ivec4 index_pos, int i, int ChunkSizeX, int ChunkSizeY, int ChunkSizeZ){
+
+    int index_exp = C_3D_to_1D(index_pos.x, index_pos.y, index_pos.z, ChunkSizeX + 1, ChunkSizeZ + 1);
+
+    int index2 = C_3D_to_1D(index_pos.x, index_pos.y, index_pos.z, ChunkSizeX, ChunkSizeZ);
+
+    ISO_Material iso_mat = in_iso_mat_data[index_exp];//get_iso_mat(index);
+    //SetDebug_Grid(index2, i, vec4(in_static_settings[0].ChunkSize.x, in_static_settings[0].ChunkSize.z, index2, 0)); // iso_mat.final_iso
+    //SetDebug_Grid(index2, i, vec4(index_pos.x, index_pos.y, index_pos.z, index2));
+    //SetDebug_Grid(index2, i, vec4(in_directionOffsets[i].values.x, in_directionOffsets[i].values.y, in_directionOffsets[i].values.z, index2));
+    //SetDebug_Grid(index2, i, vec4(run_settings.Location.x, run_settings.Location.y, run_settings.Location.z, index2));
+    //SetDebug_Grid(index, i, vec4(index_pos.x, index_pos.y, index_pos.z, iso_mat.final_iso.x));
+    
+
+    //return vec4(index, i, i, i);
+    return vec4(index_pos.x, index_pos.y, index_pos.z, iso_mat.final_iso.x);
+}
+
+vec4 VertexInterp(int edge_ent, int test, float isoLevel, vec4 p1, vec4 p2, bool invalid){
+    if ((edge_ent & test) == 0 || invalid)
+        return vec4(0, 0, 0, -1000000); // invalid
+
+    vec4 point;
+
+    if (abs(isoLevel - p1.w) < 0.00001f)
+        return p1;
+    if (abs(isoLevel - p2.w) < 0.00001f)
+        return p2;
+    if (abs(p1.w - p2.w) < 0.00001f)
+        return p1;
+
+    float mu = (isoLevel - p1.w) / (p2.w - p1.w);
+
+    point.x = p1.x + mu * (p2.x - p1.x);
+    point.y = p1.y + mu * (p2.y - p1.y);
+    point.z = p1.z + mu * (p2.z - p1.z);
+
+    point.w = p1.w > 0 ? p1.w : p2.w; // INSIDE IS POSITIVE
+
+    return point;
+}
+
+void CreateVertList(int index, vec4 grid[8], float isoLevel, int ChunkSizeX, int ChunkSizeY, int ChunkSizeZ){
+
+    //vec4 vertList[12];
+    int cubeIndex = 0;
+
+    /*SetDebug_Grid(index, 0, grid[0]);
+    SetDebug_Grid(index, 1, grid[1]);
+    SetDebug_Grid(index, 2, grid[2]);
+    SetDebug_Grid(index, 3, grid[3]);
+    SetDebug_Grid(index, 4, grid[4]);
+    SetDebug_Grid(index, 5, grid[5]);
+    SetDebug_Grid(index, 6, grid[6]);
+    SetDebug_Grid(index, 7, grid[7]);*/
+
+    if (grid[0].w > isoLevel) cubeIndex |= 1;
+    if (grid[1].w > isoLevel) cubeIndex |= 2;
+    if (grid[2].w > isoLevel) cubeIndex |= 4;
+    if (grid[3].w > isoLevel) cubeIndex |= 8;
+    if (grid[4].w > isoLevel) cubeIndex |= 16;
+    if (grid[5].w > isoLevel) cubeIndex |= 32;
+    if (grid[6].w > isoLevel) cubeIndex |= 64;
+    if (grid[7].w > isoLevel) cubeIndex |= 128;
+
+    int edge_ent = Get_Edgetable(cubeIndex);
+
+    bool invalid = (edge_ent == 0);
+
+    SetVertList(index, 0, VertexInterp(edge_ent, 1, isoLevel, grid[0], grid[1], invalid));
+    SetVertList(index, 1, VertexInterp(edge_ent, 2, isoLevel, grid[1], grid[2], invalid));
+    SetVertList(index, 2, VertexInterp(edge_ent, 4, isoLevel, grid[2], grid[3], invalid));
+    SetVertList(index, 3, VertexInterp(edge_ent, 8, isoLevel, grid[3], grid[0], invalid));
+
+
+    SetVertList(index, 4, VertexInterp(edge_ent, 16, isoLevel, grid[4], grid[5], invalid));
+    SetVertList(index, 5, VertexInterp(edge_ent, 32, isoLevel, grid[5], grid[6], invalid));
+    SetVertList(index, 6, VertexInterp(edge_ent, 64, isoLevel, grid[6], grid[7], invalid));
+    SetVertList(index, 7, VertexInterp(edge_ent, 128, isoLevel, grid[7], grid[4], invalid));
+
+
+    SetVertList(index, 8, VertexInterp(edge_ent, 256, isoLevel, grid[0], grid[4], invalid));
+    SetVertList(index, 9, VertexInterp(edge_ent, 512, isoLevel, grid[1], grid[5], invalid));
+    SetVertList(index, 10, VertexInterp(edge_ent, 1024, isoLevel, grid[2], grid[6], invalid));
+    SetVertList(index, 11, VertexInterp(edge_ent, 2048, isoLevel, grid[3], grid[7], invalid));
+
+    Set_CubeIndex(index, cubeIndex);
+}
+
+void RenderBlock(int index, ISO_Material point, Static_Settings static_settings, Run_Settings run_settings){
+
+    float iso = point.final_iso[0];
+    ivec4 material_types = point.material_types;
+    vec4 material_ratios = point.material_ratios;
+
+    int ChunkSizeX = static_settings.ChunkSize.x;
+    int ChunkSizeY = static_settings.ChunkSize.y;
+    int ChunkSizeZ = static_settings.ChunkSize.z;
+
+    float xSideLength = static_settings.SideLength.x;
+    float ySideLength = static_settings.SideLength.y;
+    float zSideLength = static_settings.SideLength.z;
+
+    ivec4 index_pos = ivec4(C_1D_to_3D(index, ChunkSizeX, ChunkSizeZ), 0);
+
+    // Coordinate of voxel in chunk
+    int x = index_pos.x;
+    int y = index_pos.y;
+    int z = index_pos.z;
+
+    // Coordinate of Chunk
+    int cx = run_settings.Location.x;
+    int cy = run_settings.Location.y;
+    int cz = run_settings.Location.z;
+
+    // Global coordinate of first voxel in chunk.
+    int xStart = cx * ChunkSizeX;
+    int yStart = cy * ChunkSizeY;
+    int zStart = cz * ChunkSizeZ;
+
+    // World position of voxel relative to chunk
+    float xLocalWorld = x * xSideLength;
+    float yLocalWorld = y * ySideLength;
+    float zLocalWorld = z * zSideLength;
+    vec3 pos_localWorld = vec3(xLocalWorld, yLocalWorld, zLocalWorld);
+
+    // World position of voxel relative to world origin
+    float xWorldOrigin = xStart + xLocalWorld;
+    float yWorldOrigin = yStart + yLocalWorld;
+    float zWorldOrigin = zStart + zLocalWorld;
+    vec3 pos_originWorld = vec3(xWorldOrigin, yWorldOrigin, zWorldOrigin);
+
+    vec4 grid[8];
+
+    for (int i = 0; i < 8; i++){
+        grid[i] = GetGridPoint(index, index_pos + in_directionOffsets[i].values, i, ChunkSizeX, ChunkSizeY, ChunkSizeZ);
+    }
+
+    CreateVertList(index, grid, 0, ChunkSizeX, ChunkSizeY, ChunkSizeZ);
+
+}
+
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+    uint index = gl_GlobalInvocationID.x;
+
+    ISO_Material point = in_iso_mat_data[index];//get_iso_mat(index);
+    Static_Settings static_settings = in_static_settings[0];
+    Run_Settings run_settings = in_run_settings[0];
+    
+    RenderBlock(int(index), point, static_settings, run_settings);
+
+}

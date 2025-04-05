@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #include "Test_Scene.h"
+#include "Voxel_Test_Scene.h"
 #include "Game_Resources.h"
 
 void Game::Init()
@@ -19,7 +20,7 @@ void Game::Init()
 
 	Logger::LogInfo(LOG_POS("Init"), "Game Initialized.");
 
-	Scene* s = Load_Scene<Test_Scene>("test");
+	Scene* s = Load_Scene<Voxel_Test_Scene>("test");
 	s->Activate(true);
 }
 

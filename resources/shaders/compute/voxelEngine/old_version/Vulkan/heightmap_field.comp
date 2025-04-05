@@ -1,0 +1,155 @@
+#version 450
+
+#include "../include/samplers/Terrain_Sampler.inc"
+
+struct Data{
+	vec4 values;
+};
+
+struct Static_Settings{
+    vec4 VoxelsPerMeter;
+    ivec4 ChunkMeterSize;
+    ivec4 ChunkSize;
+    ivec4 FullChunkSize;
+    vec4 skipDist;
+    vec4 half_;
+    vec4 SideLength;
+    ivec4 batches;
+};
+
+struct Run_Settings{
+    ivec4 Location;
+};
+
+layout(std140, binding = 0) buffer readonly SSBO_Static_Settings_In{
+	Static_Settings in_static_settings[ ];
+};
+
+layout(std140, binding = 1) buffer readonly SSBO_Run_Settings_In{
+	Run_Settings in_run_settings[ ];
+};
+
+layout(std140, binding = 2) buffer SSBO_Out{
+	Data out_data[ ];
+};
+
+layout(std140, binding = 3) buffer SSBO_Debug_Out{
+	Data out_debug_data[ ];
+};
+
+int GetVoxelIndex(int batch, int g_index, int size){
+    return (g_index % size);
+}
+
+int GetBatchIndex(int batch, int v_index, int size){
+    return (batch * size) + v_index;
+}
+
+ivec3 C_1D_to_3D(int i, int width, int height) {
+	int z = i / (width * height);
+	int y = (i % (width * height)) / width;
+	int x = i % width;
+
+	return ivec3(x, y, z);
+}
+
+int C_3D_to_1D(int x, int y, int z, int width, int height) {
+	return z * width * height + y * width + x;
+}
+
+int C_2D_to_1D(int x, int y, int width) {
+    return y * width + x;
+}
+
+ivec2 C_1D_to_2D(int i, int width) {
+    int y = i / width;
+    int x = i % width;
+
+    return ivec2(x, y);
+}
+
+float height_sample(float x, float y, Settings s){
+
+    return Sample_2D(s, x, y);
+}
+
+float height_sample(vec2 p, Settings s){
+    return height_sample(p.x, p.y, s);
+}
+
+void setHeightVal(int index, float height){
+
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+	
+	out_data[buffer_index].values[access_index] = height;
+}
+
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+    uint index = gl_GlobalInvocationID.x;
+
+    Static_Settings static_settings = in_static_settings[0];
+
+    int ChunkSizeX = static_settings.ChunkSize.x;
+    int ChunkSizeY = static_settings.ChunkSize.y;
+
+    int fullSize = (ChunkSizeX + 2) * (ChunkSizeY + 2);
+
+    int inst_index = int(index) / fullSize;
+    Run_Settings run_settings = in_run_settings[inst_index];
+
+    int numBatchesPerGroup = static_settings.batches[0];
+
+    if (run_settings.Location.w == -1 || index >= (fullSize * numBatchesPerGroup)){
+        return;
+    }
+
+    int batchIndex = run_settings.Location.w;
+    int batchIndexExpanded = run_settings.Location.w;
+
+    ivec4 batch = ivec4(0, batchIndexExpanded, 0, fullSize);
+
+    int voxel_index = GetVoxelIndex(batchIndexExpanded, int(index), fullSize);
+
+    ivec2 index_pos = C_1D_to_2D(int(voxel_index), ChunkSizeY + 2);
+
+    float xSideLength = static_settings.SideLength.x;
+    float ySideLength = static_settings.SideLength.y;
+
+    // Coordinate of voxel
+    int x = index_pos.x;
+    int y = index_pos.y;
+
+    // Coordinate of Chunk
+    int cx = run_settings.Location.x;
+    int cy = run_settings.Location.y;
+
+    // Global coordinate of first voxel in chunk.
+    int xStart = cx * ChunkSizeX;
+    int yStart = cy * ChunkSizeY;
+
+    // World position of voxel relative to chunk
+    float xLocalWorld = x * xSideLength;
+    float yLocalWorld = y * ySideLength;
+    vec2 pos_localWorld = vec2(xLocalWorld, yLocalWorld);
+
+    // World position of voxel relative to world origin
+    float xWorldOrigin = (xStart * xSideLength) + xLocalWorld;
+    float yWorldOrigin = (yStart * ySideLength) + yLocalWorld;
+    vec2 pos_originWorld = vec2(xWorldOrigin, yWorldOrigin);
+
+    Settings s;
+    s.ChunkSizeX = ChunkSizeX + 1;
+    s.ChunkSizeZ = ChunkSizeY + 1;
+    s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
+
+    float height_sample = height_sample(pos_originWorld.x, pos_originWorld.y, s);
+
+    //setHeightVal(int(index), height_sample);
+
+    //out_debug_data[index].values = vec4((batchIndexExpanded % static_settings.batches[0]), voxel_index, index, GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, fullSize));
+
+    setHeightVal(GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, fullSize), height_sample);
+}

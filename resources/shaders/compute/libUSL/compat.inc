@@ -42,7 +42,7 @@ float vector_angle(fvec3 from, fvec3 to){
     return acos(num2) * 57.29578f;
 }
 
-#define TRIANGLE_NORMAL(v1, v2, v3) normalize(cross(v2 - v1, v3 - v1))
+#define TRIANGLE_NORMAL(v1, v2, v3) normalize(cross((v2 - v1).xyz, (v3 - v1).xyz))
 
 #define EQUALS_3D(v1, v2) (v1.x == v2.x && v1.y == v2.y && v1.z == v2.z)
 

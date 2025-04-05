@@ -142,34 +142,34 @@ namespace VoxelEngine {
 		const std::string PROGRAM = "compute";
 		VoxelComputeProgram* m_program_compute;
 
-		const std::string PROGRAM_HEIGHTMAP = "heightmap_field";
+		const std::string PROGRAM_HEIGHTMAP = "1-heightmap_field_gen";
 		VoxelComputeProgram* m_program_heightmap;
 
-		const std::string PROGRAM_ISO_FIELD = "iso_field";
+		const std::string PROGRAM_ISO_FIELD = "2-iso_field_gen";
 		VoxelComputeProgram* m_program_iso_field;
 
-		const std::string PROGRAM_MATERIAL_FIELD = "material_field";
+		const std::string PROGRAM_MATERIAL_FIELD = "material_field"; // DEPRICATED
 		VoxelComputeProgram* m_program_material_field;
 
-		const std::string PROGRAM_UNIFY_FIELDS = "unify_fields";
+		const std::string PROGRAM_UNIFY_FIELDS = "3-unify_fields";
 		VoxelComputeProgram* m_program_unify_fields;
 
-		const std::string PROGRAM_SMOOTH_RENDER_CREATE_VERTLIST = "smoothrender_createvertlist";
+		const std::string PROGRAM_SMOOTH_RENDER_CREATE_VERTLIST = "smoothrender_createvertlist"; // DEPRICATED
 		VoxelComputeProgram* m_program_smoothrender_createvertlist;
 
-		const std::string PROGRAM_SMOOTH_RENDER_CREATE_MESH = "smoothrender_createmesh";
+		const std::string PROGRAM_SMOOTH_RENDER_CREATE_MESH = "smoothrender_createmesh"; // DEPRICATED
 		VoxelComputeProgram* m_program_smoothrender_createmesh;
 
-		const std::string PROGRAM_SMOOTH_RENDER_CONSTRUCT = "smoothrender_construct";
+		const std::string PROGRAM_SMOOTH_RENDER_CONSTRUCT = "4-smoothrender_construct";
 		VoxelComputeProgram* m_program_smoothrender_construct;
 
-		const std::string PROGRAM_SMOOTH_RENDER_MARK = "smoothrender_mark";
+		const std::string PROGRAM_SMOOTH_RENDER_MARK = "5-smoothrender_mark"; // DEPRICATED
 		VoxelComputeProgram* m_program_smoothrender_mark;
 
-		const std::string PROGRAM_SMOOTH_RENDER_STITCH = "smoothrender_stitch";
+		const std::string PROGRAM_SMOOTH_RENDER_STITCH = "smoothrender_stitch"; // DEPRICATED
 		VoxelComputeProgram* m_program_smoothrender_stitch;
 
-		const std::string PROGRAM_SMOOTH_RENDER_STITCH_ASYNC = "smoothrender_stitch_async";
+		const std::string PROGRAM_SMOOTH_RENDER_STITCH_ASYNC = "6-smoothrender_async_stitch";
 		VoxelComputeProgram* m_program_smoothrender_stitch_async;
 
 

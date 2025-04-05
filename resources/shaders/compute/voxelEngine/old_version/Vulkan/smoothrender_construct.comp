@@ -1,0 +1,553 @@
+#version 450
+
+/*struct Static_Settings{
+    float VoxelsPerMeter;
+    int ChunkMeterSizeX;
+    int ChunkMeterSizeY;
+    int ChunkMeterSizeZ;
+    int ChunkSizeX;
+    int ChunkSizeY;
+    int ChunkSizeZ;
+    int FullChunkSize;
+    float skipDist;
+    float half_;
+    float xSideLength;
+    float ySideLength;
+    float zSideLength;
+};*/
+
+struct Static_Settings{
+    vec4 VoxelsPerMeter;
+    ivec4 ChunkMeterSize;
+    ivec4 ChunkSize;
+    ivec4 FullChunkSize;
+    vec4 skipDist;
+    vec4 half_;
+    vec4 SideLength;
+    ivec4 batches;
+};
+
+/*struct Run_Settings{
+    int X;
+    int Y;
+    int Z;
+};*/
+
+struct Run_Settings{
+    ivec4 Location;
+};
+
+struct Data{
+	vec4 values;
+};
+
+struct i_Data{
+	ivec4 values;
+};
+
+struct ISO_Material{
+    vec4 final_iso;
+    ivec4 material_types;
+    vec4 material_ratios;
+};
+
+struct GridPoint{
+    vec4 position;
+    vec4 normal;
+    ivec4 type;
+    vec4 type_ratio;
+};
+
+layout(std140, binding = 0) buffer readonly SSBO_Static_Settings_In{
+	Static_Settings in_static_settings[ ];
+};
+
+layout(std140, binding = 1) buffer readonly SSBO_Run_Settings_In{
+	Run_Settings in_run_settings[ ];
+};
+
+layout(std140, binding = 2) buffer readonly SSBO_locOffset_In{
+	Data in_locOffset[ ];
+};
+
+layout(std140, binding = 3) buffer readonly SSBO_globalOffsets_In{
+	Data in_globalOffsets[ ];
+};
+
+layout(std140, binding = 4) buffer readonly SSBO_directionOffsets_In{
+	i_Data in_directionOffsets[ ];
+};
+
+layout(std140, binding = 5) buffer readonly SSBO_edgeTable_In{
+	i_Data in_edgeTable_data[ ];
+};
+
+layout(std140, binding = 6) buffer readonly SSBO_TriTable_In{
+	i_Data in_TriTable_data[ ];
+};
+
+layout(std140, binding = 7) buffer readonly SSBO_ISO_Material_In{
+	ISO_Material in_iso_mat_data[ ];
+};
+
+layout(std140, binding = 8) buffer SSBO_vertex_Out{
+	Data out_vertex_data[ ];
+};
+
+layout(std140, binding = 9) buffer SSBO_normal_Out{
+	Data out_normal_data[ ];
+};
+
+layout(std140, binding = 10) buffer SSBO_triangles_Out{
+	i_Data out_triangles_data[ ];
+};
+
+layout(std140, binding = 11) buffer SSBO_counts_Out {
+    i_Data out_counts_data[ ];
+};
+
+layout(std140, binding = 12) buffer SSBO_stitch_map_Out{
+	i_Data out_stitch_map_data[ ];
+};
+
+/*layout(std140, binding = 9) buffer SSBO_Debug_Grid_Out {
+    Data out_Debug_Grid_data[ ];
+};*/
+
+ivec3 C_1D_to_3D(int i, int width, int height) {
+	int z = i / (width * height);
+	int y = (i % (width * height)) / width;
+	int x = i % width;
+
+	return ivec3(x, y, z);
+}
+
+int C_3D_to_1D(int x, int y, int z, int width, int height) {
+	return z * width * height + y * width + x;
+}
+
+int GetVoxelIndex(int batch, int g_index, int size){
+    return (g_index % size);
+}
+
+int GetBatchIndex(int batch, int v_index, int size){
+    return (batch * size) + v_index;
+}
+
+/*ISO_Material get_iso_mat(uint index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_iso_mat_data[buffer_index].values[access_index];
+}*/
+
+void SetStitchMap(int index, int val){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    out_stitch_map_data[buffer_index].values[access_index] = val;
+}
+
+void Set_CubeIndex(uint index, int val){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    //out_cubeIndex_data[buffer_index].values[access_index] = val;
+}
+
+int Get_Edgetable(int index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_edgeTable_data[buffer_index].values[access_index];
+}
+
+int Get_Tritable(uint index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_TriTable_data[buffer_index].values[access_index];
+}
+
+/*void SetVertList(int voxelIndex, int vertIndex, vec4 vert){
+    
+    int index = (voxelIndex * 12) + vertIndex;
+
+    out_vertList_data[index].values = vert;
+}*/
+
+void SetDebug_Grid(int voxelIndex, int GridIndex, vec4 grid){
+    
+    int index = (voxelIndex * 8) + GridIndex;
+
+    //out_Debug_Grid_data[index].values = grid;
+}
+
+void Set_Count(int voxelIndex, int count){
+    uint buffer_index = voxelIndex / 4;
+	uint access_index = voxelIndex % 4;
+
+    out_counts_data[buffer_index].values[access_index] = count;
+}
+
+int SetMeshEntry(int voxelIndex, vec4 p1, vec4 n1, int t1, int count){
+
+    int vert_index = (voxelIndex * 15) + count;
+
+    out_vertex_data[vert_index].values = p1;
+    out_normal_data[vert_index].values = n1;
+
+    uint buffer_index = vert_index / 4;
+	uint access_index = vert_index % 4;
+
+    out_triangles_data[buffer_index].values[access_index] = t1;
+
+    count++;
+
+    return count;
+}
+
+GridPoint GetGridPoint(
+    ivec4 batch, 
+    ivec4 batch_settings, 
+    int index, 
+    ivec4 index_pos, 
+    vec4 localWorldPos, 
+    int i,
+    int ChunkSizeX, 
+    int ChunkSizeY, 
+    int ChunkSizeZ
+){
+
+    int index_exp = C_3D_to_1D(index_pos.x, index_pos.y, index_pos.z, ChunkSizeX + 1, ChunkSizeZ + 1);
+
+    int index2 = C_3D_to_1D(index_pos.x, index_pos.y, index_pos.z, ChunkSizeX, ChunkSizeZ);
+
+    //ISO_Material iso_mat = get_iso_mat(index_exp);
+    ISO_Material iso_mat = in_iso_mat_data[GetBatchIndex((batch[1] % batch_settings[0]), index_exp, batch[3])];//get_iso_mat(index);
+    //SetDebug_Grid(index2, i, vec4(in_static_settings[0].ChunkSize.x, in_static_settings[0].ChunkSize.z, index2, 0)); // iso_mat.final_iso
+    //SetDebug_Grid(index2, i, vec4(index_pos.x, index_pos.y, index_pos.z, index2));
+    //SetDebug_Grid(index2, i, vec4(in_directionOffsets[i].values.x, in_directionOffsets[i].values.y, in_directionOffsets[i].values.z, index2));
+    //SetDebug_Grid(index2, i, vec4(run_settings.Location.x, run_settings.Location.y, run_settings.Location.z, index2));
+    //SetDebug_Grid(index, i, vec4(index_pos.x, index_pos.y, index_pos.z, iso_mat.final_iso.x));
+    
+    GridPoint point;
+    point.position = vec4(localWorldPos.x, localWorldPos.y, localWorldPos.z, iso_mat.final_iso.w);
+    point.normal = vec4(iso_mat.final_iso.x, iso_mat.final_iso.y, iso_mat.final_iso.z, 0);
+    point.type = iso_mat.material_types;
+    point.type_ratio = iso_mat.material_ratios;
+
+    return point;
+
+    //return vec4(index, i, i, i);
+    //return vec4(index_pos.x, index_pos.y, index_pos.z, iso_mat.final_iso.x);
+}
+
+GridPoint VertexInterp(int edge_ent, int test, float isoLevel, GridPoint p1, GridPoint p2, bool invalid){
+    if ((edge_ent & test) == 0 || invalid){
+        GridPoint point;
+        point.position = vec4(0, 0, 0, -1000000); // invalid
+        return point;
+    }
+
+    
+    vec4 pos_1 = p1.position;
+    vec4 norm_1 = p1.normal;
+
+    vec4 pos_2 = p2.position;
+    vec4 norm_2 = p2.normal;
+
+    if (abs(isoLevel - pos_1.w) < 0.00001f)
+        return p1;
+    if (abs(isoLevel - pos_2.w) < 0.00001f)
+        return p2;
+    if (abs(pos_1.w - pos_2.w) < 0.00001f)
+        return p1;
+
+    float mu = (isoLevel - pos_1.w) / (pos_2.w - pos_1.w);
+
+    
+    vec4 res_pos = vec4(0,0,0,0);
+    vec4 res_norm = vec4(0,0,0,0);
+    ivec4 type = ivec4(0, 0, 0, 0);
+    vec4 type_ratios = vec4(0, 0, 0, 0);
+
+    res_pos.x = pos_1.x + mu * (pos_2.x - pos_1.x);
+    res_pos.y = pos_1.y + mu * (pos_2.y - pos_1.y);
+    res_pos.z = pos_1.z + mu * (pos_2.z - pos_1.z);
+
+    res_norm.x = norm_1.x + mu * (norm_2.x - norm_1.x);
+    res_norm.y = norm_1.y + mu * (norm_2.y - norm_1.y);
+    res_norm.z = norm_1.z + mu * (norm_2.z - norm_1.z);
+
+    res_pos.w = pos_1.w > 0 ? pos_1.w : pos_2.w; // INSIDE IS POSITIVE
+    type = mu < 0.5 ? p1.type : p2.type;
+    type_ratios = mu < 0.5 ? p1.type_ratio : p2.type_ratio;
+
+
+    GridPoint point;
+    point.position = res_pos;
+    point.normal = res_norm;
+    point.type = type;
+    point.type_ratio = type_ratios;
+    return point;
+}
+
+void Process_Voxel(ivec4 batch, int g_index, int v_index, int cubeIndex, int edge_ent, GridPoint vertList[12])
+{
+    if(edge_ent == 0){
+        return;
+    }
+
+    int count = 0;
+
+    //ivec4 local_tritable_ivec4[4];
+
+    int tritble_start = cubeIndex * 16;
+
+    /*const ivec4 local_tritable_ivec4_0 = in_TriTable_data[(tritble_start / 4) + 0].values;
+    const ivec4 local_tritable_ivec4_1 = in_TriTable_data[(tritble_start / 4) + 1].values;
+    const ivec4 local_tritable_ivec4_2 = in_TriTable_data[(tritble_start / 4) + 2].values;
+    const ivec4 local_tritable_ivec4_3 = in_TriTable_data[(tritble_start / 4) + 3].values;
+
+    ivec4 local_tritable_ivec4 = in_TriTable_data[(tritble_start / 4) + 0].values;*/
+
+    /*int local_tritable[16];
+
+    ivec4 local_tritable_ivec4 = in_TriTable_data[(tritble_start / 4) + 0].values;
+    local_tritable[0] = local_tritable_ivec4.x;
+    local_tritable[1] = local_tritable_ivec4.y;
+    local_tritable[2] = local_tritable_ivec4.z;
+    local_tritable[3] = local_tritable_ivec4.w;
+
+    local_tritable_ivec4 = in_TriTable_data[(tritble_start / 4) + 1].values;
+    local_tritable[4] = local_tritable_ivec4.x;
+    local_tritable[5] = local_tritable_ivec4.y;
+    local_tritable[6] = local_tritable_ivec4.z;
+    local_tritable[7] = local_tritable_ivec4.w;
+
+    local_tritable_ivec4 = in_TriTable_data[(tritble_start / 4) + 2].values;
+    local_tritable[8] = local_tritable_ivec4.x;
+    local_tritable[9] = local_tritable_ivec4.y;
+    local_tritable[01] = local_tritable_ivec4.z;
+    local_tritable[11] = local_tritable_ivec4.w;
+
+    local_tritable_ivec4 = in_TriTable_data[(tritble_start / 4) + 3].values;
+    local_tritable[12] = local_tritable_ivec4.x;
+    local_tritable[13] = local_tritable_ivec4.y;
+    local_tritable[14] = local_tritable_ivec4.z;
+    local_tritable[15] = local_tritable_ivec4.w;*/
+
+    /*const int local_tritable[16] = {
+        local_tritable_ivec4_0.x,
+        local_tritable_ivec4_0.y,
+        local_tritable_ivec4_0.z,
+        local_tritable_ivec4_0.w,
+
+        local_tritable_ivec4_1.x,
+        local_tritable_ivec4_1.y,
+        local_tritable_ivec4_1.z,
+        local_tritable_ivec4_1.w,
+
+        local_tritable_ivec4_2.x,
+        local_tritable_ivec4_2.y,
+        local_tritable_ivec4_2.z,
+        local_tritable_ivec4_2.w,
+
+        local_tritable_ivec4_3.x,
+        local_tritable_ivec4_3.y,
+        local_tritable_ivec4_3.z,
+        local_tritable_ivec4_3.w
+    };*/
+
+    
+    for (int i = 0; Get_Tritable(cubeIndex * 16 + i) != -1; i += 3)
+    //for (int i = 0; local_tritable[cubeIndex * 16 + i] != -1; i += 3)
+    {
+
+        int curTris = count;
+
+        /*vec4 p1 = vertList[local_tritable[cubeIndex * 16 + (i + 0)]];
+        vec4 p2 = vertList[local_tritable[cubeIndex * 16 + (i + 1)]];
+        vec4 p3 = vertList[local_tritable[cubeIndex * 16 + (i + 2)]];*/
+
+        GridPoint p1 = vertList[Get_Tritable(cubeIndex * 16 + (i + 0))];
+        GridPoint p2 = vertList[Get_Tritable(cubeIndex * 16 + (i + 1))];
+        GridPoint p3 = vertList[Get_Tritable(cubeIndex * 16 + (i + 2))];
+
+        p1.position.w = p1.type.x + p1.type_ratio.x;
+        p1.normal.w = p1.type.y + p1.type_ratio.y;
+
+        p2.position.w = p2.type.x + p2.type_ratio.x;
+        p2.normal.w = p2.type.y + p2.type_ratio.y;
+
+        p3.position.w = p3.type.x + p3.type_ratio.x;
+        p3.normal.w = p3.type.y + p3.type_ratio.y;
+
+
+        //vec3 dir = cross(p2.xyz - p1.xyz, p3.xyz - p1.xyz);
+        //vec3 norm = -normalize(dir);
+
+        //vec4 n1 = vec4(norm.x, norm.y, norm.z, 0);
+        int t1 = curTris + 2;
+        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p1.position, p1.normal, t1, count);
+        
+        //vec4 n2 = vec4(norm.x, norm.y, norm.z, 0);
+        int t2 = curTris + 1;
+        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p2.position, p2.normal, t2, count);
+        
+        //vec4 n3 = vec4(norm.x, norm.y, norm.z, 0);
+        int t3 = curTris + 0;
+        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p3.position, p3.normal, t3, count);
+
+    }
+
+    Set_Count(GetBatchIndex(batch[0], v_index, batch[2]), count);
+}
+
+void CreateVertList(ivec4 batch, int g_index, int v_index, GridPoint grid[8], float isoLevel, int ChunkSizeX, int ChunkSizeY, int ChunkSizeZ){
+
+    GridPoint vertList[12];
+    int cubeIndex = 0;
+
+    /*SetDebug_Grid(index, 0, grid[0]);
+    SetDebug_Grid(index, 1, grid[1]);
+    SetDebug_Grid(index, 2, grid[2]);
+    SetDebug_Grid(index, 3, grid[3]);
+    SetDebug_Grid(index, 4, grid[4]);
+    SetDebug_Grid(index, 5, grid[5]);
+    SetDebug_Grid(index, 6, grid[6]);
+    SetDebug_Grid(index, 7, grid[7]);*/
+
+    if (grid[0].position.w > isoLevel) cubeIndex |= 1;
+    if (grid[1].position.w > isoLevel) cubeIndex |= 2;
+    if (grid[2].position.w > isoLevel) cubeIndex |= 4;
+    if (grid[3].position.w > isoLevel) cubeIndex |= 8;
+    if (grid[4].position.w > isoLevel) cubeIndex |= 16;
+    if (grid[5].position.w > isoLevel) cubeIndex |= 32;
+    if (grid[6].position.w > isoLevel) cubeIndex |= 64;
+    if (grid[7].position.w > isoLevel) cubeIndex |= 128;
+
+    int edge_ent = Get_Edgetable(cubeIndex);
+
+    bool invalid = (edge_ent == 0);
+
+    vertList[0] = VertexInterp(edge_ent, 1, isoLevel, grid[0], grid[1], invalid);
+    vertList[1] = VertexInterp(edge_ent, 2, isoLevel, grid[1], grid[2], invalid);
+    vertList[2] = VertexInterp(edge_ent, 4, isoLevel, grid[2], grid[3], invalid);
+    vertList[3] = VertexInterp(edge_ent, 8, isoLevel, grid[3], grid[0], invalid);
+
+
+    vertList[4] = VertexInterp(edge_ent, 16, isoLevel, grid[4], grid[5], invalid);
+    vertList[5] = VertexInterp(edge_ent, 32, isoLevel, grid[5], grid[6], invalid);
+    vertList[6] = VertexInterp(edge_ent, 64, isoLevel, grid[6], grid[7], invalid);
+    vertList[7] = VertexInterp(edge_ent, 128, isoLevel, grid[7], grid[4], invalid);
+
+
+    vertList[8] = VertexInterp(edge_ent, 256, isoLevel, grid[0], grid[4], invalid);
+    vertList[9] = VertexInterp(edge_ent, 512, isoLevel, grid[1], grid[5], invalid);
+    vertList[10] = VertexInterp(edge_ent, 1024, isoLevel, grid[2], grid[6], invalid);
+    vertList[11] = VertexInterp(edge_ent, 2048, isoLevel, grid[3], grid[7], invalid);
+
+
+    Process_Voxel(batch, g_index, v_index, cubeIndex, edge_ent, vertList);
+    
+}
+
+void RenderBlock(ivec4 batch, int g_index, int v_index, ISO_Material point, Static_Settings static_settings, Run_Settings run_settings){
+
+    float iso = point.final_iso[0];
+    ivec4 material_types = point.material_types;
+    vec4 material_ratios = point.material_ratios;
+
+    int ChunkSizeX = static_settings.ChunkSize.x;
+    int ChunkSizeY = static_settings.ChunkSize.y;
+    int ChunkSizeZ = static_settings.ChunkSize.z;
+
+    float xSideLength = static_settings.SideLength.x;
+    float ySideLength = static_settings.SideLength.y;
+    float zSideLength = static_settings.SideLength.z;
+
+    int fullChunkSize = static_settings.FullChunkSize[0];
+
+    //int v_index = GetVoxelIndex(batch[0], g_index, fullChunkSize);
+    ivec4 index_pos = ivec4(C_1D_to_3D(v_index, ChunkSizeX, ChunkSizeZ), 0);
+
+    // Coordinate of voxel in chunk
+    int x = index_pos.x;
+    int y = index_pos.y;
+    int z = index_pos.z;
+
+    // Coordinate of Chunk
+    int cx = run_settings.Location.x;
+    int cy = run_settings.Location.y;
+    int cz = run_settings.Location.z;
+
+    // Global coordinate of first voxel in chunk.
+    int xStart = cx * ChunkSizeX;
+    int yStart = cy * ChunkSizeY;
+    int zStart = cz * ChunkSizeZ;
+
+    // World position of voxel relative to chunk
+    float xLocalWorld = x * xSideLength;
+    float yLocalWorld = y * ySideLength;
+    float zLocalWorld = z * zSideLength;
+    vec4 pos_localWorld = vec4(xLocalWorld, yLocalWorld, zLocalWorld, 0);
+
+    // World position of voxel relative to world origin
+    float xWorldOrigin = (xStart * xSideLength) + xLocalWorld;
+    float yWorldOrigin = (yStart * ySideLength) + yLocalWorld;
+    float zWorldOrigin = (zStart * zSideLength) + zLocalWorld;
+    vec4 pos_originWorld = vec4(xWorldOrigin, yWorldOrigin, zWorldOrigin, 0);
+
+    ivec4 batch_settings = static_settings.batches;
+    GridPoint grid[8];
+
+    for (int i = 0; i < 8; i++){
+        grid[i] = GetGridPoint(
+            batch, 
+            batch_settings, 
+            v_index, 
+            index_pos + in_directionOffsets[i].values, 
+            pos_localWorld + in_globalOffsets[i].values, 
+            i, 
+            ChunkSizeX, 
+            ChunkSizeY, 
+            ChunkSizeZ
+        );
+    }
+
+    Set_Count(GetBatchIndex(batch[0], v_index, batch[2]), 0);
+    SetStitchMap(GetBatchIndex(batch[0], v_index, batch[2]), -1);
+
+    CreateVertList(batch, g_index, v_index, grid, 0, ChunkSizeX, ChunkSizeY, ChunkSizeZ);
+    
+}
+
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+    Static_Settings static_settings = in_static_settings[0];
+    uint index = gl_GlobalInvocationID.x;
+
+    int inst_index = int(index) / static_settings.FullChunkSize[0];
+    Run_Settings run_settings = in_run_settings[inst_index];
+
+    int batchIndex = run_settings.Location.w;
+    int batchIndexExpanded = run_settings.Location.w;
+    ivec4 batch = ivec4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize[0], static_settings.FullChunkSize[1]);
+
+    int voxel_index = GetVoxelIndex(batchIndex, int(index), batch[2]);
+
+    if (run_settings.Location.w == -1){
+        Set_Count(GetBatchIndex(batch[0], voxel_index, batch[2]), 0);
+        SetStitchMap(GetBatchIndex(batch[0], voxel_index, batch[2]), -1);
+        return;
+    }
+
+    //ISO_Material point = in_iso_mat_data[index];
+    ISO_Material point = in_iso_mat_data[GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, batch[3])];//get_iso_mat(index);
+    
+    RenderBlock(batch, int(index), voxel_index, point, static_settings, run_settings);
+
+}

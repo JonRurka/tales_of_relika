@@ -1,0 +1,13 @@
+#version 450
+
+#define USL_DIRECTX_UNITY3D 0
+#define USL_VULKAN 1
+#define USL_OPENCL 0
+#include "../libUSL/USL.inc"
+#include "Voxel_Lib/unify_fields_lib.inc"
+
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+	unify_fields_main(gl_GlobalInvocationID.x);
+}

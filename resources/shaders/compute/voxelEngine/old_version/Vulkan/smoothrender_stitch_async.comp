@@ -1,0 +1,221 @@
+#version 450
+
+/*struct Static_Settings{
+    float VoxelsPerMeter;
+    int ChunkMeterSizeX;
+    int ChunkMeterSizeY;
+    int ChunkMeterSizeZ;
+    int ChunkSizeX;
+    int ChunkSizeY;
+    int ChunkSizeZ;
+    int FullChunkSize;
+    float skipDist;
+    float half_;
+    float xSideLength;
+    float ySideLength;
+    float zSideLength;
+};*/
+
+struct Static_Settings{
+    vec4 VoxelsPerMeter;
+    ivec4 ChunkMeterSize;
+    ivec4 ChunkSize;
+    ivec4 FullChunkSize;
+    vec4 skipDist;
+    vec4 half_;
+    vec4 SideLength;
+    ivec4 batches;
+};
+
+/*struct Run_Settings{
+    int X;
+    int Y;
+    int Z;
+};*/
+
+struct Run_Settings{
+    ivec4 Location;
+};
+
+struct Data{
+	vec4 values;
+};
+
+struct i_Data{
+	ivec4 values;
+};
+
+layout(std140, binding = 0) buffer readonly SSBO_Static_Settings_In{
+	Static_Settings in_static_settings[ ];
+};
+
+layout(std140, binding = 1) buffer readonly SSBO_Run_Settings_In{
+	Run_Settings in_run_settings[ ];
+};
+
+layout(std140, binding = 2) buffer readonly SSBO_vertex_In{
+	Data in_vertex_data[ ];
+};
+
+layout(std140, binding = 3) buffer readonly SSBO_normal_In{
+	Data in_normal_data[ ];
+};
+
+layout(std140, binding = 4) buffer readonly SSBO_tris_In{
+	i_Data in_tris_data[ ];
+};
+
+layout(std140, binding = 5) buffer readonly SSBO_counts_In {
+    i_Data in_counts_data[ ];
+};
+
+layout(std140, binding = 6) buffer readonly SSBO_stitch_map_In {
+    i_Data in_stitch_map_data[ ];
+};
+
+layout(std140, binding = 7) buffer SSBO_vertex_Out{
+	Data out_vertex_data[ ];
+};
+
+layout(std140, binding = 8) buffer SSBO_normal_Out{
+	Data out_normal_data[ ];
+};
+
+layout(std140, binding = 9) buffer SSBO_triangles_Out{
+	i_Data out_triangles_data[ ];
+};
+
+layout(std140, binding = 10) buffer SSBO_counts_Out{
+	i_Data out_counts_data[ ];
+};
+
+layout(std140, binding = 11) buffer SSBO_debug_Out{
+	Data out_debug_data[ ];
+};
+
+void SetTriangle(int index, int tris){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    out_triangles_data[buffer_index].values[access_index] = tris;
+}
+
+int GetVoxelIndex(int batch, int g_index, int size){
+    return (g_index % size);
+}
+
+int GetBatchIndex(int batch, int v_index, int size){
+    return (batch * size) + v_index;
+}
+
+int GetStitchMap(int voxel_index){
+
+    //out_stitch_map_data[voxel_index].values = ivec4(buffer_index, num);
+
+    uint buffer_index = voxel_index / 4;
+	uint access_index = voxel_index % 4;
+
+    return in_stitch_map_data[buffer_index].values[access_index];
+}
+
+void AddMeshEntry(int buffer_pos, vec4 vert, vec4 norm, int tris){
+
+    out_vertex_data[buffer_pos].values = vert;
+    out_normal_data[buffer_pos].values = norm;
+
+    SetTriangle(buffer_pos, tris);
+
+    /*counts.x++;
+    counts.y++;
+    counts.z++;*/
+
+    //return counts;
+}
+
+int GetTriangle(int index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_tris_data[buffer_index].values[access_index];
+}
+
+int GetCount(int index){
+    uint buffer_index = index / 4;
+	uint access_index = index % 4;
+
+    return in_counts_data[buffer_index].values[access_index];
+}
+
+int getSourceOffset(int batch_num, int total_batches, bool source){
+    int result = 0;
+    for (int i = 0; i < total_batches; i++){
+        
+        if (i >= batch_num){
+            //if (source)
+            //    out_counts_data[i].values[2] = result; // not a run condition!
+            return result;
+        }
+        
+        ivec4 cnt = out_counts_data[i].values;
+        result += cnt[0];
+    }
+
+    return -2147483648; // should not return here.
+}
+
+void Process_Voxel(ivec4 batch, ivec4 batch_settings, int g_index, int v_index){
+
+    //out_debug_data[g_index].values = vec4(batch[0], g_index, v_index, 0);
+    //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(batch[0], g_index, v_index, 0);
+
+    int this_count = GetCount(GetBatchIndex(batch[0], v_index, batch[2]));
+    int buffer_index = GetStitchMap(GetBatchIndex(batch[0], v_index, batch[2]));
+
+    int batch_offset = batch[0] * (batch[2] * 15);
+
+    int dst_offset = getSourceOffset(batch[0], batch_settings[2], (v_index % batch[2]) == 0);//batch[0] * 65535;
+
+
+    if (buffer_index == -1 || this_count == 0){
+        out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(g_index, buffer_index, this_count, 0);
+        return;
+    }
+
+    int tri_start = buffer_index;
+    out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(g_index, buffer_index, this_count, tri_start);
+
+    for (int i = 0; i < this_count; i++){
+ 
+        int source_index = batch_offset + (v_index * 15) + i;
+
+        vec4 vert = in_vertex_data[source_index].values;
+        vec4 norm = in_normal_data[source_index].values;
+        int tris = tri_start + GetTriangle(source_index);
+
+        AddMeshEntry(dst_offset + buffer_index + i, vert, norm, tris);
+    }
+
+    
+}
+
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+void main()
+{
+    Static_Settings static_settings = in_static_settings[0];
+    uint index = gl_GlobalInvocationID.x;
+
+    int inst_index = int(index) / static_settings.FullChunkSize[0];
+    Run_Settings run_settings = in_run_settings[inst_index];    
+
+    int batchIndex = run_settings.Location.w;
+    int batchIndexExpanded = run_settings.Location.w;
+    ivec4 batch = ivec4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize[0], static_settings.FullChunkSize[1]);
+
+    int voxel_index = GetVoxelIndex(batchIndexExpanded, int(index), batch[2]);
+
+    if (run_settings.Location.w == -1){
+        return;
+    }
+
+    Process_Voxel(batch, static_settings.batches, int(index), voxel_index);
+}
