@@ -14,6 +14,7 @@ set(${module}_headers
 	include/glad.h
 	include/Graphics.h
 	include/Engine.h
+	include/input_events.h
 	include/Scene.h
 	include/khrplatform.h
 	include/Light.h

@@ -13,6 +13,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Logger.h"
+#include "Engine.h"
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -130,6 +131,22 @@ void Graphics::OnWindowResize(int width, int height)
 		tex->Resize(width, height);
 	}
 }
+
+void Graphics::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	Engine::Instance()->key_callback(window, key, scancode, action, mods);	
+}
+
+void Graphics::cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	Engine::Instance()->cursor_position_callback(window, xpos, ypos);
+}
+
+void Graphics::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	Engine::Instance()->mouse_button_callback(window, button, action, mods);
+}
+
 
 void Graphics::render(float dt)
 {

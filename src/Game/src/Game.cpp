@@ -26,8 +26,19 @@ void Game::Init()
 
 void Game::init_shaders()
 {
-	Shader* std_shader = Shader::Create("standard", Game_Resources::Shaders::Graphics::STANDARD_VERT, Game_Resources::Shaders::Graphics::STANDARD_FRAG);
+	Shader* std_shader = Shader::Create(
+		"standard", 
+		Game_Resources::Shaders::Graphics::STANDARD_VERT, 
+		Game_Resources::Shaders::Graphics::STANDARD_FRAG
+	);
 	std_shader->Init_Lights();
+
+	Shader* opaque_chunk_shader = Shader::Create(
+		"opaque_chunk_material", 
+		Game_Resources::Shaders::Graphics::Voxel::CHUNK_OPAQUE_VERT,
+		Game_Resources::Shaders::Graphics::Voxel::CHUNK_OPAQUE_FRAG
+	);
+	opaque_chunk_shader->Init_Lights();
 
 	/*std_shader->Set_Textures({
 		{"material.diffuse",Resources::Get_Texture(Game_Resources::Textures::CONTAINER_DIFFUSE)},

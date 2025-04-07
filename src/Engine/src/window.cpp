@@ -6,6 +6,7 @@
 #include "opengl.h"
 
 #include <Graphics.h>
+#include <Engine.h>
 
 #ifdef WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -85,6 +86,22 @@ namespace {
         std::cout << "---------------" << std::endl;
         std::cout << std::endl;
     }
+
+    void static_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+        Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
+        user_ptr->key_callback(window, key, scancode, action, mods);
+    }
+
+    void static_cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+        Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
+        user_ptr->cursor_position_callback(window, xpos, ypos);
+    }
+
+    void static_mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+        Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
+        user_ptr->mouse_button_callback(window, button, action, mods);
+    }
+
 }
 
 GLFWwindow* window::Create_Window(const char* title, int width, int height, void* user_obj)
@@ -114,6 +131,12 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 	glViewport(0, 0, width, height);
 
 	glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
+    glfwSetKeyCallback(m_window, static_key_callback);
+    glfwSetCursorPosCallback(m_window, static_cursor_position_callback);
+    glfwSetMouseButtonCallback(m_window, static_mouse_button_callback);
+
+    glfwSetInputMode(m_window, GLFW_STICKY_KEYS, 1);
+    glfwSetInputMode(m_window, GLFW_STICKY_MOUSE_BUTTONS, 1);
 
 	int flags; 
 	glGetIntegerv(GL_CONTEXT_FLAGS, &flags);

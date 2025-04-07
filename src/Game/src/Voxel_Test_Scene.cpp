@@ -1,6 +1,7 @@
 #include "Voxel_Test_Scene.h"
 
 #include "Standard_Material.h"
+#include "Opaque_Chunk_Material.h"
 #include "Game_Resources.h"
 #include "Cubemap.h"
 
@@ -14,6 +15,7 @@
 
 
 using namespace VoxelEngine;
+using namespace Input;
 
 void Voxel_Test_Scene::Init()
 {
@@ -22,12 +24,11 @@ void Voxel_Test_Scene::Init()
 	// Create Directional light
 	glm::vec4 light_color_dir = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	glm::vec3 light_pos_dir = glm::vec3(0.0f, 0.0f, 100.0f);
-	WorldObject* light_obj_dir;
-	Light* light_comp_dir;
 	create_light_object(&light_obj_dir, &light_comp_dir, Light::Light_Type::DIRECTIONAL, light_pos_dir, 1, light_color_dir);
 	light_comp_dir->Enabled(true);
 	light_obj_dir->Get_Transform()->LookAt(glm::vec3(10.0f, -50.0f, -20.0f));
 
+	light_comp_dir->Strength(0.6f);
 
 	// Create camera
 	std::vector<std::string> faces
@@ -55,9 +56,19 @@ void Voxel_Test_Scene::Init()
 	standard_mat->setFloat("material.shininess", 32.0f);
 	standard_mat->setFloat("material.specular_intensity", 1.0f);
 	standard_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	standard_mat->setFloat("globalAmbientIntensity", 0.3f);
+	standard_mat->setFloat("globalAmbientIntensity", 0.1f);
 	standard_mat->setTexture("material.diffuse", Game_Resources::Textures::CONTAINER_DIFFUSE);
 	standard_mat->setTexture("material.specular", Game_Resources::Textures::CONTAINER_SPECULAR);
+
+	chunk_opaque_mat = new Opaque_Chunk_Material();
+	chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
+	chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	chunk_opaque_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
+	chunk_opaque_mat->setFloat("material.shininess", 32.0f);
+	chunk_opaque_mat->setFloat("material.specular_intensity", 1.0f);
+	chunk_opaque_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	chunk_opaque_mat->setFloat("globalAmbientIntensity", 0.1f);
+
 
 	ChunkSettings settings;
 	ChunkGenerationOptions gen_options;
@@ -101,25 +112,39 @@ void Voxel_Test_Scene::Init()
 	std::vector<glm::vec4> normals(m_normals, m_normals + chnk_count.x);
 
 	Logger::LogDebug(LOG_POS("Init"), "Number of vertices: %i", (int)chnk_count.x);
-	return;
 
 	Mesh* voxel_mesh_test = new Mesh();
 	voxel_mesh_test->Vertices(Utilities::vec4_to_vec3_arr(verts));
-	voxel_mesh_test->Normals(Utilities::vec4_to_vec3_arr(normals));
+	//voxel_mesh_test->Normals(Utilities::vec4_to_vec3_arr(normals));
+	voxel_mesh_test->Generate_Normals();
+
 
 	WorldObject* obj = Instantiate("test_object");
 	obj->Get_MeshRenderer()->Set_Mesh(voxel_mesh_test);
 	obj->Get_MeshRenderer()->Transparent(true);
 	//obj->Get_MeshRenderer()->Set_Shader(m_shader);
-	obj->Get_MeshRenderer()->Set_Material(standard_mat);
+	obj->Get_MeshRenderer()->Set_Material(chunk_opaque_mat);
 	obj->Get_Transform()->Translate(0, 0, 0);
 
 }
 
 void Voxel_Test_Scene::Update(float dt)
 {
+	light_obj_dir->Get_Transform()->Rotate(0.0f, 25.0f * dt, 0.0f);
 
+	if (Engine::GetKeyDown(KeyCode::G)) {
+		Logger::LogDebug(LOG_POS("Update"), "Pressed G");
+	}
 
+	if (Engine::GetKey(KeyCode::G)) {
+		Logger::LogDebug(LOG_POS("Update"), "Held G");
+	}
+
+	if (Engine::GetKeyUp(KeyCode::G)) {
+		Logger::LogDebug(LOG_POS("Update"), "Released G");
+	}
+
+	Logger::LogDebug(LOG_POS("Update"), "Mouse Input: X: %f, Y: %f", (float)Engine::Get_Input_X(), (float)Engine::Get_Input_X());
 
 }
 

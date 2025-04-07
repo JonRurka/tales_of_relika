@@ -10,6 +10,8 @@ using namespace VoxelEngine;
 
 #define COMPUTE_TRIANGES false
 
+#define VECTOR4_SIZE (sizeof(float) * 4)
+
 glm::fvec4 DirectionOffsets_f(int index) {
     return (glm::fvec4)MarchingCubesArrays::directionOffsets[index];
 }
@@ -345,10 +347,6 @@ void VoxelEngine::SmoothVoxelBuilder::CreateComputeBuffers()
     // size of above: 17,956,864
 
 
-    //out_Debug_Grid_buffer = m_controller->NewReadWriteBuffer(m_static_settings.FullChunkSize[0] * 8, sizeof(glm::fvec4));
-    //out_Debug_Grid_buffer = m_controller->NewReadWriteBuffer(m_static_settings.FullChunkSize[1] * m_totalBatches, sizeof(glm::fvec4));
-    out_Debug_Grid_buffer = m_controller->NewReadWriteBuffer(expanded_heightmap_size * m_numBatchesPerGroup, sizeof(glm::fvec4));
-
     //const int max_size = UINT16_MAX * sizeof(glm::vec4);
     m_out_vertex_buffer = m_controller->NewWriteBuffer(UINT16_MAX * m_totalBatches, sizeof(glm::vec4));
     m_out_normal_buffer = m_controller->NewWriteBuffer(UINT16_MAX * m_totalBatches, sizeof(glm::vec4));
@@ -362,6 +360,26 @@ void VoxelEngine::SmoothVoxelBuilder::CreateComputeBuffers()
         m_unused_heightmaps.push(heightmap);
     }
 
+    //m_out_debug_buffer_Unify_Fields   = new ComputeBuffer(expanded_chunk_size_1 * m_numBatchesPerGroup, VECTOR4_SIZE);
+    //m_out_debug_buffer_Unify_Fields   = new ComputeBuffer(1, sizeof(float));
+    //m_out_debug_buffer_Construct      = new ComputeBuffer(m_static_settings.FullChunkSize[0] * m_numBatchesPerGroup, VECTOR4_SIZE);
+    //m_out_debug_buffer_Construct      = new ComputeBuffer(1, VECTOR4_SIZE);
+    //m_out_debug_buffer_Mark           = new ComputeBuffer(1, VECTOR4_SIZE);
+    //m_out_debug_buffer_Stitch_async   = new ComputeBuffer(1, VECTOR4_SIZE);
+    
+
+    m_out_debug_buffer_Heightmap = m_controller->NewWriteBuffer(expanded_chunk_size_1 * m_numBatchesPerGroup, sizeof(float));
+    m_out_debug_buffer_ISO_Field = m_controller->NewWriteBuffer(expanded_chunk_size_1 * m_numBatchesPerGroup, VECTOR4_SIZE);
+    //m_out_debug_buffer_Unify_Fields = m_controller->NewWriteBuffer(expanded_chunk_size_1 * m_numBatchesPerGroup, VECTOR4_SIZE);
+    m_out_debug_buffer_Unify_Fields = m_controller->NewWriteBuffer(1, sizeof(float));
+    m_out_debug_buffer_Construct = m_controller->NewWriteBuffer(1, VECTOR4_SIZE);
+    m_out_debug_buffer_Mark = m_controller->NewWriteBuffer(1, VECTOR4_SIZE);
+    m_out_debug_buffer_Stitch_async = m_controller->NewWriteBuffer(1, VECTOR4_SIZE);
+
+
+    //out_Debug_Grid_buffer = m_controller->NewReadWriteBuffer(m_static_settings.FullChunkSize[0] * 8, sizeof(glm::fvec4));
+    //out_Debug_Grid_buffer = m_controller->NewReadWriteBuffer(m_static_settings.FullChunkSize[1] * m_totalBatches, sizeof(glm::fvec4));
+    out_Debug_Grid_buffer = m_controller->NewReadWriteBuffer(expanded_heightmap_size * m_numBatchesPerGroup, sizeof(glm::fvec4));
 
 
     // Set Buffer Data
@@ -397,13 +415,13 @@ void VoxelEngine::SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_heightmap->AddBuffer(0, m_in_static_settings_buffer);
     m_program_heightmap->AddBuffer(1, m_in_run_settings_buffer);
     m_program_heightmap->AddBuffer(2, m_heightmap_data_buffer);
-    m_program_heightmap->AddBuffer(3, out_Debug_Grid_buffer);
+    m_program_heightmap->AddBuffer(3, m_out_debug_buffer_Heightmap);
 
 
     m_program_iso_field->AddBuffer(0, m_in_static_settings_buffer);
     m_program_iso_field->AddBuffer(1, m_in_run_settings_buffer);
     m_program_iso_field->AddBuffer(2, m_iso_field_buffer);
-    m_program_iso_field->AddBuffer(3, out_Debug_Grid_buffer);
+    m_program_iso_field->AddBuffer(3, m_out_debug_buffer_ISO_Field);
 
     //m_program_material_field
 
@@ -413,7 +431,7 @@ void VoxelEngine::SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_unify_fields->AddBuffer(3, m_iso_field_buffer);
     m_program_unify_fields->AddBuffer(4, m_material_buffer);
     m_program_unify_fields->AddBuffer(5, m_iso_mat_buffer);
-    m_program_unify_fields->AddBuffer(6, out_Debug_Grid_buffer);
+    m_program_unify_fields->AddBuffer(6, m_out_debug_buffer_Unify_Fields);
 
 
     // ##### OLD ####
@@ -444,7 +462,7 @@ void VoxelEngine::SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_smoothrender_construct->AddBuffer(10, m_trans_triangles_buffer);
     m_program_smoothrender_construct->AddBuffer(11, m_trans_counts_buffer);
     m_program_smoothrender_construct->AddBuffer(12, m_stitch_map_buffer);
-
+    m_program_smoothrender_construct->AddBuffer(13, m_out_debug_buffer_Construct);
 
     // ##### OLD ####
     /*
@@ -465,6 +483,7 @@ void VoxelEngine::SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_smoothrender_mark->AddBuffer(1, m_trans_counts_buffer);
     m_program_smoothrender_mark->AddBuffer(2, m_stitch_map_buffer);
     m_program_smoothrender_mark->AddBuffer(3, m_out_counts_buffer);
+    m_program_smoothrender_mark->AddBuffer(4, m_out_debug_buffer_Mark);
 
     /*m_program_smoothrender_stitch->AddBuffer(0, m_in_static_settings_buffer);
     m_program_smoothrender_stitch->AddBuffer(1, m_in_run_settings_buffer);
@@ -488,7 +507,7 @@ void VoxelEngine::SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_smoothrender_stitch_async->AddBuffer(8,  m_out_normal_buffer);
     m_program_smoothrender_stitch_async->AddBuffer(9,  m_out_triangles_buffer);
     m_program_smoothrender_stitch_async->AddBuffer(10, m_out_counts_buffer);
-    m_program_smoothrender_stitch_async->AddBuffer(11, out_Debug_Grid_buffer);
+    m_program_smoothrender_stitch_async->AddBuffer(11, m_out_debug_buffer_Stitch_async);
     
     
 

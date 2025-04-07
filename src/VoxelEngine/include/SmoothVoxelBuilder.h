@@ -189,6 +189,13 @@ namespace VoxelEngine {
 		IComputeBuffer* m_in_Buffer;
 		IComputeBuffer* m_out_Buffer;
 
+		IComputeBuffer* m_out_debug_buffer_Heightmap;
+		IComputeBuffer* m_out_debug_buffer_ISO_Field;
+		IComputeBuffer* m_out_debug_buffer_Unify_Fields;
+		IComputeBuffer* m_out_debug_buffer_Construct;
+		IComputeBuffer* m_out_debug_buffer_Mark;
+		IComputeBuffer* m_out_debug_buffer_Stitch_async;
+
 		IComputeBuffer* m_heightmap_run_settings_buffer;
 		IComputeBuffer* m_heightmap_data_buffer;
 		IComputeBuffer* m_iso_field_buffer;

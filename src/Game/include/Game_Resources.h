@@ -24,6 +24,13 @@ public:
 			class Engine {
 
 			};
+
+			class Voxel {
+				public:
+				inline static const std::string CHUNK_OPAQUE_VERT = "graphics.voxel.opaque_chunk.vert";
+				inline static const std::string CHUNK_OPAQUE_FRAG = "graphics.voxel.opaque_chunk.frag";
+			};
+
 			inline static const std::string STANDARD_VERT = "graphics.standard.standard.vert";
 			inline static const std::string STANDARD_FRAG = "graphics.standard.standard.frag";
 

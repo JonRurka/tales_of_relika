@@ -94,6 +94,8 @@ public:
 		m_active = true;
 	}
 
+	void Generate_Normals();
+		
 	void Draw();
 
 	void Dispose();

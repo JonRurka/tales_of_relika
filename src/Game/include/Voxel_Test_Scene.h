@@ -11,6 +11,7 @@ using namespace VoxelEngine;
 using namespace DynamicCompute::Compute;
 
 class Standard_Material;
+class Opaque_Chunk_Material;
 
 class Voxel_Test_Scene : public Scene {
 public:
@@ -24,8 +25,12 @@ protected:
 
 private:
 	Standard_Material* standard_mat{ nullptr };
+	Opaque_Chunk_Material* chunk_opaque_mat{ nullptr };
 	WorldObject* Camera_obj{ nullptr };
 	Camera* camera{ nullptr };
+
+	WorldObject* light_obj_dir{ nullptr };
+	Light* light_comp_dir{ nullptr };
 
 	IVoxelBuilder_private* m_builder{ nullptr };
 

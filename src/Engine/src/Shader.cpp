@@ -20,6 +20,8 @@ Shader::Shader(std::string name, const std::string vertexPath, const std::string
     std::ifstream vShaderFile;
     std::ifstream fShaderFile;
 
+    m_name = name;
+
     vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 

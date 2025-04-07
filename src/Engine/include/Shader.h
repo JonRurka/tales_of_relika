@@ -73,7 +73,8 @@ public:
 
 
 private:
-    unsigned int m_ID;
+    unsigned int m_ID{ 0 };
+    std::string m_name;
     bool m_initialized{false};
 
     bool m_lights_initialized{false};

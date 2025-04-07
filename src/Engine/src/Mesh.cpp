@@ -12,6 +12,8 @@
 
 #define RECENTER_THRESHOLD 0.1f
 
+#define TRIANGLE_NORMAL(v1, v2, v3) normalize(cross((v2 - v1), (v3 - v1)))
+
 Mesh::Mesh() : Mesh(0)
 {
 }
@@ -214,6 +216,40 @@ void Mesh::Recenter()
 		m_vertices[i] -= m_center;
 		//m_vertices[i] *= scale;
 	}
+}
+
+void Mesh::Generate_Normals()
+{
+	if (m_indices.size() <= 0)
+	{
+		m_normals.clear();
+		m_normals.reserve(m_num_vertices);
+		int num_poly = m_num_vertices / 3;
+		for (int i = 0; i < num_poly; i++) {
+			glm::vec3 norm = TRIANGLE_NORMAL(
+				m_vertices[(i * 3) + 0], 
+				m_vertices[(i * 3) + 1], 
+				m_vertices[(i * 3) + 2]
+			);
+			m_normals.push_back(norm);
+			m_normals.push_back(norm);
+			m_normals.push_back(norm);
+		}
+	}
+	else {
+		m_normals.clear();
+		m_normals.reserve(m_num_vertices);
+		for (int i = 0; i < m_indices.size(); i += 3) {
+			glm::vec3 vert1 = m_vertices[m_indices[i + 0]];
+			glm::vec3 vert2 = m_vertices[m_indices[i + 1]];
+			glm::vec3 vert3 = m_vertices[m_indices[i + 2]];
+			glm::vec3 norm = TRIANGLE_NORMAL(vert1, vert2, vert3);
+			m_normals[m_indices[i + 0]] = norm;
+			m_normals[m_indices[i + 1]] = norm;
+			m_normals[m_indices[i + 2]] = norm;
+		}
+	}
+	sync_vertices(Mesh::Vert_Update_Mode::NORMALS);
 }
 
 void Mesh::Draw()
