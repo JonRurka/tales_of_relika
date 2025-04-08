@@ -15,6 +15,7 @@ set(${module}_headers
 	include/Graphics.h
 	include/Engine.h
 	include/input_events.h
+	include/Input.h
 	include/Scene.h
 	include/khrplatform.h
 	include/Light.h
@@ -46,6 +47,7 @@ set(${module}_sources
 	src/def_stb_image.cpp
 	src/glad.c
 	src/Graphics.cpp
+	src/Input.cpp
 	src/Engine.cpp
 	src/Scene.cpp
 	src/Light.cpp

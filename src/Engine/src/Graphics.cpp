@@ -14,6 +14,7 @@
 #include "Texture.h"
 #include "Logger.h"
 #include "Engine.h"
+#include "Input.h"
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -134,17 +135,17 @@ void Graphics::OnWindowResize(int width, int height)
 
 void Graphics::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	Engine::Instance()->key_callback(window, key, scancode, action, mods);	
+	Input::Instance()->key_callback(window, key, scancode, action, mods);	
 }
 
 void Graphics::cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	Engine::Instance()->cursor_position_callback(window, xpos, ypos);
+	Input::Instance()->cursor_position_callback(window, xpos, ypos);
 }
 
 void Graphics::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-	Engine::Instance()->mouse_button_callback(window, button, action, mods);
+	Input::Instance()->mouse_button_callback(window, button, action, mods);
 }
 
 
@@ -164,4 +165,10 @@ void Graphics::render(float dt)
 	m_screen_shader->use(false);
 	m_screen_shader->Bind_Textures();
 	m_screen_mesh->Draw();
+}
+
+void Graphics::set_mouse_visibility(bool visible)
+{
+	int visibility_mode = visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED;
+	glfwSetInputMode(m_window, GLFW_CURSOR, visibility_mode);
 }

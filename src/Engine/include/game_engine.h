@@ -7,6 +7,7 @@
 #include "Cube_Material.h"
 #include "Graphics.h"
 #include "Engine.h"
+#include "Input.h"
 #include "Scene.h"
 #include "Light.h"
 #include "Light_Material.h"
@@ -23,3 +24,5 @@
 #include "Utilities.h"
 #include "window.h"
 #include "WorldObject.h"
+
+using namespace input;

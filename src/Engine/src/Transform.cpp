@@ -31,9 +31,13 @@ void Transform::Rotate(glm::vec3 value)
 
 void Transform::Rotate(float x, float y, float z)
 {
-	rot_mat = glm::rotate(rot_mat, glm::radians(x), glm::vec3(1.0f, 0.0f, 0.0f));
-	rot_mat = glm::rotate(rot_mat, glm::radians(y), glm::vec3(0.0f, 1.0f, 0.0f));
-	rot_mat = glm::rotate(rot_mat, glm::radians(z), glm::vec3(0.0f, 0.0f, 1.0f));
+	m_rotation = m_rotation *
+		glm::angleAxis(glm::radians(x), glm::vec3(1.0f, 0.0f, 0.0f)) *
+		glm::angleAxis(glm::radians(y), glm::vec3(0.0f, 1.0f, 0.0f)) *
+		glm::angleAxis(glm::radians(z), glm::vec3(0.0f, 0.0f, 1.0f));
+	//rot_mat = glm::rotate(rot_mat, glm::radians(x), glm::vec3(1.0f, 0.0f, 0.0f));
+	//rot_mat = glm::rotate(rot_mat, glm::radians(y), glm::vec3(0.0f, 1.0f, 0.0f));
+	//rot_mat = glm::rotate(rot_mat, glm::radians(z), glm::vec3(0.0f, 0.0f, 1.0f));
 	set_model_mat();
 	//m_position = model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	//m_rotation = model
@@ -64,8 +68,7 @@ glm::vec3 Transform::Local_To_World_Direction(glm::vec3 value)
 void Transform::LookAt(glm::vec3 point)
 {
 
-	glm::quat q = glm::quatLookAt(-glm::normalize(m_position - point), glm::vec3(0.0f, 1.0f, 0.0f));
-	rot_mat = glm::toMat4(q);
+	m_rotation = glm::quatLookAt(-glm::normalize(m_position - point), glm::vec3(0.0f, 1.0f, 0.0f));
 	set_model_mat();
 
 	/*if (glm::length(point) <= 0.00001f) {
@@ -97,6 +100,7 @@ void Transform::set_position(glm::vec3 pos)
 
 void Transform::set_model_mat(bool update_parent)
 {
+	rot_mat = glm::toMat4(m_rotation);
 	WorldObject* parent = m_object->Parent();
 	if (parent != nullptr) {
 		Transform* parent_trans = parent->Get_Transform();
@@ -111,9 +115,9 @@ void Transform::set_model_mat(bool update_parent)
 	
 	normal_mat = glm::transpose(glm::inverse(model));
 	m_position = model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	m_forward = model * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
-	m_right = model * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-	m_up = model * glm::vec4(1.0f, 1.0f, 0.0f, 0.0f);
+	m_forward = glm::rotate(m_rotation, glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+	m_right = m_rotation * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+	m_up = m_rotation * glm::vec4(1.0f, 1.0f, 0.0f, 0.0f);
 
 	for (const auto& child : m_object->Children())
 	{

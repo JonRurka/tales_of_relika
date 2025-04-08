@@ -12,9 +12,13 @@ struct GLFWwindow;
 class Texture;
 class Mesh;
 class Shader;
+class Engine;
+class Input;
 
 class Graphics
 {
+	friend class Engine;
+	friend class Input;
 public:
 
 	struct Render_Options {
@@ -72,6 +76,7 @@ private:
 
 	void render(float dt);
 
+	void set_mouse_visibility(bool visible);
 
 	inline static const std::string LOG_LOC{ "GRAPHICS" };
 };

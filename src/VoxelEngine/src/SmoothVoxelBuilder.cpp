@@ -2,6 +2,8 @@
 
 #include "marchingcubes_arrays.h"
 
+#include "Logger.h"
+
 using namespace VoxelEngine;
 
 #define USE_CACHE false
@@ -48,7 +50,7 @@ void All_Zero(glm::vec4* data, int num, std::string marker) {
     }
 
     if (all_zero) {
-        printf("%s: All zero!!\n", marker.c_str());
+        //printf("%s: All zero!!\n", marker.c_str());
     }
 }
 
@@ -247,7 +249,6 @@ void VoxelEngine::SmoothVoxelBuilder::CalculateVariables()
 
     m_static_settings.skipDist[0] = 1 / (float)m_static_settings.VoxelsPerMeter.x;
     //skipDist = Math.RoundToInt(1 / (float)VoxelsPerMeter);
-
     
     locOffset[0] = glm::fvec4(0, 0, m_static_settings.SideLength.z, 0);
     locOffset[1] = glm::fvec4(m_static_settings.SideLength.x, 0, m_static_settings.SideLength.z, 0);

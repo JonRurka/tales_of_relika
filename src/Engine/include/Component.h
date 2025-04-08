@@ -20,7 +20,7 @@ public:
 
 	static Component* Load_Component(WorldObject* obj, json data);
 
-	virtual void Load(json data) = 0;
+	virtual void Load(json data) {};
 
 private:
 

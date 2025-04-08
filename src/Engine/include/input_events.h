@@ -25,7 +25,7 @@
 #include "Utilities.h"
 
 
-namespace Input {
+namespace input {
 
 	//class Platform;
 
@@ -240,6 +240,7 @@ namespace Input {
 	{
 		Down,
 		Up,
+		Repeat,
 		Move,
 		Unknown
 	};
@@ -252,7 +253,17 @@ namespace Input {
 			button{ button },
 			action{ action },
 			pos_x{ pos_x },
-			pos_y{ pos_y }
+			pos_y{ pos_y },
+			press_time{ Utilities::Get_Time() }, num_frames{0}, used{false}
+		{}
+
+		MouseButtonInputEvent() :
+			InputEvent{ EventSource::Mouse },
+			button{ MouseButton::Unknown },
+			action{ MouseAction::Unknown },
+			pos_x{ 0 },
+			pos_y{ 0 },
+			press_time{ 0 }, num_frames{ 0 }, used{ false }
 		{}
 
 		MouseButton get_button() const { return button; }
@@ -263,14 +274,24 @@ namespace Input {
 
 		float get_pos_y() const { return pos_y; }
 
+
+		void tick() { num_frames++; }
+		void reset() { num_frames = 0; }
+		bool is_used() { return used; }
+		int get_num_frames() { return num_frames; }
+		double get_press_time() const { return Utilities::Get_Time() - press_time; }
+		void update_action(MouseAction new_action) { action = new_action; }
+
 	private:
 		MouseButton button;
-
 		MouseAction action;
 
 		float pos_x;
-
 		float pos_y;
+
+		double press_time;
+		int num_frames;
+		bool used;
 	};
 
 	enum class TouchAction

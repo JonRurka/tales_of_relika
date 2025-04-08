@@ -7,6 +7,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#define QUATERNION_IDENTITY (glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
+
 class WorldObject;
 
 class Transform
@@ -42,7 +44,14 @@ public:
 
 	void LookAt(glm::vec3 point);
 
-	glm::vec3 EulerAngles() { return m_rotation; }
+	glm::quat Rotation() { return m_rotation; }
+	void Rotation(glm::quat value) 
+	{ 
+		m_rotation = value; 
+		set_model_mat();
+	}
+
+	glm::vec3 EulerAngles() { return glm::eulerAngles(m_rotation); }
 
 	glm::vec3 Forward() { return m_forward; }
 
@@ -65,7 +74,8 @@ private:
 	glm::mat3 normal_mat = glm::mat3(1.0f);
 
 	glm::vec3 m_position = glm::vec3(0.0f);
-	glm::vec3 m_rotation = glm::vec3(0.0f);
+	//glm::vec3 m_rotation = glm::vec3(0.0f);
+	glm::quat m_rotation = QUATERNION_IDENTITY;
 	glm::vec3 m_forward = glm::vec3(0.0, 0.0f, -1.0f);
 	glm::vec3 m_right = glm::vec3(1.0, 0.0f, 0.0f);
 	glm::vec3 m_up = glm::vec3(0.0, 1.0f, 0.0f);

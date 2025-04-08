@@ -97,6 +97,7 @@ void Camera::Set_Skybox(Cubemap* value)
 			glm::vec3( 1.0f, -1.0f,  1.0f)
 		};
 		m_cubemap_mesh = new Mesh();
+		m_cubemap_mesh->Activate();
 		m_cubemap_mesh->Vertices(skyboxVertices);
 		m_cubemap_shader = Shader::Create("skybox", SKYBOX_VERT_SHADER, SKYBOX_FRAG_SHADER);
 		if (!m_cubemap_shader->Initialized()) {
@@ -105,6 +106,7 @@ void Camera::Set_Skybox(Cubemap* value)
 		}
 	}
 	m_cubemap = value;
+	//Logger::LogDebug(LOG_POS("Set_Skybox"), "Skybox set successfully.");
 }
 
 Texture* Camera::FrameTexture()
@@ -206,7 +208,7 @@ void Camera::render_opaque(float dt)
 				alpha_object_idx.push_back(a_map);
 				continue;
 			}
-			//rend->Draw(dt);
+			rend->Draw(dt);
 		}
 
 	}

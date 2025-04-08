@@ -13,13 +13,152 @@
 #include <stdlib.h>  // For rand() and srand()
 #include <time.h>    // For time()
 
+#include "Editor_Camera_Control.h"
 
 using namespace VoxelEngine;
-using namespace Input;
+using namespace input;
 
 void Voxel_Test_Scene::Init()
 {
 	Logger::LogInfo(LOG_POS("Init"), "Test Scene started");
+
+	std::vector<glm::vec3> floor_vertices = {
+		glm::vec3(-0.5f, -0.5f, -0.5f),
+		glm::vec3(0.5f, -0.5f, -0.5f),
+		glm::vec3(0.5f,  0.5f, -0.5f),
+		glm::vec3(0.5f,  0.5f, -0.5f),
+		glm::vec3(-0.5f,  0.5f, -0.5f),
+		glm::vec3(-0.5f, -0.5f, -0.5f),
+
+		glm::vec3(-0.5f, -0.5f,  0.5f),
+		glm::vec3(0.5f, -0.5f,  0.5f),
+		glm::vec3(0.5f,  0.5f,  0.5f),
+		glm::vec3(0.5f,  0.5f,  0.5f),
+		glm::vec3(-0.5f,  0.5f,  0.5f),
+		glm::vec3(-0.5f, -0.5f,  0.5f),
+
+		glm::vec3(-0.5f,  0.5f,  0.5f),
+		glm::vec3(-0.5f,  0.5f, -0.5f),
+		glm::vec3(-0.5f, -0.5f, -0.5f),
+		glm::vec3(-0.5f, -0.5f, -0.5f),
+		glm::vec3(-0.5f, -0.5f,  0.5f),
+		glm::vec3(-0.5f,  0.5f,  0.5f),
+
+		glm::vec3(0.5f,  0.5f,  0.5f),
+		glm::vec3(0.5f,  0.5f, -0.5f),
+		glm::vec3(0.5f, -0.5f, -0.5f),
+		glm::vec3(0.5f, -0.5f, -0.5f),
+		glm::vec3(0.5f, -0.5f,  0.5f),
+		glm::vec3(0.5f,  0.5f,  0.5f),
+
+		glm::vec3(-0.5f, -0.5f, -0.5f),
+		glm::vec3(0.5f, -0.5f, -0.5f),
+		glm::vec3(0.5f, -0.5f,  0.5f),
+		glm::vec3(0.5f, -0.5f,  0.5f),
+		glm::vec3(-0.5f, -0.5f,  0.5f),
+		glm::vec3(-0.5f, -0.5f, -0.5f),
+
+		glm::vec3(-0.5f,  0.5f, -0.5f),
+		glm::vec3(0.5f,  0.5f, -0.5f),
+		glm::vec3(0.5f,  0.5f,  0.5f),
+		glm::vec3(0.5f,  0.5f,  0.5f),
+		glm::vec3(-0.5f,  0.5f,  0.5f),
+		glm::vec3(-0.5f,  0.5f, -0.5f)
+	};
+
+	std::vector<glm::vec2> floor_tex_coords = {
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(0.0f, 1.0f),
+
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(0.0f, 1.0f),
+	};
+
+	std::vector<glm::vec3> floor_normals = {
+		glm::vec3(0.0f,  0.0f, -1.0f),
+		glm::vec3(0.0f,  0.0f, -1.0f),
+		glm::vec3(0.0f,  0.0f, -1.0f),
+		glm::vec3(0.0f,  0.0f, -1.0f),
+		glm::vec3(0.0f,  0.0f, -1.0f),
+		glm::vec3(0.0f,  0.0f, -1.0f),
+
+		glm::vec3(0.0f,  0.0f, 1.0f),
+		glm::vec3(0.0f,  0.0f, 1.0f),
+		glm::vec3(0.0f,  0.0f, 1.0f),
+		glm::vec3(0.0f,  0.0f, 1.0f),
+		glm::vec3(0.0f,  0.0f, 1.0f),
+		glm::vec3(0.0f,  0.0f, 1.0f),
+
+		glm::vec3(-1.0f,  0.0f,  0.0f),
+		glm::vec3(-1.0f,  0.0f,  0.0f),
+		glm::vec3(-1.0f,  0.0f,  0.0f),
+		glm::vec3(-1.0f,  0.0f,  0.0f),
+		glm::vec3(-1.0f,  0.0f,  0.0f),
+		glm::vec3(-1.0f,  0.0f,  0.0f),
+
+		glm::vec3(1.0f,  0.0f,  0.0f),
+		glm::vec3(1.0f,  0.0f,  0.0f),
+		glm::vec3(1.0f,  0.0f,  0.0f),
+		glm::vec3(1.0f,  0.0f,  0.0f),
+		glm::vec3(1.0f,  0.0f,  0.0f),
+		glm::vec3(1.0f,  0.0f,  0.0f),
+
+		glm::vec3(0.0f, -1.0f,  0.0f),
+		glm::vec3(0.0f, -1.0f,  0.0f),
+		glm::vec3(0.0f, -1.0f,  0.0f),
+		glm::vec3(0.0f, -1.0f,  0.0f),
+		glm::vec3(0.0f, -1.0f,  0.0f),
+		glm::vec3(0.0f, -1.0f,  0.0f),
+
+		glm::vec3(0.0f,  1.0f,  0.0f),
+		glm::vec3(0.0f,  1.0f,  0.0f),
+		glm::vec3(0.0f,  1.0f,  0.0f),
+		glm::vec3(0.0f,  1.0f,  0.0f),
+		glm::vec3(0.0f,  1.0f,  0.0f),
+		glm::vec3(0.0f,  1.0f,  0.0f),
+	};
+
+	glm::vec4 cube_color(1.0f, 1.0f, 1.0f, 1.0f);
+	std::vector<glm::vec4> floor_cube_colors;
+	floor_cube_colors.assign(floor_vertices.size(), cube_color);
+
+
 
 	// Create Directional light
 	glm::vec4 light_color_dir = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -28,7 +167,7 @@ void Voxel_Test_Scene::Init()
 	light_comp_dir->Enabled(true);
 	light_obj_dir->Get_Transform()->LookAt(glm::vec3(10.0f, -50.0f, -20.0f));
 
-	light_comp_dir->Strength(0.6f);
+	light_comp_dir->Strength(1.0f);
 
 	// Create camera
 	std::vector<std::string> faces
@@ -45,14 +184,15 @@ void Voxel_Test_Scene::Init()
 	Camera_obj->Get_Transform()->Position(glm::vec3(0, 5, 6));
 	Camera_obj->Rotate(-25.0f, 0.0f, 0.0f);
 	camera = Camera_obj->Add_Component<Camera>();
+	Camera_obj->Add_Component<Editor_Camera_Control>();
 	//camera->Clear_Color(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-	camera->FOV(90.0f);
-	//camera->Set_Skybox(skybox_cubmap);
+	//camera->FOV(90.0f);
+	camera->Set_Skybox(skybox_cubmap);
 
 	standard_mat = new Standard_Material();
 	standard_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	standard_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	standard_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
+	standard_mat->SetVec2("material.scale", glm::vec2(32.0f, 32.0f));
 	standard_mat->setFloat("material.shininess", 32.0f);
 	standard_mat->setFloat("material.specular_intensity", 1.0f);
 	standard_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -68,6 +208,20 @@ void Voxel_Test_Scene::Init()
 	chunk_opaque_mat->setFloat("material.specular_intensity", 1.0f);
 	chunk_opaque_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	chunk_opaque_mat->setFloat("globalAmbientIntensity", 0.1f);
+
+
+	Mesh* cube_mesh = new Mesh();
+	cube_mesh->Vertices(floor_vertices);
+	cube_mesh->Normals(floor_normals);
+	cube_mesh->Colors(floor_cube_colors);
+	cube_mesh->TexCoords(floor_tex_coords);
+
+	WorldObject* floor_obj = Instantiate("floor");
+	floor_obj->Get_MeshRenderer()->Set_Mesh(cube_mesh);
+	floor_obj->Get_MeshRenderer()->Set_Material(standard_mat);
+	floor_obj->Get_Transform()->Translate(16.0f, 0.0f, 16.0f);
+	floor_obj->Get_Transform()->Scale(glm::vec3(32.0f, 1.0f, 32.0f));
+
 
 
 	ChunkSettings settings;
@@ -111,18 +265,26 @@ void Voxel_Test_Scene::Init()
 	std::vector<glm::vec4> verts(m_vertices, m_vertices + chnk_count.x);
 	std::vector<glm::vec4> normals(m_normals, m_normals + chnk_count.x);
 
+	glm::vec4 max_val = glm::vec4(-1000, -1000, -1000, -1000);
+	for (const auto& elem : verts) {
+		max_val = glm::max(max_val, elem);
+	}
+	Logger::LogDebug(LOG_POS("Init"), "Maximum vertex: (%f, %f, %f)", max_val.x, max_val.y, max_val.z);
+
+
 	Logger::LogDebug(LOG_POS("Init"), "Number of vertices: %i", (int)chnk_count.x);
 
 	Mesh* voxel_mesh_test = new Mesh();
 	voxel_mesh_test->Vertices(Utilities::vec4_to_vec3_arr(verts));
-	//voxel_mesh_test->Normals(Utilities::vec4_to_vec3_arr(normals));
-	voxel_mesh_test->Generate_Normals();
+	voxel_mesh_test->Normals(Utilities::vec4_to_vec3_arr(normals));
+	//voxel_mesh_test->Generate_Normals();
 
 
 	WorldObject* obj = Instantiate("test_object");
 	obj->Get_MeshRenderer()->Set_Mesh(voxel_mesh_test);
-	obj->Get_MeshRenderer()->Transparent(true);
+	//obj->Get_MeshRenderer()->Transparent(true);
 	//obj->Get_MeshRenderer()->Set_Shader(m_shader);
+	obj->Get_Transform()->Translate(16.0f, 16.0f, 16.0f);
 	obj->Get_MeshRenderer()->Set_Material(chunk_opaque_mat);
 	obj->Get_Transform()->Translate(0, 0, 0);
 
@@ -130,22 +292,9 @@ void Voxel_Test_Scene::Init()
 
 void Voxel_Test_Scene::Update(float dt)
 {
-	light_obj_dir->Get_Transform()->Rotate(0.0f, 25.0f * dt, 0.0f);
+	//light_obj_dir->Get_Transform()->Rotate(0.0f, 25.0f * dt, 0.0f);
 
-	if (Engine::GetKeyDown(KeyCode::G)) {
-		Logger::LogDebug(LOG_POS("Update"), "Pressed G");
-	}
-
-	if (Engine::GetKey(KeyCode::G)) {
-		Logger::LogDebug(LOG_POS("Update"), "Held G");
-	}
-
-	if (Engine::GetKeyUp(KeyCode::G)) {
-		Logger::LogDebug(LOG_POS("Update"), "Released G");
-	}
-
-	Logger::LogDebug(LOG_POS("Update"), "Mouse Input: X: %f, Y: %f", (float)Engine::Get_Input_X(), (float)Engine::Get_Input_X());
-
+	
 }
 
 void Voxel_Test_Scene::create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color)

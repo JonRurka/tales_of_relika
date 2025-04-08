@@ -260,6 +260,6 @@ namespace VoxelEngine {
 		glm::fvec4 locOffset[8];
 		glm::fvec4 globalOffsets[8];
 
-		
+		inline static const std::string LOG_LOC{ "SMOOTH_VOXEL_BUILDER" };
 	};
 }
