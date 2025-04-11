@@ -96,7 +96,7 @@ public:
 
 	void Generate_Normals();
 		
-	void Draw();
+	void Draw(GLenum mode = GL_TRIANGLES);
 
 	void Dispose();
 

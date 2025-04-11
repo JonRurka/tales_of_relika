@@ -31,7 +31,10 @@ struct ISO_Material{
 };
 
 struct GridPoint{
-    fvec4 position;
+	float iso;
+    fvec4 localPosition;
+	fvec4 globalPosition;
+	ivec3 voxelIndex;
     fvec4 normal;
     ivec4 type;
     fvec4 type_ratio;
@@ -74,7 +77,9 @@ STRUCT ISO_Material New_ISO_Material(){
 
 STRUCT GridPoint New_GridPoint(){
 	STRUCT GridPoint res;
-	res.position = FVEC4_ZERO;
+	res.iso = 0;
+	res.localPosition = FVEC4_ZERO;
+	res.globalPosition = FVEC4_ZERO;
 	res.normal = FVEC4_ZERO;
 	res.type = IVEC4_ZERO;
 	res.type_ratio = IVEC4_ZERO;

@@ -79,6 +79,7 @@ void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index
 
     int dst_offset = getSourceOffset(batch[0], batch_settings[2], (v_index % batch[2]) == 0);//batch[0] * 65535;
 
+	
 
     if (buffer_index == -1 || this_count == 0){
         //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(g_index, buffer_index, this_count, 0);
@@ -88,6 +89,8 @@ void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index
     int tri_start = buffer_index;
     //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(g_index, buffer_index, this_count, tri_start);
 
+	//Set_Debug_Data(v_index, FVEC4(v_index, buffer_index, this_count, 0));
+
     for (int i = 0; i < this_count; ++i){
  
         int source_index = batch_offset + (INT(v_index) * 15) + i;
@@ -95,6 +98,9 @@ void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index
         fvec4 vert = get_buffer_vector(in_vertex_data, source_index);
         fvec4 norm = get_buffer_vector(in_normal_data, source_index);
         int tris = tri_start + GetTriangle(source_index);
+		
+		//vert.w = dst_offset + buffer_index + i;
+		//Set_Debug_Data(v_index, vert);
 
         AddMeshEntry(dst_offset + buffer_index + i, vert, norm, tris);
     }
@@ -121,8 +127,8 @@ void smoothrender_async_stitch_main(uint index)
 	
 	Process_Voxel(batch, static_settings.batches, index, voxel_index);
 	
-	if (index == 0)
-		Set_Debug_Data(index, FVEC4(1, 1, 1, 1));
+	//if (index == 0)
+	//	Set_Debug_Data(index, FVEC4(1, 1, 1, 1));
 }
 
 

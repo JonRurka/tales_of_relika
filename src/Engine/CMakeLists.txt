@@ -16,9 +16,10 @@ set(${module}_headers
 	include/Engine.h
 	include/input_events.h
 	include/Input.h
+	#include/Raycast.h
+	include/Physics.h
 	include/Scene.h
 	include/khrplatform.h
-	include/Light.h
 	include/Light_Material.h
 	include/Material.h
 	include/Mesh.h
@@ -35,6 +36,10 @@ set(${module}_headers
 	include/window.h
 	include/WorldObject.h
 	include/GPUSort.h
+	
+	include/Light.h
+	include/Collider.h
+	include/BoxCollider.h
 )
 
 set(${module}_sources
@@ -48,9 +53,10 @@ set(${module}_sources
 	src/glad.c
 	src/Graphics.cpp
 	src/Input.cpp
+	#src/Raycast.cpp
+	src/Physics.cpp
 	src/Engine.cpp
 	src/Scene.cpp
-	src/Light.cpp
 	src/Light_Material.cpp
 	src/Material.cpp
 	src/Mesh.cpp
@@ -65,6 +71,10 @@ set(${module}_sources
 	src/window.cpp
 	src/WorldObject.cpp
 	src/GPUSort.cpp
+	
+	src/Light.cpp
+	src/Collider.cpp
+	src/BoxCollider.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})

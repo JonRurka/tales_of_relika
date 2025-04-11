@@ -252,7 +252,7 @@ void Mesh::Generate_Normals()
 	sync_vertices(Mesh::Vert_Update_Mode::NORMALS);
 }
 
-void Mesh::Draw()
+void Mesh::Draw(GLenum mode)
 {
 	glBindVertexArray(VAO);
 
@@ -264,11 +264,18 @@ void Mesh::Draw()
 		
 		//printf("Process mesh: %s, verts: %i, indices: %i\n", m_name.c_str(), (int)m_num_vertices, (int)m_num_indices);
 
-		glDrawElements(GL_TRIANGLES, m_num_indices, GL_UNSIGNED_INT, 0);
+		glDrawElements(mode, m_num_indices, GL_UNSIGNED_INT, 0);
 	}
 	else {
 		//printf("Process mesh: %s, verts: %i, indices: %i\n", m_name.c_str(), (int)m_num_vertices, (int)m_num_indices);
-		glDrawArrays(GL_TRIANGLES, 0, m_num_vertices);
+		
+		
+		if (mode == GL_LINES) {
+			glDrawArrays(mode, 0, m_num_vertices / 2);
+		}
+		else {
+			glDrawArrays(mode, 0, m_num_vertices);
+		}
 	}
 
 	glBindVertexArray(0);

@@ -13,6 +13,8 @@
 #include <stdlib.h>  // For rand() and srand()
 #include <time.h>    // For time()
 
+#include <chrono>
+
 #include "Editor_Camera_Control.h"
 
 using namespace VoxelEngine;
@@ -245,11 +247,20 @@ void Voxel_Test_Scene::Init()
 	gen_options.locations.push_back(chunk_loc);
 	render_options.locations.push_back(chunk_loc);
 
+	//double start = Utilities::Get_Time();
+	auto start = std::chrono::high_resolution_clock::now();
+
 	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
 	glm::dvec4 render_times = m_builder->Render(&render_options);
 
+	auto end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration<double>(end - start).count();
+	//double stop = Utilities::Get_Time();
+
 	std::vector<glm::ivec4> counts = m_builder->GetSize();
 	glm::ivec4 chnk_count = counts[0];
+
+	
 
 	glm::vec4* m_vertices = new glm::vec4[chnk_count.x];
 	glm::vec4* m_normals = new glm::vec4[chnk_count.x];
@@ -257,19 +268,32 @@ void Voxel_Test_Scene::Init()
 
 	m_builder->Extract(
 		m_vertices,
-		m_vertices,
+		m_normals,
 		m_triangles,
 		counts[0]
 	);
 
+	for (int i = 0; i < chnk_count.x; i++) {
+		if (i % 5 == 0) {
+			Graphics::DrawDebugRay(m_vertices[i], m_normals[i], glm::vec3(0, 0, 1), 1000.0f);
+		}
+	}
+
+	
+	Logger::LogDebug(LOG_POS("Init"), "Generate Time: %f", (duration) * 1000.0f);
+
 	std::vector<glm::vec4> verts(m_vertices, m_vertices + chnk_count.x);
 	std::vector<glm::vec4> normals(m_normals, m_normals + chnk_count.x);
 
-	glm::vec4 max_val = glm::vec4(-1000, -1000, -1000, -1000);
-	for (const auto& elem : verts) {
-		max_val = glm::max(max_val, elem);
+	//glm::vec4 max_val = glm::vec4(-1000, -1000, -1000, -1000);
+	float max_val = -1000;
+	for (/*int i = 0; i < (int)chnk_count.x; i++ */ const auto& elem : verts) {
+		//max_val = glm::max(max_val, elem);
+		float dist = glm::distance(glm::vec4(0, 0, 0, 0), elem);
+		max_val = glm::max(max_val, dist);
+		//Logger::LogDebug(LOG_POS("Init"), "vertex: (%f, %f, %f)", m_vertices[i].x, m_vertices[i].y, m_vertices[i].z);
 	}
-	Logger::LogDebug(LOG_POS("Init"), "Maximum vertex: (%f, %f, %f)", max_val.x, max_val.y, max_val.z);
+	Logger::LogDebug(LOG_POS("Init"), "Maximum vertex dist: (%f)", max_val);
 
 
 	Logger::LogDebug(LOG_POS("Init"), "Number of vertices: %i", (int)chnk_count.x);
@@ -284,10 +308,11 @@ void Voxel_Test_Scene::Init()
 	obj->Get_MeshRenderer()->Set_Mesh(voxel_mesh_test);
 	//obj->Get_MeshRenderer()->Transparent(true);
 	//obj->Get_MeshRenderer()->Set_Shader(m_shader);
-	obj->Get_Transform()->Translate(16.0f, 16.0f, 16.0f);
+	obj->Get_Transform()->Translate(0.0f, 0.0f, 0.0f);
 	obj->Get_MeshRenderer()->Set_Material(chunk_opaque_mat);
 	obj->Get_Transform()->Translate(0, 0, 0);
 
+	//Graphics::DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), 10.0f);
 }
 
 void Voxel_Test_Scene::Update(float dt)

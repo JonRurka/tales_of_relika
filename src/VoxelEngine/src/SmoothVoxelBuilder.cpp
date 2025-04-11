@@ -276,7 +276,8 @@ void VoxelEngine::SmoothVoxelBuilder::InitializeComputePrograms()
 {
     // TODO: Smarter logic for getting device.
     std::vector<Vulkan_Device_Info> devices = ComputeInterface::GetSupportedDevices_Vulkan();
-    m_device = devices[0];
+    m_device = devices[1];
+    Logger::LogDebug(LOG_POS("InitializeComputePrograms"), "Using Compute Device: %s", m_device.Name);
 
     printf("Creating programs...\n");
     printf(m_shaderDir.c_str());
@@ -349,10 +350,10 @@ void VoxelEngine::SmoothVoxelBuilder::CreateComputeBuffers()
 
 
     //const int max_size = UINT16_MAX * sizeof(glm::vec4);
-    m_out_vertex_buffer = m_controller->NewWriteBuffer(UINT16_MAX * m_totalBatches, sizeof(glm::vec4));
-    m_out_normal_buffer = m_controller->NewWriteBuffer(UINT16_MAX * m_totalBatches, sizeof(glm::vec4));
+    m_out_vertex_buffer = m_controller->NewReadWriteBuffer(UINT16_MAX * m_totalBatches, VECTOR4_SIZE);
+    m_out_normal_buffer = m_controller->NewReadWriteBuffer(UINT16_MAX * m_totalBatches, VECTOR4_SIZE);
     m_out_triangles_buffer = m_controller->NewReadWriteBuffer(UINT16_MAX * m_totalBatches, sizeof(int));
-    m_out_counts_buffer = m_controller->NewWriteBuffer(m_totalBatches, sizeof(glm::vec4));
+    m_out_counts_buffer = m_controller->NewReadWriteBuffer(m_totalBatches, VECTOR4_SIZE);
 
 
     // Create heightmap cache buffers
@@ -373,14 +374,14 @@ void VoxelEngine::SmoothVoxelBuilder::CreateComputeBuffers()
     m_out_debug_buffer_ISO_Field = m_controller->NewWriteBuffer(expanded_chunk_size_1 * m_numBatchesPerGroup, VECTOR4_SIZE);
     //m_out_debug_buffer_Unify_Fields = m_controller->NewWriteBuffer(expanded_chunk_size_1 * m_numBatchesPerGroup, VECTOR4_SIZE);
     m_out_debug_buffer_Unify_Fields = m_controller->NewWriteBuffer(1, sizeof(float));
-    m_out_debug_buffer_Construct = m_controller->NewWriteBuffer(1, VECTOR4_SIZE);
+    m_out_debug_buffer_Construct = m_controller->NewWriteBuffer(m_static_settings.FullChunkSize[0] * m_numBatchesPerGroup, VECTOR4_SIZE);
     m_out_debug_buffer_Mark = m_controller->NewWriteBuffer(1, VECTOR4_SIZE);
-    m_out_debug_buffer_Stitch_async = m_controller->NewWriteBuffer(1, VECTOR4_SIZE);
+    m_out_debug_buffer_Stitch_async = m_controller->NewWriteBuffer(m_static_settings.FullChunkSize[0] * m_numBatchesPerGroup, VECTOR4_SIZE);
 
 
     //out_Debug_Grid_buffer = m_controller->NewReadWriteBuffer(m_static_settings.FullChunkSize[0] * 8, sizeof(glm::fvec4));
     //out_Debug_Grid_buffer = m_controller->NewReadWriteBuffer(m_static_settings.FullChunkSize[1] * m_totalBatches, sizeof(glm::fvec4));
-    out_Debug_Grid_buffer = m_controller->NewReadWriteBuffer(expanded_heightmap_size * m_numBatchesPerGroup, sizeof(glm::fvec4));
+    out_Debug_Grid_buffer = m_controller->NewReadWriteBuffer(m_numBatchesPerGroup * m_static_settings.FullChunkSize[0], sizeof(glm::fvec4));
 
 
     // Set Buffer Data
@@ -733,7 +734,7 @@ double VoxelEngine::SmoothVoxelBuilder::AssembleUnifiedField(int group, Run_Sett
 {
     auto start = std::chrono::high_resolution_clock::now();
 
-    m_program_unify_fields->Execute(m_numBatchesPerGroup * (m_static_settings.ChunkSize.x + 1) * (m_static_settings.ChunkSize.y + 1) * (m_static_settings.ChunkSize.z + 1), 0, 0);
+    //m_program_unify_fields->Execute(m_numBatchesPerGroup * (m_static_settings.ChunkSize.x + 1) * (m_static_settings.ChunkSize.y + 1) * (m_static_settings.ChunkSize.z + 1), 0, 0);
        
     //int search_i = GetBatchNumIndex(group_start, m_numBatchesPerGroup, glm::ivec3(0, 0, 0));
 
@@ -796,14 +797,17 @@ double VoxelEngine::SmoothVoxelBuilder::Construct(int group, Run_Settings* group
     auto duration = std::chrono::duration<double>(end - start).count();
     double construct_t = duration;
 
-    /*int search_i = GetBatchNumIndex(group_start, m_numBatchesPerGroup, glm::ivec3(0, 0, 0));
+    //int search_i = GetBatchNumIndex(group_start, m_numBatchesPerGroup, glm::ivec3(0, 0, 0));
 
-    if (search_i == -1) {
-        return 0;
-    }
+    //if (search_i == -1) {
+    //    return 0;
+    //}
 
-    printf("Found chunk in batch index %i\n", search_i);*/
+    //printf("Found chunk in batch index %i\n", search_i);
 
+    //glm::vec4* debug_data = new glm::vec4[m_static_settings.FullChunkSize[0]];
+
+    //m_out_debug_buffer_Construct->GetData(debug_data, (group * m_numBatchesPerGroup + search_i) * m_static_settings.FullChunkSize[0] * VECTOR4_SIZE, m_static_settings.FullChunkSize[0] * VECTOR4_SIZE);
 
     //int* Data_count1 = new int[m_static_settings.FullChunkSize[0]];
     //int* Data_count2 = new int[m_static_settings.FullChunkSize[0]];
@@ -811,13 +815,16 @@ double VoxelEngine::SmoothVoxelBuilder::Construct(int group, Run_Settings* group
     //m_trans_counts_buffer->GetData(Data_count1, (group * m_numBatchesPerGroup + search_i) * m_static_settings.FullChunkSize[0] * sizeof(int), m_static_settings.FullChunkSize[0] * sizeof(int));
     //m_trans_counts_buffer->GetData(Data_count2, (group * m_numBatchesPerGroup + 1) * m_static_settings.FullChunkSize[0] * sizeof(int), m_static_settings.FullChunkSize[0] * sizeof(int));
 
-    /*for (int i = 0; i < m_static_settings.FullChunkSize[0]; i++) {
-        //printf("res '%i': %i ; %i\n", i, Data_count1[i], Data_count2[i]);
-        if (Data_count1[i] > 0)
-            printf("res '%i': %i\n", i, Data_count1[i]);
-    }*/
+    //for (int i = 0; i < m_static_settings.FullChunkSize[0]; i++) {
+        //Logger::LogDebug(LOG_POS("Construct"), "(%f, %f, %f, %f)", 
+        //    debug_data[i].x, debug_data[i].y, debug_data[i].z, debug_data[i].w);
 
-    //delete[] Data_count1;
+        //printf("res '%i': %i ; %i\n", i, Data_count1[i], Data_count2[i]);
+        //if (Data_count1[i] > 0)
+        //    printf("res '%i': %i\n", i, Data_count1[i]);
+    //}
+
+    //delete[] debug_data;
 
     return construct_t;
 }
@@ -844,6 +851,16 @@ glm::dvec4 VoxelEngine::SmoothVoxelBuilder::DoRender()
     double mark_t = duration;
 
 
+    //glm::vec4* debug_data = new glm::vec4[m_totalBatches];
+
+    //m_out_debug_buffer_Mark->GetData(debug_data);
+
+    //for (int i = 0; i < m_totalBatches; i++) {
+    //    Logger::LogDebug(LOG_POS("DoRender"), "res '%i': %f, %f, %f\n", i, debug_data[i].x, debug_data[i].y, debug_data[i].z);
+    //}
+
+    //delete[] debug_data;
+    
     //glm::ivec4* Data_count1 = new glm::ivec4[m_totalBatches];
     //int* Data_count2 = new int[m_totalBatches];
 
@@ -869,6 +886,22 @@ glm::dvec4 VoxelEngine::SmoothVoxelBuilder::DoRender()
 
 
         m_program_smoothrender_stitch_async->Execute(m_numBatchesPerGroup * m_static_settings.FullChunkSize[0], 0, 0);
+
+
+        //glm::vec4* debug_data = new glm::vec4[UINT16_MAX * m_totalBatches];
+
+        //m_out_debug_buffer_Stitch_async->GetData(debug_data);
+        //m_out_vertex_buffer->GetData(debug_data);
+
+        //m_numBatchesPerGroup * m_static_settings.FullChunkSize[0]
+        //for (int i = 0; i < 100; i++) {
+            //Logger::LogDebug(LOG_POS("DoRender"), "res '%i': (%f, %f, %f, %f)", i, 
+            //    debug_data[i].x, debug_data[i].y, debug_data[i].z, debug_data[i].w);
+        //}
+
+        //delete[] debug_data;
+
+
 
         //glm::vec4* Data = new glm::vec4[6144];
 
@@ -995,14 +1028,14 @@ void VoxelEngine::SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* 
     if (counts.x > 0) {
 
         if (!USE_CACHE) {
-            printf("Running extract for batch num %i\n", counts.z);
+            Logger::LogDebug(LOG_POS("Extract"), "Running extract: %i, %i", counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
             //int start = 
             //printf("Extract: %i, %i, %i, %i\n", counts.x, counts.z, counts.y, counts.w);
-            m_out_vertex_buffer->GetData(out_vertex, counts.y * sizeof(glm::vec4), counts.x * sizeof(glm::vec4));
-            m_out_normal_buffer->GetData(out_normal, counts.y * sizeof(glm::vec4), counts.x * sizeof(glm::vec4));
+            m_out_vertex_buffer->GetData(out_vertex, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
+            m_out_normal_buffer->GetData(out_normal, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
 
             //m_out_triangles_buffer->GetData(out_trianges, counts.z * counts.x * sizeof(int), counts.x * sizeof(int));
-            All_Zero(out_vertex, counts.x, "Extract");
+            //All_Zero(out_vertex, counts.x, "Extract");
 
             if (COMPUTE_TRIANGES) {
 

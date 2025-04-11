@@ -31,6 +31,10 @@ public:
 	static int Width() { return m_instance->m_width; }
 	static int Height() { return m_instance->m_height; }
 
+
+	static void DrawDebugRay(glm::vec3 start, glm::vec3 dir, glm::vec3 color, float duration = 0.0f) { m_instance->draw_debug_ray(start, dir, color, duration); }
+	static void DrawDebugLine(glm::vec3 start, glm::vec3 stop, glm::vec3 color, float duration = 0.0f) { m_instance->draw_debug_line(start, stop, color, duration); }
+
 	void Initialize();
 	void Update(float dt);
 
@@ -57,6 +61,15 @@ public:
 
 private:
 
+	struct DebugLines {
+		glm::vec3 start; 
+		glm::vec3 stop; 
+		glm::vec3 color;
+		float duration;
+
+		float time;
+	};
+
 	float deltaTime = 0;
 	GLFWwindow* m_window{nullptr};
 	window w;
@@ -67,12 +80,19 @@ private:
 	Mesh* m_screen_mesh{nullptr};
 	Shader* m_screen_shader{ nullptr };
 
+	Mesh* m_line_mesh{ nullptr };
+	Shader* m_line_shader{ nullptr };
+
 	Render_Options m_active_options;
 
 	std::vector<Texture*> m_resize_textures;
 	
 	glm::vec4 m_clear_color{ glm::vec4(0.2f, 0.3f, 0.3f, 1.0f) };
 
+	std::vector<DebugLines> m_debug_lines;
+
+	void draw_debug_ray(glm::vec3 start, glm::vec3 dir, glm::vec3 color, float duration = 0.0f);
+	void draw_debug_line(glm::vec3 start, glm::vec3 stop, glm::vec3 color, float duration = 0.0f);
 
 	void render(float dt);
 

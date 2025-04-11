@@ -27,6 +27,9 @@
 #define SCREEN_VERT_SHADER "graphics.engine.screen.screen.vert"
 #define SCREEN_FRAG_SHADER "graphics.engine.screen.screen.frag"
 
+#define LINE_VERT_SHADER "graphics.engine.line.line.vert"
+#define LINE_FRAG_SHADER "graphics.engine.line.line.frag"
+
 Graphics* Graphics::m_instance{ nullptr };
 
 void Graphics::Initialize()
@@ -75,6 +78,11 @@ void Graphics::Initialize()
 		glm::vec2(1.0f, 1.0f),
 	};
 
+	std::vector<glm::vec3> line_verts = {
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(1.0f,  0.0f,  0.0f),
+	};
+
 	m_screen_mesh = new Mesh();
 	m_screen_mesh->Vertices(quad_verts);
 	m_screen_mesh->TexCoords(quad_tex_coord);
@@ -82,6 +90,15 @@ void Graphics::Initialize()
 	m_screen_shader = Shader::Create("screen_shader", SCREEN_VERT_SHADER, SCREEN_FRAG_SHADER);
 	if (!m_screen_shader->Initialized()) {
 		Logger::LogFatal(LOG_POS("Initialize"), "Failed to create screen shader.");
+	}
+
+
+	m_line_mesh = new Mesh();
+	m_line_mesh->Vertices(line_verts);
+
+	m_line_shader = Shader::Create("line_shader", LINE_VERT_SHADER, LINE_FRAG_SHADER);
+	if (!m_line_shader->Initialized()) {
+		Logger::LogFatal(LOG_POS("Initialize"), "Failed to create line shader.");
 	}
 }
 
@@ -149,6 +166,18 @@ void Graphics::mouse_button_callback(GLFWwindow* window, int button, int action,
 }
 
 
+void Graphics::draw_debug_ray(glm::vec3 start, glm::vec3 dir, glm::vec3 color, float duration)
+{
+	draw_debug_line(start, start + dir, color, duration);
+}
+
+void Graphics::draw_debug_line(glm::vec3 start, glm::vec3 stop, glm::vec3 color, float duration)
+{
+	float cur_time = (float)Utilities::Get_Time();
+	DebugLines line{ start, stop, color, duration, cur_time };
+	m_debug_lines.push_back(line);
+}
+
 void Graphics::render(float dt)
 {
 	Camera* active_cam = Camera::Get_Active();
@@ -165,6 +194,53 @@ void Graphics::render(float dt)
 	m_screen_shader->use(false);
 	m_screen_shader->Bind_Textures();
 	m_screen_mesh->Draw();
+
+	
+
+	// Debug Lines
+	unsigned int vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	GLuint vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	m_line_shader->use(true);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	std::vector<int> to_remove;
+	to_remove.reserve(m_debug_lines.size());
+
+	glm::vec3 line_verts[2];
+	int idx = 0;
+	for (const auto& line : m_debug_lines) {
+
+		m_line_shader->SetVec3("color", line.color);
+
+		line_verts[0] = line.start;
+		line_verts[1] = line.stop;
+
+		glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(float) * 3, line_verts, GL_DYNAMIC_DRAW);
+		glDrawArrays(GL_LINES, 0, 2);
+
+		float cur_time = (float)Utilities::Get_Time();
+		if (cur_time > (line.time + line.duration)) {
+			to_remove.push_back(idx);
+		}
+
+		idx++;
+	}
+
+	for (const auto& idx : to_remove) {
+		m_debug_lines.erase(m_debug_lines.begin() + idx);
+	}
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDeleteBuffers(1, &vbo);
+	glDeleteVertexArrays(1, &vao);
 }
 
 void Graphics::set_mouse_visibility(bool visible)

@@ -17,7 +17,7 @@ private:
 	float m_horizontalAngle{ 0 };
 	float m_verticalAngle{ 0 };
 	glm::vec3 m_euler;
-	float m_move_speed{ 1.0f };
+	float m_move_speed{ 3.0f };
 
 	glm::vec3 m_control_point{glm::vec3(0.0, 0.0f, -1.0f)};
 

@@ -30,8 +30,8 @@ void CreateStitchMap(uint batch_index, uint batchesPerGroup, uint fullChunkSize)
     uint batch_offset = (batch_index) * fullChunkSize;
 
     int buffer_index = 0;
-
-    for (uint v_index = 0; v_index < fullChunkSize; ++v_index){
+	uint v_index = 0;
+    for (v_index = 0; v_index < fullChunkSize; ++v_index){
         
         int poly_count = GetCount(batch_offset + v_index);
 
@@ -45,7 +45,7 @@ void CreateStitchMap(uint batch_index, uint batchesPerGroup, uint fullChunkSize)
     }
 
 	set_buffer_vector(out_counts_data, batch_index, IVEC4(buffer_index, 0, batch_index, 0));
-	
+	//Set_Debug_Data(batch_index, FVEC4(buffer_index, INT(v_index), 1, 1));
 }
 
 void smoothrender_mark_main(uint batch_index){
@@ -56,8 +56,8 @@ void smoothrender_mark_main(uint batch_index){
 
     CreateStitchMap(batch_index, static_settings.batches[0], UINT(static_settings.FullChunkSize[0]));
 	
-	if (batch_index == 0)
-		Set_Debug_Data(batch_index, FVEC4(1, 1, 1, 1));
+	//if (batch_index == 0)
+	//	Set_Debug_Data(batch_index, FVEC4(1, 1, 1, 1));
 }
 
 
