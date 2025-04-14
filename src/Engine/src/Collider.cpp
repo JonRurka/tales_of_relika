@@ -9,6 +9,20 @@ void Collider::base_Init()
 
 void Collider::base_Update(float dt)
 {
+	Transform* obj_trans = Object()->Get_Transform();
+	btTransform bt_trans;
+	if (m_rigidbody && m_rigidbody->getMotionState())
+	{
+		m_rigidbody->getMotionState()->getWorldTransform(bt_trans);
+	}
+	else
+	{
+		bt_trans = m_rigidbody->getWorldTransform();
+	}
+	btVector3 pos = bt_trans.getOrigin();
+	btQuaternion rot = bt_trans.getRotation();
+	obj_trans->Position(glm::vec3(pos.x(), pos.y(), pos.z()));
+	obj_trans->Rotation(glm::quat(rot.x(), rot.y(), rot.z(), rot.w()));
 }
 
 btTransform Collider::get_bt_transform()
@@ -27,6 +41,16 @@ btTransform Collider::get_bt_transform()
 
 void Collider::set_rigidbody(btRigidBody* body)
 {
-	m_rigidbody = body;
-	Physics::Add_Rigidbody(m_rigidbody);
+	if (m_active) {
+		m_rigidbody = body;
+		Physics::Add_Rigidbody(m_rigidbody);
+	}
+}
+
+void Collider::remove_rigidbody(btRigidBody* body)
+{
+	if (m_active && m_rigidbody != nullptr) {
+		Physics::Remove_Rigidbody(body);
+		m_rigidbody = nullptr;
+	}
 }

@@ -4,21 +4,28 @@
 
 #define DEFAULT_SIZE (1.0f)
 
-class BoxCollider : public Collider {
+class Mesh;
+
+class MeshCollider : public Collider {
 public:
 
-	void Size(glm::vec3 size);
+	
 
 private:
 
-	btCollisionShape* m_shape{nullptr};
-	
+	btCollisionShape* m_shape{ nullptr };
+	btTriangleIndexVertexArray* mTriangleIndexVertexArray{ nullptr };
+
+	void SetMesh(Mesh* mesh);
 
 	inline static const std::string LOG_LOC{ "BOX_COLLIDER" };
 
 protected:
 
-	glm::vec3 m_size {glm::vec3(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE)};
+	Mesh* m_mesh{ nullptr };
+
+	unsigned int* m_indices{ nullptr };
+	glm::vec3* m_vertices{ nullptr };
 
 	void Init() override;
 	void Update(float dt) override;

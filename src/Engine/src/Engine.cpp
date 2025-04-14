@@ -7,6 +7,7 @@
 #include "Resources.h"
 #include "Light.h"
 #include "Input.h"
+#include "Physics.h"
 
 #include <queue>
 
@@ -77,6 +78,8 @@ void Engine::initialize()
 	m_graphics->Initialize();
 	m_graphics->Clear_Color(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
 
+	m_physics = new Physics();
+
 	Init();
 }
 
@@ -102,6 +105,7 @@ void Engine::game_loop()
 		Light::Update_Lights(m_deltaTime);
 		m_graphics->Update(m_deltaTime);
 		
+		m_physics->update_internal(m_deltaTime);
 
 		Logger::Update();
 

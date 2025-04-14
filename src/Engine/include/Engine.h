@@ -15,6 +15,7 @@ class Graphics;
 class Resources;
 class window;
 class Input;
+class Physics;
 struct GLFWwindow;
 
 class Engine {
@@ -89,7 +90,7 @@ private:
 	Input* m_input{ nullptr };
 	Scene* m_active_scene{ nullptr };
 	Graphics* m_graphics{nullptr};
-
+	Physics* m_physics{nullptr};
 	Resources* m_resources{ nullptr };
 
 	float m_start_time{ 0 };

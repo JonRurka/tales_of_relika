@@ -4,6 +4,8 @@
 #include "Opaque_Chunk_Material.h"
 #include "Game_Resources.h"
 #include "Cubemap.h"
+#include "Physics.h"
+#include "BoxCollider.h"
 
 #include "GPUSort.h"
 
@@ -223,6 +225,10 @@ void Voxel_Test_Scene::Init()
 	floor_obj->Get_MeshRenderer()->Set_Material(standard_mat);
 	floor_obj->Get_Transform()->Translate(16.0f, 0.0f, 16.0f);
 	floor_obj->Get_Transform()->Scale(glm::vec3(32.0f, 1.0f, 32.0f));
+	BoxCollider* col = floor_obj->Add_Component<BoxCollider>();
+	col->Size(glm::vec3(32.0f, 1.0f, 32.0f));
+	col->Mass(0.0f);
+	col->Activate();
 
 
 
@@ -319,7 +325,14 @@ void Voxel_Test_Scene::Update(float dt)
 {
 	//light_obj_dir->Get_Transform()->Rotate(0.0f, 25.0f * dt, 0.0f);
 
-	
+	glm::vec3 start(5.0f, 10.0f, 5.0f);
+	glm::vec3 stop(6.0f, -10.0f, 5.0f);
+
+	Graphics::DrawDebugLine(start, stop, glm::vec3(0.0f, 1.0f, 0.0f));
+	Physics::RayHit hit = Physics::Raycast(start, stop - start);
+	if (hit.did_hit) {
+		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 0.0f, 1.0f));
+	}
 }
 
 void Voxel_Test_Scene::create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color)

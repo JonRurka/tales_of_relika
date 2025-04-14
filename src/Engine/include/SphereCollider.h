@@ -4,21 +4,21 @@
 
 #define DEFAULT_SIZE (1.0f)
 
-class BoxCollider : public Collider {
+class SphereCollider : public Collider {
 public:
 
-	void Size(glm::vec3 size);
+	void Radius(float radius);
 
 private:
 
-	btCollisionShape* m_shape{nullptr};
-	
+	btCollisionShape* m_shape{ nullptr };
+
 
 	inline static const std::string LOG_LOC{ "BOX_COLLIDER" };
 
 protected:
 
-	glm::vec3 m_size {glm::vec3(DEFAULT_SIZE, DEFAULT_SIZE, DEFAULT_SIZE)};
+	float m_radius{ DEFAULT_SIZE };
 
 	void Init() override;
 	void Update(float dt) override;

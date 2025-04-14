@@ -40,6 +40,8 @@ set(${module}_headers
 	include/Light.h
 	include/Collider.h
 	include/BoxCollider.h
+	include/SphereCollider.h
+	include/MeshCollider.h
 )
 
 set(${module}_sources
@@ -75,6 +77,8 @@ set(${module}_sources
 	src/Light.cpp
 	src/Collider.cpp
 	src/BoxCollider.cpp
+	src/SphereCollider.cpp
+	src/MeshCollider.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})

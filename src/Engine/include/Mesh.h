@@ -35,7 +35,7 @@ public:
 			sync_vertices(Vert_Update_Mode::VERTICES);
 	}
 
-	std::vector<glm::vec3> Vertices() { return m_vertices; }
+	std::vector<glm::vec3>& Vertices() { return m_vertices; }
 
 	void Normals(std::vector<glm::vec3> value)
 	{
@@ -44,7 +44,7 @@ public:
 			sync_vertices(Vert_Update_Mode::NORMALS);
 	}
 
-	std::vector<glm::vec3> Normals() { return m_normals; }
+	std::vector<glm::vec3>& Normals() { return m_normals; }
 
 
 	void Colors(std::vector<glm::vec4> value) 
@@ -54,7 +54,7 @@ public:
 			sync_vertices(Vert_Update_Mode::COLORS);
 	}
 
-	std::vector<glm::vec4> Colors() { return m_colors; }
+	std::vector<glm::vec4>& Colors() { return m_colors; }
 
 
 	void TexCoords(std::vector<glm::vec2> val) 
@@ -63,7 +63,7 @@ public:
 		sync_vertices(Vert_Update_Mode::TEXCORDS);
 	}
 
-	std::vector<glm::vec2> TexCoords() { return m_texcoords; }
+	std::vector<glm::vec2>& TexCoords() { return m_texcoords; }
 
 
 	void Indices(std::vector<unsigned int> val) 
@@ -78,7 +78,7 @@ public:
 
 	glm::vec3 Center() { return m_center; }
 
-	std::vector<unsigned int> Indices() { return m_indices; }
+	std::vector<unsigned int>& Indices() { return m_indices; }
 
 	GLuint Get_VAO() { return VAO; }
 

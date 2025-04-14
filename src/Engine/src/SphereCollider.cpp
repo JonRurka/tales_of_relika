@@ -1,36 +1,36 @@
-#include "BoxCollider.h"
+#include "SphereCollider.h"
 
 #include "WorldObject.h"
 #include "Transform.h"
 
 #define DEFAULT_SIZE (1.0f)
 
-void BoxCollider::Init()
+void SphereCollider::Init()
 {
 	base_Init();
 
-	m_shape = new btBoxShape(btVector3(btScalar(m_size.x), btScalar(m_size.y), btScalar(m_size.z)));
+	m_shape = new btSphereShape(m_radius);
 }
 
-void BoxCollider::Size(glm::vec3 size)
+void SphereCollider::Radius(float radius)
 {
 	if (m_shape != nullptr) {
 		delete m_shape;
 	}
-	m_shape = new btBoxShape(btVector3(btScalar(m_size.x), btScalar(m_size.y), btScalar(m_size.z)));
+	m_shape = new btSphereShape(m_radius);
 	OnRefresh();
 }
 
-void BoxCollider::Update(float dt)
+void SphereCollider::Update(float dt)
 {
 	base_Update(dt);
 }
 
-void BoxCollider::Load(json data)
+void SphereCollider::Load(json data)
 {
 }
 
-void BoxCollider::OnRefresh()
+void SphereCollider::OnRefresh()
 {
 	if (!Active())
 		return;
