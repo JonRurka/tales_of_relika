@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -59,6 +61,8 @@ public:
 
 	glm::vec3 Up() { return m_up; }
 
+	void Set_Verbos(bool val) { m_verbos = val; }
+
 private:
 
 	Transform(WorldObject* obj);
@@ -80,8 +84,12 @@ private:
 	glm::vec3 m_right = glm::vec3(1.0, 0.0f, 0.0f);
 	glm::vec3 m_up = glm::vec3(0.0, 1.0f, 0.0f);
 
+	bool m_verbos{ false };
+
 	WorldObject* m_object{nullptr};
 
 	void set_model_mat(bool update_parent = true);
+
+	inline static const std::string LOG_LOC{ "TRANSFORM" };
 };
 

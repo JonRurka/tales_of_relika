@@ -9,16 +9,14 @@ class Mesh;
 class MeshCollider : public Collider {
 public:
 
-	
+	void SetMesh(Mesh* mesh);
 
 private:
 
 	btCollisionShape* m_shape{ nullptr };
 	btTriangleIndexVertexArray* mTriangleIndexVertexArray{ nullptr };
 
-	void SetMesh(Mesh* mesh);
-
-	inline static const std::string LOG_LOC{ "BOX_COLLIDER" };
+	inline static const std::string LOG_LOC{ "MESH_COLLIDER" };
 
 protected:
 

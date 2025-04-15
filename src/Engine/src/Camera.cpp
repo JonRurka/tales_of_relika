@@ -21,6 +21,22 @@
 
 Camera* Camera::m_active_camera{nullptr};
 
+
+namespace {
+	glm::vec3 getRayFromScreenSpace(const glm::vec2& pos, const float halfScreenWidth, const float halfScreenHeight, const glm::mat4 perspective, const glm::mat4 view)
+	{
+		glm::mat4 invMat = glm::inverse(perspective * view);
+		glm::vec4 near = glm::vec4((pos.x - halfScreenWidth) / halfScreenWidth, -1 * (pos.y - halfScreenHeight) / halfScreenHeight, -1, 1.0);
+		glm::vec4 far = glm::vec4((pos.x - halfScreenWidth) / halfScreenWidth, -1 * (pos.y - halfScreenHeight) / halfScreenHeight, 1, 1.0);
+		glm::vec4 nearResult = invMat * near;
+		glm::vec4 farResult = invMat * far;
+		nearResult /= nearResult.w;
+		farResult /= farResult.w;
+		glm::vec3 dir = glm::vec3(farResult - nearResult);
+		return glm::normalize(dir);
+	}
+}
+
 void Camera::Init()
 {
 	Type_Name("Camera");
@@ -107,6 +123,27 @@ void Camera::Set_Skybox(Cubemap* value)
 	}
 	m_cubemap = value;
 	//Logger::LogDebug(LOG_POS("Set_Skybox"), "Skybox set successfully.");
+}
+
+void Camera::ScreenPointToRay(glm::vec2 screen_pos, glm::vec3& start, glm::vec3& dir)
+{
+	float width = Graphics::Width();
+	float height = Graphics::Height();
+
+	float x = (2.0f * ((float)(screen_pos.x - 0) / (width - 0))) - 1.0f;
+	float y = 1.0f - (2.0f * ((float)(screen_pos.y - 0) / (height - 0)));
+
+	glm::vec4 point(x, y, 0.0f, 1.0f);
+
+	glm::mat4 pv = m_projection * m_view;
+	glm::mat4 inv_pv = glm::inverse(pv);
+
+	dir = getRayFromScreenSpace(screen_pos, width / 2, height / 2, m_projection, m_view);
+
+	glm::vec4 origin;
+	origin = inv_pv * point;
+	origin /= origin.w;
+	start = origin;
 }
 
 Texture* Camera::FrameTexture()

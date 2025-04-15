@@ -1,6 +1,7 @@
 #include "Transform.h"
 
 #include "WorldObject.h"
+#include "Logger.h"
 
 
 Transform::Transform(WorldObject* obj)
@@ -14,6 +15,10 @@ Transform::Transform(WorldObject* obj)
 
 void Transform::Translate(glm::vec3 value)
 {
+	if (m_verbos) {
+		Logger::LogDebug(LOG_POS("Translate"), "Translate transform for '%s': (%f, %f, %f)", 
+			m_object->Name().c_str(), value.x, value.y, value.z);
+	}
 	trans_mat = glm::translate(trans_mat, value);
 	set_model_mat();
 	//m_position = model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -31,6 +36,11 @@ void Transform::Rotate(glm::vec3 value)
 
 void Transform::Rotate(float x, float y, float z)
 {
+	if (m_verbos) {
+		Logger::LogDebug(LOG_POS("Rotate"), "Rotate transform for '%s': (%f, %f, %f)",
+			m_object->Name().c_str(), x, y, z);
+	}
+
 	m_rotation = m_rotation *
 		glm::angleAxis(glm::radians(x), glm::vec3(1.0f, 0.0f, 0.0f)) *
 		glm::angleAxis(glm::radians(y), glm::vec3(0.0f, 1.0f, 0.0f)) *
@@ -45,6 +55,11 @@ void Transform::Rotate(float x, float y, float z)
 
 void Transform::Scale(glm::vec3 value)
 {
+	if (m_verbos) {
+		Logger::LogDebug(LOG_POS("Scale"), "Scale transform for '%s': (%f, %f, %f)",
+			m_object->Name().c_str(), value.x, value.y, value.z);
+	}
+
 	scale_mat = glm::scale(scale_mat, value);
 	set_model_mat();
 	//m_position = model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -67,6 +82,10 @@ glm::vec3 Transform::Local_To_World_Direction(glm::vec3 value)
 
 void Transform::LookAt(glm::vec3 point)
 {
+	if (m_verbos) {
+		Logger::LogDebug(LOG_POS("LookAt"), "Transform LookAt for '%s': (%f, %f, %f)",
+			m_object->Name().c_str(), point.x, point.y, point.z);
+	}
 
 	m_rotation = glm::quatLookAt(-glm::normalize(m_position - point), glm::vec3(0.0f, 1.0f, 0.0f));
 	set_model_mat();

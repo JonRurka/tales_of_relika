@@ -233,6 +233,7 @@ STRUCT GridPoint GetGridPoint(
 	uint batch_index = GetBatchIndex((UINT(batch[1]) % UINT(batch_settings[0])), index_exp, batch[3]);
 	
 	float iso_val = iso_sample(s, index_pos.xyz, globalWorldPos.xyz);
+	fvec3 normal = normal_sample(s, index_pos.xyz, globalWorldPos.xyz);
 	
 	//STRUCT ISO_Material iso_mat;// = get_buffer_object(in_iso_mat_data, batch_index);
 	//if (i == 3)
@@ -246,7 +247,7 @@ STRUCT GridPoint GetGridPoint(
 	gr_point.iso = iso_val;
     gr_point.localPosition = localWorldPos;
 	gr_point.globalPosition = globalWorldPos;
-    gr_point.normal = FVEC4(0, 0, 0, 0);
+    gr_point.normal = FVEC4(normal.x, normal.y, normal.z, 0);
     gr_point.type = IVEC4(0, 0, 0, 0);// iso_mat.material_types;
     gr_point.type_ratio = FVEC4(0, 0, 0, 0);// iso_mat.material_ratios;
 
@@ -263,12 +264,12 @@ STRUCT GridPoint VertexInterp(int edge_ent, int test, float isoLevel, GridPoint 
     float iso_1 = p1.iso;
     fvec4 pos_1_local = p1.localPosition;
 	fvec4 pos_1_world = p1.globalPosition;
-    //fvec4 norm_1 = p1.normal;
+	fvec4 normal_1 = p1.normal;
 
 	float iso_2 = p2.iso;
     fvec4 pos_2_local = p2.localPosition;
 	fvec4 pos_2_world = p2.globalPosition;
-    //fvec4 norm_2 = p2.normal;
+    fvec4 normal_2 = p2.normal;
 
     if (abs(isoLevel - iso_1) < 0.00001f)
         return p1;
@@ -282,6 +283,7 @@ STRUCT GridPoint VertexInterp(int edge_ent, int test, float isoLevel, GridPoint 
     
     fvec4 res_pos_local = FVEC4_ZERO;
     fvec4 res_pos_world = FVEC4_ZERO;
+	fvec4 res_normal = FVEC4_ZERO;
     ivec4 type = IVEC4_ZERO;
     fvec4 type_ratios = FVEC4_ZERO;
 
@@ -292,6 +294,11 @@ STRUCT GridPoint VertexInterp(int edge_ent, int test, float isoLevel, GridPoint 
     res_pos_world.x = pos_1_world.x + mu * (pos_1_world.x - pos_2_world.x);
     res_pos_world.y = pos_1_world.y + mu * (pos_1_world.y - pos_2_world.y);
     res_pos_world.z = pos_1_world.z + mu * (pos_1_world.z - pos_2_world.z);
+	
+	res_normal.x = normal_1.x + mu * (normal_2.x - normal_1.x);
+    res_normal.y = normal_1.y + mu * (normal_2.y - normal_1.y);
+    res_normal.z = normal_1.z + mu * (normal_2.z - normal_1.z);
+	
 
     //res_pos_local.w = 1;// pos_1.w > 0 ? pos_1.w : pos_2.w; // INSIDE IS POSITIVE
 	//res_pos_world.w = 1;// pos_1.w > 0 ? pos_1.w : pos_2.w; // INSIDE IS POSITIVE
@@ -304,7 +311,7 @@ STRUCT GridPoint VertexInterp(int edge_ent, int test, float isoLevel, GridPoint 
 	gr_point.iso = iso_1 > 0 ? iso_1 : iso_2;
     gr_point.localPosition = res_pos_local;
 	gr_point.globalPosition = res_pos_world;
-    gr_point.normal = FVEC4_ZERO;
+    gr_point.normal = res_normal;
     gr_point.type = type;
     gr_point.type_ratio = type_ratios;
     return gr_point;
@@ -356,17 +363,17 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 
         //vec4 n1 = vec4(norm.x, norm.y, norm.z, 0);
         int t1 = INT(curTris) + 2;
-		vec3 norm1 = normal_sample(s, index_pos, p1.globalPosition.xyz);
+		vec3 norm1 = p1.normal.xyz;// normal_sample(s, index_pos, p1.globalPosition.xyz);
         count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p1.localPosition, FVEC4(norm1.x, norm1.y, norm1.z, 0), t1, count);
         
         //vec4 n2 = vec4(norm.x, norm.y, norm.z, 0);
         int t2 = INT(curTris) + 1;
-		vec3 norm2 = normal_sample(s, index_pos, p2.globalPosition.xyz);
+		vec3 norm2 = p2.normal.xyz;// normal_sample(s, index_pos, p2.globalPosition.xyz);
         count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p2.localPosition, FVEC4(norm2.x, norm2.y, norm2.z, 0), t2, count);
         
         //vec4 n3 = vec4(norm.x, norm.y, norm.z, 0);
         int t3 = INT(curTris) + 0;
-		vec3 norm3 = normal_sample(s, index_pos, p3.globalPosition.xyz);
+		vec3 norm3 = p3.normal.xyz;//normal_sample(s, index_pos, p3.globalPosition.xyz);
         count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p3.localPosition, FVEC4(norm3.x, norm3.y, norm3.z, 0), t3, count);
 		
     }

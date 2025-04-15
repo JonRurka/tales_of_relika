@@ -93,6 +93,7 @@ void Engine::game_loop()
 	{
 		
 		process_input();
+		m_physics->update_internal(m_deltaTime);
 
 		if (Active_Scene() != nullptr)
 		{
@@ -104,8 +105,6 @@ void Engine::game_loop()
 
 		Light::Update_Lights(m_deltaTime);
 		m_graphics->Update(m_deltaTime);
-		
-		m_physics->update_internal(m_deltaTime);
 
 		Logger::Update();
 

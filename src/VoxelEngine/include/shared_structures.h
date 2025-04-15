@@ -114,7 +114,7 @@ namespace VoxelEngine {
 			return m_normals;
 		}
 
-		int* Triange_Ptr() {
+		unsigned int* Triange_Ptr() {
 			return m_triangles;
 		}
 
@@ -133,7 +133,7 @@ namespace VoxelEngine {
 		bool m_complete{ false };
 		OutVertex3D* m_vertices = nullptr;
 		OutVertex3D* m_normals = nullptr;
-		int* m_triangles = nullptr;
+		unsigned int* m_triangles = nullptr;
 		int m_numVertex{ 0 };
 		int m_numTriangles{ 0 };
 	};

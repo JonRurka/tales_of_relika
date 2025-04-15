@@ -47,7 +47,7 @@ void SphereCollider::OnRefresh()
 	}
 
 	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
-	btDefaultMotionState* myMotionState = new btDefaultMotionState(get_bt_transform());
+	btDefaultMotionState* myMotionState = new btDefaultMotionState(create_bt_transform());
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), myMotionState, m_shape, m_localInertia);
 	set_rigidbody(new btRigidBody(rbInfo));
 }

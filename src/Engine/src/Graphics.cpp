@@ -195,7 +195,10 @@ void Graphics::render(float dt)
 	m_screen_shader->Bind_Textures();
 	m_screen_mesh->Draw();
 
-	
+
+	DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 0, 0));
+	DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 1, 0));
+	DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(0, 0, 1));
 
 	// Debug Lines
 	unsigned int vao;
@@ -210,11 +213,10 @@ void Graphics::render(float dt)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	std::vector<int> to_remove;
-	to_remove.reserve(m_debug_lines.size());
+	std::vector<DebugLines> tmp_debug_lines;
+	tmp_debug_lines.reserve(m_debug_lines.size());
 
 	glm::vec3 line_verts[2];
-	int idx = 0;
 	for (const auto& line : m_debug_lines) {
 
 		m_line_shader->SetVec3("color", line.color);
@@ -226,16 +228,13 @@ void Graphics::render(float dt)
 		glDrawArrays(GL_LINES, 0, 2);
 
 		float cur_time = (float)Utilities::Get_Time();
-		if (cur_time > (line.time + line.duration)) {
-			to_remove.push_back(idx);
+		if (cur_time < (line.time + line.duration)) {
+			tmp_debug_lines.push_back(line);
 		}
 
-		idx++;
 	}
 
-	for (const auto& idx : to_remove) {
-		m_debug_lines.erase(m_debug_lines.begin() + idx);
-	}
+	m_debug_lines = tmp_debug_lines;
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

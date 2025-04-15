@@ -50,6 +50,8 @@ private:
 	btSequentialImpulseConstraintSolver* m_solver{ nullptr };
 	btDiscreteDynamicsWorld* m_dynamicsWorld{ nullptr };
 
+	double m_last_update{ 0 };
+
 	//keep track of the shapes, we release memory at exit.
 	//make sure to re-use collision shapes among rigid bodies whenever possible!
 	btAlignedObjectArray<btCollisionShape*> m_collisionShapes_box;
@@ -66,4 +68,6 @@ private:
 
 	static void Remove_Rigidbody(btRigidBody* body) { m_instance->remove_rigidbody(body); }
 	void remove_rigidbody(btRigidBody* body);
+
+	inline static const std::string LOG_LOC{ "PHYSICS" };
 };

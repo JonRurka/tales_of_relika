@@ -1,5 +1,10 @@
 #include "Physics.h"
 
+#include "Logger.h"
+#include "Utilities.h"
+
+#define UPDATE_INTERVAL (1.f / 60.f)
+
 Physics* Physics::m_instance{nullptr};
 
 namespace {
@@ -10,10 +15,23 @@ namespace {
 	glm::vec3 to_glm_vector(btVector3 value) {
 		return glm::vec3(value.x(), value.y(), value.z());
 	}
+
+	void kinematicPreTickCallback(btDynamicsWorld* world, btScalar deltaTime)
+	{
+		btRigidBody* groundBody = (btRigidBody*)world->getWorldUserInfo();
+		btTransform predictedTrans;
+		btVector3 linearVelocity(0, 0, 0);
+		btVector3 angularVelocity(0, 0.1, 0);
+		btTransformUtil::integrateTransform(groundBody->getWorldTransform(), linearVelocity, angularVelocity, deltaTime, predictedTrans);
+		groundBody->getMotionState()->setWorldTransform(predictedTrans);
+
+	}
 }
 
 Physics::Physics() 
 {
+	m_instance = this;
+
 	///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
 	m_collisionConfiguration = new btDefaultCollisionConfiguration();
 
@@ -28,13 +46,29 @@ Physics::Physics()
 
 	m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_overlappingPairCache, m_solver, m_collisionConfiguration);
 	m_dynamicsWorld->setGravity(btVector3(0, -10, 0));
+
+	m_last_update = Utilities::Get_Time();
+
+	Logger::LogInfo(LOG_POS("INIT"), "Physics Initialized.");
 }
 
 void Physics::update_internal(float dt)
 {
+	float time = Utilities::Get_Time() - m_last_update;
+	if (time < UPDATE_INTERVAL) {
+		return;
+	}
+	//Logger::LogDebug(LOG_POS("update_internal"), "physics update: %f", time * 1000);
+	m_last_update = Utilities::Get_Time();
+
 	m_dynamicsWorld->updateAabbs();
 	m_dynamicsWorld->computeOverlappingPairs();
-	m_dynamicsWorld->stepSimulation(1.f / 60.f, 10);
+	m_dynamicsWorld->stepSimulation(time, 10, UPDATE_INTERVAL);
+
+	//Logger::LogDebug(LOG_POS("update_internal"), "Num objects: %i", m_dynamicsWorld->getNumCollisionObjects());
+
+	time = 0;
+	
 }
 
 void Physics::add_box_shape(btCollisionShape* shape)
@@ -79,7 +113,7 @@ Physics::RayHit Physics::Raycast(glm::vec3 start, glm::vec3 dir)
 	btVector3 to(start.x + dir.x, start.y + dir.y, start.z + dir.z);
 
 	btCollisionWorld::ClosestRayResultCallback closestResults(from, to);
-	closestResults.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
+	//closestResults.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
 
 	m_instance->m_dynamicsWorld->rayTest(from, to, closestResults);
 	if (closestResults.hasHit())
@@ -90,6 +124,11 @@ Physics::RayHit Physics::Raycast(glm::vec3 start, glm::vec3 dir)
 		res.start = start;
 		res.hit_point = to_glm_vector(hit_point);
 		res.normal = to_glm_vector(closestResults.m_hitNormalWorld);
+
+		//Logger::LogDebug(LOG_POS("Raycast"), "Did Hit");
+	}
+	else {
+		//Logger::LogDebug(LOG_POS("Raycast"), "Not Hit");
 	}
 	
 	return res;

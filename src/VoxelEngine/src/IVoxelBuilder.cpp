@@ -24,7 +24,7 @@ std::vector<glm::ivec4> VoxelEngine::IVoxelBuilder::GetSize()
 	return m_inst->GetSize();
 }
 
-void VoxelEngine::IVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, int* out_trianges, glm::ivec4 counts)
+void VoxelEngine::IVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, unsigned int* out_trianges, glm::ivec4 counts)
 {
 	return m_inst->Extract(out_vertex, out_normal, out_trianges, counts);
 }

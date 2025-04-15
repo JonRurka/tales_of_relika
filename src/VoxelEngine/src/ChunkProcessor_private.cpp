@@ -90,7 +90,7 @@ int VoxelEngine::ChunkProcessor_private::Process()
 
 			req.requests[i]->m_vertices = new OutVertex3D[chnk_count.x];
 			req.requests[i]->m_normals = new OutVertex3D[chnk_count.x];
-			req.requests[i]->m_triangles = new int[chnk_count.x];
+			req.requests[i]->m_triangles = new unsigned int[chnk_count.x];
 
 			m_builder->Extract(
 				(glm::vec4*)req.requests[i]->m_vertices,

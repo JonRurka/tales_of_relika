@@ -50,6 +50,8 @@ public:
 
 	void Set_Skybox(Cubemap* value);
 
+	void ScreenPointToRay(glm::vec2 pos, glm::vec3& out_start, glm::vec3& out_dir);
+
 	Texture* FrameTexture();
 
 	glm::mat4 Projection_Matrix() { return m_projection; }

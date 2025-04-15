@@ -26,7 +26,7 @@ public:
 		return m_active;
 	}
 
-	bool Is_Dynamic() { return m_mass != 0.0f; }
+	bool Is_Dynamic() { return m_mass > 0.0001f; }
 	
 	btRigidBody* RigidBody() { return m_rigidbody; }
 
@@ -44,7 +44,10 @@ protected:
 	void base_Init();
 	void base_Update(float dt);
 
-	btTransform get_bt_transform();
+	btTransform create_bt_transform();
+
+	btTransform get_bt_rigid_transform();
+
 
 	void set_rigidbody(btRigidBody* body);
 	void remove_rigidbody(btRigidBody* body);

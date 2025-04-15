@@ -10,7 +10,7 @@ using namespace VoxelEngine;
 
 #define USE_HEIGHTMAP_CACHE false
 
-#define COMPUTE_TRIANGES false
+#define COMPUTE_TRIANGES true
 
 #define VECTOR4_SIZE (sizeof(float) * 4)
 
@@ -1022,7 +1022,7 @@ glm::ivec4 VoxelEngine::SmoothVoxelBuilder::BuildMesh()
     return counts;
 }
 
-void VoxelEngine::SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, int* out_trianges, glm::ivec4 counts)
+void VoxelEngine::SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, unsigned int* out_trianges, glm::ivec4 counts)
 {
 
     if (counts.x > 0) {
@@ -1040,7 +1040,7 @@ void VoxelEngine::SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* 
             if (COMPUTE_TRIANGES) {
 
                 for (int i = 0; i < counts.x; i += 3) {
-                    int tris_start = i;
+                    unsigned int tris_start = i;
 
                     if (m_invert_tris) {
                         out_trianges[tris_start + 0] = tris_start + 0;
