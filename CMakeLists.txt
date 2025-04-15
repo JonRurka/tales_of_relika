@@ -20,6 +20,7 @@ find_package(Boost REQUIRED)
 find_package(lua REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(fmt REQUIRED)
+find_package(OpenAL REQUIRED)
 
 find_package(Vulkan REQUIRED
 COMPONENTS glslc glslangValidator shaderc_combined)
