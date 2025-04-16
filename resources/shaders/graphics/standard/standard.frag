@@ -6,10 +6,10 @@
 
 const int MAX_LIGHTS = 99; 
 
-in vec3 Normal;
-in vec3 Color;
-in vec2 TexCoords;
-in vec3 FragPos;
+layout(location = 0)in vec3 Normal;
+layout(location = 1)in vec3 Color;
+layout(location = 2)in vec2 TexCoords;
+layout(location = 3)in vec3 FragPos;
 
 struct Material {
 	sampler2D diffuse;
@@ -73,12 +73,12 @@ struct Light_Result{
 	vec3 lightDir;
 };
 
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
 
 uniform sampler2D texture1;
 uniform sampler2D texture2;
 
-uniform Material material;
+layout(location = 0) uniform Material material;
 //uniform Light lights;
 layout (std140, binding = 1) uniform LightBlock {
     Light lights[MAX_LIGHTS];
@@ -89,16 +89,16 @@ layout (std140, binding = 2) uniform Test {
     Test_Struct test_val[10];
 };
 
-uniform vec3 globalAmbientLightColor;
-uniform float globalAmbientIntensity;
+layout(location = 1) uniform vec3 globalAmbientLightColor;
+layout(location = 2) uniform float globalAmbientIntensity;
 
-uniform vec3 ambientLightColor;
-uniform vec3 diffuseLightColor;
+layout(location = 3) uniform vec3 ambientLightColor;
+layout(location = 4) uniform vec3 diffuseLightColor;
 
 //uniform vec3 lightColor;
 //uniform vec3 lightPos;
 
-uniform vec3 viewPos;
+layout(location = 5) uniform vec3 viewPos;
 
 
 float near = 0.1; 

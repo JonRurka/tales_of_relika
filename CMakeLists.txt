@@ -9,6 +9,7 @@ if (UNIX)
     add_compile_options(-pthread -fPIC)
 endif ()
 
+find_package(ZLIB REQUIRED)
 find_package(glm REQUIRED)
 #find_package(VulkanHeaders REQUIRED)
 #find_package(VulkanMemoryAllocator CONFIG REQUIRED)

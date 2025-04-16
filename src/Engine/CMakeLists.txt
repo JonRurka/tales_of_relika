@@ -84,6 +84,7 @@ set(${module}_sources
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
 
 target_link_libraries(${module} 
+	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
 	boost::boost

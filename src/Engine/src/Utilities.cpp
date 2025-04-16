@@ -1,11 +1,36 @@
 #include "Utilities.h"
 
 #include "opengl.h"
+#include "zlib.h"
 
 #include <cctype>
 #include <algorithm>
+
+#ifdef _WIN32
 #include <Windows.h>
 #define BUFSIZE MAX_PATH
+#endif
+
+#define ZLIB_CHUNK (256 * 1024)
+
+namespace {
+	typedef std::vector<unsigned char> vec_char;
+	unsigned char out_buf[ZLIB_CHUNK];
+
+	void vec_write(vec_char& out, const unsigned char* buf, size_t bufLen)
+	{
+		out.insert(out.end(), buf, buf + bufLen);
+	}
+
+	size_t vec_read(const vec_char& in, unsigned char*& inBuf, size_t& inPosition)
+	{
+		size_t from = inPosition;
+		inBuf = const_cast<unsigned char*>(in.data()) + inPosition;
+		inPosition += min(ZLIB_CHUNK, in.size() - from);
+		return inPosition - from;
+	}
+}
+
 
 std::string Utilities::File_Seperator()
 {
@@ -18,6 +43,8 @@ std::string Utilities::File_Seperator()
 
 std::string Utilities::Get_Root_Directory()
 {
+	// TODO: Linux version
+
 	TCHAR Buffer[BUFSIZE];
 	DWORD dwRet;
 
@@ -36,7 +63,7 @@ std::string Utilities::Get_Root_Directory()
 
 	//std::cout << str << std::endl; //<-- should work!
 
-	return str + "\\";
+	return str + File_Seperator();
 }
 
 std::string Utilities::toLowerCase(std::string str)
@@ -142,4 +169,114 @@ std::vector<glm::vec3> Utilities::vec4_to_vec3_arr(std::vector<glm::vec4> arr)
 	}
 
 	return res;
+}
+
+std::vector<unsigned char> Utilities::Compress(std::vector<unsigned char> input, int level)
+{
+	std::vector<unsigned char> result;
+
+	int ret, flush;
+	unsigned have;
+	z_stream strm;
+	unsigned char* in_buf;
+
+	size_t inPosition = 0; /* position indicator of "in" */
+
+	strm.zalloc = Z_NULL;
+	strm.zfree = Z_NULL;
+	strm.opaque = Z_NULL;
+	ret = deflateInit(&strm, level);
+	if (ret != Z_OK)
+		return result;
+
+	result.reserve(input.size());
+
+	flush = Z_NO_FLUSH;
+
+	do {
+		strm.avail_in = vec_read(input, in_buf, inPosition);
+
+		if (strm.avail_in <= 0)
+			break;
+		if (strm.avail_in < ZLIB_CHUNK || (input.size() == ZLIB_CHUNK))
+		{
+			flush = Z_FINISH;
+		}
+		strm.next_in = in_buf;
+
+		do {
+			strm.avail_out = ZLIB_CHUNK;
+			strm.next_out = out_buf;
+			ret = deflate(&strm, flush);    /* no bad return value */
+			assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+			switch (ret) {
+			case Z_NEED_DICT:
+				ret = Z_DATA_ERROR; /* and fall through */
+			case Z_DATA_ERROR:
+			case Z_MEM_ERROR:
+				(void)inflateEnd(&strm);
+				return result;
+			}
+			have = ZLIB_CHUNK - strm.avail_out;
+			vec_write(result, out_buf, have);
+
+		} while (strm.avail_out <= 0);
+
+	} while (true);
+
+	(void)inflateEnd(&strm);
+
+	return result;
+}
+
+std::vector<unsigned char> Utilities::Decompress(std::vector<unsigned char> input)
+{
+	std::vector<unsigned char> result;
+
+	int ret, flush;
+	unsigned have;
+	z_stream strm;
+	unsigned char* in_buf;
+
+	size_t inPosition = 0; /* position indicator of "in" */
+
+	strm.zalloc = Z_NULL;
+	strm.zfree = Z_NULL;
+	strm.opaque = Z_NULL;
+	ret = inflateInit(&strm);
+	if (ret != Z_OK)
+		return result;
+
+	do {
+		strm.avail_in = vec_read(input, in_buf, inPosition);
+
+		if (strm.avail_in == 0)
+			break;
+		strm.next_in = in_buf;
+
+		/* run inflate() on input until output buffer not full */
+		do {
+			strm.avail_out = ZLIB_CHUNK;
+			strm.next_out = out_buf;
+			ret = inflate(&strm, Z_NO_FLUSH);
+			assert(ret != Z_STREAM_ERROR); /* state not clobbered */
+			switch (ret) {
+			case Z_NEED_DICT:
+				ret = Z_DATA_ERROR; /* and fall through */
+			case Z_DATA_ERROR:
+			case Z_MEM_ERROR:
+				(void)inflateEnd(&strm);
+				return result;
+			}
+			have = ZLIB_CHUNK - strm.avail_out;
+			vec_write(result, out_buf, have);
+		} while (strm.avail_out == 0);
+
+		/* done when inflate() says it's done */
+	} while (ret != Z_STREAM_END);
+
+	/* clean up and return */
+	(void)inflateEnd(&strm);
+
+	return result;
 }

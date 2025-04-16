@@ -343,7 +343,7 @@ void Voxel_Test_Scene::Init()
 	obj->Get_MeshRenderer()->Set_Material(chunk_opaque_mat);
 
 	Transform* obj_trans = obj->Get_Transform();
-	Logger::LogDebug(LOG_POS("Update"), "Orig Obj Position:(%f, %f, %f)",
+	Logger::LogDebug(LOG_POS("Init"), "Orig Obj Position:(%f, %f, %f)",
 		obj_trans->Position().x, obj_trans->Position().y, obj_trans->Position().z);
 
 	MeshCollider* mesh_col = obj->Add_Component<MeshCollider>();
@@ -355,6 +355,21 @@ void Voxel_Test_Scene::Init()
 	//test_col->Activate();
 
 	//Graphics::DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), 10.0f);
+
+	std::string test_str = "this is a test string to compress.";
+	std::vector<unsigned char> vec_uncompressed;
+	vec_uncompressed.assign(test_str.begin(), test_str.end());
+
+
+	float comp_start = (float)Utilities::Get_Time();
+	std::vector<unsigned char> vec_compressed = Utilities::Compress(vec_uncompressed);
+	vec_uncompressed = Utilities::Decompress(vec_compressed);
+	float comp_stop = (float)Utilities::Get_Time();
+
+	std::string test_str_res(vec_uncompressed.begin(), vec_uncompressed.end());
+
+	Logger::LogDebug(LOG_POS("Init"), "Compressed string (%f ms): %s", (comp_stop - comp_start) * 1000.0f, test_str_res.c_str());
+
 }
 
 void Voxel_Test_Scene::Update(float dt)
@@ -394,7 +409,6 @@ void Voxel_Test_Scene::Update(float dt)
 	if (hit.did_hit) {
 		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 1.0f, 0.0f));
 	}
-
 
 	//Logger::LogDebug(LOG_POS("Update"), "FPS: %f", Engine::FPS());
 }

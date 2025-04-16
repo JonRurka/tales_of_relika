@@ -55,7 +55,6 @@ endif()
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
 
 target_link_libraries(${module}
-	${PLATFORM_LIBRARIES} 
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
 	boost::boost

@@ -19,6 +19,7 @@ set(${PROJECT_NAME}_sources
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
 
 target_link_libraries(${PROJECT_NAME} 
+	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
 	boost::boost
