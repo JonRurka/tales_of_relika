@@ -133,21 +133,21 @@ struct Material {
 };
 
 
-in vec3 Normal;
-in vec3 Color;
-in vec2 TexCoords;
-in vec3 FragPos;
+layout (location = 0) in vec3 Normal;
+layout (location = 1) in vec3 Color;
+layout (location = 2) in vec2 TexCoords;
+layout (location = 3) in vec3 FragPos;
 
-uniform vec3 globalAmbientLightColor;
-uniform float globalAmbientIntensity;
+layout (location = 4) uniform vec3 globalAmbientLightColor;
+layout (location = 5) uniform float globalAmbientIntensity;
 
-uniform vec3 viewPos;
+layout (location = 6) uniform vec3 viewPos;
 
-uniform Material material;
+layout (location = 7) uniform Material material;
 
 
 
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
 
 void main()
 {

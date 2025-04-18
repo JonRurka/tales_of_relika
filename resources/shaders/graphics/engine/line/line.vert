@@ -1,8 +1,8 @@
 #version 450 core
 layout (location = 0) in vec3 aPos;
 
-uniform mat4 view_mat;
-uniform mat4 projection_mat;
+layout (location = 1)uniform mat4 view_mat;
+layout (location = 2)uniform mat4 projection_mat;
 
 void main()
 {

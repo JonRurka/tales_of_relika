@@ -88,8 +88,9 @@ void Graphics::Initialize()
 	m_screen_mesh->TexCoords(quad_tex_coord);
 
 	m_screen_shader = Shader::Create("screen_shader", SCREEN_VERT_SHADER, SCREEN_FRAG_SHADER);
-	if (!m_screen_shader->Initialized()) {
+	if (m_screen_shader == nullptr || !m_screen_shader->Initialized()) {
 		Logger::LogFatal(LOG_POS("Initialize"), "Failed to create screen shader.");
+		return;
 	}
 
 
@@ -97,14 +98,19 @@ void Graphics::Initialize()
 	m_line_mesh->Vertices(line_verts);
 
 	m_line_shader = Shader::Create("line_shader", LINE_VERT_SHADER, LINE_FRAG_SHADER);
-	if (!m_line_shader->Initialized()) {
+	if (m_line_shader == nullptr || !m_line_shader->Initialized()) {
 		Logger::LogFatal(LOG_POS("Initialize"), "Failed to create line shader.");
+		return;
 	}
+
+	m_initialized = true;
 }
 
 void Graphics::Update(float dt)
 {
-	
+	if (!m_initialized)
+		return;
+
 	render(dt);
 
 
@@ -134,6 +140,8 @@ bool Graphics::Window_Should_Close()
 
 void Graphics::Set_Screen_FrameTexture(Texture* tex)
 {
+	if (!m_initialized)
+		return;
 	m_screen_shader->use(false);
 	m_screen_shader->Set_Textures({
 		{"screenTexture", tex}
@@ -142,6 +150,8 @@ void Graphics::Set_Screen_FrameTexture(Texture* tex)
 
 void Graphics::OnWindowResize(int width, int height)
 {
+	if (!m_initialized)
+		return;
 	m_width = width;
 	m_height = height;
 
@@ -180,6 +190,9 @@ void Graphics::draw_debug_line(glm::vec3 start, glm::vec3 stop, glm::vec3 color,
 
 void Graphics::render(float dt)
 {
+	if (!m_initialized)
+		return;
+
 	Camera* active_cam = Camera::Get_Active();
 	if (active_cam == nullptr)
 		return;

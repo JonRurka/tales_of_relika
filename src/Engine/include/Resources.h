@@ -23,6 +23,9 @@ public:
 		bool loaded;
 		void* handle;
 		void* data;
+		size_t data_size;
+		int pack_index;
+		int pack_offset;
 	};
 	
 	Resources();
@@ -71,6 +74,8 @@ public:
 
 	static std::string Get_Resources_Director();
 
+	static std::string Get_Data_Director();
+
 private:
 
 	LoadMode m_mode;
@@ -82,6 +87,8 @@ private:
 	static Resources* m_instance;
 
 	static void get_assets_recursively(std::string basePath, std::vector<Asset>& assets, std::string rel_path = "");
+
+	static void get_binary_assets(std::string data_Path, std::vector<Asset>& assets);
 
 	void load_shaders_binary();
 	void load_textures_binary();
@@ -117,5 +124,5 @@ private:
 		return m_models_assets.find(name) != m_models_assets.end();
 	}
 
-	const std::string LOG_LOC{ "RESOURCES" };
+	inline static const std::string LOG_LOC{ "RESOURCES" };
 };

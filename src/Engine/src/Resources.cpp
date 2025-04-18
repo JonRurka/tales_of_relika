@@ -11,12 +11,16 @@
 #include <stdlib.h>
 #include <algorithm>
 
+#include <nlohmann/json.hpp>
+
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <dirent.h>
 #include <sys/stat.h>
 #endif
+
+using nlohmann::json;
 
 Resources* Resources::m_instance{nullptr};
 
@@ -25,7 +29,8 @@ Resources::Resources()
 #ifdef NDEBUG
     m_mode = LoadMode::Binary;
 #else
-    m_mode = LoadMode::Filesystem;
+    //m_mode = LoadMode::Filesystem;
+    m_mode = LoadMode::Binary;
 #endif
 
     switch (m_mode) {
@@ -167,9 +172,14 @@ std::string Resources::Get_Resources_Director()
 	return Utilities::Get_Root_Directory() + "resources\\";
 #else
 	//debug
-	return (Utilities::Get_Root_Directory() + "..\\..\\resources\\");
+	return (Utilities::Get_Root_Directory() + "..\\..\\..\\resources\\");
 #endif
 
+}
+
+std::string Resources::Get_Data_Director()
+{
+    return Utilities::Get_Root_Directory() + "data\\";
 }
 
 namespace {
@@ -316,6 +326,34 @@ void Resources::get_assets_recursively(std::string basePath, std::vector<Asset>&
 #endif
 }
 
+void Resources::get_binary_assets(std::string data_Path, std::vector<Asset>& assets)
+{
+    std::string base64 = Utilities::Read_File_String(data_Path);
+    if (base64 == "") {
+        Logger::LogFatal(LOG_POS("get_binary_assets"), "No shader assets to available.");
+        return;
+    }
+    std::string resource_map_str = Utilities::Decode_Base64(base64);
+
+    auto data = json::parse(resource_map_str);
+    for (auto& element : data) {
+
+        //std::cout << element << '\n';
+        Asset asset;
+
+        element["resource_name"].get_to(asset.name);
+        element["pack_file"].get_to(asset.pack_index);
+        element["size"].get_to(asset.data_size);
+        element["offset"].get_to(asset.pack_offset);
+
+        asset.path = "";
+        asset.loaded = false;
+        asset.handle = nullptr;
+        asset.data = nullptr;
+    }
+
+}
+
 
 void Resources::load_shaders_fs()
 {
@@ -370,6 +408,25 @@ void Resources::load_models_fs()
 
 void Resources::load_shaders_binary()
 {
+    std::string data_dir = Get_Data_Director();
+    std::string shader_data_file = data_dir + "s000.dat";
+    std::string shader_pack_file = data_dir + "s001.pack";
+
+    std::vector<Asset> assets;
+
+    get_binary_assets(shader_data_file, assets);
+
+    std::vector<char> pack_data = Utilities::Read_File_Bytes(shader_pack_file);
+    const char* data = pack_data.data();
+
+    Logger::LogDebug(LOG_POS("load_shaders_fs"), "Loaded Shaders:");
+    for (auto& a : assets)
+    {
+        a.data = new char[a.data_size];
+        memcpy(a.data, &data[a.pack_offset], a.data_size);
+        m_shader_assets[a.name] = a;
+        Logger::LogDebug(LOG_POS("load_shaders_binary"), "\t - %s", a.name.c_str());
+    }
 }
 
 void Resources::load_textures_binary()

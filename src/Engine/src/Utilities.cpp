@@ -3,8 +3,21 @@
 #include "opengl.h"
 #include "zlib.h"
 
+#include <iostream>
+#include <string>
 #include <cctype>
 #include <algorithm>
+#include <sstream>
+
+#include <boost/dll.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/archive/iterators/insert_linebreaks.hpp>
+#include <boost/archive/iterators/remove_whitespace.hpp>
+
+#include "Logger.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -43,6 +56,12 @@ std::string Utilities::File_Seperator()
 
 std::string Utilities::Get_Root_Directory()
 {
+	// Get the full path to the executable
+	boost::filesystem::path exe_path = boost::dll::program_location();
+	boost::filesystem::path exe_dir = exe_path.parent_path();
+	return exe_dir.string() + File_Seperator();
+
+	/*
 	// TODO: Linux version
 
 	TCHAR Buffer[BUFSIZE];
@@ -63,7 +82,7 @@ std::string Utilities::Get_Root_Directory()
 
 	//std::cout << str << std::endl; //<-- should work!
 
-	return str + File_Seperator();
+	return str + File_Seperator();*/
 }
 
 std::string Utilities::toLowerCase(std::string str)
@@ -114,6 +133,97 @@ std::string Utilities::Get_Filename(const std::string& path)
 	}
 
 	return path.substr(filename_pos + 1);
+}
+
+std::string Utilities::Decode_Base64(std::string base64_input)
+{
+	// https://stackoverflow.com/a/46358091
+
+	using namespace boost::archive::iterators;
+	typedef transform_width<binary_from_base64<remove_whitespace
+		<std::string::const_iterator> >, 8, 6> ItBinaryT;
+
+	try
+	{
+		// If the input isn't a multiple of 4, pad with =
+		size_t num_pad_chars((4 - base64_input.size() % 4) % 4);
+		base64_input.append(num_pad_chars, '=');
+
+		size_t pad_chars(std::count(base64_input.begin(), base64_input.end(), '='));
+		std::replace(base64_input.begin(), base64_input.end(), '=', 'A');
+		std::string output(ItBinaryT(base64_input.begin()), ItBinaryT(base64_input.end()));
+		output.erase(output.end() - pad_chars, output.end());
+		return output;
+	}
+	catch (std::exception const&)
+	{
+		return std::string("");
+	}
+}
+
+std::vector<char> Utilities::Read_File_Bytes(const std::string& path)
+{
+	std::vector<char> res;
+	
+	// Open the file in binary mode
+	std::ifstream file(path, std::ios::binary | std::ios::ate);
+	if (!file.is_open()) {
+		Logger::LogError(LOG_POS("Read_File"), "Failed to open file '%s'.", path.c_str());
+		return res;
+	}
+
+	// Get the file size (since we're at the end due to ios::ate)
+	size_t outSize = file.tellg();
+	if (outSize == 0) {
+		file.close();
+		return res; // Empty file, return nullptr
+	}
+
+	// Allocate a char array to hold the file contents
+	char* buffer = new char[outSize];
+
+	// Move back to the beginning of the file
+	file.seekg(0, std::ios::beg);
+
+	// Read the file contents into the buffer
+	file.read(buffer, outSize);
+	if (!file) {
+		delete[] buffer;
+		file.close();
+		Logger::LogError(LOG_POS("Read_File"), "Error reading file '%s'.", path.c_str());
+		return res;
+	}
+
+	// Close the file
+	file.close();
+
+	res = std::vector<char>(buffer, buffer + outSize);
+
+	delete[] buffer;
+
+	return res;
+}
+
+std::string Utilities::Read_File_String(const std::string& path)
+{
+	std::string res = "";
+	std::ifstream file;
+	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	try {
+		file.open(path);
+		std::stringstream file_stream;
+		file_stream << file.rdbuf();
+		// close file handlers
+		file.close();
+		res = file_stream.str();
+		file_stream.clear();
+	}
+	catch (std::ifstream::failure e) {
+		//std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+		Logger::LogError(LOG_POS("Read_File_String"), "Error reading file '%s'.", path.c_str());
+		return res;
+	}
+	return res;
 }
 
 double Utilities::Get_Time()

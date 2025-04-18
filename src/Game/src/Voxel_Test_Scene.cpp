@@ -370,6 +370,8 @@ void Voxel_Test_Scene::Init()
 
 	Logger::LogDebug(LOG_POS("Init"), "Compressed string (%f ms): %s", (comp_stop - comp_start) * 1000.0f, test_str_res.c_str());
 
+
+	Logger::LogDebug(LOG_POS("Init"), "Data directory: %s", Resources::Get_Data_Director().c_str());
 }
 
 void Voxel_Test_Scene::Update(float dt)

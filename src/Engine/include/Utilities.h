@@ -30,6 +30,12 @@ public:
 	static std::string getFileExtension(const std::string& filePath);
 
 	static std::string Get_Filename(const std::string& path);
+	
+	static std::string Decode_Base64(std::string base64_input);
+
+	static std::vector<char> Read_File_Bytes(const std::string& path);
+
+	static std::string Read_File_String(const std::string& path);
 
 	static double Get_Time();
 
@@ -44,6 +50,9 @@ public:
 	static std::vector<unsigned char> Compress(std::vector<unsigned char> input, int level = ZLIB_DEFAULT_COMPRESSION);
 
 	static std::vector<unsigned char> Decompress(std::vector<unsigned char> input);
+
+private:
+	inline static const std::string LOG_LOC{ "UTILITIES" };
 
 };
 

@@ -77,6 +77,8 @@ private:
 	int m_height{ 0 };
 	static Graphics* m_instance;
 
+	bool m_initialized{ false };
+
 	Mesh* m_screen_mesh{nullptr};
 	Shader* m_screen_shader{ nullptr };
 

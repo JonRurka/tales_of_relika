@@ -31,6 +31,12 @@ void Game::init_shaders()
 		Game_Resources::Shaders::Graphics::STANDARD_VERT, 
 		Game_Resources::Shaders::Graphics::STANDARD_FRAG
 	);
+	if (std_shader == nullptr || !std_shader->Initialized())
+	{
+		Logger::LogFatal(LOG_POS("init_shaders"), "Failed to load standard shader.");
+		return;
+	}
+
 	std_shader->Init_Lights();
 
 	Shader* opaque_chunk_shader = Shader::Create(
@@ -38,6 +44,11 @@ void Game::init_shaders()
 		Game_Resources::Shaders::Graphics::Voxel::CHUNK_OPAQUE_VERT,
 		Game_Resources::Shaders::Graphics::Voxel::CHUNK_OPAQUE_FRAG
 	);
+	if (opaque_chunk_shader == nullptr || !opaque_chunk_shader->Initialized())
+	{
+		Logger::LogFatal(LOG_POS("init_shaders"), "Failed to load opaque chunk shader.");
+		return;
+	}
 	opaque_chunk_shader->Init_Lights();
 
 	/*std_shader->Set_Textures({
