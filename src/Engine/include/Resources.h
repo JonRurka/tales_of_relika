@@ -80,6 +80,13 @@ private:
 
 	LoadMode m_mode;
 
+	enum PackType {
+		Shader_Type,
+		Texture_Type,
+		Model_Type,
+		Data_Type
+	};
+
 	std::unordered_map<std::string, Asset> m_shader_assets;
 	std::unordered_map<std::string, Asset> m_texture_assets;
 	std::unordered_map<std::string, Asset> m_models_assets;
@@ -108,8 +115,11 @@ private:
 	void load_model(std::string name);
 	void load_model(std::vector<std::string> names);
 
+	void load_pack_data(Asset* asset, Resources::PackType type);
+
 	Texture* get_texture(std::string name);
 	std::string get_shader_file(std::string name);
+	std::vector<char> get_shader_bin(std::string name);
 	Model* get_model(std::string name);
 
 	bool has_texture(std::string name) {

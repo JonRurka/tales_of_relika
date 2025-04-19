@@ -135,6 +135,35 @@ std::string Utilities::Get_Filename(const std::string& path)
 	return path.substr(filename_pos + 1);
 }
 
+std::string Utilities::Get_Resource_Filename(const std::string& path)
+{
+	if (path.empty()) {
+		return "";  // Return empty string for empty input
+	}
+
+	size_t last_slash = path.find_last_of(':');
+	size_t last_backslash = path.find_last_of(':');
+
+	// If no separators found, return the whole string
+	if (last_slash == std::string::npos && last_backslash == std::string::npos) {
+		return path;
+	}
+
+	// Find the rightmost separator
+	size_t filename_pos = 0;
+	if (last_slash != std::string::npos && last_backslash != std::string::npos) {
+		filename_pos = max(last_slash, last_backslash);
+	}
+	else if (last_slash != std::string::npos) {
+		filename_pos = last_slash;
+	}
+	else {
+		filename_pos = last_backslash;
+	}
+
+	return path.substr(filename_pos + 1);
+}
+
 std::string Utilities::Decode_Base64(std::string base64_input)
 {
 	// https://stackoverflow.com/a/46358091
@@ -202,6 +231,51 @@ std::vector<char> Utilities::Read_File_Bytes(const std::string& path)
 	delete[] buffer;
 
 	return res;
+}
+
+void Utilities::Read_File_Bytes(const std::string& path, size_t offset, size_t size, char* out_bytes)
+{
+	//std::vector<char> res;
+
+	// Open the file in binary mode
+	std::ifstream file(path, std::ios::binary | std::ios::ate);
+	if (!file.is_open()) {
+		Logger::LogError(LOG_POS("Read_File"), "Failed to open file '%s'.", path.c_str());
+		return;
+	}
+
+	// Get the file size (since we're at the end due to ios::ate)
+	size_t outSize = size;
+	if ((offset + outSize) > file.tellg()) {
+		file.close();
+		return;
+	}
+
+	// Allocate a char array to hold the file contents
+
+	char* buffer = out_bytes;
+	//char* buffer = new char[outSize];
+
+	// Move back to offset of the file
+	file.seekg(offset, std::ios::beg);
+
+	// Read the file contents into the buffer
+	file.read(buffer, outSize);
+	if (!file) {
+		delete[] buffer;
+		file.close();
+		Logger::LogError(LOG_POS("Read_File"), "Error reading file '%s'.", path.c_str());
+		return;
+	}
+
+	// Close the file
+	file.close();
+
+	//res = std::vector<char>(buffer, buffer + outSize);
+
+	//delete[] buffer;
+
+	//return res;
 }
 
 std::string Utilities::Read_File_String(const std::string& path)

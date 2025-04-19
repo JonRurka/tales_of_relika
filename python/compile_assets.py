@@ -2,6 +2,7 @@ import subprocess
 import os
 import base64
 import zlib
+import json
 from pathlib import Path
 
 MAX_PACK_SIZE = 10 * 1024 * 1024
@@ -15,7 +16,7 @@ shader_resources = [];
 shader_offset = 0;
 shader_resource_file_bytes = b""
 
-data_resources = {}
+data_resources = []
 data_offset = 0
 data_resource_bytes = {}
 data_current_pack = 1
@@ -94,10 +95,10 @@ def general_process_asset(file_path, rel_path):
     
     if data_current_pack not in data_resource_bytes:
         data_resource_bytes[data_current_pack] = b""
-    if data_current_pack not in data_resources:
-        data_resources[data_current_pack] = []
+    #if data_current_pack not in data_resources:
+    #    data_resources[data_current_pack] = []
         
-    data_resources[data_current_pack].append (dict(
+    data_resources.append (dict(
         resource_name=resource_path,
         offset=data_offset,
         size=asset_size,
@@ -131,7 +132,7 @@ def process_assets(directory, extension_list, func):
 def serialize_shader_resources(resource_map, data):
     global final_data_path
     global output_extension
-    map_str = str(resource_map);
+    map_str = json.dumps(resource_map);
     map_str = map_str.encode("utf-8")
     base64_bytes = base64.b64encode(map_str)
     base64_string = base64_bytes.decode("ascii")
@@ -152,7 +153,7 @@ def serialize_resources(prefix_letter, resource_map, data_map):
     global final_data_path
     global output_extension
     
-    map_str = str(resource_map);
+    map_str = json.dumps(resource_map);
     map_str = map_str.encode("utf-8")
     base64_bytes = base64.b64encode(map_str)
     base64_string = base64_bytes.decode("ascii")

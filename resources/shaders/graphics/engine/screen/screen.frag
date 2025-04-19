@@ -2,7 +2,7 @@
 
 layout (location = 0) out vec4 FragColor;
   
-layout (location = 1) in vec2 TexCoords;
+layout (location = 3) in vec2 TexCoords;
 
 uniform sampler2D screenTexture;
 

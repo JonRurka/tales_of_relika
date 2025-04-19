@@ -29,6 +29,8 @@ public:
 
 	Texture(const std::string path, bool flip = true);
 
+	Texture(const std::string resource_name, const std::vector<char> data, bool flip = true);
+
 	Texture(const int width, const int height);
 
 	GLuint Tex() { return m_texture; }

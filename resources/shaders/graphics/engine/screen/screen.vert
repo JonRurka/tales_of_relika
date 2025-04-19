@@ -4,7 +4,7 @@ layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec3 aColor;
 layout (location = 3) in vec2 aTexCoord;
 
-layout (location = 4) out vec2 TexCoords;
+layout (location = 0) out vec2 TexCoords;
 
 void main()
 {

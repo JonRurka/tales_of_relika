@@ -22,16 +22,57 @@
 
 using nlohmann::json;
 
+#define LOAD_MODE_FS 1
+#define LOAD_MODE_BIN 2
+
+#define LOAD_MODE LOAD_MODE_BIN
+
 Resources* Resources::m_instance{nullptr};
+
+namespace {
+    std::string pad_int(int value, int width) {
+        std::ostringstream oss;
+        oss << std::setw(width) << std::setfill('0') << value;
+        return oss.str();
+    }
+
+    bool hasExtension(const std::string& filename) {
+        // Find last occurrence of '.'
+        size_t pos = filename.find_last_of('.');
+
+        // If no '.' found, or it's the last character, or it's part of ./ or ../
+        if (pos == std::string::npos ||        // No '.' found
+            pos == filename.length() - 1 ||    // '.' is last character
+            pos == 0 ||                        // '.' is first character
+            (pos == 1 && filename[0] == '.'))  // Part of ../
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    void removeLastIf(std::string& str, char ch) {
+        if (!str.empty() && str.back() == ch) {
+            str.pop_back();
+        }
+    }
+
+    std::string sep() {
+        return Utilities::File_Seperator();
+    }
+}
+
 
 Resources::Resources()
 {
-#ifdef NDEBUG
-    m_mode = LoadMode::Binary;
-#else
-    //m_mode = LoadMode::Filesystem;
-    m_mode = LoadMode::Binary;
-#endif
+    if (LOAD_MODE == LOAD_MODE_FS) {
+        m_mode = LoadMode::Filesystem;
+    }
+    else if (LOAD_MODE == LOAD_MODE_BIN) {
+        m_mode = LoadMode::Binary;
+    }
+
 
     switch (m_mode) {
     case LoadMode::Filesystem:
@@ -68,7 +109,7 @@ void Resources::load_shader(std::vector<std::string> names)
 {
     for (const auto& elem : names)
     {
-        Load_Shader(elem);
+        load_shader(elem);
     }
 }
 
@@ -80,8 +121,30 @@ void Resources::load_texture(std::string name, bool flip)
     }
 
     Asset* asset = &m_texture_assets[name];
-    if (!asset->loaded) {
+    if (asset->loaded)
+    {
+        return;
+    }
+
+    if (LOAD_MODE == LOAD_MODE_FS)
+    {
         Texture* tex = new Texture(asset->path, flip);
+        asset->handle = tex;
+        asset->data = tex->Data();
+        if (tex->Initialized()) {
+            asset->loaded = true;
+        }
+        else {
+            Logger::LogError(LOG_POS("Get_Texture"), "Failed to load texture: %s \n", name.c_str());
+        }
+        
+    }
+    else if (LOAD_MODE == LOAD_MODE_BIN) 
+    {
+        load_pack_data(asset, PackType::Texture_Type);
+        char* data_ptr = (char*)asset->data;
+        size_t data_size = asset->data_size;
+        Texture* tex = new Texture(name, std::vector<char>(data_ptr, data_ptr + data_size), flip);
         asset->handle = tex;
         asset->data = tex->Data();
         if (tex->Initialized()) {
@@ -109,8 +172,27 @@ void Resources::load_model(std::string name)
     }
 
     Asset* asset = &m_models_assets[name];
-    if (!asset->loaded) {
+    if (asset->loaded) {
+        return;
+    }
+
+    if (LOAD_MODE == LOAD_MODE_FS)
+    {
         Model* model = Model::Load(asset->path);
+        asset->handle = model;
+        if (model->Initialized()) {
+            asset->loaded = true;
+        }
+        else {
+            Logger::LogError(LOG_POS("Load_Model"), "Failed to load Model: %s \n", name.c_str());
+        }
+    }
+    else if (LOAD_MODE == LOAD_MODE_BIN)
+    {
+        load_pack_data(asset, PackType::Model_Type);
+        char* data_ptr = (char*)asset->data;
+        size_t data_size = asset->data_size;
+        Model* model = Model::Load(name, std::vector<char>(data_ptr, data_ptr + data_size));
         asset->handle = model;
         if (model->Initialized()) {
             asset->loaded = true;
@@ -127,6 +209,41 @@ void Resources::load_model(std::vector<std::string> names)
     {
         load_model(elem);
     }
+}
+
+void Resources::load_pack_data(Asset* asset, Resources::PackType type)
+{
+    std::string prefix = "";
+    switch (type) {
+    case PackType::Texture_Type:
+        prefix = "t";
+        break;
+    case PackType::Model_Type:
+        prefix = "m";
+        break;
+    case PackType::Shader_Type:
+        prefix = "s";
+        break;
+    case PackType::Data_Type:
+        prefix = "d";
+        break;
+    }
+
+    std::string data_dir = Get_Data_Director();
+    std::string file_name = prefix + pad_int(asset->pack_index, 3) + ".pack";
+    std::string file_path = data_dir + file_name;
+
+    asset->data = new char[asset->data_size];
+    Utilities::Read_File_Bytes(file_path, asset->pack_offset, asset->data_size, (char*)asset->data);
+    
+    unsigned char* compressed_data = (unsigned char*)asset->data;
+    std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(compressed_data, compressed_data + asset->data_size));
+
+    delete[] asset->data;
+
+    asset->data = new char[decompressed_data.size()];
+    memcpy(asset->data, decompressed_data.data(), decompressed_data.size());
+    asset->data_size = decompressed_data.size();
 }
 
 Texture* Resources::get_texture(std::string name)
@@ -151,6 +268,21 @@ std::string Resources::get_shader_file(std::string name)
     Load_Shader(name);
 
     return m_shader_assets[name].path;
+}
+
+std::vector<char> Resources::get_shader_bin(std::string name)
+{
+    if (!Has_Shader(name)) {
+        Logger::LogError(LOG_POS("Get_Shader_File"), "Shader File not found: %s \n", name.c_str());
+        return std::vector<char>();
+    }
+
+    Load_Shader(name);
+
+    char* data_ptr = (char*)m_shader_assets[name].data;
+    size_t data_size = m_shader_assets[name].data_size;
+
+    return std::vector<char>(data_ptr, data_ptr + data_size);
 }
 
 Model* Resources::get_model(std::string name)
@@ -180,34 +312,6 @@ std::string Resources::Get_Resources_Director()
 std::string Resources::Get_Data_Director()
 {
     return Utilities::Get_Root_Directory() + "data\\";
-}
-
-namespace {
-    bool hasExtension(const std::string& filename) {
-        // Find last occurrence of '.'
-        size_t pos = filename.find_last_of('.');
-
-        // If no '.' found, or it's the last character, or it's part of ./ or ../
-        if (pos == std::string::npos ||        // No '.' found
-            pos == filename.length() - 1 ||    // '.' is last character
-            pos == 0 ||                        // '.' is first character
-            (pos == 1 && filename[0] == '.'))  // Part of ../
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    void removeLastIf(std::string& str, char ch) {
-        if (!str.empty() && str.back() == ch) {
-            str.pop_back();
-        }
-    }
-
-    std::string sep() {
-        return Utilities::File_Seperator();
-    }
 }
 
 void Resources::get_assets_recursively(std::string basePath, std::vector<Asset>& assets, std::string rel_path) {
@@ -419,11 +523,17 @@ void Resources::load_shaders_binary()
     std::vector<char> pack_data = Utilities::Read_File_Bytes(shader_pack_file);
     const char* data = pack_data.data();
 
-    Logger::LogDebug(LOG_POS("load_shaders_fs"), "Loaded Shaders:");
+    Logger::LogDebug(LOG_POS("load_shaders_binary"), "Loaded Shaders:");
     for (auto& a : assets)
     {
-        a.data = new char[a.data_size];
-        memcpy(a.data, &data[a.pack_offset], a.data_size);
+        unsigned char* compressed_data = (unsigned char*)data[a.pack_offset];
+
+        std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(compressed_data, compressed_data + a.data_size));
+
+        a.data = new char[decompressed_data.size()];
+        memcpy(a.data, decompressed_data.data(), decompressed_data.size());
+        a.data_size = decompressed_data.size();
+        a.loaded = true;
         m_shader_assets[a.name] = a;
         Logger::LogDebug(LOG_POS("load_shaders_binary"), "\t - %s", a.name.c_str());
     }
@@ -431,10 +541,36 @@ void Resources::load_shaders_binary()
 
 void Resources::load_textures_binary()
 {
+    std::string data_dir = Get_Data_Director();
+    std::string texture_data_file = data_dir + "t000.dat";
+
+    std::vector<Asset> assets;
+
+    get_binary_assets(texture_data_file, assets);
+
+    Logger::LogDebug(LOG_POS("load_textures_binary"), "Loaded Textures:");
+    for (auto& a : assets)
+    {
+        m_texture_assets[a.name] = a;
+        Logger::LogDebug(LOG_POS("load_textures_binary"), "\t - %s", a.name.c_str());
+    }
 }
 
 void Resources::load_models_binary()
 {
+    std::string data_dir = Get_Data_Director();
+    std::string model_data_file = data_dir + "m000.dat";
+
+    std::vector<Asset> assets;
+
+    get_binary_assets(model_data_file, assets);
+
+    Logger::LogDebug(LOG_POS("load_models_binary"), "Loaded Models:");
+    for (auto& a : assets)
+    {
+        m_models_assets[a.name] = a;
+        Logger::LogDebug(LOG_POS("load_models_binary"), "\t - %s", a.name.c_str());
+    }
 }
 
 

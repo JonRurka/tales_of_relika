@@ -11,17 +11,21 @@ using namespace LuaCpp;
 using namespace LuaCpp::Registry;
 using namespace LuaCpp::Engine;
 
+
 int main()
 {
-	std::string data_dir = Resources::Get_Data_Director();
+	//printf("Padded: %s\n", intToPaddedString(5, 3).c_str());
+
+
+	/*std::string data_dir = Resources::Get_Data_Director();
 	printf("data dir: %s\n", data_dir.c_str());
 	std::string base64 = Utilities::Read_File_String(data_dir + "s000.dat");
 	std::string decoded = Utilities::Decode_Base64(base64);
 	Logger::Update();
 
 	//printf("Base64: %s\n", base64.c_str());
-	printf("Decoded: %s\n", decoded.c_str());
+	printf("Decoded: %s\n", decoded.c_str());*/
 
-	//Game game;
-	//return game.Run();
+	Game game;
+	return game.Run();
 }

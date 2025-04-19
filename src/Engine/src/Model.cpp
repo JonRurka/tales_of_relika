@@ -2,6 +2,7 @@
 
 #include "Mesh.h"
 #include "Texture.h"
+#include "Logger.h"
 
 #include <iostream>
 #include <tchar.h>
@@ -34,11 +35,29 @@ Model* Model::Load(std::string file)
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+        //std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+        Logger::LogError(LOG_POS("Load"), "%s", import.GetErrorString());
         return new Model();
     }
 
     std::string directory = file.substr(0, file.find_last_of('/'));
+
+    return Get_Model(directory, scene->mRootNode, scene);
+}
+
+Model* Model::Load(std::string resource_name, std::vector<char> file_data)
+{
+    Assimp::Importer import;
+    const aiScene* scene = import.ReadFileFromMemory(file_data.data(), file_data.size(), aiProcess_Triangulate | aiProcess_FlipUVs);
+
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    {
+        //std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+        Logger::LogError(LOG_POS("Load"), "%s", import.GetErrorString());
+        return new Model();
+    }
+
+    std::string directory = "";
 
     return Get_Model(directory, scene->mRootNode, scene);
 }
@@ -143,6 +162,9 @@ Mesh* Model::Process_Mesh(aiMesh* mesh, const aiScene* scene)
 
 std::vector<Texture*> Model::Process_Textures(std::string dir, aiMesh* mesh, const aiScene* scene)
 {
+    if (dir == "")
+        return std::vector<Texture*>();
+
     if (mesh->mMaterialIndex >= 0)
     {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -155,7 +177,7 @@ std::vector<Texture*> Model::Process_Textures(std::string dir, aiMesh* mesh, con
         m_textures.insert(m_textures.end(), norm_texas.begin(), norm_texas.end());
     }
 
-    return std::vector<Texture*>();
+    return m_textures;
 }
 
 std::vector<Texture*> Model::loadMaterialTextures(std::string dir, aiMaterial* mat, int type)

@@ -16,8 +16,8 @@
 
 
 
-#define SKYBOX_VERT_SHADER "graphics.engine.skybox.skybox.vert"
-#define SKYBOX_FRAG_SHADER "graphics.engine.skybox.skybox.frag"
+#define SKYBOX_VERT_SHADER "graphics::engine::skybox::skybox.vert"
+#define SKYBOX_FRAG_SHADER "graphics::engine::skybox::skybox.frag"
 
 Camera* Camera::m_active_camera{nullptr};
 

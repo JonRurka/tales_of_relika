@@ -24,11 +24,11 @@
 #define DEFAULT_SCREEN_WIDTH 800
 #define DEFAULT_SCREEN_HEIGHT 600
 
-#define SCREEN_VERT_SHADER "graphics.engine.screen.screen.vert"
-#define SCREEN_FRAG_SHADER "graphics.engine.screen.screen.frag"
+#define SCREEN_VERT_SHADER "graphics::engine::screen::screen.vert"
+#define SCREEN_FRAG_SHADER "graphics::engine::screen::screen.frag"
 
-#define LINE_VERT_SHADER "graphics.engine.line.line.vert"
-#define LINE_FRAG_SHADER "graphics.engine.line.line.frag"
+#define LINE_VERT_SHADER "graphics::engine::line::line.vert"
+#define LINE_FRAG_SHADER "graphics::engine::line::line.frag"
 
 Graphics* Graphics::m_instance{ nullptr };
 

@@ -23,6 +23,8 @@ public:
 
 	static Model* Load(std::string file);
 
+	static Model* Load(std::string resource_name, std::vector<char> data);
+
 	bool Initialized() { return m_initialized; }
 
 	std::string Name() { return m_name; }
@@ -59,5 +61,7 @@ private:
 	std::vector<Texture*> loadMaterialTextures(std::string dir, aiMaterial* mat, int type);
 
 	static Texture* Import_Texture(std::string directory, std::string name);
+
+	inline static const std::string LOG_LOC{ "MODEL" };
 };
 

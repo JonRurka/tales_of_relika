@@ -30,10 +30,14 @@ public:
 	static std::string getFileExtension(const std::string& filePath);
 
 	static std::string Get_Filename(const std::string& path);
+
+	static std::string Get_Resource_Filename(const std::string& path);
 	
 	static std::string Decode_Base64(std::string base64_input);
 
 	static std::vector<char> Read_File_Bytes(const std::string& path);
+
+	static void Read_File_Bytes(const std::string& path, size_t offset, size_t size, char* out_bytes);
 
 	static std::string Read_File_String(const std::string& path);
 
