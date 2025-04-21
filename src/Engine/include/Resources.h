@@ -43,6 +43,7 @@ public:
 
 	static Texture* Get_Texture(std::string name) { return m_instance->get_texture(name); }
 	static std::string Get_Shader_File(std::string name){ return m_instance->get_shader_file(name);}
+	static std::vector<char> Get_Shader_bin(std::string name) { return m_instance->get_shader_bin(name); }
 	static Model* Get_Model(std::string name) { return m_instance->get_model(name); }
 
 	static Asset Get_Texture_Asset(std::string name) {

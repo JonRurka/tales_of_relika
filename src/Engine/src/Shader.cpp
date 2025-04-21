@@ -8,6 +8,8 @@
 #include "Logger.h"
 #include "Resources.h"
 
+#define USE_SPIRV 0
+
 std::unordered_map<unsigned int, std::vector<Renderer*>> Shader::m_renderers;
 std::unordered_map<unsigned int, Shader*> Shader::m_shaders;
 std::unordered_map<std::string, Shader*> Shader::m_shaders_map;
@@ -106,6 +108,139 @@ Shader::Shader(std::string name, const std::string vertexPath, const std::string
     m_shaders_map[name] = this;
     m_renderers[m_ID] = std::vector<Renderer*>();
     m_initialized = true;
+}
+
+Shader::Shader(std::string name, const char* vertex_source, const char* fragment_src)
+{
+    const char* vShaderCode = vertex_source;
+    const char* fShaderCode = fragment_src;
+
+    //Logger::LogDebug(LOG_POS("NEW"), "%s", vShaderCode);
+
+    //printf("vertex code:\n%s \n", vShaderCode);
+    //printf("frag code:\n%s \n", fShaderCode);
+
+    // 2. compile shaders
+    GLuint vertex, fragment;
+    int success;
+    char infoLog[512];
+
+    Logger::LogDebug(LOG_POS("NEW"), "%s: Compiling vertex shader.", name.c_str());
+    // vertex Shader
+    vertex = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex, 1, &vShaderCode, NULL);
+    glCompileShader(vertex);
+    // print compile errors if any
+    glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertex, 512, NULL, infoLog);
+        //std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        Logger::LogError(LOG_POS("NEW::VERTEX"), "COMPILATION_FAILED: %s", infoLog);
+        return;
+    };
+
+    Logger::LogDebug(LOG_POS("NEW"), "%s: Compiling fragment shader.", name.c_str());
+    // fragment Shader
+    fragment = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment, 1, &fShaderCode, NULL);
+    glCompileShader(fragment);
+    // print compile errors if any
+    glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertex, 512, NULL, infoLog);
+        //std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        Logger::LogError(LOG_POS("NEW::FRAGMENT"), "COMPILATION_FAILED: %s", infoLog);
+        return;
+    };
+
+    m_ID = glCreateProgram();
+    glAttachShader(m_ID, vertex);
+    glAttachShader(m_ID, fragment);
+    glLinkProgram(m_ID);
+    // print linking errors if any
+    glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(m_ID, 512, NULL, infoLog);
+        //std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        Logger::LogError(LOG_POS("NEW::PROGRAM"), "LINKING_FAILED: %s", infoLog);
+        std::string str(fragment_src);
+        Logger::LogDebug(LOG_POS("NEW::PROGRAM"), "%i", (int)str.size());
+        return;
+    }
+
+    // delete the shaders as they're linked into our program now and no longer necessary
+    glDeleteShader(vertex);
+    glDeleteShader(fragment);
+
+    m_shaders[m_ID] = this;
+    m_shaders_map[name] = this;
+    m_renderers[m_ID] = std::vector<Renderer*>();
+    m_initialized = true;
+}
+
+Shader::Shader(std::string name, const std::vector<char> vertex_bin, const std::vector<char> fragment_bin)
+{
+    // 2. compile shaders
+    GLuint vertex, fragment;
+    int success = 0;
+    char infoLog[512];
+
+    // vertex Shader
+    vertex = glCreateShader(GL_VERTEX_SHADER);
+    glShaderBinary(1, &vertex, GL_SHADER_BINARY_FORMAT_SPIR_V_ARB, vertex_bin.data(), vertex_bin.size());
+    glSpecializeShader(vertex, "main", 0, 0, 0);
+    // print compile errors if any
+    //glCheckError();
+    glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertex, 512, NULL, infoLog);
+        //std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        Logger::LogError(LOG_POS("NEW::VERTEX"), "COMPILATION_FAILED: %s", infoLog);
+        return;
+    };
+
+    // fragment Shader
+    fragment = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderBinary(1, &fragment, GL_SHADER_BINARY_FORMAT_SPIR_V_ARB, fragment_bin.data(), fragment_bin.size());
+    glSpecializeShader(fragment, "main", 0, 0, 0);
+    // print compile errors if any
+    //glCheckError();
+    glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertex, 512, NULL, infoLog);
+        //std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        Logger::LogError(LOG_POS("NEW::FRAGMENT"), "COMPILATION_FAILED: %s", infoLog);
+        return;
+    };
+
+    m_ID = glCreateProgram();
+    glAttachShader(m_ID, vertex);
+    glAttachShader(m_ID, fragment);
+    glLinkProgram(m_ID);
+    // print linking errors if any
+    glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(m_ID, 512, NULL, infoLog);
+        //std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        Logger::LogError(LOG_POS("NEW::PROGRAM"), "LINKING_FAILED: %s", infoLog);
+        return;
+    }
+
+    // delete the shaders as they're linked into our program now and no longer necessary
+    glDeleteShader(vertex);
+    glDeleteShader(fragment);
+
+    m_shaders[m_ID] = this;
+    m_shaders_map[name] = this;
+    m_renderers[m_ID] = std::vector<Renderer*>();
+    m_initialized = true;
+
 }
 
 void Shader::use(bool update_camera)
@@ -240,13 +375,28 @@ Shader* Shader::Create(std::string name, const std::string vertex_name, const st
         return nullptr;
     }
 
-    std::string vertex_path = Resources::Get_Shader_File(vertex_name);
-    std::string fragment_path = Resources::Get_Shader_File(fragment_name);
+#if USE_SPIRV >= 1
+        std::vector<char> vertex_bin = Resources::Get_Shader_bin(vertex_name);
+        std::vector<char> fragment_bin = Resources::Get_Shader_bin(fragment_name);
+        Shader* shader = new Shader(name, vertex_bin, fragment_bin);
+#else 
+        //std::string vertex_path = Resources::Get_Shader_File(vertex_name);
+        //std::string fragment_path = Resources::Get_Shader_File(fragment_name);
+        //Shader* shader = new Shader(name, vertex_path, fragment_path);
 
-    Shader* shader = new Shader(name, vertex_path, fragment_path);
-    if (!shader->Initialized()) {
-        Logger::LogError("SHADER::CREATE", "Failed to create shader '%s'", name.c_str());
-    }
+        std::vector<char> vertex_bin = Resources::Get_Shader_bin(vertex_name);
+        std::vector<char> fragment_bin = Resources::Get_Shader_bin(fragment_name);
+        std::string v_str = std::string(vertex_bin.begin(), vertex_bin.end());
+        std::string f_str = std::string(fragment_bin.begin(), fragment_bin.end());
+        if (fragment_name == "graphics::standard::standard.frag") {
+            Logger::LogDebug(LOG_POS("Create"), f_str.c_str());
+        }
+        Shader* shader = new Shader(name, v_str.c_str(), f_str.c_str());
+#endif
+      
+        if (!shader->Initialized()) {
+            Logger::LogError(LOG_POS("CREATE"), "Failed to create shader '%s'", name.c_str());
+        }
 
     return shader;
 }

@@ -25,7 +25,7 @@ int main()
 
 	//printf("Base64: %s\n", base64.c_str());
 	printf("Decoded: %s\n", decoded.c_str());*/
-
+	Logger::Set_Direct(true);
 	Game game;
 	return game.Run();
 }

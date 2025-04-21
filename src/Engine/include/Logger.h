@@ -38,11 +38,14 @@ public:
 
 	static std::vector<LogEntry> GetLogEntries();
 
+	static void Set_Direct(bool value) { m_direct = value; }
+
 	static void Update();
 
 private:
 
 	static Logger m_logger;
+	inline static bool m_direct{false};
 	std::vector<LogEntry> m_entries;
 
 	

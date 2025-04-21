@@ -37,6 +37,11 @@ public:
 
     // constructor reads and builds the shader
     Shader(std::string name, const std::string vertexPath, const std::string fragmentPath);
+
+    Shader(std::string name, const char* vertex_source, const char* fragment_src);
+
+    Shader(std::string name, const std::vector<char> vertex_bin, const std::vector<char> fragment_bin);
+    
     // use/activate the shader
     void use(bool update_camera = false);
 
@@ -89,7 +94,7 @@ private:
     static std::unordered_map<unsigned int, Shader*> m_shaders;
     static std::unordered_map<std::string, Shader*> m_shaders_map;
 
-    const std::string LOG_LOC{ "SHADER" };
+    inline static const std::string LOG_LOC{ "SHADER" };
 };
 
 

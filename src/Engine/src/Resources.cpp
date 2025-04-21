@@ -454,6 +454,8 @@ void Resources::get_binary_assets(std::string data_Path, std::vector<Asset>& ass
         asset.loaded = false;
         asset.handle = nullptr;
         asset.data = nullptr;
+
+        assets.push_back(asset);
     }
 
 }
@@ -523,19 +525,23 @@ void Resources::load_shaders_binary()
     std::vector<char> pack_data = Utilities::Read_File_Bytes(shader_pack_file);
     const char* data = pack_data.data();
 
-    Logger::LogDebug(LOG_POS("load_shaders_binary"), "Loaded Shaders:");
+    Logger::LogDebug(LOG_POS("load_shaders_binary"), "Loaded Shaders (%i):", (int)assets.size());
     for (auto& a : assets)
     {
-        unsigned char* compressed_data = (unsigned char*)data[a.pack_offset];
+        unsigned char* compressed_data = (unsigned char*)&data[a.pack_offset];
+        int compressed_size = a.data_size;
 
         std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(compressed_data, compressed_data + a.data_size));
+        int decompressed_size = decompressed_data.size();
 
+        delete[] a.data;
         a.data = new char[decompressed_data.size()];
         memcpy(a.data, decompressed_data.data(), decompressed_data.size());
+
         a.data_size = decompressed_data.size();
         a.loaded = true;
         m_shader_assets[a.name] = a;
-        Logger::LogDebug(LOG_POS("load_shaders_binary"), "\t - %s", a.name.c_str());
+        Logger::LogDebug(LOG_POS("load_shaders_binary"), "\t - %s (decompressed: %i bytes, compressed: %i bytes)", a.name.c_str(), decompressed_size, compressed_size);
     }
 }
 

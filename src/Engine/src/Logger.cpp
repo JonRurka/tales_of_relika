@@ -6,7 +6,7 @@
 #include <cstdio>
 #include <iostream>
 
-#define MESSAGE_BUFFER_SIZE 1024
+#define MESSAGE_BUFFER_SIZE 10 * 1024
 
 #include "opengl.h"
 
@@ -22,6 +22,10 @@ void Logger::Log(Logger::Level level, std::string source, std::string message)
 	entry.message = message;
 
 	m_logger.m_entries.push_back(entry);
+
+	if (m_direct) {
+		Update();
+	}
 }
 
 void Logger::LogFatal(std::string source, const std::string format, ...)

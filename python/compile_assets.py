@@ -12,6 +12,9 @@ parent_dir = Path(__file__).parent.parent.resolve()
 final_data_path = os.path.join(parent_dir, 'build/src/Debug/data').replace('\\', '/')
 output_extension = 'pack'
 
+if not os.path.exists(final_data_path):
+    os.makedirs(final_data_path)
+
 shader_resources = [];
 shader_offset = 0;
 shader_resource_file_bytes = b""
@@ -20,6 +23,8 @@ data_resources = []
 data_offset = 0
 data_resource_bytes = {}
 data_current_pack = 1
+
+
 
 def reset():
     global data_resources
@@ -31,9 +36,16 @@ def reset():
     data_resource_bytes.clear()
     data_current_pack = 1
 
-def compile_shader(working_dir, resource_path, file):    
+def compile_shader(working_dir, resource_path, file_path, file_name):
+    asset_bytes = b""
+    with open(file_path, 'rb') as file_obj:
+        #asset_bytes = zlib.compress(file_obj.read(), level=9)
+        asset_bytes = file_obj.read()
+    return asset_bytes
+    """
     result = subprocess.run(
-        ['glslc.exe', file, '-o', '-', '--target-env=opengl4.5'], 
+        ['glslc.exe', file, '-o', '-', '--target-env=opengl4.5'],
+        #['glslangValidator.exe', '-G', '-o' 'tmp.spv']
         capture_output=True,  
         cwd=working_dir
     )
@@ -53,14 +65,36 @@ def compile_shader(working_dir, resource_path, file):
             for x in range(len(output_lines)):
                 print (output_lines[x].replace('\\r', '').replace('\\n', ''))
         return "";
+    """
+    """
+    result = subprocess.run(
+        #['glslc.exe', file, '-o', '', '--target-env=opengl4.5'],
+        ['glslangValidator.exe', '-G', '-o' 'tmp.spv']
+        capture_output=True,  
+        cwd=working_dir
+    )
+    if result.returncode == 0:
+        print(f"shader '{resource_path}' complication failed with return code: {result.returncode}")
+        output_str = str(result.stderr)
+        if 'ERROR:' in output_str:
+            output_lines = output_str.split('\\n')
+            print(f'Errors Generated for {file}:');
+            for x in range(len(output_lines)):
+                print (output_lines[x].replace('\\r', '').replace('\\n', ''))
+        return "";
+    """
 
 def process_shader_asset(file_path, rel_path):
     directory = Path(file_path).parent
     file_name = Path(file_path).name
     resource_path = rel_path.replace('/', '::');
-    shader_bytes = compile_shader(directory, resource_path, file_name)
+    shader_bytes = compile_shader(directory, resource_path, file_path, file_name)
     shader_size = len(shader_bytes)
+    shader_compressed_bytes = zlib.compress(shader_bytes, level=9)
+    shader_compressed_size = len(shader_compressed_bytes)
     #print(len(shader_bytes))
+    
+    print(f"Adding shader {resource_path}. {shader_size} bytes decompressed. {shader_compressed_size} bytes compressed.")
     
     if shader_bytes == "":
         return
@@ -72,12 +106,15 @@ def process_shader_asset(file_path, rel_path):
     shader_resources.append(dict(
         resource_name=resource_path,
         offset=shader_offset,
-        size=shader_size,
+        #size=shader_size,
+        size=shader_compressed_size,
         pack_file = 1
     ));
-    shader_offset = shader_offset + shader_size
+    #shader_offset = shader_offset + shader_size
+    shader_offset = shader_offset + shader_compressed_size
     
-    shader_resource_file_bytes = shader_resource_file_bytes + shader_bytes;
+    #shader_resource_file_bytes = shader_resource_file_bytes + shader_bytes;
+    shader_resource_file_bytes = shader_resource_file_bytes + shader_compressed_bytes;
 
 def general_process_asset(file_path, rel_path):
     global data_resources
@@ -138,14 +175,14 @@ def serialize_shader_resources(resource_map, data):
     base64_string = base64_bytes.decode("ascii")
     file_path = f"{final_data_path}/s000.dat"
     print(f'Creating resource pack data "{file_path}"')
-    with open(file_path, "wb") as file:
+    with open(file_path, "wb+") as file:
         file.write(base64_bytes)
         
     file_data = data
     file_name = f"s001.{output_extension}"
     file_path = f"{final_data_path}/{file_name}"
     print(f'Creating resource pack "{file_path}"')
-    with open(file_path, "wb") as file:
+    with open(file_path, "wb+") as file:
         file.write(file_data)
     
     
@@ -159,7 +196,7 @@ def serialize_resources(prefix_letter, resource_map, data_map):
     base64_string = base64_bytes.decode("ascii")
     file_path = f"{final_data_path}/{prefix_letter}000.dat"
     print(f'Creating resource pack data "{file_path}"')
-    with open(file_path, "wb") as file:
+    with open(file_path, "wb+") as file:
         file.write(base64_bytes)
     
     for key, value in data_map.items():
@@ -167,7 +204,7 @@ def serialize_resources(prefix_letter, resource_map, data_map):
         file_name = f"{prefix_letter}{key:03d}.{output_extension}"
         file_path = f"{final_data_path}/{file_name}"
         print(f'Creating resource pack "{file_path}"')
-        with open(file_path, "wb") as file:
+        with open(file_path, "wb+") as file:
             file.write(file_data)
         
 
