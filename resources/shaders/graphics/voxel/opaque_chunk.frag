@@ -7,22 +7,12 @@
 const int MAX_LIGHTS = 99; 
 
 struct Light {
-	//int enabled;
-	//int allocated;
-	//int type;
+
 	ivec4 int_options_1; // enabled, allocated, type
 	vec4 position;
 	vec4 lightColor;
 	vec4 direction;
-
-	//float strength;
-	//float constant;
-	//float linear;
 	vec4 float_options_2; // strength, constant, linear
-
-	//float quadratic;
-	//float cutOff;
-	//float outerCutOff;
 	vec4 float_options_3; // quadratic, cutOff, outerCutOff
 };
 
@@ -138,16 +128,16 @@ layout (location = 1) in vec3 Color;
 layout (location = 2) in vec2 TexCoords;
 layout (location = 3) in vec3 FragPos;
 
-layout (location = 4) uniform vec3 globalAmbientLightColor;
-layout (location = 5) uniform float globalAmbientIntensity;
-
-layout (location = 6) uniform vec3 viewPos;
-
-layout (location = 7) uniform Material material;
-
-
-
 layout (location = 0) out vec4 FragColor;
+
+layout (location = 10) uniform vec3 globalAmbientLightColor;
+layout (location = 11) uniform float globalAmbientIntensity;
+layout (location = 12) uniform vec3 viewPos;
+layout (location = 13) uniform Material material;
+
+
+
+
 
 void main()
 {

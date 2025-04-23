@@ -3,6 +3,7 @@ import os
 import base64
 import zlib
 import json
+from termcolor import colored # install via 'pip install termcolor'
 from pathlib import Path
 
 MAX_PACK_SIZE = 10 * 1024 * 1024
@@ -24,6 +25,8 @@ data_offset = 0
 data_resource_bytes = {}
 data_current_pack = 1
 
+global_use_spirv = True;
+do_compress = True;
 
 
 def reset():
@@ -36,36 +39,48 @@ def reset():
     data_resource_bytes.clear()
     data_current_pack = 1
 
+# Returns {success (bool), is_spirv (bool), content bytes}
 def compile_shader(working_dir, resource_path, file_path, file_name):
-    asset_bytes = b""
-    with open(file_path, 'rb') as file_obj:
+    global global_use_spirv
+    use_spirv = False
+    
+    content = ""
+    with open(file_path, 'r') as file_obj:
         #asset_bytes = zlib.compress(file_obj.read(), level=9)
-        asset_bytes = file_obj.read()
-    return asset_bytes
-    """
-    result = subprocess.run(
-        ['glslc.exe', file, '-o', '-', '--target-env=opengl4.5'],
-        #['glslangValidator.exe', '-G', '-o' 'tmp.spv']
-        capture_output=True,  
-        cwd=working_dir
-    )
-
-    if result.returncode == 0:
-        print(f"Shader '{resource_path}' compiled successfully.")
-        output_bytes = result.stdout
-        compressed_data = zlib.compress(output_bytes, level=9)
-        return compressed_data;
-    else:
-        print(f"shader '{resource_path}' complication failed with return code: {result.returncode}")
-        #print(f"Error: {result.stderr}")
-        output_str = str(result.stderr)
-        if 'error generated.' in output_str:
+        content = file_obj.read()
+    if ("USE_SPIRV" in content):
+        use_spirv = True
+    
+    if use_spirv and global_use_spirv:
+        result = subprocess.run(
+            ['glslc.exe', file_name, '-o', '-', '--target-env=opengl4.5', '-O0', '-g'],
+            #['glslangValidator.exe', '-G', '-o' 'tmp.spv']
+            capture_output=True,  
+            cwd=working_dir
+        )
+        if result.returncode == 0:
+            output_bytes = result.stdout
+            #compressed_data = zlib.compress(output_bytes, level=9)
+            decompressed_data = output_bytes
+            return dict(success=True, is_spirv=True, content=decompressed_data);
+        else:
+            print('###### COMPILATION ERROR ########')
+            print(f"shader '{resource_path}' complication failed with return code: {result.returncode}")
+            #print(f"Error: {result.stderr}")
+            output_str = str(result.stderr)
+            #if 'error generated.' in output_str:
             output_lines = output_str.split('\\n')
-            print(f'Errors Generated for {file}:');
+            print(f'Errors Generated for {file_name}:');
             for x in range(len(output_lines)):
-                print (output_lines[x].replace('\\r', '').replace('\\n', ''))
-        return "";
-    """
+                print (f"\t{output_lines[x].replace('\\r', '').replace('\\n', '').replace("\\'", "'")}")
+            print('#################################')
+            return dict(success=False, is_spirv=True, content=b'');
+    else:
+        asset_bytes = b""
+        with open(file_path, 'rb') as file_obj:
+            #asset_bytes = zlib.compress(file_obj.read(), level=9)
+            asset_bytes = file_obj.read()
+        return dict(success=True, is_spirv=False, content=asset_bytes)
     """
     result = subprocess.run(
         #['glslc.exe', file, '-o', '', '--target-env=opengl4.5'],
@@ -88,16 +103,19 @@ def process_shader_asset(file_path, rel_path):
     directory = Path(file_path).parent
     file_name = Path(file_path).name
     resource_path = rel_path.replace('/', '::');
-    shader_bytes = compile_shader(directory, resource_path, file_path, file_name)
+    shader_compile_res = compile_shader(directory, resource_path, file_path, file_name)
+    shader_bytes = shader_compile_res['content']
     shader_size = len(shader_bytes)
     shader_compressed_bytes = zlib.compress(shader_bytes, level=9)
     shader_compressed_size = len(shader_compressed_bytes)
     #print(len(shader_bytes))
     
-    print(f"Adding shader {resource_path}. {shader_size} bytes decompressed. {shader_compressed_size} bytes compressed.")
+    #print(f"Adding shader {resource_path}. {shader_size} bytes decompressed. {shader_compressed_size} bytes compressed.")
     
-    if shader_bytes == "":
+    if shader_bytes == b"" or not shader_compile_res['success']:
         return
+        
+    print(f"Shader '{resource_path}' (SPIRV: {shader_compile_res['is_spirv']}) compiled successfully.")
     
     global shader_resources;
     global shader_offset;
@@ -108,7 +126,8 @@ def process_shader_asset(file_path, rel_path):
         offset=shader_offset,
         #size=shader_size,
         size=shader_compressed_size,
-        pack_file = 1
+        pack_file = 1,
+        use_spirv=shader_compile_res['is_spirv'],
     ));
     #shader_offset = shader_offset + shader_size
     shader_offset = shader_offset + shader_compressed_size

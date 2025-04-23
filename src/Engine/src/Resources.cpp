@@ -450,6 +450,14 @@ void Resources::get_binary_assets(std::string data_Path, std::vector<Asset>& ass
         element["size"].get_to(asset.data_size);
         element["offset"].get_to(asset.pack_offset);
 
+        if (element.contains("use_spirv")) {
+            element["use_spirv"].get_to(asset.use_spirv);
+        }
+        else {
+            asset.use_spirv = false;
+        }
+
+
         asset.path = "";
         asset.loaded = false;
         asset.handle = nullptr;

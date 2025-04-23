@@ -26,6 +26,9 @@ public:
 		size_t data_size;
 		int pack_index;
 		int pack_offset;
+
+		// shader specific
+		bool use_spirv;
 	};
 	
 	Resources();

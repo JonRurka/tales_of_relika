@@ -1,12 +1,15 @@
 #version 450 core
 
-layout (location = 0) out vec4 FragColor;
-  
-layout (location = 3) in vec2 TexCoords;
+#define USE_SPIRV
 
-uniform sampler2D screenTexture;
+layout (location = 0) in vec2 TexCoords;
+
+layout (location = 0) out vec4 FragColor;
+
+layout (binding = 0) uniform sampler2D screenTexture;
 
 void main()
 { 
     FragColor = texture(screenTexture, TexCoords);
+	//FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

@@ -196,15 +196,15 @@ void Voxel_Test_Scene::Init()
 	camera->Set_Skybox(skybox_cubmap);
 
 	standard_mat = new Standard_Material();
-	standard_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
-	standard_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	standard_mat->SetVec2("material.scale", glm::vec2(32.0f, 32.0f));
-	standard_mat->setFloat("material.shininess", 32.0f);
-	standard_mat->setFloat("material.specular_intensity", 1.0f);
+	standard_mat->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
+	standard_mat->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	standard_mat->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));
+	standard_mat->setFloat("material_shininess", 32.0f);
+	standard_mat->setFloat("material_specular_intensity", 1.0f);
 	standard_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	standard_mat->setFloat("globalAmbientIntensity", 0.1f);
-	standard_mat->setTexture("material.diffuse", Game_Resources::Textures::CONTAINER_DIFFUSE);
-	standard_mat->setTexture("material.specular", Game_Resources::Textures::CONTAINER_SPECULAR);
+	standard_mat->setTexture("material_diffuse", Game_Resources::Textures::CONTAINER_DIFFUSE);
+	standard_mat->setTexture("material_specular", Game_Resources::Textures::CONTAINER_SPECULAR);
 
 	chunk_opaque_mat = new Opaque_Chunk_Material();
 	chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
@@ -356,22 +356,7 @@ void Voxel_Test_Scene::Init()
 
 	//Graphics::DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), 10.0f);
 
-	std::string test_str = "this is a test string to compress.";
-	std::vector<unsigned char> vec_uncompressed;
-	vec_uncompressed.assign(test_str.begin(), test_str.end());
 
-
-	float comp_start = (float)Utilities::Get_Time();
-	std::vector<unsigned char> vec_compressed = Utilities::Compress(vec_uncompressed);
-	vec_uncompressed = Utilities::Decompress(vec_compressed);
-	float comp_stop = (float)Utilities::Get_Time();
-
-	std::string test_str_res(vec_uncompressed.begin(), vec_uncompressed.end());
-
-	Logger::LogDebug(LOG_POS("Init"), "Compressed string (%f ms): %s", (comp_stop - comp_start) * 1000.0f, test_str_res.c_str());
-
-
-	Logger::LogDebug(LOG_POS("Init"), "Data directory: %s", Resources::Get_Data_Director().c_str());
 }
 
 void Voxel_Test_Scene::Update(float dt)
@@ -412,6 +397,7 @@ void Voxel_Test_Scene::Update(float dt)
 		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
+	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()));
 	//Logger::LogDebug(LOG_POS("Update"), "FPS: %f", Engine::FPS());
 }
 

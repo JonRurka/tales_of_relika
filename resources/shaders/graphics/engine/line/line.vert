@@ -1,4 +1,7 @@
 #version 450 core
+
+#define USE_SPIRV
+
 layout (location = 0) in vec3 aPos;
 
 layout (location = 0)uniform mat4 view_mat;

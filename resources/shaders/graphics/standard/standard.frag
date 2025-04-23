@@ -1,27 +1,28 @@
 #version 450 core
 
+
 #define LIGHT_TYPE_DIRECTIONAL 	1
 #define LIGHT_TYPE_POINT 		2
 #define LIGHT_TYPE_SPOT 		3
 
 const int MAX_LIGHTS = 1; 
 
-in vec3 Normal;
-in vec3 Color;
-in vec2 TexCoords;
-in vec3 FragPos;
+layout (location = 0) in vec3 Normal;
+layout (location = 1) in vec3 Color;
+layout (location = 2) in vec2 TexCoords;
+layout (location = 3) in vec3 FragPos;
 
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
 
 struct Material {
-	sampler2D diffuse;
-	sampler2D specular;
-    vec3 ambientColor;
-    vec3 diffuseColor;
-	vec2 scale;
-    //vec3 specular;
-	float specular_intensity;
-    float shininess;
+	//sampler2D 	diffuse;
+	//sampler2D 	specular;
+    vec3 		ambientColor;
+    vec3 		diffuseColor;
+	vec2 		scale;
+    //vec3 		specular;
+	float 		specular_intensity;
+    float 		shininess;
 };
 
 
@@ -54,20 +55,47 @@ struct Light_Result{
 	vec3 lightDir;
 };
 
-uniform Material material;
+
 
 //uniform Light lights;
-layout (std140, binding = 1) uniform LightBlock {
+layout (std140, binding = 0) uniform LightBlock {
     Light lights[MAX_LIGHTS];
 };
 
 
-uniform vec3 globalAmbientLightColor;
-uniform float globalAmbientIntensity;
-uniform vec3 viewPos;
+layout (location = 10) uniform vec3 globalAmbientLightColor;
+layout (location = 11) uniform float globalAmbientIntensity;
+layout (location = 12) uniform vec3 viewPos;
 
+//layout (location = 13) uniform Material material;
+layout (binding = 1) uniform sampler2D material_diffuse;
+layout (binding = 2) uniform sampler2D material_specular;
+
+layout (location = 20) uniform vec3 material_ambientColor;
+layout (location = 21) uniform vec3 material_diffuseColor;
+layout (location = 22) uniform vec2 material_scale;
+//layout (location = 23) uniform //vec3 specular;
+layout (location = 24) uniform float material_specular_intensity;
+layout (location = 25) uniform float material_shininess;
+
+
+Material get_material()
+{
+	Material res;
+	//res.diffuse = material_diffuse;
+	//res.specular = material_specular;
+	res.ambientColor = material_ambientColor;
+	res.diffuseColor = material_diffuseColor;
+	res.scale = material_scale;
+	//res.specular = ;
+	res.specular_intensity = material_specular_intensity;
+	res.shininess = material_shininess;
+	return res;
+}
 
 vec3 get_light(Light p_light){
+	
+	Material material = get_material();
 	
 	vec3 lightPos = p_light.position.xyz;
 	vec3 norm = normalize(Normal);
@@ -106,22 +134,24 @@ vec3 get_light(Light p_light){
 	
 	// diffuse
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = intensity * lightColor * material.diffuseColor * diff * vec3(texture(material.diffuse, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
+    vec3 diffuse = intensity * lightColor * material.diffuseColor * diff * vec3(texture(material_diffuse, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
 	
 	// specular
 	vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = intensity * material.specular_intensity * lightColor * spec /*material.specular*/ * vec3(texture(material.specular, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
+    vec3 specular = intensity * material.specular_intensity * lightColor * spec /*material.specular*/ * vec3(texture(material_specular, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
 	
 	return vec3(diffuse + specular);
 }
 
 void main()
 {
+	Material material = get_material();
+	
 	vec3 resColor = vec3(0.0f);
 	
 	// ambient
-	vec3 ambient = globalAmbientIntensity * globalAmbientLightColor * material.ambientColor * vec3(texture(material.diffuse, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
+	vec3 ambient = globalAmbientIntensity * globalAmbientLightColor * material.ambientColor * vec3(texture(material_diffuse, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
 	//vec3 ambient = 1.0 * globalAmbientLightColor * vec3(1.0f) * vec3(texture(material.diffuse, TexCoords));
 	resColor += ambient;
 	

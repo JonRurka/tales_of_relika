@@ -91,6 +91,10 @@ target_link_libraries(${module}
 	Vulkan::Vulkan
 	glm::glm
 	glfw
+	spirv-cross-core
+	spirv-cross-glsl
+	spirv-cross-msl
+	spirv-cross-reflect
 	lua::lua
 	Bullet::Bullet
 	OpenAL::OpenAL

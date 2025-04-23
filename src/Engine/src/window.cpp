@@ -163,6 +163,11 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
     return m_window;
 }
 
+void window::set_title(std::string title)
+{
+    glfwSetWindowTitle(m_window, title.c_str());
+}
+
 bool window::Should_Close()
 {
 	return glfwWindowShouldClose(m_window);

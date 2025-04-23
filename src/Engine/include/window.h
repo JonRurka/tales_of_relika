@@ -12,6 +12,8 @@ class window
 public:
 	GLFWwindow* Create_Window(const char* title, int width, int height, void* user_obj = nullptr);
 
+	void set_title(std::string title);
+
 	bool Should_Close();
 
 	static void* sysGetProcAddress(const char* name);

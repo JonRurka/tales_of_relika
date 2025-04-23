@@ -51,14 +51,23 @@ public:
 
 
     // utility uniform functions
-    void setBool(const std::string& name, bool value) const;
-    void setInt(const std::string& name, int value) const;
-    void setFloat(const std::string& name, float value) const;
-    void SetVec2(const std::string& name, glm::vec2 value) const;
-    void SetVec3(const std::string& name, glm::vec3 value) const;
-    void SetVec4(const std::string& name, glm::vec4 value) const;
-    void setMat3x3(const std::string& name, glm::mat3 value) const;
-    void setMat4x4(const std::string& name, glm::mat4 value) const;
+    void setBool(const std::string& name, bool value);
+    void setInt(const std::string& name, int value);
+    void setFloat(const std::string& name, float value);
+    void SetVec2(const std::string& name, glm::vec2 value);
+    void SetVec3(const std::string& name, glm::vec3 value);
+    void SetVec4(const std::string& name, glm::vec4 value);
+    void setMat3x3(const std::string& name, glm::mat3 value);
+    void setMat4x4(const std::string& name, glm::mat4 value);
+
+    void setBool(const int name, bool value) const;
+    void setInt(const int name, int value) const;
+    void setFloat(const int name, float value) const;
+    void SetVec2(const int name, glm::vec2 value) const;
+    void SetVec3(const int name, glm::vec3 value) const;
+    void SetVec4(const int name, glm::vec4 value) const;
+    void setMat3x3(const int name, glm::mat3 value) const;
+    void setMat4x4(const int name, glm::mat4 value) const;
 
     //void Set_Samplers(std::vector<std::string> sampler_names);
     //void Set_Textures(std::vector<Texture*> textures);
@@ -81,6 +90,7 @@ private:
     unsigned int m_ID{ 0 };
     std::string m_name;
     bool m_initialized{false};
+    bool m_is_spirv{ false };
 
     bool m_lights_initialized{false};
     GLuint uniformBlockIndexLights{ 0 };
@@ -89,6 +99,12 @@ private:
     std::vector<Bound_Texture> m_textures;
 
     std::vector<Material*> m_source_materials;
+
+    std::unordered_map<std::string, int> m_uniform_map;
+
+    void load_uniforms(const std::vector<char> spirv_bin);
+
+    int get_uniform_location(std::string name);
 
     static std::unordered_map<unsigned int, std::vector<Renderer*>> m_renderers;
     static std::unordered_map<unsigned int, Shader*> m_shaders;

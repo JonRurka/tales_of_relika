@@ -103,6 +103,8 @@ void Graphics::Initialize()
 		return;
 	}
 
+
+	Logger::LogInfo(LOG_POS("Initialize"), "Graphics Initialized");
 	m_initialized = true;
 }
 
@@ -253,6 +255,11 @@ void Graphics::render(float dt)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
+}
+
+void Graphics::update_window_title(std::string title)
+{
+	glfwSetWindowTitle(m_window, title.c_str());
 }
 
 void Graphics::set_mouse_visibility(bool visible)

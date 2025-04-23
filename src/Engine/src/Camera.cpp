@@ -11,6 +11,8 @@
 #include "Cubemap.h"
 #include "Scene.h"
 #include "GPUSort.h"
+#include "Resources.h"
+#include "Texture.h"
 
 #include <math.h>
 
@@ -18,6 +20,9 @@
 
 #define SKYBOX_VERT_SHADER "graphics::engine::skybox::skybox.vert"
 #define SKYBOX_FRAG_SHADER "graphics::engine::skybox::skybox.frag"
+
+#define SKYBOX_PROJECTION_LOC	10
+#define SKYBOX_VIEW_LOC			11
 
 Camera* Camera::m_active_camera{nullptr};
 
@@ -208,12 +213,13 @@ void Camera::render_skybox(float dt)
 
 	//m_cubemap->Bind();
 
-	m_cubemap_shader->setInt("skybox", 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, m_cubemap->Tex());
+	//m_cubemap_shader->setInt("skybox", 0);
 	glm::mat4 view = glm::mat4(glm::mat3(m_view));
 	m_cubemap_shader->setMat4x4("projection", m_projection);
 	m_cubemap_shader->setMat4x4("view", view);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, m_cubemap->Tex());
+	//glBindTexture(GL_TEXTURE_2D, Resources::Get_Texture("skybox::right.jpg")->Tex());
 
 	m_cubemap_mesh->Draw();
 
@@ -235,8 +241,10 @@ void Camera::render_opaque(float dt)
 	std::vector<unsigned int> shader_ids = Shader::Get_Shader_ID_List();
 	for (const auto& ID : shader_ids) {
 		Shader* shader = Shader::Get_Shader(ID);
-		shader->use(true);
 		std::vector<Renderer*> renderers = Shader::Get_Shader_Renderer_List(ID);
+		if (renderers.size() <= 0)
+			continue;
+		shader->use(true);
 		for (const auto& rend : renderers) {
 			if (rend->Transparent()) {
 				alpha_renderers.push_back(rend);
@@ -269,7 +277,7 @@ void Camera::render(float dt)
 	glEnable(GL_DEPTH_TEST);
 
 	render_opaque(dt);
-	render_transparent(dt);
+	//render_transparent(dt);
 	render_skybox(dt);
 
 	m_framebuffer->Use(false);

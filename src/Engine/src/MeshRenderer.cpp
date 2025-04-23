@@ -63,6 +63,7 @@ void MeshRenderer::Set_Material(Material* material)
 		m_source_material->Get_Shader()->Register_Renderer(this);
 
 		m_bound_material = m_source_material->Copy();
+		m_bound_material->Name(m_source_material->Name() + "_clone");
 		m_bound_material->Set_Shader(m_source_material->Get_Shader());
 		m_bound_material->Set_World_Object(m_object);
 		m_bound_material->m_source_material = m_source_material;

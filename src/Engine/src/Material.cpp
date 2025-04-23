@@ -107,7 +107,8 @@ void Material::setTexture(const std::string& name, std::string resource_name)
 		Logger::LogError(LOG_POS("setTexture"), "Texture resource %s does not exist.", resource_name.c_str());
 		return;
 	}
-	setTexture(name, Resources::Get_Texture(resource_name));
+	Texture* tex = Resources::Get_Texture(resource_name);
+	setTexture(name, tex);
 }
 
 void Material::setTexture(const std::string& name, Texture* value, bool set_source)

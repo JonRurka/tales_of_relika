@@ -35,6 +35,8 @@ public:
 	static void DrawDebugRay(glm::vec3 start, glm::vec3 dir, glm::vec3 color, float duration = 0.0f) { m_instance->draw_debug_ray(start, dir, color, duration); }
 	static void DrawDebugLine(glm::vec3 start, glm::vec3 stop, glm::vec3 color, float duration = 0.0f) { m_instance->draw_debug_line(start, stop, color, duration); }
 
+	static void Update_Window_Title(std::string title) { m_instance->update_window_title(title); }
+
 	void Initialize();
 	void Update(float dt);
 
@@ -97,6 +99,8 @@ private:
 	void draw_debug_line(glm::vec3 start, glm::vec3 stop, glm::vec3 color, float duration = 0.0f);
 
 	void render(float dt);
+
+	void update_window_title(std::string title);
 
 	void set_mouse_visibility(bool visible);
 

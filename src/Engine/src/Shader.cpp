@@ -8,7 +8,11 @@
 #include "Logger.h"
 #include "Resources.h"
 
-#define USE_SPIRV 0
+#include "spirv_cross/spirv_cross.hpp"
+#include "spirv_cross/spirv_glsl.hpp"
+#include "spirv_cross/spirv_reflect.hpp"
+#include "spirv_cross/spirv_cross_util.hpp"
+
 
 std::unordered_map<unsigned int, std::vector<Renderer*>> Shader::m_renderers;
 std::unordered_map<unsigned int, Shader*> Shader::m_shaders;
@@ -112,6 +116,8 @@ Shader::Shader(std::string name, const std::string vertexPath, const std::string
 
 Shader::Shader(std::string name, const char* vertex_source, const char* fragment_src)
 {
+    m_name = name;
+
     const char* vShaderCode = vertex_source;
     const char* fShaderCode = fragment_src;
 
@@ -179,10 +185,14 @@ Shader::Shader(std::string name, const char* vertex_source, const char* fragment
     m_shaders_map[name] = this;
     m_renderers[m_ID] = std::vector<Renderer*>();
     m_initialized = true;
+
+    Logger::LogDebug(LOG_POS("NEW::PROGRAM"), "%s: CREATED GLSL SHADER SUCCESSFULLY", name.c_str());
 }
 
 Shader::Shader(std::string name, const std::vector<char> vertex_bin, const std::vector<char> fragment_bin)
 {
+    m_name = name;
+
     // 2. compile shaders
     GLuint vertex, fragment;
     int success = 0;
@@ -191,56 +201,89 @@ Shader::Shader(std::string name, const std::vector<char> vertex_bin, const std::
     // vertex Shader
     vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderBinary(1, &vertex, GL_SHADER_BINARY_FORMAT_SPIR_V_ARB, vertex_bin.data(), vertex_bin.size());
-    glSpecializeShader(vertex, "main", 0, 0, 0);
+    glSpecializeShaderARB(vertex, "main", 0, 0, 0);
     // print compile errors if any
     //glCheckError();
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
     if (!success)
     {
+        glCheckError();
         glGetShaderInfoLog(vertex, 512, NULL, infoLog);
         //std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-        Logger::LogError(LOG_POS("NEW::VERTEX"), "COMPILATION_FAILED: %s", infoLog);
+        Logger::LogError(LOG_POS("NEW::VERTEX"), "%s: COMPILATION FAILED: %s", name.c_str(), infoLog);
         return;
-    };
+    }
+    else {
+        //Logger::LogDebug(LOG_POS("NEW::VERTEX"), "%s: COMPILATION SUCCESS", name.c_str());
+    }
 
     // fragment Shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderBinary(1, &fragment, GL_SHADER_BINARY_FORMAT_SPIR_V_ARB, fragment_bin.data(), fragment_bin.size());
-    glSpecializeShader(fragment, "main", 0, 0, 0);
+    glSpecializeShaderARB(fragment, "main", 0, 0, 0);
     // print compile errors if any
     //glCheckError();
     glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
     if (!success)
     {
+        glCheckError();
         glGetShaderInfoLog(vertex, 512, NULL, infoLog);
         //std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-        Logger::LogError(LOG_POS("NEW::FRAGMENT"), "COMPILATION_FAILED: %s", infoLog);
+        Logger::LogError(LOG_POS("NEW::FRAGMENT"), "%s: COMPILATION FAILED: %s", name.c_str(), infoLog);
         return;
-    };
+    }
+    else {
+        //Logger::LogDebug(LOG_POS("NEW::FRAGMENT"), "%s: COMPILATION SUCCESS", name.c_str());
+    }
 
     m_ID = glCreateProgram();
     glAttachShader(m_ID, vertex);
     glAttachShader(m_ID, fragment);
     glLinkProgram(m_ID);
+    //glCheckError();
     // print linking errors if any
     glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
     if (!success)
     {
+        std::string err_type = "";
+        glCheckError();
+        switch (success) {
+            case GL_INVALID_VALUE:
+                err_type = "GL_INVALID_VALUE";
+                break;
+            case GL_INVALID_ENUM:
+                err_type = "GL_INVALID_ENUM";
+                break;
+            case GL_INVALID_OPERATION:
+                err_type = "GL_INVALID_OPERATION";
+                break;
+            default:
+                err_type = "OTHER(" + std::to_string(success) + ")";
+                break;
+        }
         glGetProgramInfoLog(m_ID, 512, NULL, infoLog);
         //std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-        Logger::LogError(LOG_POS("NEW::PROGRAM"), "LINKING_FAILED: %s", infoLog);
+        Logger::LogError(LOG_POS("NEW::PROGRAM"), "%s: LINKING_FAILED (%s): %s", name.c_str(), err_type.c_str(), infoLog);
         return;
+    }
+    else {
+        //Logger::LogDebug(LOG_POS("NEW::PROGRAM"), "%s: PROGRAM LINK SUCCESS", name.c_str());
     }
 
     // delete the shaders as they're linked into our program now and no longer necessary
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
+    load_uniforms(vertex_bin);
+    load_uniforms(fragment_bin);
+
     m_shaders[m_ID] = this;
     m_shaders_map[name] = this;
     m_renderers[m_ID] = std::vector<Renderer*>();
     m_initialized = true;
+    m_is_spirv = true;
 
+    Logger::LogDebug(LOG_POS("NEW::PROGRAM"), "%s: CREATED SPIRV SHADER SUCCESSFULLY", name.c_str());
 }
 
 void Shader::use(bool update_camera)
@@ -273,46 +316,87 @@ void Shader::Init_Lights()
     m_lights_initialized = true;
 }
 
-void Shader::setBool(const std::string& name, bool value) const
+void Shader::setBool(const std::string& name, bool value)
 {
-    glUniform1i(glGetUniformLocation(m_ID, name.c_str()), (int)value);
+    setBool(get_uniform_location(name), value);
 }
 
-void Shader::setInt(const std::string& name, int value) const
+void Shader::setInt(const std::string& name, int value)
 {
-    glUniform1i(glGetUniformLocation(m_ID, name.c_str()), (int)value);
+    int id = get_uniform_location(name);
+    setInt(id, value);
 }
 
-void Shader::setFloat(const std::string& name, float value) const
+void Shader::setFloat(const std::string& name, float value)
 {
-    glUniform1f(glGetUniformLocation(m_ID, name.c_str()), value);
+    setFloat(get_uniform_location(name), value);
 }
 
-void Shader::SetVec2(const std::string& name, glm::vec2 value) const
+void Shader::SetVec2(const std::string& name, glm::vec2 value)
 {
-    glUniform2fv(glGetUniformLocation(m_ID, name.c_str()), 1, glm::value_ptr(value));
+    SetVec2(get_uniform_location(name), value);
 }
 
-void Shader::SetVec3(const std::string& name, glm::vec3 value) const
+void Shader::SetVec3(const std::string& name, glm::vec3 value)
 {
-    glUniform3fv(glGetUniformLocation(m_ID, name.c_str()), 1, glm::value_ptr(value));
+    SetVec3(get_uniform_location(name), value);
 }
 
-void Shader::SetVec4(const std::string& name, glm::vec4 value) const
+void Shader::SetVec4(const std::string& name, glm::vec4 value)
 {
-    glUniform4fv(glGetUniformLocation(m_ID, name.c_str()), 1, glm::value_ptr(value));
+    SetVec4(get_uniform_location(name), value);
 }
 
-void Shader::setMat3x3(const std::string& name, glm::mat3 value) const
+void Shader::setMat3x3(const std::string& name, glm::mat3 value)
 {
-    int modelLoc = glGetUniformLocation(m_ID, name.c_str());
-    glUniformMatrix3fv(modelLoc, 1, GL_FALSE, glm::value_ptr(value));
+    setMat3x3(get_uniform_location(name), value);
 }
 
-void Shader::setMat4x4(const std::string& name, glm::mat4 value) const
+void Shader::setMat4x4(const std::string& name, glm::mat4 value)
 {
-    int modelLoc = glGetUniformLocation(m_ID, name.c_str());
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(value));
+    setMat4x4(get_uniform_location(name), value);
+}
+
+
+
+void Shader::setBool(const int name, bool value) const
+{
+    glUniform1i(name, (int)value);
+}
+
+void Shader::setInt(const int name, int value) const
+{
+    glUniform1i(name, (int)value);
+}
+
+void Shader::setFloat(const int name, float value) const
+{
+    glUniform1f(name, value);
+}
+
+void Shader::SetVec2(const int name, glm::vec2 value) const
+{
+    glUniform2fv(name, 1, glm::value_ptr(value));
+}
+
+void Shader::SetVec3(const int name, glm::vec3 value) const
+{
+    glUniform3fv(name, 1, glm::value_ptr(value));
+}
+
+void Shader::SetVec4(const int name, glm::vec4 value) const
+{
+    glUniform4fv(name, 1, glm::value_ptr(value));
+}
+
+void Shader::setMat3x3(const int name, glm::mat3 value) const
+{
+    glUniformMatrix3fv(name, 1, GL_FALSE, glm::value_ptr(value));
+}
+
+void Shader::setMat4x4(const int name, glm::mat4 value) const
+{
+    glUniformMatrix4fv(name, 1, GL_FALSE, glm::value_ptr(value));
 }
 
 /*void Shader::Set_Samplers(std::vector<std::string> sampler_names)
@@ -332,6 +416,8 @@ void Shader::Set_Textures(std::vector<Bound_Texture> textures)
 {
     use();
     m_textures = textures;
+    if (m_is_spirv)
+        return;
     for (int i = 0; i < m_textures.size(); i++) {
         setInt(m_textures[i].name, i);
     }
@@ -375,28 +461,37 @@ Shader* Shader::Create(std::string name, const std::string vertex_name, const st
         return nullptr;
     }
 
-#if USE_SPIRV >= 1
-        std::vector<char> vertex_bin = Resources::Get_Shader_bin(vertex_name);
-        std::vector<char> fragment_bin = Resources::Get_Shader_bin(fragment_name);
-        Shader* shader = new Shader(name, vertex_bin, fragment_bin);
-#else 
+    Resources::Asset vertex_asset = Resources::Get_Shader_Asset(vertex_name);
+    Resources::Asset fragment_asset = Resources::Get_Shader_Asset(fragment_name);
+
+    if (vertex_asset.use_spirv != fragment_asset.use_spirv) {
+        Logger::LogError(LOG_POS("Create"), "Shader must not combine spirv and glsl stages.");
+        return nullptr;
+    }
+
+    bool use_spirv = vertex_asset.use_spirv;
+    Shader* shader = nullptr;
+    std::vector<char> vertex_bin = Resources::Get_Shader_bin(vertex_name);
+    std::vector<char> fragment_bin = Resources::Get_Shader_bin(fragment_name);
+    if (use_spirv) {
+        shader = new Shader(name, vertex_bin, fragment_bin);
+    }
+    else{
         //std::string vertex_path = Resources::Get_Shader_File(vertex_name);
         //std::string fragment_path = Resources::Get_Shader_File(fragment_name);
         //Shader* shader = new Shader(name, vertex_path, fragment_path);
 
-        std::vector<char> vertex_bin = Resources::Get_Shader_bin(vertex_name);
-        std::vector<char> fragment_bin = Resources::Get_Shader_bin(fragment_name);
         std::string v_str = std::string(vertex_bin.begin(), vertex_bin.end());
         std::string f_str = std::string(fragment_bin.begin(), fragment_bin.end());
         if (fragment_name == "graphics::standard::standard.frag") {
-            Logger::LogDebug(LOG_POS("Create"), f_str.c_str());
+            //Logger::LogDebug(LOG_POS("Create"), f_str.c_str());
         }
-        Shader* shader = new Shader(name, v_str.c_str(), f_str.c_str());
-#endif
+        shader = new Shader(name, v_str.c_str(), f_str.c_str());
+    }
       
-        if (!shader->Initialized()) {
-            Logger::LogError(LOG_POS("CREATE"), "Failed to create shader '%s'", name.c_str());
-        }
+    if (!shader->Initialized()) {
+        Logger::LogError(LOG_POS("CREATE"), "Failed to create shader '%s'", name.c_str());
+    }
 
     return shader;
 }
@@ -434,4 +529,51 @@ std::vector<std::vector<Renderer*>> Shader::Get_Shader_Renderer_List()
         all_renderers.push_back(pair.second);
     }
     return all_renderers;
+}
+
+void Shader::load_uniforms(const std::vector<char> spirv_bin)
+{
+    uint32_t* spv_data = (uint32_t*)spirv_bin.data();
+    std::vector<uint32_t> spirv_data(spv_data, spv_data + (spirv_bin.size() / 4));
+    spirv_cross::Compiler compiler(spirv_data);
+
+    // Get the reflected resources
+    spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+
+    for (const auto& uniform : resources.gl_plain_uniforms)
+    {
+        auto type = compiler.get_type(uniform.type_id);
+        std::string uniform_name = compiler.get_name(uniform.id);
+        int uniform_index = compiler.get_decoration(uniform.id, spv::DecorationLocation);
+
+        m_uniform_map[uniform_name] = uniform_index;
+
+        Logger::LogDebug(LOG_POS("NEW::SPIRV"), "%s: Uniform: %s (%i)", m_name.c_str(), uniform_name.c_str(), uniform_index);
+    }
+
+    for (const auto& uniform : resources.sampled_images)
+    {
+        auto type = compiler.get_type(uniform.type_id);
+        std::string uniform_name = compiler.get_name(uniform.id);
+        int uniform_index = compiler.get_decoration(uniform.id, spv::DecorationLocation);
+
+        m_uniform_map[uniform_name] = uniform_index;
+
+        Logger::LogDebug(LOG_POS("NEW::SPIRV"), "%s: Sampler: %s (%i)", m_name.c_str(), uniform_name.c_str(), uniform_index);
+    }
+}
+
+int Shader::get_uniform_location(std::string name)
+{
+    if (m_is_spirv) {
+        if (!m_uniform_map.contains(name)) {
+            Logger::LogError(LOG_POS("get_uniform_location"), "%s: spirv Uniform variable not found: %s", m_name.c_str(), name.c_str());
+            return -1;
+        }
+        return m_uniform_map[name];
+    }
+    else {
+        return glGetUniformLocation(m_ID, name.c_str());
+    }
+
 }
