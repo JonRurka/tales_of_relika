@@ -6,6 +6,7 @@
 
 #include "ComputeController_VK.h"
 #include "vulkan_utils.h"
+
 //#include "Compute_Vulkan/vulkan_test.h"
 //#include "Compute_Vulkan/vulkan_compute_test.h"
 
@@ -33,8 +34,8 @@ using namespace DynamicCompute::Compute::VK;
 
 IComputeController_private* ComputeInterface_private::GetComputeController(ComputeInterface_private::Compute_SDK implementation, ControllerInfo info)
 {
-    printf("SDK 2: %i\n", (int)implementation);
-    printf("getting controller\n");
+    //printf("SDK 2: %i\n", (int)implementation);
+    //printf("getting controller\n");
 	switch (implementation)
 	{
 	//case ComputeInterface_private::Compute_SDK::OpenCL:
@@ -107,7 +108,7 @@ IComputeController_private* ComputeInterface_private::GetComputeController_Vulka
         printf("the controller is null\n");
     }
     else {
-        printf("the controller is not null\n");
+        //printf("the controller is not null\n");
     }
 
     return controller;

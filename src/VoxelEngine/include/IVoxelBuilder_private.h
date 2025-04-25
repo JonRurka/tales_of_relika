@@ -1,6 +1,10 @@
 #pragma once
 
 #include "shared_structures.h"
+#include "dynamic_compute.h"
+
+
+using namespace DynamicCompute::Compute;
 
 namespace VoxelEngine {
 
@@ -21,11 +25,17 @@ namespace VoxelEngine {
 
 		virtual std::vector<glm::ivec4> GetSize() = 0;
 
+		virtual void Extract(IComputeBuffer* out_vertex, IComputeBuffer* out_normal, IComputeBuffer* out_trianges, glm::ivec4 counts) = 0;
+
 		virtual void Extract(glm::vec4* out_vertex, glm::vec4* out_normal, unsigned int* out_trianges, glm::ivec4 counts) = 0;
 
 		virtual void ReleaseHeightmap(int x, int z) = 0;
 
 		virtual void SetHeightmapsEnabled(bool enabled) = 0;
+
+		virtual IComputeBuffer* Get_Tranfer_Buffer(int size, int stride, bool external) = 0;
+
+		virtual IComputeController* Get_Compute_Controller() = 0;
 
 		//virtual void SetBlock(int x, int y, int z, Block block) = 0;
 

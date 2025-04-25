@@ -26,6 +26,8 @@
 
 #include "Logger.h"
 
+window* window::m_instance{NULL};
+
 namespace {
     static HMODULE s_module = NULL;
 
@@ -106,6 +108,8 @@ namespace {
 
 GLFWwindow* window::Create_Window(const char* title, int width, int height, void* user_obj)
 {
+    m_instance = this;
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -122,6 +126,7 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 		glfwTerminate();
 	}
 	glfwMakeContextCurrent(m_window);
+    glfwSwapInterval(1);  // Enable vsync
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -150,15 +155,7 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 	}
 
-#ifdef WIN32
-    if (!s_module)
-    {
-        s_module = LoadLibraryA("opengl32.dll");
-        if (s_module) {
-            printf("Found opengl32.dll\n");
-        }
-    }
-#endif
+    load_module();
 
     return m_window;
 }
@@ -171,6 +168,19 @@ void window::set_title(std::string title)
 bool window::Should_Close()
 {
 	return glfwWindowShouldClose(m_window);
+}
+
+void window::load_module()
+{
+#ifdef WIN32
+    if (!s_module)
+    {
+        s_module = LoadLibraryA("opengl32.dll");
+        if (s_module) {
+            printf("Found opengl32.dll\n");
+        }
+    }
+#endif
 }
 
 #ifdef WIN32

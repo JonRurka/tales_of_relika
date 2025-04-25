@@ -58,7 +58,7 @@ struct Light_Result{
 
 
 //uniform Light lights;
-layout (std140, binding = 0) uniform LightBlock {
+layout (std140, binding = 1) uniform LightBlock {
     Light lights[MAX_LIGHTS];
 };
 

@@ -9,6 +9,7 @@
 #include "MeshCollider.h"
 
 #include "GPUSort.h"
+#include "Stitch_VBO.h"
 
 #include <vector>
 #include <string>
@@ -272,6 +273,13 @@ void Voxel_Test_Scene::Init()
 
 	m_builder->Init(&settings);
 
+	Stitch_VBO* vbo_stitch = new Stitch_VBO();
+	vbo_stitch->Init(m_builder->Get_Compute_Controller(), INT16_MAX);
+
+	//IComputeBuffer* vert_transfer = m_builder->Get_Tranfer_Buffer(INT16_MAX, sizeof(float) * 4, false);
+	//IComputeBuffer* norm_transfer = m_builder->Get_Tranfer_Buffer(INT16_MAX, sizeof(float) * 4, false);
+	//IComputeBuffer* vbo_transfer = m_builder->Get_Tranfer_Buffer(INT16_MAX, sizeof(float) * 11, false);
+
 	glm::ivec4 chunk_loc = glm::ivec4(0, 0, 0, 0);
 	gen_options.locations.push_back(chunk_loc);
 	render_options.locations.push_back(chunk_loc);
@@ -282,16 +290,20 @@ void Voxel_Test_Scene::Init()
 	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
 	glm::dvec4 render_times = m_builder->Render(&render_options);
 
-	auto end = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration<double>(end - start).count();
+	
 	//double stop = Utilities::Get_Time();
 
 	std::vector<glm::ivec4> counts = m_builder->GetSize();
 	glm::ivec4 chnk_count = counts[0];
 
-	
+	m_builder->Extract(
+		vbo_stitch->Input_Vertex_Buffer(),
+		vbo_stitch->Input_Normal_Buffer(),
+		nullptr,
+		counts[0]
+	);
 
-	glm::vec4* m_vertices = new glm::vec4[chnk_count.x];
+	/*glm::vec4* m_vertices = new glm::vec4[chnk_count.x];
 	glm::vec4* m_normals = new glm::vec4[chnk_count.x];
 	unsigned int* m_triangles = new unsigned int[chnk_count.x];
 
@@ -300,7 +312,7 @@ void Voxel_Test_Scene::Init()
 		m_normals,
 		m_triangles,
 		counts[0]
-	);
+	);*/
 
 	/*for (int i = 0; i < chnk_count.x; i++) {
 		if (i % 5 == 0) {
@@ -308,30 +320,40 @@ void Voxel_Test_Scene::Init()
 		}
 	}*/
 
-	
+	vbo_stitch->Stitch(chnk_count.x);
+
+	auto end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration<double>(end - start).count();
 	Logger::LogDebug(LOG_POS("Init"), "Generate Time: %f", (duration) * 1000.0f);
 
-	std::vector<glm::vec4> verts(m_vertices, m_vertices + chnk_count.x);
-	std::vector<unsigned int> tris(m_triangles, m_triangles + chnk_count.x);
-	std::vector<glm::vec4> normals(m_normals, m_normals + chnk_count.x);
+	//std::vector<glm::vec4> verts(m_vertices, m_vertices + chnk_count.x);
+	//std::vector<unsigned int> tris(m_triangles, m_triangles + chnk_count.x);
+	//std::vector<glm::vec4> normals(m_normals, m_normals + chnk_count.x);
 
+	
 	//glm::vec4 max_val = glm::vec4(-1000, -1000, -1000, -1000);
-	float max_val = -1000;
-	for (/*int i = 0; i < (int)chnk_count.x; i++ */ const auto& elem : verts) {
+	//float max_val = -1000;
+	//for (/*int i = 0; i < (int)chnk_count.x; i++ */ const auto& elem : verts) {
 		//max_val = glm::max(max_val, elem);
-		float dist = glm::distance(glm::vec4(0, 0, 0, 0), elem);
-		max_val = glm::max(max_val, dist);
+		//float dist = glm::distance(glm::vec4(0, 0, 0, 0), elem);
+		//max_val = glm::max(max_val, dist);
 		//Logger::LogDebug(LOG_POS("Init"), "vertex: (%f, %f, %f)", m_vertices[i].x, m_vertices[i].y, m_vertices[i].z);
-	}
-	Logger::LogDebug(LOG_POS("Init"), "Maximum vertex dist: (%f)", max_val);
+	//}
+	//Logger::LogDebug(LOG_POS("Init"), "Maximum vertex dist: (%f)", max_val);
 
 
 	Logger::LogDebug(LOG_POS("Init"), "Number of vertices: %i", (int)chnk_count.x);
 
-	Mesh* voxel_mesh_test = new Mesh();
-	voxel_mesh_test->Vertices(Utilities::vec4_to_vec3_arr(verts));
-	voxel_mesh_test->Indices(tris);
-	voxel_mesh_test->Normals(Utilities::vec4_to_vec3_arr(normals));
+	Mesh::VertexAttributeList vertex_list(Stitch_VBO::Stride());
+
+	Mesh* voxel_mesh_test = new Mesh((int)chnk_count.x);
+	voxel_mesh_test->Set_Vertex_Attributes(Stitch_VBO::Get_Vertex_Attributes());
+	voxel_mesh_test->Load(vbo_stitch->Output_VBO_Buffer());
+
+	//Mesh* voxel_mesh_test = new Mesh();
+	//voxel_mesh_test->Vertices(Utilities::vec4_to_vec3_arr(verts));
+	//voxel_mesh_test->Indices(tris);
+	//voxel_mesh_test->Normals(Utilities::vec4_to_vec3_arr(normals));
 	//voxel_mesh_test->Generate_Normals();
 
 	WorldObject* obj = Instantiate("test_voxel_object");
@@ -347,8 +369,10 @@ void Voxel_Test_Scene::Init()
 		obj_trans->Position().x, obj_trans->Position().y, obj_trans->Position().z);
 
 	MeshCollider* mesh_col = obj->Add_Component<MeshCollider>();
-	mesh_col->SetMesh(voxel_mesh_test);
-	mesh_col->Activate();
+	//mesh_col->SetMesh(voxel_mesh_test);
+	//mesh_col->Activate();
+
+
 	//BoxCollider* test_col = obj->Add_Component<BoxCollider>();
 	//test_col->Size(glm::vec3(0.5f, 0.5f, 0.5f));
 	//test_col->Mass(0.0f);

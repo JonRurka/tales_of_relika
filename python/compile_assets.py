@@ -43,17 +43,25 @@ def reset():
 def compile_shader(working_dir, resource_path, file_path, file_name):
     global global_use_spirv
     use_spirv = False
+    spirv_opengl = False
+    spirv_vulkan = False
     
     content = ""
+    spirv_target = ""
     with open(file_path, 'r') as file_obj:
         #asset_bytes = zlib.compress(file_obj.read(), level=9)
         content = file_obj.read()
-    if ("USE_SPIRV" in content):
-        use_spirv = True
+    if ("SPIRV_OPENGL" in content):
+        spirv_opengl = True
+        spirv_target = 'opengl4.5'
+    if ("SPIRV_VULKAN" in content):
+        spirv_vulkan = True
+        spirv_target = 'vulkan1.0'
+    use_spirv = (spirv_opengl or spirv_vulkan)
     
     if use_spirv and global_use_spirv:
         result = subprocess.run(
-            ['glslc.exe', file_name, '-o', '-', '--target-env=opengl4.5', '-O0', '-g'],
+            ['glslc.exe', file_name, '-o', '-', f'--target-env={spirv_target}', '-O0', '-g'],
             #['glslangValidator.exe', '-G', '-o' 'tmp.spv']
             capture_output=True,  
             cwd=working_dir

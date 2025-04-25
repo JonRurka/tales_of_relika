@@ -1,6 +1,6 @@
 #version 450 core
 
-#define USE_SPIRV
+#define SPIRV_OPENGL
 
 layout (location = 0)out vec4 FragColor;
 

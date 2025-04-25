@@ -10,7 +10,7 @@
 #include <chrono>
 #include <iostream>
 
-#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+//#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan.hpp>
@@ -32,7 +32,7 @@
 
 namespace nvvk {
 
-namespace test {
+namespace gl_vk_buffer {
 
 // #VKGL Extra for Interop
 struct BufferVkGL
@@ -49,19 +49,28 @@ struct BufferVkGL
 
   void destroy(nvvk::ResourceAllocator& alloc);
 };
-}  // namespace test
+
 
 void prepare();
 
-void createBufferVK();
+
+BufferVkGL createBufferVK(int size);
+BufferVkGL createBufferVK(int elements, int stride);
+
+void destroyBufferVk(BufferVkGL& buffer);
+
+VkDeviceMemory get_buffer_mem(nvvk::MemHandle handle);
 
 // Get the Vulkan buffer and create the OpenGL equivalent using the memory allocated in Vulkan
-inline void doCreateBufferGL(nvvk::ResourceAllocator& alloc, nvvk::test::BufferVkGL& bufGl);
+inline void doCreateBufferGL(nvvk::ResourceAllocator& alloc, nvvk::gl_vk_buffer::BufferVkGL& bufGl);
+
+void poll_events();
 
 int run_test();
 
-int run_test(vk::Instance instance, vk::Device device, vk::PhysicalDevice physicalDevice);
+int run_test(GLFWwindow* window, vk::Instance instance, vk::Device device, vk::PhysicalDevice physicalDevice);
 
+}  // namespace gl_vk_buffer
 }
 
 

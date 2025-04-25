@@ -16,10 +16,13 @@
 
 Mesh::Mesh() : Mesh(0)
 {
+	m_attrib_list = VertexAttributeList::Default();
 }
 
 Mesh::Mesh(size_t size)
 {
+	m_attrib_list = VertexAttributeList::Default();
+
 	m_initial_size = size;
 
 	glGenBuffers(1, &VBO);
@@ -120,7 +123,7 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer)
 	glCheckError();
 	glBindBuffer(GL_COPY_READ_BUFFER, 0);
 
-	
+	/*
 	// position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -132,7 +135,8 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer)
 	glEnableVertexAttribArray(2);
 	// texture coord attribute
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
-	glEnableVertexAttribArray(3);
+	glEnableVertexAttribArray(3);*/
+	m_attrib_list.process();
 
 	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 11);
 	glCheckError();
@@ -162,14 +166,16 @@ void Mesh::Set_Raw_Vertex_Data(float* data, size_t size)
 	glEnableVertexAttribArray(2);*/
 
 	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	/*glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	// color attribute
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	// texture coord attribute
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(2);*/
+
+	m_attrib_list.process();
 
 	glBindVertexArray(0);
 }
@@ -409,10 +415,11 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 		}
 	}
 
-
+	
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, num_elements * sizeof(float) * stride, raw_vert_data, GL_STATIC_DRAW);
+	/*
 	// position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -424,7 +431,9 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 	glEnableVertexAttribArray(2);
 	// texture coord attribute
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
-	glEnableVertexAttribArray(3);
+	glEnableVertexAttribArray(3);*/
+	m_attrib_list.process();
+
 	glBindVertexArray(0);
 }
 
@@ -435,4 +444,15 @@ void Mesh::sync_indices()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_num_indices * sizeof(int), m_indices.data(), GL_STATIC_DRAW);
 	glBindVertexArray(0);
+}
+
+void Mesh::VertexAttributeList::process()
+{
+	int attrib_ptr = 0;
+	for (const auto& attrib : m_attributes)
+	{
+		glVertexAttribPointer(attrib_ptr, attrib.x, GL_FLOAT, GL_FALSE, m_stride, (void*)attrib.y);
+		glEnableVertexAttribArray(attrib_ptr);
+		attrib_ptr++;
+	}
 }

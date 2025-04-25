@@ -31,9 +31,15 @@ namespace VoxelEngine {
 
 		void Extract(glm::vec4* out_vertex, glm::vec4* out_normal, unsigned int* out_trianges, glm::ivec4 counts);
 
+		void Extract(IComputeBuffer* out_vertex, IComputeBuffer* out_normal, IComputeBuffer* out_trianges, glm::ivec4 counts);
+
 		void ReleaseHeightmap(int x, int z);
 
 		void SetHeightmapsEnabled(bool enabled);
+
+		IComputeBuffer* Get_Tranfer_Buffer(int size, int stride, bool external);
+
+		IComputeController* Get_Compute_Controller();
 
 		//void SetBlock(int x, int y, int z, Block block);
 
@@ -142,16 +148,16 @@ namespace VoxelEngine {
 		const std::string PROGRAM = "compute";
 		VoxelComputeProgram* m_program_compute;
 
-		const std::string PROGRAM_HEIGHTMAP = "1-heightmap_field_gen";
+		const std::string PROGRAM_HEIGHTMAP = "1-heightmap_field_gen.comp";
 		VoxelComputeProgram* m_program_heightmap;
 
-		const std::string PROGRAM_ISO_FIELD = "2-iso_field_gen";
+		const std::string PROGRAM_ISO_FIELD = "2-iso_field_gen.comp";
 		VoxelComputeProgram* m_program_iso_field;
 
 		const std::string PROGRAM_MATERIAL_FIELD = "material_field"; // DEPRICATED
 		VoxelComputeProgram* m_program_material_field;
 
-		const std::string PROGRAM_UNIFY_FIELDS = "3-unify_fields";
+		const std::string PROGRAM_UNIFY_FIELDS = "3-unify_fields.comp";
 		VoxelComputeProgram* m_program_unify_fields;
 
 		const std::string PROGRAM_SMOOTH_RENDER_CREATE_VERTLIST = "smoothrender_createvertlist"; // DEPRICATED
@@ -160,16 +166,16 @@ namespace VoxelEngine {
 		const std::string PROGRAM_SMOOTH_RENDER_CREATE_MESH = "smoothrender_createmesh"; // DEPRICATED
 		VoxelComputeProgram* m_program_smoothrender_createmesh;
 
-		const std::string PROGRAM_SMOOTH_RENDER_CONSTRUCT = "4-smoothrender_construct";
+		const std::string PROGRAM_SMOOTH_RENDER_CONSTRUCT = "4-smoothrender_construct.comp";
 		VoxelComputeProgram* m_program_smoothrender_construct;
 
-		const std::string PROGRAM_SMOOTH_RENDER_MARK = "5-smoothrender_mark"; // DEPRICATED
+		const std::string PROGRAM_SMOOTH_RENDER_MARK = "5-smoothrender_mark.comp"; // DEPRICATED
 		VoxelComputeProgram* m_program_smoothrender_mark;
 
 		const std::string PROGRAM_SMOOTH_RENDER_STITCH = "smoothrender_stitch"; // DEPRICATED
 		VoxelComputeProgram* m_program_smoothrender_stitch;
 
-		const std::string PROGRAM_SMOOTH_RENDER_STITCH_ASYNC = "6-smoothrender_async_stitch";
+		const std::string PROGRAM_SMOOTH_RENDER_STITCH_ASYNC = "6-smoothrender_async_stitch.comp";
 		VoxelComputeProgram* m_program_smoothrender_stitch_async;
 
 

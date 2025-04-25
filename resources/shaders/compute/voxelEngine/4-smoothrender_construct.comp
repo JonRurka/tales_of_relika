@@ -1,5 +1,7 @@
 #version 450
 
+#define SPIRV_VULKAN
+
 #define USL_DIRECTX_UNITY3D 0
 #define USL_VULKAN 1
 #define USL_OPENCL 0

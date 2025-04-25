@@ -16,7 +16,7 @@ public:
 	public:
 		class Compute {
 		public:
-
+			inline static const std::string CREATE_VBO = "compute::create_vbo.comp";
 		};
 
 		class Graphics {

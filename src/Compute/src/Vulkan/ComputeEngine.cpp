@@ -17,6 +17,7 @@
 
 #include "nvvk/gl_vk_vertex_buffer.h"
 
+#include "window.h"
 #include "Logger.h"
 
 //VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
@@ -401,8 +402,10 @@ VkResult ComputeContext::createLogicalDevice()
 	Utilities::Create_NVVK_Allocator(mPhysicalDevice, mDevice);
 	load_GL(window::sysGetProcAddress);
 
-	//nvvk::run_test(*mInstance, mDevice, mPhysicalDevice);
-	//printf("executed glCreateBuffers\n");
+
+	//nvvk::gl_vk_buffer::run_test(window::glfw_window(), *mInstance, mDevice, mPhysicalDevice);
+	nvvk::gl_vk_buffer::run_test();
+	printf("executed glCreateBuffers\n");
 
 	VkResult res = VK_SUCCESS;
 	return res;
@@ -1021,12 +1024,12 @@ ComputeBuffer::ComputeBuffer(ComputeContext* context, Buffer_Type type, VkDevice
 	}
 
 	if (external) {
-		nvvk::ExportResourceAllocatorDedicated* alloc = Utilities::Get_NVVK_Allocator();
+		//nvvk::ExportResourceAllocatorDedicated* alloc = Utilities::Get_NVVK_Allocator();
 
 		// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 
-
+		/*
 		m_gl_vk_buffer.bufVk = alloc->createBuffer(
 			mSize, 
 			VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -1037,6 +1040,20 @@ ComputeBuffer::ComputeBuffer(ComputeContext* context, Buffer_Type type, VkDevice
 		mBufferMemory = info.memory;
 		
 		initExternalCopy();
+		*/
+		m_gl_vk_buffer = nvvk::gl_vk_buffer::createBufferVK(mSize);
+		mBuffer = m_gl_vk_buffer.bufVk.buffer;
+		mBufferMemory = nvvk::gl_vk_buffer::get_buffer_mem(m_gl_vk_buffer.bufVk.memHandle);
+		mExternalBuffer = m_gl_vk_buffer.oglId;
+		mExternalMemObj = m_gl_vk_buffer.memoryObject;
+		//nvvk::gl_vk_buffer::poll_events();
+
+#if WIN32
+		mFD = m_gl_vk_buffer.handle;
+#else
+		mFD = m_gl_vk_buffer.fd;
+#endif
+
 	}
 	else {
 		Utilities::CreateBuffer(
@@ -1151,10 +1168,7 @@ int ComputeBuffer::GetData(void* outData, int SrcStart, int size)
 	vkMapMemory(*mLogicalDevice, stagingBufferMemory, 0, size, 0, &maped_data);
 	memcpy(outData, maped_data, static_cast<uint32_t>(size));
 	vkUnmapMemory(*mLogicalDevice, stagingBufferMemory);
-	//printf("ComputeBuffer::GetData: Finish.'\n");
 
-	//vkDestroyBuffer(*mLogicalDevice, stagingBuffer, nullptr);
-	//vkFreeMemory(*mLogicalDevice, stagingBufferMemory, nullptr);
 
 	return 0;
 }
@@ -1378,7 +1392,7 @@ void ComputeBuffer::Dispose() {
 		return;
 
 	if (mIs_External) {
-		m_gl_vk_buffer.destroy();
+		nvvk::gl_vk_buffer::destroyBufferVk(m_gl_vk_buffer);
 	}
 	else {
 		//printf("Dispose buffer and buffer memory.\n");

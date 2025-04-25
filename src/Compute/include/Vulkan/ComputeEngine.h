@@ -7,6 +7,7 @@
 #include "PlatformStructures_private.h"
 
 #include "nvvk/resourceallocator_vk.hpp"
+#include "nvvk/gl_vk_vertex_buffer.h"
 
 #include <queue>
 
@@ -49,7 +50,7 @@ namespace DynamicCompute {
                 VkDeviceMemory stagingBufferMemory{};
                 VkDeviceSize mSize{};
 
-                Utilities::BufferVkGL m_gl_vk_buffer;
+                nvvk::gl_vk_buffer::BufferVkGL m_gl_vk_buffer;
                 bool mIs_External{ false };
 
                 VkBufferUsageFlags mTransfer_flag{ 0 };

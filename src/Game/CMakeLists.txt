@@ -13,6 +13,8 @@ set(${module}_headers
 	include/Voxel_Test_Scene.h
 	
 	include/Editor_Camera_Control.h
+	
+	include/Stitch_VBO.h
 )
 
 set(${module}_sources
@@ -25,6 +27,8 @@ set(${module}_sources
 	src/Voxel_Test_Scene.cpp
 	
 	src/Editor_Camera_Control.cpp
+	
+	src/Stitch_VBO.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})

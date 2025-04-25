@@ -123,10 +123,11 @@ struct Material {
 };
 
 
-layout (location = 0) in vec3 Normal;
-layout (location = 1) in vec3 Color;
-layout (location = 2) in vec2 TexCoords;
-layout (location = 3) in vec3 FragPos;
+layout (location = 0) in vec3 FragPos;
+layout (location = 1) in vec3 Normal;
+//layout (location = 2) in vec3 Color;
+//layout (location = 3) in vec2 TexCoords;
+
 
 layout (location = 0) out vec4 FragColor;
 

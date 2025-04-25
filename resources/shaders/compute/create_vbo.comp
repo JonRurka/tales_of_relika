@@ -1,33 +1,34 @@
 #version 450
 
+#define SPIRV_VULKAN
+
 #define USL_DIRECTX_UNITY3D 0
 #define USL_VULKAN 1
 #define USL_OPENCL 0
 #include "libUSL/USL.inc"
 
+#define STRIDE 8
 
-read_buffer(fvec4, 0, in_vertices)
-read_buffer(fvec4, 1, in_normals)
-read_buffer(fvec4, 2, in_colors)
-read_buffer(fvec4, 3, in_texcoords)
+readwrite_buffer_float(0, out_vbo)
 
-readwrite_buffer_float(4, out_vbo)
+read_buffer(fvec4, 1, in_vertices)
+read_buffer(fvec4, 2, in_normals)
+//read_buffer(fvec4, 3, in_colors)
+//read_buffer(fvec4, 4, in_texcoords)
 
 void insert(uvec3 id)
 {
 	uint i = id.x;
 	
-	const uint stride = 11;
-	
-	uint vert_ptr =  ((stride * i) + 0);
-	uint norm_ptr =  ((stride * i) + 3);
-	uint color_ptr = ((stride * i) + 6);
-	uint tex_ptr = 	 ((stride * i) + 9);
+	uint vert_ptr =  ((STRIDE * i) + 0);
+	uint norm_ptr =  ((STRIDE * i) + 3);
+	uint color_ptr = ((STRIDE * i) + 6);
+	uint tex_ptr = 	 ((STRIDE * i) + 9);
 	
 	fvec4 vertex = get_buffer_vector(in_vertices, i);
 	fvec4 normal = get_buffer_vector(in_normals, i);
-	fvec4 color = get_buffer_vector(in_colors, i);
-	fvec4 texcoord = get_buffer_vector(in_texcoords, i);
+	//fvec4 color = get_buffer_vector(in_colors, i);
+	//fvec4 texcoord = get_buffer_vector(in_texcoords, i);
 	
 
 	set_buffer_scalar(out_vbo, vert_ptr + 0,  vertex.x);
@@ -36,11 +37,11 @@ void insert(uvec3 id)
 	set_buffer_scalar(out_vbo, vert_ptr + 3 , normal.x);    
 	set_buffer_scalar(out_vbo, vert_ptr + 4 , normal.y);    
 	set_buffer_scalar(out_vbo, vert_ptr + 5 , normal.z);    
-	set_buffer_scalar(out_vbo, vert_ptr + 6 , color.x);     
-	set_buffer_scalar(out_vbo, vert_ptr + 7 , color.y);     
-	set_buffer_scalar(out_vbo, vert_ptr + 8 , color.z);     
-	set_buffer_scalar(out_vbo, vert_ptr + 9 , texcoord.x);  
-	set_buffer_scalar(out_vbo, vert_ptr + 10, texcoord.y);
+	//set_buffer_scalar(out_vbo, vert_ptr + 6 , color.x);     
+	//set_buffer_scalar(out_vbo, vert_ptr + 7 , color.y);     
+	//set_buffer_scalar(out_vbo, vert_ptr + 8 , color.z);     
+	//set_buffer_scalar(out_vbo, vert_ptr + 9 , texcoord.x);  
+	//set_buffer_scalar(out_vbo, vert_ptr + 10, texcoord.y);
 	
 }
 

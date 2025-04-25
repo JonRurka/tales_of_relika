@@ -20,8 +20,40 @@ class Mesh
 	friend class Model;
 public:
 
+	class VertexAttributeList {
+		friend class Mesh;
+	public:
+
+		VertexAttributeList() : m_stride{ 11 }
+		{}
+
+		VertexAttributeList(int stride) : m_stride{stride}
+		{}
+
+		void add_attribute(int size, int offset) {
+			m_attributes.push_back(glm::ivec4(size, offset, 0, 0));
+		}
+
+		static VertexAttributeList Default() {
+			VertexAttributeList res(11 * sizeof(float));
+			res.add_attribute(3, 0);
+			res.add_attribute(3, (3 * sizeof(float)));
+			res.add_attribute(3, (6 * sizeof(float)));
+			res.add_attribute(2, (9 * sizeof(float)));
+			return res;
+		}
+
+	private:
+		std::vector<glm::ivec4> m_attributes;
+		int m_stride{0};
+
+		void process();
+	};
+
 	Mesh();
 	Mesh(size_t size);
+
+	void Set_Vertex_Attributes(VertexAttributeList list) { m_attrib_list = list; }
 
 	void Name(std::string value) { m_name = value; }
 	std::string Name() { return m_name; }
@@ -101,7 +133,11 @@ public:
 	void Dispose();
 
 private:
+	
 	std::string m_name;
+
+	VertexAttributeList m_attrib_list;
+
 	std::vector<glm::vec3> m_vertices;
 	std::vector<glm::vec3> m_normals;
 	std::vector<glm::vec4> m_colors;

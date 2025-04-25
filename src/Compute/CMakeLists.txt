@@ -2,17 +2,14 @@ set(module "Compute")
 
 
 include_directories(include)
-include_directories(include/nvpro_core/nvp)
-include_directories(include/nvpro_core)
+include_directories(include/Vulkan)
+include_directories(include/Vulkan/nvpro_core/nvp)
+include_directories(include/Vulkan/nvpro_core)
+
+include_directories(include/OpenCL)
 
 set(${module}_headers
 	include/ForwardDeclarations.h
-	include/vk_mem_alloc.h
-	include/vulkan_utils.h
-	include/ComputeEngine.h
-	include/ComputeController_VK.h
-	include/ComputeProgram_VK.h
-	include/ComputeBuffer_VK.h
 	include/InterfaceIncludes_private.h
 	include/PlatformStructures_private.h
 	include/ComputeInterface_private.h
@@ -28,15 +25,24 @@ set(${module}_headers
 	include/IComputeController.h
 	include/ComputeInterface.h
 	
-	include/nvpro_core/nvgl/extensions_gl.hpp
+	include/Vulkan/nvpro_core/nvgl/extensions_gl.hpp
+	include/Vulkan/vk_mem_alloc.h
+	include/Vulkan/vulkan_utils.h
+	include/Vulkan/ComputeEngine.h
+	include/Vulkan/ComputeController_VK.h
+	include/Vulkan/ComputeProgram_VK.h
+	include/Vulkan/ComputeBuffer_VK.h
+	
+	include/OpenCL/ComputeEngine.h
+	include/OpenCL/ComputeController.h
+	include/OpenCL/ComputeController_OCL.h
+	include/OpenCL/ComputeProgram_OCL.h
+	include/OpenCL/ComputeBuffer_OCL.h
+	include/OpenCL/OCL_forwardDeclarations.h
+	include/OpenCL/ProgramBuilder.h
 )
 
 set(${module}_sources
-	src/vulkan_utils.cpp
-	src/ComputeEngine.cpp
-	src/ComputeController_VK.cpp
-	src/ComputeProgram_VK.cpp
-	src/ComputeBuffer_VK.cpp
 	src/PlatformStructures.cpp
 	src/IComputeBuffer.cpp
 	src/IComputeProgram.cpp
@@ -45,6 +51,18 @@ set(${module}_sources
 	src/ComputeInterface.cpp
 	
 	#include/nvpro_core/nvgl/extensions_gl.cpp
+	src/Vulkan/vulkan_utils.cpp
+	src/Vulkan/ComputeEngine.cpp
+	src/Vulkan/ComputeController_VK.cpp
+	src/Vulkan/ComputeProgram_VK.cpp
+	src/Vulkan/ComputeBuffer_VK.cpp
+	
+	src/OpenCL/ComputeEngine.cpp
+	src/OpenCL/ComputeController.cpp
+	src/OpenCL/ComputeController_OCL.cpp
+	src/OpenCL/ComputeProgram_OCL.cpp
+	src/OpenCL/ComputeBuffer_OCL.cpp
+	src/OpenCL/ProgramBuilder.cpp
 )
 
 if(WIN32)
