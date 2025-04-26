@@ -28,18 +28,18 @@ set(${module}_headers
 	include/Vulkan/nvpro_core/nvgl/extensions_gl.hpp
 	include/Vulkan/vk_mem_alloc.h
 	include/Vulkan/vulkan_utils.h
-	include/Vulkan/ComputeEngine.h
+	include/Vulkan/ComputeEngine_VK.h
 	include/Vulkan/ComputeController_VK.h
 	include/Vulkan/ComputeProgram_VK.h
 	include/Vulkan/ComputeBuffer_VK.h
 	
-	include/OpenCL/ComputeEngine.h
-	include/OpenCL/ComputeController.h
+	include/OpenCL/ComputeEngine_OCL.h
+	#include/OpenCL/ComputeController.h
 	include/OpenCL/ComputeController_OCL.h
 	include/OpenCL/ComputeProgram_OCL.h
 	include/OpenCL/ComputeBuffer_OCL.h
-	include/OpenCL/OCL_forwardDeclarations.h
-	include/OpenCL/ProgramBuilder.h
+	#include/OpenCL/OCL_forwardDeclarations.h
+	#include/OpenCL/ProgramBuilder.h
 )
 
 set(${module}_sources
@@ -52,17 +52,17 @@ set(${module}_sources
 	
 	#include/nvpro_core/nvgl/extensions_gl.cpp
 	src/Vulkan/vulkan_utils.cpp
-	src/Vulkan/ComputeEngine.cpp
+	src/Vulkan/ComputeEngine_VK.cpp
 	src/Vulkan/ComputeController_VK.cpp
 	src/Vulkan/ComputeProgram_VK.cpp
 	src/Vulkan/ComputeBuffer_VK.cpp
 	
-	src/OpenCL/ComputeEngine.cpp
-	src/OpenCL/ComputeController.cpp
+	src/OpenCL/ComputeEngine_OCL.cpp
+	#src/OpenCL/ComputeController.cpp
 	src/OpenCL/ComputeController_OCL.cpp
 	src/OpenCL/ComputeProgram_OCL.cpp
 	src/OpenCL/ComputeBuffer_OCL.cpp
-	src/OpenCL/ProgramBuilder.cpp
+	#src/OpenCL/ProgramBuilder.cpp
 )
 
 if(WIN32)

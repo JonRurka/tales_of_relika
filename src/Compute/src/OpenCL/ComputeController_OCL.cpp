@@ -71,27 +71,27 @@ IComputeProgram_private* ComputeController_OCL::GetProgram(std::string name)
 	return m_programs[name];
 }
 
-IComputeBuffer_private* ComputeController_OCL::NewReadBuffer(size_t numElements, size_t stride)
+IComputeBuffer_private* ComputeController_OCL::NewReadBuffer(size_t numElements, size_t stride, bool external)
 {
-	return new ComputeBuffer_OCL(ComputeController_OCL::NewBuffer(ComputeBuffer::Buffer_Type::READ, numElements * stride));
+	return new ComputeBuffer_OCL(ComputeController_OCL::NewBuffer(ComputeBuffer::Buffer_Type::READ, numElements * stride, external));
 }
 
-IComputeBuffer_private* ComputeController_OCL::NewWriteBuffer(size_t numElements, size_t stride)
+IComputeBuffer_private* ComputeController_OCL::NewWriteBuffer(size_t numElements, size_t stride, bool external)
 {
-	return new ComputeBuffer_OCL(ComputeController_OCL::NewBuffer(ComputeBuffer::Buffer_Type::Write, numElements * stride));
+	return new ComputeBuffer_OCL(ComputeController_OCL::NewBuffer(ComputeBuffer::Buffer_Type::Write, numElements * stride, external));
 }
 
-IComputeBuffer_private* ComputeController_OCL::NewReadWriteBuffer(size_t numElements, size_t stride)
+IComputeBuffer_private* ComputeController_OCL::NewReadWriteBuffer(size_t numElements, size_t stride, bool external)
 {
-	return new ComputeBuffer_OCL(ComputeController_OCL::NewBuffer(ComputeBuffer::Buffer_Type::Read_Write, numElements * stride));
+	return new ComputeBuffer_OCL(ComputeController_OCL::NewBuffer(ComputeBuffer::Buffer_Type::Read_Write, numElements * stride, external));
 }
 
 
 // Non-interface methods:
 
-ComputeBuffer* ComputeController_OCL::NewBuffer(ComputeBuffer::Buffer_Type type, size_t length)
+ComputeBuffer* ComputeController_OCL::NewBuffer(ComputeBuffer::Buffer_Type type, size_t length, bool external)
 {
-	return m_context->GetBuffer(type, length);
+	return m_context->GetBuffer(type, length, external);
 }
 
 IComputeController_private* DynamicCompute::Compute::OCL::ComputeController_OCL::New()

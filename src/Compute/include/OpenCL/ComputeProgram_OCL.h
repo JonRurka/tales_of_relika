@@ -1,10 +1,10 @@
 #pragma once
 
 #include "OCL_forwardDeclarations.h"
-#include "Compute_Interface/InterfaceIncludes_private.h"
-#include "ComputeEngine.h"
-#include "ProgramBuilder.h"
-#include "ShaderDepository.h"
+#include "InterfaceIncludes_private.h"
+#include "ComputeEngine_OCL.h"
+//#include "ProgramBuilder.h"
+//#include "ShaderDepository.h"
 
 namespace DynamicCompute {
 	namespace Compute {
@@ -19,37 +19,41 @@ namespace DynamicCompute {
 
 				void Init(std::string name);
 
-				void AddIncludeDirectory(std::string directory);
+				void AddIncludeDirectory(std::string directory) override;
 
-				void AddDefine(std::string name, std::string value);
+				void AddDefine(std::string name, std::string value) override;
 
-				int Build();
+				int Build() override;
 
-				int FinishBuild() { return 0; }
+				int FinishBuild() override { return 0; }
 
-				int GetKernelID(std::string name);
+				int GetKernelID(std::string name) override;
 
-				void KernelSetWorkGroupSize(std::string k_name, int size);
+				void KernelSetWorkGroupSize(std::string k_name, glm::uvec3 size) override;
 
 				int KernelAddBuffer(std::string k_name, IComputeBuffer_private* buffer);
 
-				int KernelSetBuffer(std::string k_name, IComputeBuffer_private* buffer, BindIndex arg);
+				int KernelSetBuffer(std::string k_name, IComputeBuffer_private* buffer, BindIndex arg) override;
 
-				int RunKernel(std::string k_name, int size_x, int size_y, int size_z);
+				int RunKernel(std::string k_name, int size_x, int size_y, int size_z) override;
 
-				int RunKernel(int kernel_id, int size_x, int size_y, int size_z);
+				int RunKernel(int kernel_id, int size_x, int size_y, int size_z) override;
 
-				void* GetKernelFunction(int kernel_id);
+				int RunKernel(std::string k_name, int num, int size_x, int size_y, int size_z);
 
-				ProgramBuildState GetState() { return m_cur_state; }
+				int RunKernel(int kernel_id, int num, int size_x, int size_y, int size_z);
 
-				int GetBuildResultCode() { return m_cl_build_res; }
+				void* GetKernelFunction(int kernel_id) override;
 
-				std::string GetBuildErrorMessage() { return m_build_error; }
+				ProgramBuildState GetState() override { return m_cur_state; }
 
-				std::string GetProgramName() { return m_program_name; }
+				int GetBuildResultCode() override { return m_cl_build_res; }
 
-				void Dispose() {}
+				std::string GetBuildErrorMessage() override { return m_build_error; }
+
+				std::string GetProgramName() override { return m_program_name; }
+
+				void Dispose() override {}
 
 
 				// Non-interface methods:
@@ -65,9 +69,9 @@ namespace DynamicCompute {
 					m_kernel_names = std::vector<std::string>(kernel_names);
 				}
 
-				ProgramBuilder* GetProgramBuilder() { return m_builder; }
+				//ProgramBuilder* GetProgramBuilder() { return m_builder; }
 
-				ProgramBuildState ConstructSourceProgram();
+				//ProgramBuildState ConstructSourceProgram();
 
 				ProgramBuildState BuildProgramFromBinary(std::string file_path, std::vector<std::string> kernels);
 
@@ -77,7 +81,7 @@ namespace DynamicCompute {
 
 				ProgramBuildState BuildProgramFromSourceFile(std::string file_path, std::vector<std::string> kernels);
 
-				ProgramBuildState BuildProgramFromInternalDepo();
+				//ProgramBuildState BuildProgramFromInternalDepo();
 
 			private:
 
@@ -93,19 +97,23 @@ namespace DynamicCompute {
 
 				int InitKernelEntries();
 
+				std::vector<std::string> m_kernels;
+
+				ComputeProgram* m_program{ nullptr };
+
 				std::string m_program_name;
 				std::string m_program_directory;
 				FileType m_ftype;
 				std::vector<std::string> m_kernel_names;
 
 				ComputeContext* m_context{ nullptr };
-				ProgramBuilder* m_builder{ nullptr };
+				//ProgramBuilder* m_builder{ nullptr };
 				ProgramBuildState m_cur_state{ ProgramBuildState::None };
 
 				std::string m_build_error = "";
 				int m_cl_build_res = { 0 };
 
-				ShaderDepository default_shaders;
+				//ShaderDepository default_shaders;
 
 				size_t m_num_kernels;
 				kernelEnt* m_kernel_entries{ nullptr };

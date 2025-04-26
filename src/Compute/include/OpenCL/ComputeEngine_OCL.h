@@ -156,7 +156,7 @@ namespace DynamicCompute {
                 ComputeProgram* Programs(std::string name);
 
                 ComputeKernel* GetKernel(std::string p_name, std::string name);
-                ComputeBuffer* GetBuffer(ComputeBuffer::Buffer_Type type, size_t length);
+                ComputeBuffer* GetBuffer(ComputeBuffer::Buffer_Type type, size_t length, bool external);
 
                 void Dispose();
             };

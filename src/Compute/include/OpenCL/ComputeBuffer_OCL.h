@@ -3,7 +3,7 @@
 #include "OCL_forwardDeclarations.h"
 #include "InterfaceIncludes_private.h"
 //#include "ComputeEngine.h"
-#include "OpenCL/ComputeEngine.h"
+#include "OpenCL/ComputeEngine_OCL.h"
 
 namespace DynamicCompute {
     namespace Compute {
@@ -14,29 +14,33 @@ namespace DynamicCompute {
                 friend class ComputeController_OCL;
                 
             public:
-                int SetData(void* data);
+                int SetData(void* data) override;
 
-                int GetData(void* outData);
+                int GetData(void* outData) override;
 
-                int SetData(void* data, int size);
+                int SetData(void* data, int size) override;
 
-                int GetData(void* outData, int size);
+                int GetData(void* outData, int size) override;
 
-                int SetData(void* data, int DstStart, int size) { return 0; }
+                int SetData(void* data, int DstStart, int size) override { return 0; }
 
-                int GetData(void* outData, int SrcStart, int size) { return 0; }
+                int GetData(void* outData, int SrcStart, int size) override { return 0; }
 
-                int CopyTo(IComputeBuffer_private* other) { return 0; }
+                int CopyTo(IComputeBuffer_private* other) override { return 0; }
 
-                int CopyTo(IComputeBuffer_private* other, int size) { return 0; }
+                int CopyTo(IComputeBuffer_private* other, int size) override { return 0; }
 
-                int CopyTo(IComputeBuffer_private* other, int srcStart, int dstStart, int size) { return 0; }
+                int CopyTo(IComputeBuffer_private* other, int srcStart, int dstStart, int size) override { return 0; }
 
-                size_t GetSize();
+                size_t GetSize() override;
 
-                void Dispose();
+                void Dispose() override;
 
-                void* Get_Native_Ptr();
+                void* Get_Native_Ptr() override;
+
+                unsigned int External_Buffer() override;
+
+                unsigned int External_Memory() override;
 
 
                 // Non-interface methods:

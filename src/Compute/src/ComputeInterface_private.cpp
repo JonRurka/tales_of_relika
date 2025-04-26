@@ -1,6 +1,6 @@
 #include "ComputeInterface_private.h"
 
-//#include "Compute_OCL/ComputeController_OCL.h"
+#include "ComputeController_OCL.h"
 //#include "Compute_OCL/compute_test.h"
 //#pragma comment(lib, "OpenCL.lib")
 
@@ -19,7 +19,7 @@
 #endif
 
 using namespace DynamicCompute::Compute;
-//using namespace DynamicCompute::Compute::OCL;
+using namespace DynamicCompute::Compute::OCL;
 using namespace DynamicCompute::Compute::VK;
 
 #ifdef WINDOWS_PLATFROM
@@ -38,8 +38,8 @@ IComputeController_private* ComputeInterface_private::GetComputeController(Compu
     //printf("getting controller\n");
 	switch (implementation)
 	{
-	//case ComputeInterface_private::Compute_SDK::OpenCL:
-		//return GetComputeController_OCL(info);
+	case ComputeInterface_private::Compute_SDK::OpenCL:
+		return GetComputeController_OCL(info);
 
 	case ComputeInterface_private::Compute_SDK::VULKAN:
 		return GetComputeController_Vulkan(info);
@@ -74,7 +74,7 @@ void ComputeInterface_private::DisposePlatform(Compute_SDK implementation)
     }
 }
 
-/*IComputeController_private* ComputeInterface_private::GetComputeController_OCL(ControllerInfo info)
+IComputeController_private* ComputeInterface_private::GetComputeController_OCL(ControllerInfo info)
 {
     //compute_test test;
     //test.Run(info.platform, info.device);
@@ -86,7 +86,7 @@ void ComputeInterface_private::DisposePlatform(Compute_SDK implementation)
     controller->Init(info.platform, info.device, info.program_dir);
 
 	return controller;
-}*/
+}
 
 /*IComputeController_private* ComputeInterface_private::GetComputeController_CUDA(ControllerInfo info)
 {
@@ -133,7 +133,7 @@ IComputeController_private* ComputeInterface_private::GetComputeController_Vulka
 	return controller;
 }*/
 
-/*
+
 std::vector<Platform> ComputeInterface_private::GetSupportedPlatforms_OpenCL()
 {
     std::vector<Platform> res;
@@ -179,9 +179,9 @@ std::vector<Platform> ComputeInterface_private::GetSupportedPlatforms_OpenCL()
 
     return res;
 }
-*/
 
-/*
+
+
 std::vector<OpenCL_Device_Info> ComputeInterface_private::GetSupportedDevices_OpenCL(Platform pltfrm)
 {
     std::vector<OpenCL_Device_Info> res;
@@ -278,7 +278,7 @@ std::vector<OpenCL_Device_Info> ComputeInterface_private::GetSupportedDevices_Op
 
     return res;
 }
-*/
+
 
 
 std::vector<Vulkan_Device_Info> ComputeInterface_private::GetSupportedDevices_Vulkan()

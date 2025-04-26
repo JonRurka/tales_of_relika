@@ -5,6 +5,7 @@
 using namespace DynamicCompute::Compute;
 using namespace DynamicCompute::Compute::OCL;
 
+#define ERROR_SIZE 10000
 #define DEFAULT_BINARY_FILE_TYPE "spv"
 #define DEFAULT_TEXT_FILE_TYPE "cl"
 
@@ -12,19 +13,20 @@ void ComputeProgram_OCL::Init(std::string name)
 {
 	m_program_name = name;
 
-	m_builder = new ProgramBuilder(m_context, m_program_name);
+	//m_builder = new ProgramBuilder(m_context, m_program_name);
+	m_program = m_context->Add_Program(m_program_name);
 
 	m_cur_state = ProgramBuildState::Inited;
 }
 
 void ComputeProgram_OCL::AddIncludeDirectory(std::string directory)
 {
-	m_builder->GetProgram()->AddIncludeDirector(directory);
+	m_program->AddIncludeDirector(directory);
 }
 
 void ComputeProgram_OCL::AddDefine(std::string name, std::string value)
 {
-	m_builder->AddConstant(name, value);
+	m_program->AddConstant(name, value);
 }
 
 int ComputeProgram_OCL::Build()
@@ -60,8 +62,9 @@ int ComputeProgram_OCL::GetKernelID(std::string name)
 	return m_kernel_name_to_id[name];
 }
 
-void DynamicCompute::Compute::OCL::ComputeProgram_OCL::KernelSetWorkGroupSize(std::string k_name, int size)
+void ComputeProgram_OCL::KernelSetWorkGroupSize(std::string k_name, glm::uvec3 size)
 {
+	
 }
 
 int ComputeProgram_OCL::KernelAddBuffer(std::string k_name, IComputeBuffer_private* buffer)
@@ -120,6 +123,22 @@ int ComputeProgram_OCL::RunKernel(int kernel_id, int size_x, int size_y, int siz
 	return m_kernel_entries[kernel_id].kernel->Execute(3, global);
 }
 
+int ComputeProgram_OCL::RunKernel(std::string k_name, int num, int size_x, int size_y, int size_z)
+{
+	for (int i = 0; i < num; i++) {
+		RunKernel(k_name, size_x, size_y, size_z);
+	}
+	return 0;
+}
+
+int ComputeProgram_OCL::RunKernel(int kernel_id, int num, int size_x, int size_y, int size_z)
+{
+	for (int i = 0; i < num; i++) {
+		RunKernel(kernel_id, size_x, size_y, size_z);
+	}
+	return 0;
+}
+
 void* ComputeProgram_OCL::GetKernelFunction(int kernel_id)
 {
 	return nullptr;
@@ -134,7 +153,7 @@ ComputeProgram_OCL::ComputeProgram_OCL(ComputeContext* context)
 	m_context = context;
 }
 
-IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::ConstructSourceProgram()
+/*IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::ConstructSourceProgram()
 {
 	if (m_cur_state == ProgramBuildState::Inited)
 	{
@@ -172,13 +191,39 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::ConstructSourcePr
 	}
 
 	return m_cur_state;
-}
+}*/
 
 IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromBinary(std::string file_path, std::vector<std::string> kernels)
 {
-	m_builder->AddKernels(kernels);
+	//m_builder->AddKernels(kernels);
+	for (int i = 0; i < kernels.size(); i++)
+	{
+		m_kernels.push_back(kernels[i]);
+	}
 
-	m_cl_build_res = m_builder->BuildFromBinary(file_path);
+	//m_cl_build_res = m_builder->BuildFromBinary(file_path);
+	char errorstr[ERROR_SIZE];
+	int set_b_res = m_program->Set_Binary_File(file_path);
+	if (set_b_res != 0)
+	{
+		m_cur_state = ProgramBuildState::BuildError;
+		printf("BuildFromBinary(file) Failed at m_program->Set_Binary: %i\n", set_b_res);
+		return m_cur_state;
+	}
+
+	int status = m_program->Build(errorstr, ERROR_SIZE);
+	m_build_error = errorstr;
+	if (status != 0)
+	{
+		m_cur_state = ProgramBuildState::BuildError;
+		printf("BuildFromBinary(file) Failed at m_program->Build: %i\n", status);
+		return m_cur_state;
+	}
+
+	for (int i = 0; i < m_kernels.size(); i++)
+	{
+		m_program->GetKernel(m_kernels[i]);
+	}
 
 	if (m_cl_build_res == 0)
 	{
@@ -198,21 +243,46 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromB
 	else
 	{
 		m_cur_state = ProgramBuildState::BuildError;
-		m_build_error = m_builder->GetError();
+		m_build_error = m_build_error;
 		printf("Got non-zero result from BuildFromBinary: %i\n", m_cl_build_res);
 		//printf("Build Error: %s\n", m_builder->GetError().c_str());
 	}
 
-	m_builder->Clear();
+	//m_builder->Clear();
 
 	return m_cur_state;
 }
 
 IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromBinary(const void* binary, size_t length, std::vector<std::string> kernels)
 {
-	m_builder->AddKernels(kernels);
+	//m_builder->AddKernels(kernels);
+	for (int i = 0; i < kernels.size(); i++)
+	{
+		m_kernels.push_back(kernels[i]);
+	}
 
-	m_cl_build_res = m_builder->BuildFromBinary(binary, length);
+	//m_cl_build_res = m_builder->BuildFromBinary(binary, length);
+	char errorstr[ERROR_SIZE];
+	int set_b_res = m_program->Set_Binary(binary, length);
+	if (set_b_res != 0)
+	{
+		m_cur_state = ProgramBuildState::BuildError;
+		printf("BuildFromBinary(bin) Failed at m_program->Set_Binary: %i\n", set_b_res);
+		return m_cur_state;
+	}
+
+	int status = m_program->Build(errorstr, ERROR_SIZE);
+	m_build_error = errorstr;
+	if (status != 0)
+	{
+		m_cur_state = ProgramBuildState::BuildError;
+		printf("BuildFromBinary(bin) Failed at m_program->Build: %i\n", status);
+		return m_cur_state;
+	}
+	for (int i = 0; i < m_kernels.size(); i++)
+	{
+		m_program->GetKernel(m_kernels[i]);
+	}
 
 	if (m_cl_build_res == 0)
 	{
@@ -232,22 +302,29 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromB
 	else
 	{
 		m_cur_state = ProgramBuildState::BuildError;
-		m_build_error = m_builder->GetError();
+		m_build_error = m_build_error;
 		printf("Got non-zero result from BuildFromBinary: %i\n", m_cl_build_res);
 		//printf("Build Error: %s\n", m_builder->GetError().c_str());
 	}
 
-	m_builder->Clear();
-
+	//m_builder->Clear();
 	return m_cur_state;
 }
 
 IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromSource(std::string content, std::vector<std::string> kernels)
 {
-	m_builder->AddKernels(kernels);
-	m_builder->AppendSource(content);
+	//m_builder->AddKernels(kernels);
+	for (int i = 0; i < kernels.size(); i++)
+	{
+		m_kernels.push_back(kernels[i]);
+	}
+	//m_builder->AppendSource(content);
 
-	m_cl_build_res = m_builder->BuildFromSource();
+	//m_cl_build_res = m_builder->BuildFromSource();
+	char errorstr[ERROR_SIZE];
+	m_program->Set_Source(content.c_str());
+	m_cl_build_res = m_program->Build(errorstr, ERROR_SIZE);
+	std::string error_msg = m_cl_build_res != 0 ? errorstr : "Program Built Successfully";
 
 	if (m_cl_build_res == 0)
 	{
@@ -267,19 +344,23 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromS
 	else
 	{
 		m_cur_state = ProgramBuildState::BuildError;
-		m_build_error = m_builder->GetError();
+		m_build_error = error_msg;
 		printf("Got non-zero result from BuildFromBinary: %i\n", m_cl_build_res);
 		//printf("Build Error: %s\n", m_builder->GetError().c_str());
 	}
 
-	m_builder->Clear();
+	//m_builder->Clear();
 
 	return m_cur_state;
 }
 
 IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromSourceFile(std::string file_path, std::vector<std::string> kernels)
 {
-	m_builder->AddKernels(kernels);
+	//m_builder->AddKernels(kernels);
+	for (int i = 0; i < kernels.size(); i++)
+	{
+		m_kernels.push_back(kernels[i]);
+	}
 
 	//open file
 	std::ifstream infile(file_path);
@@ -303,9 +384,12 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromS
 
 	std::string file_res(buffer.begin(), buffer.end());
 
-	m_builder->AppendSource(file_res);
-
-	m_cl_build_res = m_builder->BuildFromSource();
+	//m_builder->AppendSource(file_res);
+	//m_cl_build_res = m_builder->BuildFromSource();
+	char errorstr[ERROR_SIZE];
+	m_program->Set_Source(file_res.c_str());
+	m_cl_build_res = m_program->Build(errorstr, ERROR_SIZE);
+	std::string error_msg = m_cl_build_res != 0 ? errorstr : "Program Built Successfully";
 
 	if (m_cl_build_res == 0)
 	{
@@ -325,16 +409,17 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromS
 	else
 	{
 		m_cur_state = ProgramBuildState::BuildError;
-		m_build_error = m_builder->GetError();
+		m_build_error = error_msg;
 		printf("Got non-zero result from BuildFromBinary: %i\n", m_cl_build_res);
 		//printf("Build Error: %s\n", m_builder->GetError().c_str());
 	}
 
-	m_builder->Clear();
+	//m_builder->Clear();
 
 	return m_cur_state;
 }
 
+/*
 IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromInternalDepo()
 {
 	if (m_cur_state == ProgramBuildState::Constructed)
@@ -369,7 +454,7 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromI
 
 	return m_cur_state;
 }
-
+*/
 
 
 // private functions:
@@ -382,9 +467,9 @@ int ComputeProgram_OCL::BindKernel(ComputeBuffer* buffer, ComputeKernel* kernel,
 
 int ComputeProgram_OCL::InitKernelEntries()
 {
-	std::vector<std::string> kernls = m_builder->GetKernels();
+	//std::vector<std::string> kernls = m_builder->GetKernels();
 
-	m_num_kernels = kernls.size();
+	m_num_kernels = m_kernels.size();
 
 	if (m_kernel_entries != nullptr)
 		delete[] m_kernel_entries;
@@ -393,11 +478,11 @@ int ComputeProgram_OCL::InitKernelEntries()
 
 	for (int i = 0; i < m_num_kernels; i++)
 	{
-		std::string k_name = kernls[i];
+		std::string k_name = m_kernels[i];
 
 		kernelEnt k_ent;
 		k_ent.name = k_name;
-		k_ent.kernel = m_builder->GetKernel(k_name);
+		k_ent.kernel = m_program->GetKernel(k_name);//m_builder->GetKernel(k_name);
 		k_ent.args = 0;
 
 		int k_status = k_ent.kernel->GetStatus();

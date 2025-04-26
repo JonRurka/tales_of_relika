@@ -1,4 +1,5 @@
-#include "ComputeEngine.h"
+//#include "ComputeEngine.h"
+#include "OpenCL/ComputeEngine_OCL.h"
 
 using namespace DynamicCompute::Compute::OCL;
 
@@ -191,7 +192,7 @@ void ComputeEngine::Dispose() {
 
 
 
-ComputeBuffer* ComputeContext::GetBuffer(ComputeBuffer::Buffer_Type type, size_t size)
+ComputeBuffer* ComputeContext::GetBuffer(ComputeBuffer::Buffer_Type type, size_t size, bool external)
 {
     cl_mem_flags flags = 0;
     cl_mem_flags flags_staging = 0;

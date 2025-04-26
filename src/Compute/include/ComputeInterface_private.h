@@ -4,7 +4,7 @@
 #include "PlatformStructures_private.h"
 #include "IComputeController_private.h"
 //#include "CL/cl.h"
-//#include "Compute_OCL/CL_SDK/cl.h"
+#include "CL_SDK/cl.h"
 #include "vulkan/vulkan.h"
 //#include "vulkan-hpp/vulkan.hpp"
 
@@ -14,7 +14,7 @@ namespace DynamicCompute {
 		class ComputeInterface_private {
 		public:
 			enum Compute_SDK {
-				//OpenCL = 0,
+				OpenCL = 0,
 				VULKAN = 1,
 #ifdef WINDOWS_PLATFROM
 				//DIRECTX = 2,
@@ -40,8 +40,8 @@ namespace DynamicCompute {
 
 			static void DisposePlatform(Compute_SDK implementation);
 
-            //static std::vector<Platform> GetSupportedPlatforms_OpenCL();
-            //static std::vector<OpenCL_Device_Info> GetSupportedDevices_OpenCL(Platform pltfrm);
+            static std::vector<Platform> GetSupportedPlatforms_OpenCL();
+            static std::vector<OpenCL_Device_Info> GetSupportedDevices_OpenCL(Platform pltfrm);
 
 			static std::vector<Vulkan_Device_Info> GetSupportedDevices_Vulkan();
 
@@ -49,11 +49,11 @@ namespace DynamicCompute {
 
         private:
 
-            //static cl_uint num_of_platforms;
-            //static cl_uint num_of_devices;
-            //static cl_device_id device_ids[MAX_OCL_DEVICES];
+            static cl_uint num_of_platforms;
+            static cl_uint num_of_devices;
+            static cl_device_id device_ids[MAX_OCL_DEVICES];
 
-			//static IComputeController_private* GetComputeController_OCL(ControllerInfo info);
+			static IComputeController_private* GetComputeController_OCL(ControllerInfo info);
 
 			//static IComputeController_private* GetComputeController_CUDA(ControllerInfo info);
 

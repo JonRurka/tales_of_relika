@@ -1,6 +1,6 @@
 #include "ComputeProgram_VK.h"
 
-#include "ComputeEngine.h"
+#include "ComputeEngine_VK.h"
 #include "ComputeBuffer_VK.h"
 
 using namespace DynamicCompute::Compute;
