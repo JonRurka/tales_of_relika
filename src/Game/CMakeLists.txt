@@ -11,6 +11,7 @@ set(${module}_headers
 	
 	include/Test_Scene.h
 	include/Voxel_Test_Scene.h
+	include/Test_OpenCL_Scene.h
 	
 	include/Editor_Camera_Control.h
 	
@@ -25,6 +26,7 @@ set(${module}_sources
 	
 	src/Test_Scene.cpp
 	src/Voxel_Test_Scene.cpp
+	src/Test_OpenCL_Scene.cpp
 	
 	src/Editor_Camera_Control.cpp
 	

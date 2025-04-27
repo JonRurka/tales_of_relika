@@ -18,16 +18,17 @@ namespace DynamicCompute {
 			};
 
 			enum class FileType {
-				Text,
-				Binary,
-				Raw
+				Text_File,
+				Binary_File,
+				Text_Data,
+				Binary_Data
 			};
 
 			struct ProgramInfo {
 			public:
 
 				ProgramInfo() 
-					: m_name(""), m_type(FileType::Binary) {}
+					: m_name(""), m_type(FileType::Binary_File) {}
 
 				ProgramInfo(std::string name, FileType type)
 					: m_name(name), m_type(type) {}

@@ -15,13 +15,41 @@ int ComputeBuffer_OCL::GetData(void* outData)
 int ComputeBuffer_OCL::SetData(void* data, int size)
 {
 	// TODO: Implement
-	return 0;
+	return m_buffer->SetData(data, size);
 }
 
 int ComputeBuffer_OCL::GetData(void* outData, int size)
 {
 	// TODO: Implement
-	return 0;
+	return m_buffer->GetData(outData, size);
+}
+
+int ComputeBuffer_OCL::SetData(void* data, int DstStart, int size)
+{
+	return m_buffer->SetData(data, DstStart, size);
+}
+
+int ComputeBuffer_OCL::GetData(void* outData, int SrcStart, int size)
+{
+	return m_buffer->GetData(outData, SrcStart, size);
+}
+
+int ComputeBuffer_OCL::CopyTo(IComputeBuffer_private* other)
+{
+	ComputeBuffer_OCL* other_vk = (ComputeBuffer_OCL*)other;
+	return m_buffer->CopyTo(other_vk->GetBuffer());
+}
+
+int ComputeBuffer_OCL::CopyTo(IComputeBuffer_private* other, int size)
+{
+	ComputeBuffer_OCL* other_vk = (ComputeBuffer_OCL*)other;
+	return m_buffer->CopyTo(other_vk->GetBuffer(), size);
+}
+
+int ComputeBuffer_OCL::CopyTo(IComputeBuffer_private* other, int srcStart, int dstStart, int size)
+{
+	ComputeBuffer_OCL* other_vk = (ComputeBuffer_OCL*)other;
+	return m_buffer->CopyTo(other_vk->GetBuffer(), srcStart, dstStart, size);
 }
 
 size_t ComputeBuffer_OCL::GetSize()

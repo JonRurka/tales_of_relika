@@ -15,7 +15,7 @@ void ComputeProgram_VK::Init(std::string name)
 	m_program = m_context->Add_Program(name);
 }
 
-int DynamicCompute::Compute::VK::ComputeProgram_VK::Build()
+int ComputeProgram_VK::Build()
 {
 	// ProgramInfo FileType is ignored because only SPIRV binary files are supported.
 	std::string full_file_path = m_program_directory + m_program_name + "." + DEFAULT_BINARY_FILE_TYPE;
@@ -23,11 +23,11 @@ int DynamicCompute::Compute::VK::ComputeProgram_VK::Build()
 	//printf("ComputeController_VK: Reading program from directory: %s\n", m_program_directory.c_str());
 
 	switch (m_ftype) {
-	case FileType::Binary:
+	case FileType::Binary_File:
 		printf("ComputeController_VK: Adding program binary file: %s\n", full_file_path.c_str());
 		BuildProgramFromBinary(full_file_path, m_kernel_names);
 		break;
-	case FileType::Raw:
+	case FileType::Binary_Data:
 		BuildProgramFromBinary(m_raw_binary.data(), m_raw_binary.size(), m_kernel_names);
 		break;
 	}
@@ -50,7 +50,7 @@ int ComputeProgram_VK::GetKernelID(std::string name)
 	return m_kernel_name_to_id[name];
 }
 
-void DynamicCompute::Compute::VK::ComputeProgram_VK::KernelSetWorkGroupSize(std::string k_name, glm::uvec3 size)
+void ComputeProgram_VK::KernelSetWorkGroupSize(std::string k_name, glm::uvec3 size)
 {
 	if (m_kernel_name_to_id.count(k_name) <= 0) {
 		printf("Kernel not found: %s\n", k_name.c_str());
@@ -100,7 +100,7 @@ int ComputeProgram_VK::RunKernel(int kernel_id, int size_x, int size_y, int size
 	return m_kernel_entries[kernel_id].kernel->Execute(size_x, size_y, size_z);
 }
 
-int DynamicCompute::Compute::VK::ComputeProgram_VK::RunKernel(std::string k_name, int num, int size_x, int size_y, int size_z)
+int ComputeProgram_VK::RunKernel(std::string k_name, int num, int size_x, int size_y, int size_z)
 {
 	if (m_kernel_name_to_id.count(k_name) <= 0) {
 		printf("Kernel not found: %s\n", k_name.c_str());
@@ -112,7 +112,7 @@ int DynamicCompute::Compute::VK::ComputeProgram_VK::RunKernel(std::string k_name
 	return RunKernel(K_ID, num, size_x, size_y, size_z);
 }
 
-int DynamicCompute::Compute::VK::ComputeProgram_VK::RunKernel(int kernel_id, int num, int size_x, int size_y, int size_z)
+int ComputeProgram_VK::RunKernel(int kernel_id, int num, int size_x, int size_y, int size_z)
 {
 	if (kernel_id >= m_num_kernels)
 	{

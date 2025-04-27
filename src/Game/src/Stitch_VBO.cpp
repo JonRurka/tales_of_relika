@@ -18,7 +18,7 @@ void Stitch_VBO::Init(IComputeController* controller, int elements)
 	std::vector<uint8_t> shader_data(shader_data_tmp.begin(), shader_data_tmp.end());
 
 	//IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(m_name, IComputeProgram::FileType::Binary);
-	IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(resource, IComputeProgram::FileType::Raw);
+	IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(resource, IComputeProgram::FileType::Binary_Data);
 	program_info.SetData(shader_data);
 
 	program_info.AddKernel(kernel_name);

@@ -117,6 +117,9 @@ void Light::Activate_Shadows(bool enabled)
 
 void Light::Flush()
 {
+	if (!m_initialized) {
+		return;
+	}
 	glBindBuffer(GL_UNIFORM_BUFFER, m_uboLights);
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(Light_Data) * m_num_lights, m_light_data, GL_DYNAMIC_DRAW);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 1, m_uboLights);

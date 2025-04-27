@@ -77,6 +77,7 @@ target_link_libraries(${module}
 	nlohmann_json::nlohmann_json 
 	boost::boost
 	Vulkan::Vulkan
+	OpenCL-SDK OpenCLUtils OpenCLUtilsCpp
 	glm::glm
 	glfw
 	lua::lua

@@ -28,9 +28,9 @@ using namespace DynamicCompute::Compute::VK;
 
 
 
-//cl_uint ComputeInterface_private::num_of_platforms = 0;
-//cl_uint ComputeInterface_private::num_of_devices = 0;
-//cl_device_id ComputeInterface_private::device_ids[MAX_OCL_DEVICES] = { 0 };
+cl_uint ComputeInterface_private::num_of_platforms = 0;
+cl_uint ComputeInterface_private::num_of_devices = 0;
+cl_device_id ComputeInterface_private::device_ids[MAX_OCL_DEVICES] = { 0 };
 
 IComputeController_private* ComputeInterface_private::GetComputeController(ComputeInterface_private::Compute_SDK implementation, ControllerInfo info)
 {
@@ -158,6 +158,7 @@ std::vector<Platform> ComputeInterface_private::GetSupportedPlatforms_OpenCL()
         ZeroMemory(&platform, sizeof(Platform));
 
         platform.platform = all_platforms[i];
+        printf("Platform ID: %llX\n", (long long)platform.platform);
 
         ZeroMemory(Info, INFO_SIZE);
         clGetPlatformInfo(all_platforms[i], CL_PLATFORM_NAME, INFO_SIZE, Info, &n_size);
@@ -211,6 +212,7 @@ std::vector<OpenCL_Device_Info> ComputeInterface_private::GetSupportedDevices_Op
         OpenCL_Device_Info info{};
 
         info.cl_device = device_ids[i];
+        info.platform = pltfrm;
 
         ZeroMemory(Info, INFO_SIZE);
         n_size = 0;
@@ -256,12 +258,12 @@ std::vector<OpenCL_Device_Info> ComputeInterface_private::GetSupportedDevices_Op
         cl_device_local_mem_type local_mem_type;
         n_size = 0;
         clGetDeviceInfo(device_ids[i], CL_DEVICE_LOCAL_MEM_TYPE, sizeof(cl_device_local_mem_type), &local_mem_type, &n_size);
-        printf("Device Local Memory Type: %u\n", local_mem_type);
+        //printf("Device Local Memory Type: %u\n", local_mem_type);
 
         cl_ulong local_mem_size;
         n_size = 0;
         clGetDeviceInfo(device_ids[i], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &local_mem_size, &n_size);
-        printf("Device local memory size: %llu\n", local_mem_size);
+        //printf("Device local memory size: %llu\n", local_mem_size);
         info.local_memory_size = (unsigned int)local_mem_size;
 
         n_size = 0;

@@ -417,7 +417,7 @@ void Test_Scene::Setup_gpu_program(int size)
 
 	m_controller = ComputeInterface::GetComputeController(ComputeInterface::VULKAN, m_controllerInfo);
 
-	IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(PROGRAM_NAME, IComputeProgram::FileType::Binary);
+	IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(PROGRAM_NAME, IComputeProgram::FileType::Binary_File);
 	program_info.AddKernel(KERNEL_NAME);
 
 	m_program = m_controller->AddProgram(program_info);

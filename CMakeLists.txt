@@ -24,6 +24,9 @@ find_package(Bullet REQUIRED)
 find_package(fmt REQUIRED)
 find_package(OpenAL REQUIRED)
 
+set(OpenCL_SDK_Lib ${PROJECT_SOURCE_DIR}/lib/OpenCL_SDK/win32)
+link_directories(${OpenCL_SDK_Lib})
+
 find_package(Vulkan REQUIRED
 COMPONENTS glslc glslangValidator shaderc_combined)
 if(Vulkan_FOUND)

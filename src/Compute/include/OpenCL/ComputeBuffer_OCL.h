@@ -22,15 +22,15 @@ namespace DynamicCompute {
 
                 int GetData(void* outData, int size) override;
 
-                int SetData(void* data, int DstStart, int size) override { return 0; }
+                int SetData(void* data, int DstStart, int size) override;
 
-                int GetData(void* outData, int SrcStart, int size) override { return 0; }
+                int GetData(void* outData, int SrcStart, int size) override;
 
-                int CopyTo(IComputeBuffer_private* other) override { return 0; }
+                int CopyTo(IComputeBuffer_private* other) override;
 
-                int CopyTo(IComputeBuffer_private* other, int size) override { return 0; }
+                int CopyTo(IComputeBuffer_private* other, int size) override;
 
-                int CopyTo(IComputeBuffer_private* other, int srcStart, int dstStart, int size) override { return 0; }
+                int CopyTo(IComputeBuffer_private* other, int srcStart, int dstStart, int size) override;
 
                 size_t GetSize() override;
 

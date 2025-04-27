@@ -53,7 +53,7 @@ namespace DynamicCompute {
 
 				std::string GetProgramName() override { return m_program_name; }
 
-				void Dispose() override {}
+				void Dispose() override;
 
 
 				// Non-interface methods:
@@ -67,6 +67,9 @@ namespace DynamicCompute {
 				}
 				void SetKernelNames(std::vector<std::string> kernel_names) {
 					m_kernel_names = std::vector<std::string>(kernel_names);
+				}
+				void SetData(std::vector<uint8_t> data) {
+					m_data = data;
 				}
 
 				//ProgramBuilder* GetProgramBuilder() { return m_builder; }
@@ -105,6 +108,8 @@ namespace DynamicCompute {
 				std::string m_program_directory;
 				FileType m_ftype;
 				std::vector<std::string> m_kernel_names;
+
+				std::vector<uint8_t> m_data;
 
 				ComputeContext* m_context{ nullptr };
 				//ProgramBuilder* m_builder{ nullptr };

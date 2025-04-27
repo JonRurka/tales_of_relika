@@ -34,20 +34,27 @@ int ComputeProgram_OCL::Build()
 	printf("ComputeController_OCL: Reading program from directory: %s\n", m_program_directory.c_str());
 
 	switch (m_ftype) {
-		case IComputeProgram_private::FileType::Binary:
+		case IComputeProgram_private::FileType::Binary_File:
 		{
 			std::string full_file_path = m_program_directory + m_program_name + "." + DEFAULT_BINARY_FILE_TYPE;
 			printf("ComputeController_OCL: Adding program binary file: %s\n", full_file_path.c_str());
 			BuildProgramFromBinary(full_file_path, m_kernel_names);
 			break;
 		}
-		case IComputeProgram_private::FileType::Text:
+		case IComputeProgram_private::FileType::Text_File:
 		{
 			std::string full_file_path = m_program_directory + m_program_name + "." + DEFAULT_TEXT_FILE_TYPE;
 			printf("ComputeController_OCL: Adding program source file: %s\n", full_file_path.c_str());
 			BuildProgramFromSourceFile(full_file_path, m_kernel_names);
+
 			break;
 		}
+		case IComputeProgram_private::FileType::Text_Data:
+			printf("ComputeController_OCL: Adding program source.\n");
+			BuildProgramFromSource(std::string(m_data.begin(), m_data.end()), m_kernel_names);
+			break;
+		case IComputeProgram_private::FileType::Binary_Data:
+			break;
 	}
 	return 0;
 }
@@ -142,6 +149,10 @@ int ComputeProgram_OCL::RunKernel(int kernel_id, int num, int size_x, int size_y
 void* ComputeProgram_OCL::GetKernelFunction(int kernel_id)
 {
 	return nullptr;
+}
+
+void ComputeProgram_OCL::Dispose()
+{
 }
 
 

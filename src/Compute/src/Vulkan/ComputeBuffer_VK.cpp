@@ -37,19 +37,19 @@ int DynamicCompute::Compute::VK::ComputeBuffer_VK::GetData(void* outData, int Sr
 int DynamicCompute::Compute::VK::ComputeBuffer_VK::CopyTo(IComputeBuffer_private* other)
 {
 	ComputeBuffer_VK* other_vk = (ComputeBuffer_VK*)other;
-	return 0;
+	return m_buffer->CopyTo(other_vk->GetBuffer());
 }
 
 int DynamicCompute::Compute::VK::ComputeBuffer_VK::CopyTo(IComputeBuffer_private* other, int size)
 {
 	ComputeBuffer_VK* other_vk = (ComputeBuffer_VK*)other;
-	return 0;
+	return m_buffer->CopyTo(other_vk->GetBuffer(), size);
 }
 
 int DynamicCompute::Compute::VK::ComputeBuffer_VK::CopyTo(IComputeBuffer_private* other, int srcStart, int dstStart, int size)
 {
 	ComputeBuffer_VK* other_vk = (ComputeBuffer_VK*)other;
-	return 0;
+	return m_buffer->CopyTo(other_vk->GetBuffer(), srcStart, dstStart, size);
 }
 
 size_t ComputeBuffer_VK::GetSize()

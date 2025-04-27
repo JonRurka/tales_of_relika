@@ -1,6 +1,10 @@
 //#include "ComputeEngine.h"
 #include "OpenCL/ComputeEngine_OCL.h"
 
+#include "CL_SDK/cl.h"
+#include "CL_SDK/opencl.hpp"
+#include "CL_SDK/Utils/Utils.h"
+
 using namespace DynamicCompute::Compute::OCL;
 
 //#pragma comment(lib, "OpenCL.lib")
@@ -142,6 +146,7 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
 {
    
     platform_id = (cl_platform_id)pltform.platform;
+    printf("Init Platform ID: %X\n", platform_id);
 
    // context properties list - must be terminated with 0
    properties[0] = CL_CONTEXT_PLATFORM;
@@ -156,9 +161,13 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
 }
 
 ComputeContext* ComputeEngine::GetNewContext(OpenCL_Device_Info device) {
+    if (!mInitialized) {
+        return nullptr;
+    }
+    
     mContexts.emplace_back(ComputeContext(properties, device));
     auto& buf = mContexts.back();
-    //buf.mCanCallDispose = true;
+    buf.mCanCallDispose = true;
     return &buf;
 }
 
@@ -256,13 +265,14 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
     cl_int err;
     numContexts = 0;
 
-
     deviceID = (cl_device_id)device.cl_device;
 
     context = clCreateContext(properties, 1, &deviceID, NULL, NULL, &err);
 
     command_queue = clCreateCommandQueue(context, deviceID, 0, &err);
     numContexts = 1;
+
+    //printf("Creating Compute Context with device: %s\n", device.name);
 
     mInitialized = true;
 }
@@ -529,7 +539,7 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
    num = numContext;
    //buffer = new cl_mem[numContext];
    //command_queue = new cl_command_queue[numContext];
-   size = length;
+   mSize = length;
 
    context = contexts;
    command_queue = queue;
@@ -545,19 +555,47 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
 
 int ComputeBuffer::SetData(void* data)
 {
-   cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, data, 0, NULL, NULL);
+   cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, 0, mSize, data, 0, NULL, NULL);
 
    if (res != 0)
    {
        return res;
    }
 
-   res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, 0, 0, size, 0, NULL, NULL);
+   res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, 0, 0, mSize, 0, NULL, NULL);
 
    return res;
 }
 
 int ComputeBuffer::GetData(void* outData)
+{
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, 0, 0, mSize, 0, NULL, NULL);
+
+    if (res != 0)
+    {
+        return res;
+    }
+
+    res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, 0, mSize, outData, 0, NULL, NULL);
+
+   return res;
+}
+
+int ComputeBuffer::SetData(void* data, int size) 
+{
+    cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, data, 0, NULL, NULL);
+
+    if (res != 0)
+    {
+        return res;
+    }
+
+    res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, 0, 0, size, 0, NULL, NULL);
+
+    return res;
+}
+
+int ComputeBuffer::GetData(void* outData, int size) 
 {
     cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, 0, 0, size, 0, NULL, NULL);
 
@@ -568,7 +606,56 @@ int ComputeBuffer::GetData(void* outData)
 
     res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, outData, 0, NULL, NULL);
 
-   return res;
+    return res;
+}
+
+int ComputeBuffer::SetData(void* data, int DstStart, int size) 
+{
+    cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, DstStart, size, data, 0, NULL, NULL);
+
+    if (res != 0)
+    {
+        return res;
+    }
+
+    res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, DstStart, DstStart, size, 0, NULL, NULL);
+
+    return res;
+}
+
+int ComputeBuffer::GetData(void* outData, int SrcStart, int size) 
+{
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, SrcStart, SrcStart, size, 0, NULL, NULL);
+
+    if (res != 0)
+    {
+        return res;
+    }
+
+    res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, SrcStart, size, outData, 0, NULL, NULL);
+
+    return res;
+}
+
+int ComputeBuffer::CopyTo(ComputeBuffer* other) 
+{
+    int src_size = mSize;
+    int dst_size = other->mSize;
+    int size = std::min(src_size, dst_size);
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, 0, 0, size, 0, NULL, NULL);
+    return res;
+}
+
+int ComputeBuffer::CopyTo(ComputeBuffer* other, int size) 
+{
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, 0, 0, size, 0, NULL, NULL);
+    return res;
+}
+
+int ComputeBuffer::CopyTo(ComputeBuffer* other, int srcStart, int dstStart, int size) 
+{
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, srcStart, dstStart, size, 0, NULL, NULL);
+    return res;
 }
 
 void ComputeBuffer::Dispose()

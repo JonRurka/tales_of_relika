@@ -40,8 +40,22 @@ namespace DynamicCompute {
             DEVICE_TYPE_OTHER = 5,
         };
 
+        struct Platform {
+            void* platform;
+
+            char name[1000];
+            unsigned short name_size;
+
+            char vendor[1000];
+            unsigned short vendor_size;
+
+            char version[1000];
+            unsigned short version_size;
+        };
+
         struct OpenCL_Device_Info {
             void* cl_device;
+            Platform platform;
 
             char vendor[1000];
             unsigned short vendor_size;
@@ -134,19 +148,6 @@ namespace DynamicCompute {
                     return "UNKNOWN";
                 }
             }
-        };
-
-        struct Platform {
-            void* platform;
-
-            char name[1000];
-            unsigned short name_size;
-
-            char vendor[1000];
-            unsigned short vendor_size;
-
-            char version[1000];
-            unsigned short version_size;
         };
 
         /*struct Device {

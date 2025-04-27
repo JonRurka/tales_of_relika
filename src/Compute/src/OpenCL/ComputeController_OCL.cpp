@@ -34,6 +34,7 @@ IComputeProgram_private* ComputeController_OCL::AddProgram(IComputeProgram_priva
 	program->Init(name);
 	program->SetProgramDirectory(m_directory);
 	program->SetFileType(info.Type());
+	program->SetData(info.Data());
 	program->SetKernelNames(kernels);
 
 	
@@ -94,7 +95,7 @@ ComputeBuffer* ComputeController_OCL::NewBuffer(ComputeBuffer::Buffer_Type type,
 	return m_context->GetBuffer(type, length, external);
 }
 
-IComputeController_private* DynamicCompute::Compute::OCL::ComputeController_OCL::New()
+IComputeController_private* ComputeController_OCL::New()
 {
 	int index = m_controllers.size();
 	m_controllers.resize(index + 1);

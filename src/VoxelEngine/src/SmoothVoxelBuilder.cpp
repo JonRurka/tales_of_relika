@@ -4,6 +4,8 @@
 
 #include "Logger.h"
 
+#include <chrono>
+
 using namespace VoxelEngine;
 
 #define USE_CACHE false

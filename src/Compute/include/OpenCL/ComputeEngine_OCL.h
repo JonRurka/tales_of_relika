@@ -27,7 +27,7 @@ namespace DynamicCompute {
                 cl_mem buffer_staging;
                 cl_command_queue command_queue;
                 int num;
-                size_t size;
+                size_t mSize;
 
                 bool mInitialized{ false };
                 bool mDestroyed{ false };
@@ -53,7 +53,21 @@ namespace DynamicCompute {
 
                 int GetData(void* outData);
 
-                size_t GetSize() { return size; };
+                int SetData(void* data, int size);
+
+                int GetData(void* outData, int size);
+
+                int SetData(void* data, int DstStart, int size);
+
+                int GetData(void* outData, int SrcStart, int size);
+
+                int CopyTo(ComputeBuffer* other);
+
+                int CopyTo(ComputeBuffer* other, int size);
+
+                int CopyTo(ComputeBuffer* other, int srcStart, int dstStart, int size);
+
+                size_t GetSize() { return mSize; };
 
                 void Dispose();
             };
@@ -129,6 +143,8 @@ namespace DynamicCompute {
             };
 
             class ComputeContext {
+                friend class ComputeEngine;
+
                 std::map<std::string, ComputeProgram*> programs;
                 std::list<ComputeBuffer> mBuffers;
 
