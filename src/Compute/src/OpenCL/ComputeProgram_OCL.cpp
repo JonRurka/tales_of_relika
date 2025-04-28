@@ -54,6 +54,8 @@ int ComputeProgram_OCL::Build()
 			BuildProgramFromSource(std::string(m_data.begin(), m_data.end()), m_kernel_names);
 			break;
 		case IComputeProgram_private::FileType::Binary_Data:
+			printf("ComputeController_OCL: Adding program binary data\n");
+			BuildProgramFromBinary(m_data.data(), m_data.size(), m_kernel_names);
 			break;
 	}
 	return 0;

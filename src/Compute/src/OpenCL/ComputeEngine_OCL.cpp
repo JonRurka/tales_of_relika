@@ -267,6 +267,12 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
 
     deviceID = (cl_device_id)device.cl_device;
 
+    char driver_version[100];
+    memset(driver_version, 0, 100);
+    clGetDeviceInfo(deviceID, CL_DRIVER_VERSION, sizeof(driver_version), &driver_version, NULL);
+    printf("OpenCL Driver Version: %s\n", driver_version);
+    printf("OpenCl Platform Version: %s\n", ComputeEngine::Get_CL_Version().c_str());
+
     context = clCreateContext(properties, 1, &deviceID, NULL, NULL, &err);
 
     command_queue = clCreateCommandQueue(context, deviceID, 0, &err);
@@ -359,11 +365,17 @@ int ComputeProgram::Set_Binary(const void* binary, size_t length)
     cl_int err;
 #if CL_TARGET_OPENCL_VERSION >= 210
     program = clCreateProgramWithIL(m_context, binary, length, &err);
-    args += "-x spir -spir-std=1.4 ";
+    //args += "-x spir -spir-std=1.4 ";
+
+    //CL_INVALID_CONTEXT
 #else
     cl_device_id dvc = mContextObj->Get_CL_Device_ID();
     program = clCreateProgramWithBinary(m_context, 1, &dvc, &length, (const unsigned char**)&binary, NULL, &err)
 #endif
+    if (err == CL_INVALID_OPERATION) {
+        printf("CL_INVALID_OPERATION\n");
+    }
+
     printf("clCreateProgramWithIL: res %i\n", err);
     mInitialized = true;
     return err;
@@ -499,26 +511,30 @@ int ComputeKernel::SetBuffer(ComputeBuffer* buffer, int arg)
 
 int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
 {
-   cl_command_queue c_q = command_queue;
-   printf("Enqueue kernel.\n");
-   int res = clEnqueueNDRangeKernel(c_q, kernel, work_dim, NULL, global_work_size, NULL, 0, NULL, NULL);
-   printf("Finish enqueue kernel.\n");
-   
-   if (res != 0)
-   {
-       printf("ComputeKernel.Execute: Failed to enqueue Kernel: %i\n", res);
-   }
+    /*size_t local_world_size[3] = {
+        4, 4, 4
+    };*/
 
-   printf("clFinish.\n");
-   res = clFinish(command_queue);
-   printf("Finished clFinish.\n");
+    cl_command_queue c_q = command_queue;
+    printf("Enqueue kernel.\n");
+    int res = clEnqueueNDRangeKernel(c_q, kernel, work_dim, NULL, global_work_size, NULL, 0, NULL, NULL);
+    printf("Finish enqueue kernel.\n");
+    
+    if (res != 0)
+    {
+        printf("ComputeKernel.Execute: Failed to enqueue Kernel: %i\n", res);
+    }
 
-   if (res != 0)
-   {
-       printf("ComputeKernel.Execute: clFinish failed after kernel enqueue: %i\n", res);
-   }
+    printf("clFinish.\n");
+    res = clFinish(command_queue);
+    printf("Finished clFinish.\n");
 
-   return res;
+    if (res != 0)
+    {
+        printf("ComputeKernel.Execute: clFinish failed after kernel enqueue: %i\n", res);
+    }
+
+    return res;
 }
 
 void ComputeKernel::Dispose()

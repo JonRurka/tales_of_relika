@@ -33,7 +33,7 @@ void Test_OpenCL_Scene::Init()
 	//m_controllerInfo.SetProgramDir("C:/Users/Jon/Source/cpp_libs/VoxelEngine/shaders/Vulkan/test");
 
 	IComputeController* m_controller = ComputeInterface::GetComputeController(ComputeInterface::OpenCL, m_controllerInfo);
-	m_controller->NewReadWriteBuffer(1, 1, true);
+	//m_controller->NewReadWriteBuffer(1, 1, true);
 	//printf("Selected Device: %s, GPU: %i, CPU: %i, Comp Units: %i\n", picked_device.name, (int)picked_device.is_type_GPU, (int)picked_device.is_type_CPU, picked_device.num_compute_units);
 
 	std::string resource = Game_Resources::Shaders::Compute::TEST_OPENCL_SPIRV;
@@ -44,11 +44,11 @@ void Test_OpenCL_Scene::Init()
 	//IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(resource, IComputeProgram::FileType::Raw);
 	//program_info.SetData(shader_data);
 
-	IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(resource, IComputeProgram::FileType::Text_File);
+	IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(resource, IComputeProgram::FileType::Text_Data);
 	program_info.SetData(shader_data);
 
 	int elements = 16;
-	std::string kernel_name = "main";
+	std::string kernel_name = "main_cl";
 
 	program_info.AddKernel(kernel_name);
 
@@ -61,15 +61,33 @@ void Test_OpenCL_Scene::Init()
 
 	IComputeProgram::BindIndex ind{};
 	ind.GlobalIndex = 0;
+	ind.ParameterIndex = 0;
 	m_program->KernelSetBuffer(kernel_name, in_buffer, ind);
 
 	ind = {};
 	ind.GlobalIndex = 1;
+	ind.ParameterIndex = 1;
 	m_program->KernelSetBuffer(kernel_name, out_buffer, ind);
 
 
 	m_program->FinishBuild();
 	Logger::LogDebug(LOG_POS("Init"), "Finish Build program");
+
+	float* in_data = new float[elements];
+	for (int i = 0; i < elements; i++) {
+		in_data[i] = i;
+	}
+	in_buffer->SetData(in_data);
+
+	m_program->RunKernel(kernel_name, elements, 1, 1);
+
+	float* out_data = new float[elements];
+
+	out_buffer->GetData(out_data);
+
+	for (int i = 0; i < elements; i++) {
+		printf("%i: %f\n", i, out_data[i]);
+	}
 }
 
 void Test_OpenCL_Scene::Update(float dt)

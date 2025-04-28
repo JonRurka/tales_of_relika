@@ -45,6 +45,7 @@ def compile_shader(working_dir, resource_path, file_path, file_name):
     use_spirv = False
     spirv_opengl = False
     spirv_vulkan = False
+    spirv_opencl = False
     
     content = ""
     spirv_target = ""
@@ -57,15 +58,34 @@ def compile_shader(working_dir, resource_path, file_path, file_name):
     if ("SPIRV_VULKAN" in content):
         spirv_vulkan = True
         spirv_target = 'vulkan1.0'
-    use_spirv = (spirv_opengl or spirv_vulkan)
+    if ("SPIRV_OPENCL" in content):
+        spirv_opencl = True
+        spirv_target = ''
+    use_spirv = (spirv_opengl or spirv_vulkan or spirv_opencl)
     
     if use_spirv and global_use_spirv:
-        result = subprocess.run(
-            ['glslc.exe', file_name, '-o', '-', f'--target-env={spirv_target}', '-O0', '-g'],
-            #['glslangValidator.exe', '-G', '-o' 'tmp.spv']
-            capture_output=True,  
-            cwd=working_dir
-        )
+        if spirv_opencl:
+            result = subprocess.run(
+                ['clang', '-c', '-target', 'spir', '-O0', '-emit-llvm', '-o', 'tmp-llvm.bc', file_name],
+                capture_output=True,  
+                cwd=working_dir
+            )
+            if result.returncode == 0:
+                result = subprocess.run(
+                    ['llvm-spirv', 'tmp-llvm.bc', '-o', '-'],
+                    capture_output=True,  
+                    cwd=working_dir
+                )
+            temp_llvm_path = os.path.join(working_dir, 'tmp-llvm.bc')
+            if os.path.exists(temp_llvm_path):
+                os.remove(temp_llvm_path)
+        else:
+            result = subprocess.run(
+                ['glslc.exe', file_name, '-o', '-', f'--target-env={spirv_target}', '-O0', '-g'],
+                #['glslangValidator.exe', '-G', '-o' 'tmp.spv']
+                capture_output=True,  
+                cwd=working_dir
+            )
         if result.returncode == 0:
             output_bytes = result.stdout
             #compressed_data = zlib.compress(output_bytes, level=9)
@@ -236,7 +256,7 @@ def serialize_resources(prefix_letter, resource_map, data_map):
         
 
 print('Processing Shaders.')
-process_assets('resources/shaders', ['.comp', '.vert', '.frag'], process_shader_asset);
+process_assets('resources/shaders', ['.comp', '.cl', '.vert', '.frag'], process_shader_asset);
 serialize_shader_resources(shader_resources, shader_resource_file_bytes)
 #serialize_resources('s', data_resources, data_resource_bytes)
 print('\n')
