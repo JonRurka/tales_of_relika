@@ -3,6 +3,7 @@
 #include "marchingcubes_arrays.h"
 
 #include "Logger.h"
+#include "Utilities.h"
 
 #include <chrono>
 
@@ -15,6 +16,16 @@ using namespace VoxelEngine;
 #define COMPUTE_TRIANGES true
 
 #define VECTOR4_SIZE (sizeof(float) * 4)
+
+#define VK_EXT ".comp"
+#define CL_EXT ".cl"
+
+#if VOXEL_RUNTIME == VOXEL_RUNTIME_OPENCL
+#define EXT CL_EXT
+#elif VOXEL_RUNTIME == VOXEL_RUNTIME_VULKAN
+#define EXT VK_EXT
+#endif
+
 
 #define BASE_RESOURCE_DIR "compute::voxelEngine::"
 
@@ -289,37 +300,58 @@ void SmoothVoxelBuilder::CalculateVariables()
 
 void SmoothVoxelBuilder::InitializeComputePrograms()
 {
-    // TODO: Smarter logic for getting device.
-    std::vector<Vulkan_Device_Info> devices = ComputeInterface::GetSupportedDevices_Vulkan();
-    m_device = devices[1];
-    Logger::LogDebug(LOG_POS("InitializeComputePrograms"), "Using Compute Device: %s", m_device.Name);
+    IComputeProgram::FileType type;
+    if (m_voxel_runtime == VOXEL_RUNTIME_OPENCL) {
+        type = IComputeProgram::FileType::Text_Data;
 
-    printf("Creating programs...\n");
-    printf(m_shaderDir.c_str());
+        m_device_cl = Utilities::Get_Recommended_Device();
+        Logger::LogDebug(LOG_POS("InitializeComputePrograms"), "Using OpenCL Compute Device: %s", m_device_cl.name);
 
-    m_controllerInfo.device = &m_device;
-    m_controllerInfo.SetProgramDir(m_shaderDir);
-    //m_controllerInfo.SetProgramDir("C:/Users/Jon/Source/cpp_libs/VoxelEngine/shaders/Vulkan/test");
+        m_controllerInfo.device = &m_device_cl;
+        m_controllerInfo.platform = m_device_cl.platform;
+        m_controllerInfo.SetProgramDir("");
 
-    m_controller = ComputeInterface::GetComputeController(ComputeInterface::VULKAN, m_controllerInfo);
+        m_controller = ComputeInterface::GetComputeController(ComputeInterface::OpenCL, m_controllerInfo);
+    }
+    else if (m_voxel_runtime == VOXEL_RUNTIME_VULKAN) {
+        type = IComputeProgram::FileType::Binary_Data;
+
+        // TODO: Smarter logic for getting device.
+        std::vector<Vulkan_Device_Info> devices = ComputeInterface::GetSupportedDevices_Vulkan();
+        m_device_vk = devices[1];
+        Logger::LogDebug(LOG_POS("InitializeComputePrograms"), "Using Vulkan Compute Device: %s", m_device_vk.Name);
+
+        printf("Creating programs...\n");
+        printf(m_shaderDir.c_str());
+
+        m_controllerInfo.device = &m_device_vk;
+        m_controllerInfo.SetProgramDir("");
+        //m_controllerInfo.SetProgramDir("C:/Users/Jon/Source/cpp_libs/VoxelEngine/shaders/Vulkan/test");
+
+        m_controller = ComputeInterface::GetComputeController(ComputeInterface::VULKAN, m_controllerInfo);
+    }
+    else {
+        Logger::LogFatal(LOG_POS("InitializeComputePrograms"), "Invalid voxel runtime");
+        return;
+    }
 
     // program 1
     
     //m_program_compute = new VoxelComputeProgram(m_controller, PROGRAM);
 
-    m_program_heightmap = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_HEIGHTMAP, m_WorkGroups);
-    m_program_iso_field = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_ISO_FIELD, m_WorkGroups);
+    m_program_heightmap = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_HEIGHTMAP + EXT, m_WorkGroups, type);
+    m_program_iso_field = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_ISO_FIELD + EXT, m_WorkGroups, type);
     //m_program_material_field = new VoxelComputeProgram(m_controller, PROGRAM_MATERIAL_FIELD, m_WorkGroups);
-    m_program_unify_fields = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_UNIFY_FIELDS, m_WorkGroups);
+    m_program_unify_fields = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_UNIFY_FIELDS + EXT, m_WorkGroups, type);
 
     //m_program_smoothrender_createvertlist = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_CREATE_VERTLIST, m_WorkGroups);
     //m_program_smoothrender_createmesh = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_CREATE_MESH, m_WorkGroups);
 
 
-    m_program_smoothrender_construct = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_CONSTRUCT, m_WorkGroups);
-    m_program_smoothrender_mark = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK, m_WorkGroups);
+    m_program_smoothrender_construct = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_CONSTRUCT + EXT, m_WorkGroups, type);
+    m_program_smoothrender_mark = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK + EXT, m_WorkGroups, type);
     //m_program_smoothrender_stitch = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_STITCH, 1);
-    m_program_smoothrender_stitch_async = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_STITCH_ASYNC, m_WorkGroups);
+    m_program_smoothrender_stitch_async = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_STITCH_ASYNC + EXT, m_WorkGroups, type);
 }
 
 void SmoothVoxelBuilder::CreateComputeBuffers()

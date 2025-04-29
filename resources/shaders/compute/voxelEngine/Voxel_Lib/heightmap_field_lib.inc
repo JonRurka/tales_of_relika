@@ -12,13 +12,13 @@ readwrite_buffer_float(2, out_data)
 readwrite_buffer_float(3, out_debug_data)
 
 
-float height_sample(float x, float y, STRUCT Settings s){
+float height_sample_3(float x, float y, STRUCT Settings s){
 
     return Sample_2D(s, x, y);
 }
 
-float height_sample(fvec2 p, STRUCT Settings s){
-    return height_sample(p.x, p.y, s);
+float height_sample_2(fvec2 p, STRUCT Settings s){
+    return height_sample_3(p.x, p.y, s);
 }
 
 void setHeightVal(uint index, float height){
@@ -41,7 +41,7 @@ void heightmap_gen_main(uint index) {
 	
 	uint fullSize = (ChunkSizeX + 2) * (ChunkSizeY + 2);
 	
-	uint inst_index = int(index) / fullSize;
+	uint inst_index = INT(index) / fullSize;
     STRUCT Run_Settings run_settings = GET_RUN_SETTINGS(inst_index);
 	
 	uint numBatchesPerGroup = static_settings.batches[0];
@@ -89,7 +89,7 @@ void heightmap_gen_main(uint index) {
     s.ChunkSizeZ = ChunkSizeY + 1;
     s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
 	
-	float height_sample_val = height_sample(pos_originWorld.x, pos_originWorld.y, s);
+	float height_sample_val = height_sample_3(pos_originWorld.x, pos_originWorld.y, s);
 	
 	setHeightVal(GetBatchIndex((batchIndexExpanded % UINT(static_settings.batches[0])), voxel_index, fullSize), height_sample_val);
 	

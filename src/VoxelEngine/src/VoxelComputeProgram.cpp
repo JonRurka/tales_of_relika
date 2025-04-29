@@ -5,14 +5,14 @@
 using namespace DynamicCompute::Compute;
 using namespace VoxelEngine;
 
-VoxelComputeProgram::VoxelComputeProgram(IComputeController* controller, std::string name) 
+VoxelComputeProgram::VoxelComputeProgram(IComputeController* controller, std::string name, IComputeProgram::FileType type)
 {
-	Initialize(controller, name, 16);
+	Initialize(controller, name, 16, type);
 }
 
-VoxelComputeProgram::VoxelComputeProgram(IComputeController* controller, std::string name, int workGroupSize)
+VoxelComputeProgram::VoxelComputeProgram(IComputeController* controller, std::string name, int workGroupSize, IComputeProgram::FileType type)
 {
-	Initialize(controller, name, workGroupSize);
+	Initialize(controller, name, workGroupSize, type);
 }
 
 void VoxelComputeProgram::AddBuffer(int bind, IComputeBuffer* buffer)
@@ -42,7 +42,7 @@ void VoxelComputeProgram::Execute(int size_x, int size_y, int size_z)
 	m_program->RunKernel(kernel_name, size_x, size_y, size_z);
 }
 
-void VoxelComputeProgram::Initialize(IComputeController* controller, std::string name, int workGroupSize)
+void VoxelComputeProgram::Initialize(IComputeController* controller, std::string name, int workGroupSize, IComputeProgram::FileType type)
 {
 	m_controller = controller;
 	m_name = name;
@@ -53,7 +53,8 @@ void VoxelComputeProgram::Initialize(IComputeController* controller, std::string
 	std::vector<uint8_t> shader_data(shader_data_tmp.begin(), shader_data_tmp.end());
 
 	//IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(m_name, IComputeProgram::FileType::Binary);
-	IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(m_name, IComputeProgram::FileType::Binary_Data);
+	//IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(m_name, IComputeProgram::FileType::Binary_Data);
+	IComputeProgram::ProgramInfo program_info = IComputeProgram::ProgramInfo(m_name, type);
 	program_info.SetData(shader_data);
 	
 	program_info.AddKernel(kernel_name);

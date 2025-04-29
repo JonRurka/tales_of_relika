@@ -13,49 +13,7 @@
 //
 // Modules
 //
-STRUCT Module GetModule(float x, float y, float z)
-{
-   STRUCT Module module;
-
-   module.Value = 0;
-   module.m_X = x;
-   module.m_Y = y;
-   module.m_Z = z;
-
-   /* Base module settings for Perlin, Billow, and RidgedMulti*/
-   module.m_frequency = DEFAULT_FREQUENCY;
-   module.m_lacunarity = DEFAULT_LACUNARITY;
-   module.m_noiseQuality = DEFAULT_QUALITY;
-   module.m_octaveCount = DEFAULT_OCTAVE_COUNT;
-   module.m_persistence = DEFAULT_PERSISTENCE;
-   module.m_seed = DEFAULT_SEED;
-
-   /* Specific to Rigdged Multi Facture*/
-   module.m_ridged_offset = 1.0;
-   module.m_ridged_gain = 2.0;
-   module.m_ridged_H = 1.0;
-
-   /* Specific to Voronoi */
-   module.m_voronoi_displacement = DEFAULT_VORONOI_DISPLACEMENT;
-   module.m_voronoi_enableDistance = false;
-
-   /* Specific to Cache.*/
-   module.m_cachedValue = 0;
-   module.m_cache_isCached = false;
-   module.m_cache_xCache = 0;
-   module.m_cache_yCache = 0;
-   module.m_cache_zCache = 0;
-
-   /* Specific to Turbulence*/
-   module.m_turb_power = DEFAULT_TURBULENCE_POWER;
-   module.m_turb_seed = DEFAULT_TURBULENCE_SEED;
-   module.m_turb_frequency = DEFAULT_TURBULENCE_FREQUENCY;
-   module.m_turb_roughness = DEFAULT_TURBULENCE_ROUGHNESS;
-
-   return module;
-}
-
-STRUCT Module GetModule(STRUCT Module m)
+STRUCT Module GetModule_1(STRUCT Module m)
 {
    STRUCT Module module;
 
@@ -116,16 +74,58 @@ STRUCT Module GetModule(STRUCT Module m)
    return module;
 }
 
-STRUCT Module GetModule(float x, float y, float z, float value)
+STRUCT Module GetModule_2(STRUCT Module m, float value)
 {
-   STRUCT Module module = GetModule(x, y, z);
+   STRUCT Module module = GetModule_1(m);
    module.Value = value;
    return module;
 }
 
-STRUCT Module GetModule(STRUCT Module m, float value)
+STRUCT Module GetModule_3(float x, float y, float z)
 {
-   STRUCT Module module = GetModule(m);
+   STRUCT Module module;
+
+   module.Value = 0;
+   module.m_X = x;
+   module.m_Y = y;
+   module.m_Z = z;
+
+   /* Base module settings for Perlin, Billow, and RidgedMulti*/
+   module.m_frequency = DEFAULT_FREQUENCY;
+   module.m_lacunarity = DEFAULT_LACUNARITY;
+   module.m_noiseQuality = DEFAULT_QUALITY;
+   module.m_octaveCount = DEFAULT_OCTAVE_COUNT;
+   module.m_persistence = DEFAULT_PERSISTENCE;
+   module.m_seed = DEFAULT_SEED;
+
+   /* Specific to Rigdged Multi Facture*/
+   module.m_ridged_offset = 1.0;
+   module.m_ridged_gain = 2.0;
+   module.m_ridged_H = 1.0;
+
+   /* Specific to Voronoi */
+   module.m_voronoi_displacement = DEFAULT_VORONOI_DISPLACEMENT;
+   module.m_voronoi_enableDistance = false;
+
+   /* Specific to Cache.*/
+   module.m_cachedValue = 0;
+   module.m_cache_isCached = false;
+   module.m_cache_xCache = 0;
+   module.m_cache_yCache = 0;
+   module.m_cache_zCache = 0;
+
+   /* Specific to Turbulence*/
+   module.m_turb_power = DEFAULT_TURBULENCE_POWER;
+   module.m_turb_seed = DEFAULT_TURBULENCE_SEED;
+   module.m_turb_frequency = DEFAULT_TURBULENCE_FREQUENCY;
+   module.m_turb_roughness = DEFAULT_TURBULENCE_ROUGHNESS;
+
+   return module;
+}
+
+STRUCT Module GetModule_4(float x, float y, float z, float value)
+{
+   STRUCT Module module = GetModule_3(x, y, z);
    module.Value = value;
    return module;
 }
@@ -249,11 +249,11 @@ float GradientCoherentNoise3D(float x, float y, float z, int seed, int noiseQual
 {
    /* Create a unit-length cube aligned along an integer boundary.  This cube
     surrounds the input point.*/
-   int x0 = (x > 0.0 ? int(x) : int(x) - 1);
+   int x0 = (x > 0.0 ? INT(x) : INT(x) - 1);
    int x1 = x0 + 1;
-   int y0 = (y > 0.0 ? int(y) : int(y) - 1);
+   int y0 = (y > 0.0 ? INT(y) : INT(y) - 1);
    int y1 = y0 + 1;
-   int z0 = (z > 0.0 ? int(z) : int(z) - 1);
+   int z0 = (z > 0.0 ? INT(z) : INT(z) - 1);
    int z1 = z0 + 1;
 
    /* Map the difference between the coordinates of the input value and the

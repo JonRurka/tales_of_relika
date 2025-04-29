@@ -352,8 +352,8 @@ ComputeProgram::ComputeProgram(ComputeContext* context_obj, cl_context context, 
 
 int ComputeProgram::Set_Source(const char* source)
 {
-   cl_int err;
-   printf("%s\n", source);
+   cl_int err = 0;
+   //printf("%s\n", source);
    program = clCreateProgramWithSource(m_context, 1, (const char **)&source, NULL, &err);
    args += "-cl-std=CL2.0 ";
    mInitialized = true;

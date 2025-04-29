@@ -5,7 +5,7 @@
 using namespace DynamicCompute::Compute;
 using namespace DynamicCompute::Compute::OCL;
 
-#define ERROR_SIZE 10000
+#define ERROR_SIZE 100000
 #define DEFAULT_BINARY_FILE_TYPE "spv"
 #define DEFAULT_TEXT_FILE_TYPE "cl"
 
@@ -276,6 +276,7 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromB
 
 	//m_cl_build_res = m_builder->BuildFromBinary(binary, length);
 	char errorstr[ERROR_SIZE];
+	memset(errorstr, 0, ERROR_SIZE);
 	int set_b_res = m_program->Set_Binary(binary, length);
 	if (set_b_res != 0)
 	{
@@ -335,6 +336,7 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromS
 
 	//m_cl_build_res = m_builder->BuildFromSource();
 	char errorstr[ERROR_SIZE];
+	memset(errorstr, 0, ERROR_SIZE);
 	m_program->Set_Source(content.c_str());
 	m_cl_build_res = m_program->Build(errorstr, ERROR_SIZE);
 	std::string error_msg = m_cl_build_res != 0 ? errorstr : "Program Built Successfully";
@@ -358,7 +360,7 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromS
 	{
 		m_cur_state = ProgramBuildState::BuildError;
 		m_build_error = error_msg;
-		printf("Got non-zero result from BuildFromBinary: %i\n", m_cl_build_res);
+		printf("Got non-zero result from BuildProgramFromSource: %i\n", m_cl_build_res);
 		//printf("Build Error: %s\n", m_builder->GetError().c_str());
 	}
 

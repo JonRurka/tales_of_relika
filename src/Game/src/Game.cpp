@@ -21,8 +21,8 @@ void Game::Init()
 
 	Logger::LogInfo(LOG_POS("Init"), "Game Initialized.");
 
-	//Scene* s = Load_Scene<Voxel_Test_Scene>("test");
-	Scene* s = Load_Scene<Test_OpenCL_Scene>("test");
+	Scene* s = Load_Scene<Voxel_Test_Scene>("test");
+	//Scene* s = Load_Scene<Test_OpenCL_Scene>("test");
 	s->Activate(true);
 }
 

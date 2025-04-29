@@ -62,13 +62,13 @@ float iso_sample_3D(fvec3 p, STRUCT Settings s){
     return iso_sample_3D(p.x, p.y, p.z,  s);
 }
 
-float height_sample(float x, float y, STRUCT Settings s){
+float height_sample_3(float x, float y, STRUCT Settings s){
 
     return Sample_2D(s, x, y);
 }
 
-float height_sample(fvec2 p, STRUCT Settings s){
-    return height_sample(p.x, p.y, s);
+float height_sample_2(fvec2 p, STRUCT Settings s){
+    return height_sample_3(p.x, p.y, s);
 }
 
 float Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, float edit_iso){
@@ -154,7 +154,7 @@ float iso_sample(STRUCT Settings s, ivec3 p, fvec3 world_pos, uint size_x, uint 
     //vec3 world_pos = FVEC3(global_pos.x * s.VoxelsPerMeter, global_pos.y * s.VoxelsPerMeter, global_pos.z * s.VoxelsPerMeter);
 
     float iso = iso_sample_3D(world_pos, s);
-    float height = height_sample(world_pos.x, world_pos.y, s);
+    float height = height_sample_3(world_pos.x, world_pos.y, s);
     
     //float iso = getISOval(GetBatchIndex((batch % batchesPerGroup), voxel_index, fullSize)).w;
     //float height = getHeightVal(GetBatchIndex((batch % batchesPerGroup), height_index, heights_size));
@@ -261,13 +261,13 @@ fvec4 material_sample(float iso, fvec3 normal, fvec3 world_pos, bool isSurface, 
     float stand_top_offset = 60;
     float stand_bottom = -30;
 
-    STRUCT Module dirt_patch = GetModule(world_pos.x * 0.02, 0, world_pos.y * 0.035);
+    STRUCT Module dirt_patch = GetModule_3(world_pos.x * 0.02, 0, world_pos.y * 0.035);
     dirt_patch.m_seed = 5346;
     dirt_patch.m_frequency = 0.7;
     dirt_patch.m_noiseQuality = QUALITY_STD;
     dirt_patch = Perlin_GetValue(dirt_patch);
 
-    STRUCT Module gravel_patch = GetModule(world_pos.x * 0.02, 0, world_pos.y * 0.02);
+    STRUCT Module gravel_patch = GetModule_3(world_pos.x * 0.02, 0, world_pos.y * 0.02);
     gravel_patch.m_seed = 2054;
     gravel_patch.m_frequency = 0.3;
     gravel_patch.m_noiseQuality = QUALITY_STD;
@@ -311,7 +311,7 @@ fvec4 material_sample(float iso, fvec3 normal, fvec3 world_pos, bool isSurface, 
 
     }
 
-    STRUCT Module stone_region_start_patch = GetModule(world_pos.x * 0.025, 0, world_pos.y * 0.025);
+    STRUCT Module stone_region_start_patch = GetModule_3(world_pos.x * 0.025, 0, world_pos.y * 0.025);
     stone_region_start_patch.m_seed = 6939;
     stone_region_start_patch.m_frequency = 0.3;
     stone_region_start_patch.m_noiseQuality = QUALITY_STD;

@@ -48,13 +48,13 @@ float iso_sample_3D(fvec3 p, STRUCT Settings s){
     return iso_sample_3D(p.x, p.y, p.z, s);
 }
 
-float height_sample(float x, float y, STRUCT Settings s){
+float height_sample_3(float x, float y, STRUCT Settings s){
 
     return Sample_2D(s, x, y);
 }
 
-float height_sample(fvec2 p, STRUCT Settings s){
-    return height_sample(p.x, p.y, s);
+float height_sample_2(fvec2 p, STRUCT Settings s){
+    return height_sample_3(p.x, p.y, s);
 }
 
 float Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, float edit_iso){
@@ -135,7 +135,7 @@ float Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso
 
 float iso_sample(STRUCT Settings s, ivec3 p, fvec3 world_pos){
     float iso = iso_sample_3D(world_pos, s);
-    float height = height_sample(world_pos.x, world_pos.y, s);
+    float height = height_sample_3(world_pos.x, world_pos.y, s);
 
     return iso;// Combine_ISO(s, p, world_pos, iso, height, 0);
 }
@@ -513,7 +513,7 @@ void smoothrender_construct_main(uint index)
 {
 	STRUCT Static_Settings static_settings = GET_STATIC_SETTINGS();
 	
-	uint inst_index = int(index) / static_settings.FullChunkSize[0];
+	uint inst_index = INT(index) / static_settings.FullChunkSize[0];
 	STRUCT Run_Settings run_settings = GET_RUN_SETTINGS(inst_index);
 	
 	int batchIndex = run_settings.Location.w;

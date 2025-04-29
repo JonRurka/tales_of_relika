@@ -32,7 +32,7 @@
 
 #define FLOAT(val) float(val)
 
-#else // OpenCL or DirectComp
+#elif USL_DIRECTX_UNITY3D == 1  // DirectComp
 
 #define fvec2 float2
 #define fvec3 float3
@@ -55,6 +55,28 @@
 
 #define FLOAT(val) (float)(val)
 
+#elif USL_OPENCL == 1  // OpenCL
+
+#define fvec2 float2
+#define fvec3 float3
+#define fvec4 float4
+
+#define ivec2 int2
+#define ivec3 int3
+#define ivec4 int4
+
+#define uvec2 uint2
+#define uvec3 uint3
+#define uvec4 uint4
+
+#define fmat4x4 float4x4
+#define fmat3x3 float3x3
+
+#define INT(val) (int)(val)
+
+#define UINT(val) (uint)(val)
+
+#define FLOAT(val) (float)(val)
 
 #endif // OpenCL or DirectComp
 
@@ -137,6 +159,10 @@
 #elif USL_DIRECTX_UNITY3D == 1
 
 #define CONST_ARRAY static const
+
+#elif USL_OPENCL == 1
+
+#define CONST_ARRAY constant
 
 #endif
 // TODO: OpenCL

@@ -12,8 +12,8 @@ namespace VoxelEngine {
 	public:
 
 		VoxelComputeProgram() {};
-		VoxelComputeProgram(IComputeController* controller, std::string name);
-		VoxelComputeProgram(IComputeController* controller, std::string name, int workGroupSize);
+		VoxelComputeProgram(IComputeController* controller, std::string name, IComputeProgram::FileType type);
+		VoxelComputeProgram(IComputeController* controller, std::string name, int workGroupSize, IComputeProgram::FileType type);
 
 		void AddBuffer(int bind, IComputeBuffer* buffer);
 
@@ -23,12 +23,12 @@ namespace VoxelEngine {
 
 	private:
 
-		void Initialize(IComputeController* controller, std::string name, int workGroupSize);
+		void Initialize(IComputeController* controller, std::string name, int workGroupSize, IComputeProgram::FileType type);
 
 		bool finalized = false;
 		bool initialized = false;
 
-		std::string kernel_name = "main";
+		std::string kernel_name = "main_cl";
 
 		IComputeController* m_controller = nullptr;
 

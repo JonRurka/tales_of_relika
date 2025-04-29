@@ -11,7 +11,7 @@
 
 
 float Perlin_sample_2D(float x, float y, float horizontal_scale, float frequency, float amp, int seed){
-    STRUCT Module smooth_bumps = GetModule(x * horizontal_scale, 0, y * horizontal_scale);
+    STRUCT Module smooth_bumps = GetModule_3(x * horizontal_scale, 0, y * horizontal_scale);
     smooth_bumps.m_seed = seed;
     smooth_bumps.m_frequency = frequency;
     smooth_bumps.m_noiseQuality = QUALITY_STD;
@@ -62,7 +62,7 @@ float crater_heightmap_sample(float x, float y, float R, float offset, float def
 }
 
 float CaveSample(STRUCT Settings s, float x, float y, float z, float scale, float height, float power){
-    STRUCT Module cave_module = GetModule(x / scale, y / scale, z / scale);
+    STRUCT Module cave_module = GetModule_3(x / scale, y / scale, z / scale);
     cave_module.m_seed = s.seed;
     cave_module.m_frequency = 0.15;
     cave_module.m_noiseQuality = s.quality;
@@ -133,7 +133,7 @@ float CraterSandRing(STRUCT Settings s, float x, float y, float n1, float n2){
     float center_dist = distance(FVEC2(0, 0), FVEC2(x, y));
 
     float horizontal_scale = 0.04;
-    STRUCT Module smooth_bumps = GetModule(x * horizontal_scale, 0, y * horizontal_scale);
+    STRUCT Module smooth_bumps = GetModule_3(x * horizontal_scale, 0, y * horizontal_scale);
     smooth_bumps.m_seed = 3095;
     smooth_bumps.m_frequency = 0.8;
     smooth_bumps.m_noiseQuality = s.quality;
@@ -159,7 +159,7 @@ float CraterTerrainVariation(STRUCT Settings s, float x, float y){
     //return 0;
 
     float horizontal_scale = 0.03;
-    STRUCT Module smooth_bumps = GetModule(x * horizontal_scale, 0, y * horizontal_scale);
+    STRUCT Module smooth_bumps = GetModule_3(x * horizontal_scale, 0, y * horizontal_scale);
     smooth_bumps.m_seed = s.seed;
     smooth_bumps.m_frequency = 0.5;
     smooth_bumps.m_noiseQuality = s.quality;
@@ -176,12 +176,12 @@ float MountainTerrainSample(STRUCT Settings s, float x, float y)
     //return x/3;
     return 0;
 
-    STRUCT Module perlin_mountains = GetModule(x, 0, y);
+    STRUCT Module perlin_mountains = GetModule_3(x, 0, y);
     perlin_mountains.m_seed = s.seed;
     perlin_mountains.m_frequency = 0.5;
     perlin_mountains.m_noiseQuality = s.quality;
 
-    /*Module mountains = GetModule(x, 0, y);
+    /*Module mountains = GetModule_3(x, 0, y);
     mountains.m_seed = s.seed;
     mountains.m_frequency = 0.5;
     mountains.m_lacunarity = 2;

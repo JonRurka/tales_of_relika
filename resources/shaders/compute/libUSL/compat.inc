@@ -11,9 +11,6 @@
 #define FMOD(x, y) (x - y * floor(x/y))
 
 
-#define FABS(val) abs(val)
-
-
 #define SQR_MAG(val) dot(val, val)
 
 float sqrMagnitude(fvec3 val) {
@@ -28,7 +25,8 @@ float sqrMagnitude(fvec3 val) {
         out_val = 0; 									\
     } 													\
 	else { 												\
-		float num2 = clamp(dot(from, to) / num, -1, 1); \
+		float dot_val1 = dot(from, to);					\
+		float num2 = clamp(dot_val1 / num, -1.0f, 1.0f);	\
 		out_val = acos(num2) * 57.29578f; 				\
 	}
 
@@ -38,7 +36,8 @@ float vector_angle(fvec3 from, fvec3 to){
     {
         return 0;
     }
-    float num2 = clamp(dot(from, to) / num, -1, 1);
+	float dot_val2 = dot(from, to);
+    float num2 = clamp(dot_val2 / num, -1.0f, 1.0f);
     return acos(num2) * 57.29578f;
 }
 
@@ -48,16 +47,19 @@ float vector_angle(fvec3 from, fvec3 to){
 
 #if USL_VULKAN == 1
 
-#define LERP(__start__, __end__, __delta__) mix(__start__, __end__, __delta__)
+#define FABS(val) abs(val)
+#define LERP(_start_, _end_, _delta_) mix(_start_, _end_, _delta_)
 
 #elif USL_OPENCL == 1
 
-#define LERP(__start__, __end__, __delta__) lerp(__start__, __end__, __delta__)
+#define FABS(val) fabs(val)
+#define LERP(_start_, _end_, _delta_) lerp(_start_, _end_, _delta_)
 
 
 #elif USL_DIRECTX_UNITY3D == 1
 
-#define LERP(__start__, __end__, __delta__) lerp(__start__, __end__, __delta__)
+#define FABS(val) abs(val)
+#define LERP(_start_, _end_, _delta_) lerp(_start_, _end_, _delta_)
 
 
 #endif

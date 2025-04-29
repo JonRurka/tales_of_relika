@@ -21,7 +21,7 @@ struct Run_Settings{
 
 struct Materials{
     ivec4 material_types;
-    ivec4 material_ratios;
+    fvec4 material_ratios;
 };
 
 struct ISO_Material{
@@ -63,7 +63,7 @@ STRUCT Polygon New_Polygon(fvec4 v1, fvec4 v2, fvec4 v3){
 STRUCT Materials New_Materials(){
 	STRUCT Materials mat;
 	mat.material_types = IVEC4_ZERO;
-	mat.material_ratios = IVEC4_ZERO;
+	mat.material_ratios = FVEC4_ZERO;
 	return mat;
 }
 
@@ -71,7 +71,7 @@ STRUCT ISO_Material New_ISO_Material(){
 	STRUCT ISO_Material mat;
 	mat.final_iso = FVEC4_ZERO;
 	mat.material_types = IVEC4_ZERO;
-	mat.material_ratios = IVEC4_ZERO;
+	mat.material_ratios = FVEC4_ZERO;
 	return mat;
 }
 
@@ -82,7 +82,7 @@ STRUCT GridPoint New_GridPoint(){
 	res.globalPosition = FVEC4_ZERO;
 	res.normal = FVEC4_ZERO;
 	res.type = IVEC4_ZERO;
-	res.type_ratio = IVEC4_ZERO;
+	res.type_ratio = FVEC4_ZERO;
 	return res;
 }
 

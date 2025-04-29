@@ -63,25 +63,33 @@ def compile_shader(working_dir, resource_path, file_path, file_name):
         spirv_target = ''
     use_spirv = (spirv_opengl or spirv_vulkan or spirv_opencl)
     
+    opencl_compile_cmd = ['clang', '-c', '-target', 'spir', '-O0', '-emit-llvm', '-o', 'tmp-llvm.bc', file_name]
+    llvm_convert_cmd = ['llvm-spirv', 'tmp-llvm.bc', '-o', '-']
+    
+    glsl_compile_cmd = ['glslc.exe', file_name, '-o', '-', f'--target-env={spirv_target}', '-O0']
+    
+    opencl_preprocess_cmd = ['gcc', '-E', '-x', 'c', file_name, '-o', '-']
+    glsl_preprocess_cmd = ['glslc.exe', '-E', file_name, '-o', '-']
+    
     if use_spirv and global_use_spirv:
         if spirv_opencl:
             result = subprocess.run(
-                ['clang', '-c', '-target', 'spir', '-O0', '-emit-llvm', '-o', 'tmp-llvm.bc', file_name],
+                opencl_compile_cmd,
                 capture_output=True,  
                 cwd=working_dir
             )
             if result.returncode == 0:
                 result = subprocess.run(
-                    ['llvm-spirv', 'tmp-llvm.bc', '-o', '-'],
+                    llvm_convert_cmd,
                     capture_output=True,  
                     cwd=working_dir
                 )
             temp_llvm_path = os.path.join(working_dir, 'tmp-llvm.bc')
             if os.path.exists(temp_llvm_path):
                 os.remove(temp_llvm_path)
-        else:
+        else:            
             result = subprocess.run(
-                ['glslc.exe', file_name, '-o', '-', f'--target-env={spirv_target}', '-O0', '-g'],
+                glsl_compile_cmd,
                 #['glslangValidator.exe', '-G', '-o' 'tmp.spv']
                 capture_output=True,  
                 cwd=working_dir
@@ -94,9 +102,7 @@ def compile_shader(working_dir, resource_path, file_path, file_name):
         else:
             print('###### COMPILATION ERROR ########')
             print(f"shader '{resource_path}' complication failed with return code: {result.returncode}")
-            #print(f"Error: {result.stderr}")
             output_str = str(result.stderr)
-            #if 'error generated.' in output_str:
             output_lines = output_str.split('\\n')
             print(f'Errors Generated for {file_name}:');
             for x in range(len(output_lines)):
@@ -104,11 +110,36 @@ def compile_shader(working_dir, resource_path, file_path, file_name):
             print('#################################')
             return dict(success=False, is_spirv=True, content=b'');
     else:
-        asset_bytes = b""
-        with open(file_path, 'rb') as file_obj:
-            #asset_bytes = zlib.compress(file_obj.read(), level=9)
-            asset_bytes = file_obj.read()
-        return dict(success=True, is_spirv=False, content=asset_bytes)
+        preprocess_cmd = glsl_preprocess_cmd
+        if ('.cl' in file_name):
+            preprocess_cmd = opencl_preprocess_cmd
+        
+        result = subprocess.run(
+            preprocess_cmd,
+            capture_output=True,  
+            cwd=working_dir
+        )
+        if result.returncode == 0:
+            output_bytes = result.stdout
+            #compressed_data = zlib.compress(output_bytes, level=9)
+            decompressed_data = output_bytes
+            return dict(success=True, is_spirv=False, content=decompressed_data);
+        else:
+            print('###### PREPROCESSOR ERROR ########')
+            print(f"shader '{resource_path}' preprocessor ({preprocess_cmd[0]}) failed with return code: {result.returncode}")
+            output_str = str(result.stderr)
+            output_lines = output_str.split('\\n')
+            print(f'Errors Generated for {file_name}:');
+            for x in range(len(output_lines)):
+                print (f"\t{output_lines[x].replace('\\r', '').replace('\\n', '').replace("\\'", "'")}")
+            print('#################################')
+            return dict(success=False, is_spirv=False, content=b'');
+        
+        #asset_bytes = b""
+        #with open(file_path, 'rb') as file_obj:
+        #    #asset_bytes = zlib.compress(file_obj.read(), level=9)
+        #    asset_bytes = file_obj.read()
+        #return dict(success=True, is_spirv=False, content=asset_bytes)
     """
     result = subprocess.run(
         #['glslc.exe', file, '-o', '', '--target-env=opengl4.5'],
@@ -256,7 +287,7 @@ def serialize_resources(prefix_letter, resource_map, data_map):
         
 
 print('Processing Shaders.')
-process_assets('resources/shaders', ['.comp', '.cl', '.vert', '.frag'], process_shader_asset);
+process_assets('resources/shaders', ['.cl', '.vert', '.frag'], process_shader_asset);
 serialize_shader_resources(shader_resources, shader_resource_file_bytes)
 #serialize_resources('s', data_resources, data_resource_bytes)
 print('\n')

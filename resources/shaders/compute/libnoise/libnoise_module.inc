@@ -80,7 +80,7 @@ STRUCT Module Billow_GetValue(STRUCT Module module)
 
       seed = (module.m_seed + curOctave) & 0xffffffff;
       signal = GradientCoherentNoise3D(nx, ny, nz, seed, module.m_noiseQuality);
-      signal = 2.0 * FABS(signal) - 1.0;
+      signal = 2.0f * FABS(signal) - 1.0f;
       value += signal * curPersistence;
 
       // Prepare the next octave.
@@ -343,7 +343,8 @@ STRUCT Module Curve_GetValue(STRUCT Module module, STRUCT ControlPoint m_pContro
 STRUCT Module Exponent_GetValue(STRUCT Module module, float m_exponent)
 {
    float value = module.Value;
-   module.Value = (pow(FABS((value + 1.0) / 2.0), m_exponent) * 2.0 - 1.0);
+   float abs_val = FABS((value + 1.0f) / 2.0f);
+   module.Value = (pow(abs_val, m_exponent) * 2.0f - 1.0f);
    return module;
 }
 
@@ -413,7 +414,7 @@ STRUCT Module RotatePoint_SetAngles(STRUCT Module module, float angle_x, float a
    return module;
 }
 
-STRUCT Module RotatePoint_GetModule(STRUCT Module module)
+STRUCT Module RotatePoint_GetModule_1(STRUCT Module module)
 {
    float x = module.m_X;
    float y = module.m_Y;
@@ -426,10 +427,10 @@ STRUCT Module RotatePoint_GetModule(STRUCT Module module)
    return module;
 }
 
-STRUCT Module RotatePoint_GetModule(STRUCT Module module, float angle_x, float angle_y, float angle_z)
+STRUCT Module RotatePoint_GetModule_2(STRUCT Module module, float angle_x, float angle_y, float angle_z)
 {
    module = RotatePoint_SetAngles(module, angle_x, angle_y, angle_z);
-   module = RotatePoint_GetModule(module);
+   module = RotatePoint_GetModule_1(module);
 
    return module;
 }
@@ -498,19 +499,19 @@ STRUCT Module Turbulence_GetValue(STRUCT Module module)
    y2 = y + (11213.0 / 65536.0);
    z2 = z + (44845.0 / 65536.0);
 
-   STRUCT Module m_DistortModule = GetModule(x0, y0, z0);
+   STRUCT Module m_DistortModule = GetModule_3(x0, y0, z0);
    m_DistortModule.m_seed = INT(module.m_turb_seed);
    m_DistortModule.m_frequency = module.m_turb_frequency;
    m_DistortModule.m_octaveCount = module.m_turb_roughness;
    float xDistort = x + (Perlin_GetValue(m_DistortModule).Value * module.m_turb_power);
 
-   m_DistortModule = GetModule(x1, y1, z1);
+   m_DistortModule = GetModule_3(x1, y1, z1);
    m_DistortModule.m_seed = INT(module.m_turb_seed) + 1;
    m_DistortModule.m_frequency = module.m_turb_frequency;
    m_DistortModule.m_octaveCount = module.m_turb_roughness;
    float yDistort = y + (Perlin_GetValue(m_DistortModule).Value * module.m_turb_power);
 
-   m_DistortModule = GetModule(x2, y2, z2);
+   m_DistortModule = GetModule_3(x2, y2, z2);
    m_DistortModule.m_seed = INT(module.m_turb_seed) + 2;
    m_DistortModule.m_frequency = module.m_turb_frequency;
    m_DistortModule.m_octaveCount = module.m_turb_roughness;

@@ -52,7 +52,7 @@ void Camera::Init()
 	if (Get_Active() == nullptr) {
 		Activate(true);
 	}
-	m_sort = new GPUSort(1024);
+	//m_sort = new GPUSort(1024);
 }
 
 void Camera::Update(float dt)

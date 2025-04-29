@@ -7,6 +7,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "shared_structures.h"
+#include "dynamic_compute.h"
+
+using namespace DynamicCompute;
+using namespace DynamicCompute::Compute;
+
 #define ZLIB_DEFAULT_COMPRESSION (-1)
 
 #define Remove_If_Found(vec, target)						\
@@ -54,6 +60,8 @@ public:
 	static std::vector<unsigned char> Compress(std::vector<unsigned char> input, int level = ZLIB_DEFAULT_COMPRESSION);
 
 	static std::vector<unsigned char> Decompress(std::vector<unsigned char> input);
+
+	static OpenCL_Device_Info Get_Recommended_Device();
 
 private:
 	inline static const std::string LOG_LOC{ "UTILITIES" };

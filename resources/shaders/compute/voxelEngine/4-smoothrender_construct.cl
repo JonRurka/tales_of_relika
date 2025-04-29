@@ -4,8 +4,43 @@
 #include "../libUSL/USL.inc"
 #include "Voxel_Lib/smoothrender_construct_lib.inc"
 
-void kernel main_cl(global const float* in_data, global float* out_data)
+void kernel main_cl(
+	global STRUCT Static_Settings* p_in_static_settings, 
+	global STRUCT Run_Settings* p_in_run_settings,
+	
+	global fvec4* p_in_locOffset,
+	global fvec4* p_in_globalOffsets,
+	global fvec4* p_in_directionOffsets,
+	
+	global int* p_in_edgeTable_data,
+	global int* p_in_TriTable_data,
+	
+	global ISO_Material* p_in_iso_mat_data,
+	
+	global fvec4* p_out_vertex_data,
+	global fvec4* p_out_normal_data,
+	global int* p_out_triangles_data,
+	global int* p_out_counts_data,
+	global int* p_out_stitch_map_data,
+	
+	global fvec4* p_out_debug_data
+)
 {
+	in_static_settings = p_in_static_settings;
+	in_run_settings = p_in_run_settings;
+	in_locOffset = p_in_locOffset;
+	in_globalOffsets = p_in_globalOffsets;
+	in_directionOffsets = p_in_directionOffsets;
+	in_edgeTable_data = p_in_edgeTable_data;
+	in_TriTable_data = p_in_TriTable_data;
+	in_iso_mat_data = p_in_iso_mat_data;
+	out_vertex_data = p_out_vertex_data;
+	out_normal_data = p_out_normal_data;
+	out_triangles_data = p_out_triangles_data;
+	out_counts_data = p_out_counts_data;
+	out_stitch_map_data = p_out_stitch_map_data;
+	out_debug_data = p_out_debug_data;
+
 	smoothrender_construct_main(get_global_id(0));
 }
 
