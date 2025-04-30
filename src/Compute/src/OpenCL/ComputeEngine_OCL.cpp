@@ -20,6 +20,10 @@ std::list<ComputeContext> ComputeEngine::mContexts;
 
 bool ComputeEngine::mInitialized{ false };
 
+namespace {
+    cl_event g_wait_event{ NULL }; // TODO: This is stupid. Change this.
+}
+
 /*std::vector<ComputeEngine::Platform> ComputeEngine::GetSupportedPlatforms()
 {
     std::vector<ComputeEngine::Platform> res;
@@ -267,11 +271,19 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
 
     deviceID = (cl_device_id)device.cl_device;
 
+    cl_ulong local_size;
+    clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &local_size, 0);
+
+    cl_ulong const_size;
+    clGetDeviceInfo(deviceID, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(cl_ulong), &const_size, 0);
+
     char driver_version[100];
     memset(driver_version, 0, 100);
     clGetDeviceInfo(deviceID, CL_DRIVER_VERSION, sizeof(driver_version), &driver_version, NULL);
     printf("OpenCL Driver Version: %s\n", driver_version);
     printf("OpenCl Platform Version: %s\n", ComputeEngine::Get_CL_Version().c_str());
+    printf("OpenCl max local memory: %i bytes\n", (int)local_size);
+    printf("OpenCl max const memory: %i bytes\n", (int)const_size);
 
     context = clCreateContext(properties, 1, &deviceID, NULL, NULL, &err);
 
@@ -355,7 +367,7 @@ int ComputeProgram::Set_Source(const char* source)
    cl_int err = 0;
    //printf("%s\n", source);
    program = clCreateProgramWithSource(m_context, 1, (const char **)&source, NULL, &err);
-   args += "-cl-std=CL2.0 ";
+   args += "-cl-std=CL3.0 ";
    mInitialized = true;
    return err;
 }
@@ -438,13 +450,15 @@ int ComputeProgram::Build(char* errorStr, size_t e_size)
     }
    cl_int build_res = clBuildProgram(program, 0, NULL, args.c_str(), NULL, NULL);
 
-   printf("clBuildProgram: res %i\n", build_res);
+   //printf("clBuildProgram: res %i\n", build_res);
 
    size_t ret_e_size;
    int res = clGetProgramBuildInfo(program, mContextObj->Get_CL_Device_ID(), CL_PROGRAM_BUILD_LOG, e_size, errorStr, &ret_e_size);
 
    if (build_res != 0) {
+       printf("### COMPILATION FAILED: ###\n");
        printf("Build error: %s\n", errorStr);
+       printf("###########################\\n");
    }
 
    return build_res;
@@ -490,7 +504,7 @@ ComputeKernel::ComputeKernel(ComputeProgram* program_obj, char* name, cl_command
    //kernels = new cl_kernel[numKernels];
    //command_queue = new cl_command_queue[numKernels];
    
-   printf("ComputeKernel(): Create kernel %s\n", name);
+   //printf("ComputeKernel(): Create kernel %s\n", name);
    kernel = clCreateKernel(m_program, name, &err);
 
    if (err != 0)
@@ -505,8 +519,10 @@ ComputeKernel::ComputeKernel(ComputeProgram* program_obj, char* name, cl_command
 
 int ComputeKernel::SetBuffer(ComputeBuffer* buffer, int arg)
 {
-   int res = clSetKernelArg(kernel, arg, sizeof(cl_mem), (void*)buffer->Get_CL_Mem());
-   return res;
+    int res = 0;
+    res = clSetKernelArg(kernel, (arg * 1) + 0, sizeof(cl_mem), (void*)buffer->Get_CL_Mem());
+    //res = clSetKernelArg(kernel, (arg * 2) + 1, buffer->GetSize(), NULL);
+    return res;
 }
 
 int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
@@ -515,19 +531,23 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
         4, 4, 4
     };*/
 
-    cl_command_queue c_q = command_queue;
-    printf("Enqueue kernel.\n");
-    int res = clEnqueueNDRangeKernel(c_q, kernel, work_dim, NULL, global_work_size, NULL, 0, NULL, NULL);
-    printf("Finish enqueue kernel.\n");
+
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+
+    int res = clEnqueueNDRangeKernel(command_queue, kernel, work_dim, NULL, global_work_size, NULL, num_wait_events, wait_event_ptr, &finished_event);
+    
+    g_wait_event = finished_event;
     
     if (res != 0)
     {
         printf("ComputeKernel.Execute: Failed to enqueue Kernel: %i\n", res);
     }
 
-    printf("clFinish.\n");
+   // printf("clFinish.\n");
     res = clFinish(command_queue);
-    printf("Finished clFinish.\n");
+    //printf("Finished clFinish.\n");
 
     if (res != 0)
     {
@@ -571,106 +591,163 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
 
 int ComputeBuffer::SetData(void* data)
 {
-   cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, 0, mSize, data, 0, NULL, NULL);
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
 
-   if (res != 0)
-   {
-       return res;
-   }
+    cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, 0, mSize, data, num_wait_events, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
 
-   res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, 0, 0, mSize, 0, NULL, NULL);
+    if (res != 0)
+    {
+        return res;
+    }
 
-   return res;
+    wait_event_ptr = &g_wait_event;
+    res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, 0, 0, mSize, 1, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
+
+    return res;
 }
 
 int ComputeBuffer::GetData(void* outData)
 {
-    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, 0, 0, mSize, 0, NULL, NULL);
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, 0, 0, mSize, num_wait_events, wait_event_ptr, &finished_event);
 
     if (res != 0)
     {
         return res;
     }
 
-    res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, 0, mSize, outData, 0, NULL, NULL);
+    wait_event_ptr = &g_wait_event;
+    res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, 0, mSize, outData, 1, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
 
-   return res;
+    return res;
 }
 
 int ComputeBuffer::SetData(void* data, int size) 
 {
-    cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, data, 0, NULL, NULL);
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+
+    cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, data, num_wait_events, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
 
     if (res != 0)
     {
         return res;
     }
 
-    res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, 0, 0, size, 0, NULL, NULL);
+    wait_event_ptr = &g_wait_event;
+    res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, 0, 0, size, 1, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
 
     return res;
 }
 
 int ComputeBuffer::GetData(void* outData, int size) 
 {
-    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, 0, 0, size, 0, NULL, NULL);
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, 0, 0, size, num_wait_events, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
 
     if (res != 0)
     {
         return res;
     }
 
-    res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, outData, 0, NULL, NULL);
+    wait_event_ptr = &g_wait_event;
+    res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, outData, 1, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
 
     return res;
 }
 
 int ComputeBuffer::SetData(void* data, int DstStart, int size) 
 {
-    cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, DstStart, size, data, 0, NULL, NULL);
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+
+    cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, DstStart, size, data, num_wait_events, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
 
     if (res != 0)
     {
         return res;
     }
 
-    res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, DstStart, DstStart, size, 0, NULL, NULL);
+    wait_event_ptr = &g_wait_event;
+    res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, DstStart, DstStart, size, 1, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
 
     return res;
 }
 
 int ComputeBuffer::GetData(void* outData, int SrcStart, int size) 
 {
-    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, SrcStart, SrcStart, size, 0, NULL, NULL);
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, SrcStart, SrcStart, size, num_wait_events, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
 
     if (res != 0)
     {
         return res;
     }
 
-    res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, SrcStart, size, outData, 0, NULL, NULL);
+    wait_event_ptr = &g_wait_event;
+    res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, SrcStart, size, outData, 1, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
 
     return res;
 }
 
 int ComputeBuffer::CopyTo(ComputeBuffer* other) 
 {
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+
+
     int src_size = mSize;
     int dst_size = other->mSize;
     int size = std::min(src_size, dst_size);
-    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, 0, 0, size, 0, NULL, NULL);
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, 0, 0, size, num_wait_events, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
     return res;
 }
 
 int ComputeBuffer::CopyTo(ComputeBuffer* other, int size) 
 {
-    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, 0, 0, size, 0, NULL, NULL);
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, 0, 0, size, num_wait_events, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
     return res;
 }
 
 int ComputeBuffer::CopyTo(ComputeBuffer* other, int srcStart, int dstStart, int size) 
 {
-    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, srcStart, dstStart, size, 0, NULL, NULL);
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+
+    cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, srcStart, dstStart, size, num_wait_events, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
     return res;
 }
 

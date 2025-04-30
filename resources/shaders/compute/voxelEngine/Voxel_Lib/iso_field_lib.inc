@@ -11,33 +11,33 @@ readwrite_buffer(fvec4, 2, out_data)
 
 readwrite_buffer_float(3, out_debug_data)
 
-float sphere_sample(float radius, float x, float y, float z){
+float sphere_sample_4(float radius, float x, float y, float z){
 
     fvec3 sphere_center = FVEC3(16, 16, 16);
 
     return radius - sqrt(pow(x - sphere_center.x, 2) + pow(y - sphere_center.y, 2) + pow(z - sphere_center.z, 2));
 }
 
-float iso_sample(float x, float y, float z, STRUCT Settings s){
+float iso_sample_4(float x, float y, float z, STRUCT Settings s){
 
     return Sample_3D(s, x, y, z);
 
     //float radius = 10;
 
-    //return sphere_sample(radius, x, y, z);
+    //return sphere_sample_3(radius, x, y, z);
 }
 
-float iso_sample(fvec3 p, STRUCT Settings s){
-    return iso_sample(p.x, p.y, p.z,  s);
+float iso_sample_2(fvec3 p, STRUCT Settings s){
+    return iso_sample_4(p.x, p.y, p.z,  s);
 }
 
 fvec3 normal_sample(float x, float y, float z, float centerDistance, STRUCT Settings s){
     fvec3 p = FVEC3(x, y, z);
     float epsilon = 0.001; // arbitrary — should be smaller than any surface detail in your distance function, but not so small as to get lost in float precision
-    //float centerDistance = iso_sample(p);
-    float xDistance = iso_sample(p + FVEC3(epsilon, 0, 0), s);
-    float yDistance = iso_sample(p + FVEC3(0, epsilon, 0), s);
-    float zDistance = iso_sample(p + FVEC3(0, 0, epsilon), s);
+    //float centerDistance = iso_sample_1(p);
+    float xDistance = iso_sample_2(p + FVEC3(epsilon, 0, 0), s);
+    float yDistance = iso_sample_2(p + FVEC3(0, epsilon, 0), s);
+    float zDistance = iso_sample_2(p + FVEC3(0, 0, epsilon), s);
     fvec3 normal = (FVEC3(xDistance - centerDistance, yDistance - centerDistance, zDistance - centerDistance)) / epsilon;
     return normal;
 }
@@ -84,7 +84,7 @@ void iso_field_gen_main(uint index) {
 	
 	uint batchIndex = UINT(run_settings.Location.w);
     uint batchIndexExpanded = UINT(run_settings.Location.w);
-	ivec4 batch = ivec4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize[0], FullChunkSize_exp);
+	ivec4 batch = IVEC4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize[0], FullChunkSize_exp);
 	
 	uint voxel_index = GetVoxelIndex(batchIndexExpanded, index, batch[3]);
 	
@@ -127,7 +127,7 @@ void iso_field_gen_main(uint index) {
     s.ChunkSizeZ = ChunkSizeZ + 2;
     s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
 	
-	float iso = iso_sample(pos_originWorld.x, pos_originWorld.y, pos_originWorld.z, s);
+	float iso = iso_sample_4(pos_originWorld.x, pos_originWorld.y, pos_originWorld.z, s);
     fvec3 normal = FVEC3(0,0,0);//-normal_sample(pos_originWorld.x, pos_originWorld.y, pos_originWorld.z, iso);
 	
 	setISOval(GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, batch[3]), iso, normal);

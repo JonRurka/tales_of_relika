@@ -28,7 +28,7 @@ namespace VoxelEngine {
 		bool finalized = false;
 		bool initialized = false;
 
-		std::string kernel_name = "main_cl";
+		std::string kernel_name;
 
 		IComputeController* m_controller = nullptr;
 

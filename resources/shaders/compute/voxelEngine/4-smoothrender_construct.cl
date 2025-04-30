@@ -8,14 +8,14 @@ void kernel main_cl(
 	global STRUCT Static_Settings* p_in_static_settings, 
 	global STRUCT Run_Settings* p_in_run_settings,
 	
-	global fvec4* p_in_locOffset,
-	global fvec4* p_in_globalOffsets,
-	global fvec4* p_in_directionOffsets,
+	__constant fvec4* p_in_locOffset,
+	__constant fvec4* p_in_globalOffsets,
+	__constant ivec4* p_in_directionOffsets,
 	
-	global int* p_in_edgeTable_data,
-	global int* p_in_TriTable_data,
+	__constant int* p_in_edgeTable_data,
+	__constant int* p_in_TriTable_data,
 	
-	global ISO_Material* p_in_iso_mat_data,
+	global STRUCT ISO_Material* p_in_iso_mat_data,
 	
 	global fvec4* p_out_vertex_data,
 	global fvec4* p_out_normal_data,

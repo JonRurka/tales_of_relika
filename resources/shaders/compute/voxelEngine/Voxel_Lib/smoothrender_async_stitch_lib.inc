@@ -117,7 +117,7 @@ void smoothrender_async_stitch_main(uint index)
 	
 	int batchIndex = run_settings.Location.w;
     int batchIndexExpanded = run_settings.Location.w;
-    ivec4 batch = ivec4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize[0], static_settings.FullChunkSize[1]);
+    ivec4 batch = IVEC4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize[0], static_settings.FullChunkSize[1]);
 	
 	uint voxel_index = GetVoxelIndex(batchIndexExpanded, index, batch[2]);
 

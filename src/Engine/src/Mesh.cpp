@@ -77,7 +77,8 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer)
 {
 	
 	size_t size = buffer->GetSize();
-	m_num_vertices = size / (sizeof(float) * 11);
+	//m_num_vertices = size / (sizeof(float) * 11);
+	m_num_vertices = size / m_attrib_list.m_stride;
 	m_virtual_mesh = true;
 	//Logger::LogDebug(LOG_POS("Load"), "Loading %i Vertices.", (int)m_num_vertices);
 	//Logger::LogDebug(LOG_POS("Load"), "Load buffer size: %i", (int)size);
@@ -226,8 +227,14 @@ void Mesh::Recenter()
 
 void Mesh::Generate_Normals()
 {
+	if (!m_active) {
+		Logger::LogWarning(LOG_POS("Generate_Normals"), "Cannot generate normals for inactive mesh.");
+		return;
+	}
+
 	if (m_indices.size() <= 0)
 	{
+		Logger::LogDebug(LOG_POS("Generate_Normals"), "Generate normals without indices.");
 		m_normals.clear();
 		m_normals.reserve(m_num_vertices);
 		int num_poly = m_num_vertices / 3;
@@ -243,6 +250,7 @@ void Mesh::Generate_Normals()
 		}
 	}
 	else {
+		Logger::LogDebug(LOG_POS("Generate_Normals"), "Generate normals with indices (%i).", (int)m_indices.size());
 		m_normals.clear();
 		m_normals.reserve(m_num_vertices);
 		for (int i = 0; i < m_indices.size(); i += 3) {

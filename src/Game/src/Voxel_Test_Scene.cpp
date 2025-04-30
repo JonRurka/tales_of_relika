@@ -290,11 +290,21 @@ void Voxel_Test_Scene::Init()
 	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
 	glm::dvec4 render_times = m_builder->Render(&render_options);
 
-	
 	//double stop = Utilities::Get_Time();
 
 	std::vector<glm::ivec4> counts = m_builder->GetSize();
 	glm::ivec4 chnk_count = counts[0];
+
+	auto end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration<double>(end - start).count();
+	Logger::LogDebug(LOG_POS("Init"), "Generate Time: %f", (duration) * 1000.0f);
+
+	Logger::LogDebug(LOG_POS("Init"), "Generate - Assemble: %f ms", gen_times.y * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "Generate - Construct: %f ms", gen_times.z * 1000);
+
+	Logger::LogDebug(LOG_POS("Init"), "Render - Mark: %f ms", render_times.y * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "Render - Stitch: %f ms", render_times.z * 1000);
+
 
 	/*
 	m_builder->Extract(
@@ -323,9 +333,7 @@ void Voxel_Test_Scene::Init()
 
 	//vbo_stitch->Stitch(chnk_count.x);
 
-	auto end = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration<double>(end - start).count();
-	Logger::LogDebug(LOG_POS("Init"), "Generate Time: %f", (duration) * 1000.0f);
+	
 
 	std::vector<glm::vec4> verts(m_vertices, m_vertices + chnk_count.x);
 	std::vector<unsigned int> tris(m_triangles, m_triangles + chnk_count.x);
@@ -355,7 +363,8 @@ void Voxel_Test_Scene::Init()
 	voxel_mesh_test->Vertices(Utilities::vec4_to_vec3_arr(verts));
 	voxel_mesh_test->Indices(tris);
 	voxel_mesh_test->Normals(Utilities::vec4_to_vec3_arr(normals));
-	voxel_mesh_test->Generate_Normals();
+	voxel_mesh_test->Activate();
+	//voxel_mesh_test->Generate_Normals();
 
 	WorldObject* obj = Instantiate("test_voxel_object");
 	obj->Get_Transform()->Set_Verbos(true);

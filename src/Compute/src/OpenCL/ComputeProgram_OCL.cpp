@@ -31,7 +31,8 @@ void ComputeProgram_OCL::AddDefine(std::string name, std::string value)
 
 int ComputeProgram_OCL::Build()
 {
-	printf("ComputeController_OCL: Reading program from directory: %s\n", m_program_directory.c_str());
+	//printf("ComputeController_OCL: Reading program from directory: %s\n", m_program_directory.c_str());
+	printf("Building program: %s\n", m_program_name.c_str());
 
 	switch (m_ftype) {
 		case IComputeProgram_private::FileType::Binary_File:

@@ -18,12 +18,23 @@
 read_buffer_struct(Static_Settings, 0, in_static_settings)
 read_buffer_struct(Run_Settings, 1, in_run_settings)
 
+#if USL_OPENCL == 1
+__constant fvec4* in_locOffset;
+__constant fvec4* in_globalOffsets;
+__constant ivec4* in_directionOffsets;
+
+__constant int* in_edgeTable_data;
+__constant int* in_TriTable_data;
+#else
 read_buffer(fvec4, 2, in_locOffset)
-read_buffer(fvec4, 3, in_globalOffsets)
+read_buffer(fvec4, 3, in_globalOffsets)	
 read_buffer(ivec4, 4, in_directionOffsets)
 
 read_buffer_int(5, in_edgeTable_data)
 read_buffer_int(6, in_TriTable_data)
+#endif
+
+
 
 readwrite_buffer_struct(ISO_Material, 7, in_iso_mat_data)
 
@@ -36,16 +47,16 @@ readwrite_buffer_int(12, out_stitch_map_data)
 readwrite_buffer(fvec4, 13, out_debug_data)
 
 
-float iso_sample_3D(float x, float y, float z, STRUCT Settings s){
+float iso_sample_3D_4(float x, float y, float z, STRUCT Settings s){
 
     return Sample_3D(s, x, y, z);
 
     //float radius = 10;
-    //return sphere_sample(radius, x, y, z);
+    //return sphere_sample_4(radius, x, y, z);
 }
 
-float iso_sample_3D(fvec3 p, STRUCT Settings s){
-    return iso_sample_3D(p.x, p.y, p.z, s);
+float iso_sample_3D_2(fvec3 p, STRUCT Settings s){
+    return iso_sample_3D_4(p.x, p.y, p.z, s);
 }
 
 float height_sample_3(float x, float y, STRUCT Settings s){
@@ -133,8 +144,8 @@ float Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso
     return result; 
 }
 
-float iso_sample(STRUCT Settings s, ivec3 p, fvec3 world_pos){
-    float iso = iso_sample_3D(world_pos, s);
+float iso_sample_3(STRUCT Settings s, ivec3 p, fvec3 world_pos){
+    float iso = iso_sample_3D_2(world_pos, s);
     float height = height_sample_3(world_pos.x, world_pos.y, s);
 
     return iso;// Combine_ISO(s, p, world_pos, iso, height, 0);
@@ -144,14 +155,14 @@ fvec3 normal_sample(STRUCT Settings s, ivec3 p, fvec3 world_pos)
 {
 	float epsilon = 0.01;
 	
-	float x1 = iso_sample(s, p - IVEC3(1, 0, 0), world_pos - FVEC3(epsilon, 0, 0));
-	float x2 = iso_sample(s, p + IVEC3(1, 0, 0), world_pos + FVEC3(epsilon, 0, 0));
+	float x1 = iso_sample_3(s, p - IVEC3(1, 0, 0), world_pos - FVEC3(epsilon, 0, 0));
+	float x2 = iso_sample_3(s, p + IVEC3(1, 0, 0), world_pos + FVEC3(epsilon, 0, 0));
 
-	float y1 = iso_sample(s, p - IVEC3(0, 1, 0), world_pos - FVEC3(0, epsilon, 0));
-	float y2 = iso_sample(s, p + IVEC3(0, 1, 0), world_pos + FVEC3(0, epsilon, 0));
+	float y1 = iso_sample_3(s, p - IVEC3(0, 1, 0), world_pos - FVEC3(0, epsilon, 0));
+	float y2 = iso_sample_3(s, p + IVEC3(0, 1, 0), world_pos + FVEC3(0, epsilon, 0));
 
-	float z1 = iso_sample(s, p - IVEC3(0, 0, 1), world_pos - FVEC3(0, 0, epsilon));
-	float z2 = iso_sample(s, p + IVEC3(0, 0, 1), world_pos + FVEC3(0, 0, epsilon));
+	float z1 = iso_sample_3(s, p - IVEC3(0, 0, 1), world_pos - FVEC3(0, 0, epsilon));
+	float z2 = iso_sample_3(s, p + IVEC3(0, 0, 1), world_pos + FVEC3(0, 0, epsilon));
 
 	//Set_Debug_Data(g_index, FVEC4(y1, y2, y1 - y2, 1));
 
@@ -165,11 +176,13 @@ fvec3 normal_sample(STRUCT Settings s, ivec3 p, fvec3 world_pos)
 }
 
 
+ivec4 Get_Direction_Offset(uint i){
+	return get_buffer_vector(in_directionOffsets, i);
+}
 
-
-
-
-
+fvec4 Get_Global_Offset(uint i){
+	return get_buffer_vector(in_globalOffsets, i);
+}
 
 void SetStitchMap(uint index, int val){
 	set_buffer_scalar(out_stitch_map_data, index, val);
@@ -218,7 +231,7 @@ STRUCT GridPoint GetGridPoint(
     uint ChunkSizeY, 
     uint ChunkSizeZ
 ){
-	Settings s = New_Settings();
+	STRUCT Settings s = New_Settings();
     s.ChunkSizeX = ChunkSizeX + 2;
     s.ChunkSizeY = ChunkSizeY + 2;
     s.ChunkSizeZ = ChunkSizeZ + 2;
@@ -232,7 +245,7 @@ STRUCT GridPoint GetGridPoint(
 	
 	uint batch_index = GetBatchIndex((UINT(batch[1]) % UINT(batch_settings[0])), index_exp, batch[3]);
 	
-	float iso_val = iso_sample(s, index_pos.xyz, globalWorldPos.xyz);
+	float iso_val = iso_sample_3(s, index_pos.xyz, globalWorldPos.xyz);
 	fvec3 normal = normal_sample(s, index_pos.xyz, globalWorldPos.xyz);
 	
 	//STRUCT ISO_Material iso_mat;// = get_buffer_object(in_iso_mat_data, batch_index);
@@ -254,7 +267,7 @@ STRUCT GridPoint GetGridPoint(
     return gr_point;
 }
 
-STRUCT GridPoint VertexInterp(int edge_ent, int test, float isoLevel, GridPoint p1, GridPoint p2, bool invalid){
+STRUCT GridPoint VertexInterp(int edge_ent, int test, float isoLevel, STRUCT GridPoint p1, STRUCT GridPoint p2, bool invalid){
     if ((edge_ent & test) == 0 || invalid){
         STRUCT GridPoint gr_point = New_GridPoint();
         gr_point.localPosition = FVEC4(0, 0, 0, -1000000); // invalid
@@ -271,11 +284,11 @@ STRUCT GridPoint VertexInterp(int edge_ent, int test, float isoLevel, GridPoint 
 	fvec4 pos_2_world = p2.globalPosition;
     fvec4 normal_2 = p2.normal;
 
-    if (abs(isoLevel - iso_1) < 0.00001f)
+    if (FABS(isoLevel - iso_1) < 0.00001f)
         return p1;
-    if (abs(isoLevel - iso_2) < 0.00001f)
+    if (FABS(isoLevel - iso_2) < 0.00001f)
         return p2;
-    if (abs(iso_1 - iso_2) < 0.00001f)
+    if (FABS(iso_1 - iso_2) < 0.00001f)
         return p1;
 
     float mu = (isoLevel - iso_1) / (iso_2 - iso_1);
@@ -325,7 +338,7 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 	
 	ivec3 index_pos = C_1D_to_3D(v_index, static_settings.ChunkSize.x, static_settings.ChunkSize.y);
 	
-	Settings s = New_Settings();
+	STRUCT Settings s = New_Settings();
     s.ChunkSizeX = static_settings.ChunkSize.x + 2;
     s.ChunkSizeY = static_settings.ChunkSize.y + 2;
     s.ChunkSizeZ = static_settings.ChunkSize.z + 2;
@@ -357,23 +370,23 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
         //p3.normal.w = p3.type.y + p3.type_ratio.y;
 
 
-        vec3 dir = cross(p2.localPosition.xyz - p1.localPosition.xyz, p3.localPosition.xyz - p1.localPosition.xyz);
-        vec3 norm = -normalize(dir);
-		vec4 norm4 = FVEC4(norm.x, norm.y, norm.z, 0.0f);
+        fvec3 dir = cross(p2.localPosition.xyz - p1.localPosition.xyz, p3.localPosition.xyz - p1.localPosition.xyz);
+        fvec3 norm = -normalize(dir);
+		fvec4 norm4 = FVEC4(norm.x, norm.y, norm.z, 0.0f);
 
         //vec4 n1 = vec4(norm.x, norm.y, norm.z, 0);
         int t1 = INT(curTris) + 2;
-		vec3 norm1 = p1.normal.xyz;// normal_sample(s, index_pos, p1.globalPosition.xyz);
+		fvec3 norm1 = p1.normal.xyz;// normal_sample(s, index_pos, p1.globalPosition.xyz);
         count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p1.localPosition, FVEC4(norm1.x, norm1.y, norm1.z, 0), t1, count);
         
         //vec4 n2 = vec4(norm.x, norm.y, norm.z, 0);
         int t2 = INT(curTris) + 1;
-		vec3 norm2 = p2.normal.xyz;// normal_sample(s, index_pos, p2.globalPosition.xyz);
+		fvec3 norm2 = p2.normal.xyz;// normal_sample(s, index_pos, p2.globalPosition.xyz);
         count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p2.localPosition, FVEC4(norm2.x, norm2.y, norm2.z, 0), t2, count);
         
         //vec4 n3 = vec4(norm.x, norm.y, norm.z, 0);
         int t3 = INT(curTris) + 0;
-		vec3 norm3 = p3.normal.xyz;//normal_sample(s, index_pos, p3.globalPosition.xyz);
+		fvec3 norm3 = p3.normal.xyz;//normal_sample(s, index_pos, p3.globalPosition.xyz);
         count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p3.localPosition, FVEC4(norm3.x, norm3.y, norm3.z, 0), t3, count);
 		
     }
@@ -467,9 +480,9 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
     int cz = run_settings.Location.z;
 
     // Global coordinate of first voxel in chunk.
-    int xStart = cx * int(ChunkSizeX);
-    int yStart = cy * int(ChunkSizeY);
-    int zStart = cz * int(ChunkSizeZ);
+    int xStart = cx * INT(ChunkSizeX);
+    int yStart = cy * INT(ChunkSizeY);
+    int zStart = cz * INT(ChunkSizeZ);
 
     // World position of voxel relative to chunk
     float xLocalWorld = x * xSideLength;
@@ -492,9 +505,9 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
             batch, 
             batch_settings, 
             v_index, 
-            index_pos + get_buffer_vector(in_directionOffsets, i), 
-			pos_originWorld + get_buffer_vector(in_globalOffsets, i),
-            pos_localWorld + get_buffer_vector(in_globalOffsets, i), 
+            index_pos + Get_Direction_Offset(i),
+			pos_originWorld + Get_Global_Offset(i),
+            pos_localWorld + Get_Global_Offset(i), 
             i, 
             ChunkSizeX, 
             ChunkSizeY, 

@@ -50,16 +50,16 @@ float getHeightVal(uint index){
 	return in_heightmap_data[buffer_index].values[access_index];*/
 }
 
-float iso_sample_3D(float x, float y, float z, STRUCT Settings s){
+float iso_sample_3D_4(float x, float y, float z, STRUCT Settings s){
 
     return Sample_3D(s, x, y, z);
 
     //float radius = 10;
-    //return sphere_sample(radius, x, y, z);
+    //return sphere_sample_4(radius, x, y, z);
 }
 
-float iso_sample_3D(fvec3 p, STRUCT Settings s){
-    return iso_sample_3D(p.x, p.y, p.z,  s);
+float iso_sample_3D_2(fvec3 p, STRUCT Settings s){
+    return iso_sample_3D_4(p.x, p.y, p.z,  s);
 }
 
 float height_sample_3(float x, float y, STRUCT Settings s){
@@ -90,7 +90,7 @@ float Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso
     // TODO: Scale the cave noise by the distance past the cave bounds. 
 
 
-    float wall_noise = 0;//Scale(iso_sample_3D(world_pos + vec3(498, -320, 103) * 3, s), lower_limit, upper_limit, 0, upper_limit);
+    float wall_noise = 0;//Scale(iso_sample_3D_2(world_pos + vec3(498, -320, 103) * 3, s), lower_limit, upper_limit, 0, upper_limit);
 
     // distance(vec2(0, 0), vec2(world_pos.x, world_pos.y)) < (CRATER_METER_DIAMETER  / 2) - (33 + wall_noise)
 
@@ -147,13 +147,13 @@ float Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso
     return result; 
 }
 
-float iso_sample(STRUCT Settings s, ivec3 p, fvec3 world_pos, uint size_x, uint size_z, uint fullSize, uint heights_size, uint batch, uint batchesPerGroup){
+float iso_sample_9(STRUCT Settings s, ivec3 p, fvec3 world_pos, uint size_x, uint size_z, uint fullSize, uint heights_size, uint batch, uint batchesPerGroup){
     //int voxel_index = C_3D_to_1D(p.x, p.y, p.z, size_x, size_z);
     //int height_index = C_2D_to_1D(p.x, p.y, size_z);
 
     //vec3 world_pos = FVEC3(global_pos.x * s.VoxelsPerMeter, global_pos.y * s.VoxelsPerMeter, global_pos.z * s.VoxelsPerMeter);
 
-    float iso = iso_sample_3D(world_pos, s);
+    float iso = iso_sample_3D_2(world_pos, s);
     float height = height_sample_3(world_pos.x, world_pos.y, s);
     
     //float iso = getISOval(GetBatchIndex((batch % batchesPerGroup), voxel_index, fullSize)).w;
@@ -166,16 +166,16 @@ float iso_sample(STRUCT Settings s, ivec3 p, fvec3 world_pos, uint size_x, uint 
 bool is_surface(STRUCT Settings s, ivec3 p, fvec3 world_pos, float centerDistance, uint size_x, uint size_z, uint fullSize, uint heights_size, uint batch, uint batchesPerGroup){
     float epsilon = 1;
 
-    float x1 = iso_sample(s, p - IVEC3(1, 0, 0), world_pos - FVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
-    float x2 = iso_sample(s, p + IVEC3(1, 0, 0), world_pos + FVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+    float x1 = iso_sample_9(s, p - IVEC3(1, 0, 0), world_pos - FVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+    float x2 = iso_sample_9(s, p + IVEC3(1, 0, 0), world_pos + FVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
     bool crosses_x = (x1 >= 0 && x2 < 0) || (x1 <= 0 && x2 > 0);
 
-    float y1 = iso_sample(s, p - IVEC3(0, 1, 0), world_pos - FVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
-    float y2 = iso_sample(s, p + IVEC3(0, 1, 0), world_pos + FVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+    float y1 = iso_sample_9(s, p - IVEC3(0, 1, 0), world_pos - FVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+    float y2 = iso_sample_9(s, p + IVEC3(0, 1, 0), world_pos + FVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
     bool crosses_y = (y1 >= 0 && y2 < 0) || (y1 <= 0 && y2 > 0);
 
-    float z1 = iso_sample(s, p - IVEC3(0, 0, 1), world_pos - FVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
-    float z2 = iso_sample(s, p + IVEC3(0, 0, 1), world_pos + FVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+    float z1 = iso_sample_9(s, p - IVEC3(0, 0, 1), world_pos - FVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+    float z2 = iso_sample_9(s, p + IVEC3(0, 0, 1), world_pos + FVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
     bool crosses_z = (z1 >= 0 && z2 < 0) || (z1 <= 0 && z2 > 0);
 
     // TODO: corners
@@ -187,14 +187,14 @@ fvec3 normal_sample(STRUCT Settings s, uint g_index, ivec3 p, fvec3 world_pos, f
     float epsilon = 0.001;
 
     if ((p.x > 0 && p.y > 0 && p.z > 0) || true){
-        float x1 = iso_sample(s, p - IVEC3(1, 0, 0), world_pos - FVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
-        float x2 = iso_sample(s, p + IVEC3(1, 0, 0), world_pos + FVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+        float x1 = iso_sample_9(s, p - IVEC3(1, 0, 0), world_pos - FVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+        float x2 = iso_sample_9(s, p + IVEC3(1, 0, 0), world_pos + FVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
 
-        float y1 = iso_sample(s, p - IVEC3(0, 1, 0), world_pos - FVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
-        float y2 = iso_sample(s, p + IVEC3(0, 1, 0), world_pos + FVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+        float y1 = iso_sample_9(s, p - IVEC3(0, 1, 0), world_pos - FVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+        float y2 = iso_sample_9(s, p + IVEC3(0, 1, 0), world_pos + FVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
 
-        float z1 = iso_sample(s, p - IVEC3(0, 0, 1), world_pos - FVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
-        float z2 = iso_sample(s, p + IVEC3(0, 0, 1), world_pos + FVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+        float z1 = iso_sample_9(s, p - IVEC3(0, 0, 1), world_pos - FVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+        float z2 = iso_sample_9(s, p + IVEC3(0, 0, 1), world_pos + FVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
 	
 		//Set_Debug_Data(g_index, FVEC4(y1, y2, y1 - y2, 1));
 	
@@ -209,44 +209,44 @@ fvec3 normal_sample(STRUCT Settings s, uint g_index, ivec3 p, fvec3 world_pos, f
     else{
         //vec3 p = vec3(x, y, z);
         //int epsilon = 1; // arbitrary - should be smaller than any surface detail in your distance function, but not so small as to get lost in float precision
-        //float centerDistance = iso_sample(p);
-        float xDistance = iso_sample(s, p + IVEC3(1, 0, 0), world_pos + FVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
-        float yDistance = iso_sample(s, p + IVEC3(0, 1, 0), world_pos + FVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
-        float zDistance = iso_sample(s, p + IVEC3(0, 0, 1), world_pos + FVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+        //float centerDistance = iso_sample_1(p);
+        float xDistance = iso_sample_9(s, p + IVEC3(1, 0, 0), world_pos + FVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+        float yDistance = iso_sample_9(s, p + IVEC3(0, 1, 0), world_pos + FVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+        float zDistance = iso_sample_9(s, p + IVEC3(0, 0, 1), world_pos + FVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
         fvec3 normal = (FVEC3(xDistance - centerDistance, yDistance - centerDistance, zDistance - centerDistance)) / epsilon;
         return -normal;
     }
 
-    /*float xDistance = iso_sample(s, p + IVEC3(epsilon, 0, 0), global_pos + IVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
-    float yDistance = iso_sample(s, p + IVEC3(0, epsilon, 0), global_pos + IVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
-    float zDistance = iso_sample(s, p + IVEC3(0, 0, epsilon), global_pos + IVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+    /*float xDistance = iso_sample_9(s, p + IVEC3(epsilon, 0, 0), global_pos + IVEC3(epsilon, 0, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+    float yDistance = iso_sample_9(s, p + IVEC3(0, epsilon, 0), global_pos + IVEC3(0, epsilon, 0), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
+    float zDistance = iso_sample_9(s, p + IVEC3(0, 0, epsilon), global_pos + IVEC3(0, 0, epsilon), size_x, size_z, fullSize, heights_size, batch, batchesPerGroup);
     fvec3 normal = (FVEC3(xDistance - centerDistance, yDistance - centerDistance, zDistance - centerDistance)) / epsilon;
     return -normal;*/
 }
 
 float log_delta(float delta){
     //return 0.5 * log(0.99 * delta + 0.01) + 1;
-    float A = 0.197382;
-    float S = 23.6439;
-    float O = -0.150036;
-    float C = 0.37441;
+    float A = 0.197382f;
+    float S = 23.6439f;
+    float O = -0.150036f;
+    float C = 0.37441f;
     return A * log(S * delta + O) + C;
 }
 
 float pow_delta(float delta){
-    float A = 2.18203;
-    float S = 6.79111;
-    float O = -6.78469;
-    float C = -0.0050226;
+    float A = 2.18203f;
+    float S = 6.79111f;
+    float O = -6.78469f;
+    float C = -0.0050226f;
     return pow(A, S * delta + O) + C;
 }
 
 float cube_root_delta(float delta){
-    float A = 0.37;
-    float S = 5;
-    float O = -2.5;
-    float C = 0.5;
-    return A * pow(S * delta + O, 1 / float(3)) + C;
+    float A = 0.37f;
+    float S = 5.0f;
+    float O = -2.5f;
+    float C = 0.5f;
+    return A * pow(S * delta + O, 1.0f / 3.0f) + C;
 }
 
 fvec4 material_sample(float iso, fvec3 normal, fvec3 world_pos, bool isSurface, Surface_Type surface_type){
@@ -393,7 +393,7 @@ void unify_fields_main(uint index){
 	// 3D vector location of voxel inside iso data (expanded by 2).
     ivec3 src_voxel_pos = C_1D_to_3D(src_voxel_index, ChunkSizeX + 2, ChunkSizeY + 2);
 	
-	Settings s = New_Settings();
+	STRUCT Settings s = New_Settings();
     s.ChunkSizeX = ChunkSizeX + 2;
     s.ChunkSizeY = ChunkSizeY + 2;
     s.ChunkSizeZ = ChunkSizeZ + 2;
@@ -401,7 +401,7 @@ void unify_fields_main(uint index){
     s.seed = 0;
     s.quality = QUALITY_STD;
 	
-	ISO_Material mat_point = New_ISO_Material();
+	STRUCT ISO_Material mat_point = New_ISO_Material();
 	
 	float xSideLength = static_settings.SideLength.x;
     float ySideLength = static_settings.SideLength.y;
@@ -441,7 +441,7 @@ void unify_fields_main(uint index){
     fvec3 pos_originWorld = FVEC3(xWorldOrigin, yWorldOrigin, zWorldOrigin);
 	
 	
-    float iso = iso_sample(s, src_voxel_pos, pos_originWorld, ChunkSizeX + 2, ChunkSizeY + 2, FullChunkSize_src_exp, heightmap_size, batchIndexExpanded, static_settings.batches[0]); //getISOval(GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, batch[3])).w;
+    float iso = iso_sample_9(s, src_voxel_pos, pos_originWorld, ChunkSizeX + 2, ChunkSizeY + 2, FullChunkSize_src_exp, heightmap_size, batchIndexExpanded, static_settings.batches[0]); //getISOval(GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, batch[3])).w;
 	
 	//vec4 iso_normal = getISOval(GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, batch[3]));
     fvec3 normal = normal_sample(s, index, src_voxel_pos, pos_originWorld, iso, ChunkSizeX + 2, ChunkSizeY + 2, FullChunkSize_src_exp, heightmap_size, batchIndexExpanded, static_settings.batches[0]);

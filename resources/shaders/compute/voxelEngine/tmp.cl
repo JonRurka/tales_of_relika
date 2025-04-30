@@ -1,7 +1,7 @@
-# 0 "1-heightmap_field_gen.cl"
+# 0 "5-smoothrender_mark.cl"
 # 0 "<built-in>"
 # 0 "<command-line>"
-# 1 "1-heightmap_field_gen.cl"
+# 1 "5-smoothrender_mark.cl"
 
 
 
@@ -14,24 +14,25 @@
 # 1 "../libUSL/Buffers.inc" 1
 # 6 "../libUSL/USL.inc" 2
 # 1 "../libUSL/compat.inc" 1
-# 19 "../libUSL/compat.inc"
+# 16 "../libUSL/compat.inc"
 float sqrMagnitude(float3 val) {
 
  return dot(val, val);
 }
-# 35 "../libUSL/compat.inc"
+# 33 "../libUSL/compat.inc"
 float vector_angle(float3 from, float3 to){
     float num = sqrt(dot(from, from) * dot(to, to));
     if (num < 0.0000000000000001)
     {
         return 0;
     }
-    float num2 = clamp(dot(from, to) / num, -1, 1);
+ float dot_val2 = dot(from, to);
+    float num2 = clamp(dot_val2 / num, -1.0f, 1.0f);
     return acos(num2) * 57.29578f;
 }
 # 7 "../libUSL/USL.inc" 2
-# 5 "1-heightmap_field_gen.cl" 2
-# 1 "Voxel_Lib/heightmap_field_lib.inc" 1
+# 5 "5-smoothrender_mark.cl" 2
+# 1 "Voxel_Lib/smoothrender_mark_lib.inc" 1
 
 
 
@@ -58,7 +59,7 @@ float vector_angle(float3 from, float3 to){
 
 
 
-CONST_ARRAY float g_randomVectors[1024] = {
+constant float g_randomVectors[1024] = {
     -0.763874, -0.596439, -0.246489, 0.0,
     0.396055, 0.904518, -0.158073, 0.0,
     -0.499004, -0.8665, -0.0131631, 0.0,
@@ -381,49 +382,7 @@ struct ControlPoint {
 };
 # 7 "Voxel_Lib/../../libnoise/libnoise_core.inc" 2
 # 16 "Voxel_Lib/../../libnoise/libnoise_core.inc"
-struct Module GetModule(float x, float y, float z)
-{
-   struct Module module;
-
-   module.Value = 0;
-   module.m_X = x;
-   module.m_Y = y;
-   module.m_Z = z;
-
-
-   module.m_frequency = 1.0;
-   module.m_lacunarity = 2.0;
-   module.m_noiseQuality = 1;
-   module.m_octaveCount = 6;
-   module.m_persistence = 0.5;
-   module.m_seed = 0;
-
-
-   module.m_ridged_offset = 1.0;
-   module.m_ridged_gain = 2.0;
-   module.m_ridged_H = 1.0;
-
-
-   module.m_voronoi_displacement = 1.0;
-   module.m_voronoi_enableDistance = false;
-
-
-   module.m_cachedValue = 0;
-   module.m_cache_isCached = false;
-   module.m_cache_xCache = 0;
-   module.m_cache_yCache = 0;
-   module.m_cache_zCache = 0;
-
-
-   module.m_turb_power = 1.0;
-   module.m_turb_seed = 0;
-   module.m_turb_frequency = 1.0;
-   module.m_turb_roughness = 3;
-
-   return module;
-}
-
-struct Module GetModule(struct Module m)
+struct Module GetModule_1(struct Module m)
 {
    struct Module module;
 
@@ -484,16 +443,58 @@ struct Module GetModule(struct Module m)
    return module;
 }
 
-struct Module GetModule(float x, float y, float z, float value)
+struct Module GetModule_2(struct Module m, float value)
 {
-   struct Module module = GetModule(x, y, z);
+   struct Module module = GetModule_1(m);
    module.Value = value;
    return module;
 }
 
-struct Module GetModule(struct Module m, float value)
+struct Module GetModule_3(float x, float y, float z)
 {
-   struct Module module = GetModule(m);
+   struct Module module;
+
+   module.Value = 0;
+   module.m_X = x;
+   module.m_Y = y;
+   module.m_Z = z;
+
+
+   module.m_frequency = 1.0;
+   module.m_lacunarity = 2.0;
+   module.m_noiseQuality = 1;
+   module.m_octaveCount = 6;
+   module.m_persistence = 0.5;
+   module.m_seed = 0;
+
+
+   module.m_ridged_offset = 1.0;
+   module.m_ridged_gain = 2.0;
+   module.m_ridged_H = 1.0;
+
+
+   module.m_voronoi_displacement = 1.0;
+   module.m_voronoi_enableDistance = false;
+
+
+   module.m_cachedValue = 0;
+   module.m_cache_isCached = false;
+   module.m_cache_xCache = 0;
+   module.m_cache_yCache = 0;
+   module.m_cache_zCache = 0;
+
+
+   module.m_turb_power = 1.0;
+   module.m_turb_seed = 0;
+   module.m_turb_frequency = 1.0;
+   module.m_turb_roughness = 3;
+
+   return module;
+}
+
+struct Module GetModule_4(float x, float y, float z, float value)
+{
+   struct Module module = GetModule_3(x, y, z);
    module.Value = value;
    return module;
 }
@@ -609,11 +610,11 @@ float GradientCoherentNoise3D(float x, float y, float z, int seed, int noiseQual
 {
 
 
-   int x0 = (x > 0.0 ? int(x) : int(x) - 1);
+   int x0 = (x > 0.0 ? (int)(x) : (int)(x) - 1);
    int x1 = x0 + 1;
-   int y0 = (y > 0.0 ? int(y) : int(y) - 1);
+   int y0 = (y > 0.0 ? (int)(y) : (int)(y) - 1);
    int y1 = y0 + 1;
-   int z0 = (z > 0.0 ? int(z) : int(z) - 1);
+   int z0 = (z > 0.0 ? (int)(z) : (int)(z) - 1);
    int z1 = z0 + 1;
 
 
@@ -791,7 +792,7 @@ struct Module Billow_GetValue(struct Module module)
 
       seed = (module.m_seed + curOctave) & 0xffffffff;
       signal = GradientCoherentNoise3D(nx, ny, nz, seed, module.m_noiseQuality);
-      signal = 2.0 * abs(signal) - 1.0;
+      signal = 2.0f * fabs(signal) - 1.0f;
       value += signal * curPersistence;
 
 
@@ -838,7 +839,7 @@ struct Module RidgedMulti_GetValue(struct Module module)
       signal = GradientCoherentNoise3D(nx, ny, nz, seed, module.m_noiseQuality);
 
 
-      signal = abs(signal);
+      signal = fabs(signal);
       signal = module.m_ridged_offset - signal;
 
 
@@ -1001,7 +1002,7 @@ struct Module Voronoi_GetValue(struct Module module)
 
 struct Module ABS_GetValue(struct Module module)
 {
-   module.Value = abs(module.Value);
+   module.Value = fabs(module.Value);
    return module;
 }
 
@@ -1054,7 +1055,8 @@ struct Module Curve_GetValue(struct Module module, struct ControlPoint m_pContro
 struct Module Exponent_GetValue(struct Module module, float m_exponent)
 {
    float value = module.Value;
-   module.Value = (pow(abs((value + 1.0) / 2.0), m_exponent) * 2.0 - 1.0);
+   float abs_val = fabs((value + 1.0f) / 2.0f);
+   module.Value = (pow(abs_val, m_exponent) * 2.0f - 1.0f);
    return module;
 }
 
@@ -1124,7 +1126,7 @@ struct Module RotatePoint_SetAngles(struct Module module, float angle_x, float a
    return module;
 }
 
-struct Module RotatePoint_GetModule(struct Module module)
+struct Module RotatePoint_GetModule_1(struct Module module)
 {
    float x = module.m_X;
    float y = module.m_Y;
@@ -1137,10 +1139,10 @@ struct Module RotatePoint_GetModule(struct Module module)
    return module;
 }
 
-struct Module RotatePoint_GetModule(struct Module module, float angle_x, float angle_y, float angle_z)
+struct Module RotatePoint_GetModule_2(struct Module module, float angle_x, float angle_y, float angle_z)
 {
    module = RotatePoint_SetAngles(module, angle_x, angle_y, angle_z);
-   module = RotatePoint_GetModule(module);
+   module = RotatePoint_GetModule_1(module);
 
    return module;
 }
@@ -1188,7 +1190,7 @@ struct Module Turbulence_GetValue(struct Module module)
    float x = module.m_X;
    float y = module.m_Y;
    float z = module.m_Z;
-# 488 "Voxel_Lib/../../libnoise/libnoise_module.inc"
+# 489 "Voxel_Lib/../../libnoise/libnoise_module.inc"
    float x0, y0, z0;
    float x1, y1, z1;
    float x2, y2, z2;
@@ -1202,19 +1204,19 @@ struct Module Turbulence_GetValue(struct Module module)
    y2 = y + (11213.0 / 65536.0);
    z2 = z + (44845.0 / 65536.0);
 
-   struct Module m_DistortModule = GetModule(x0, y0, z0);
+   struct Module m_DistortModule = GetModule_3(x0, y0, z0);
    m_DistortModule.m_seed = (int)(module.m_turb_seed);
    m_DistortModule.m_frequency = module.m_turb_frequency;
    m_DistortModule.m_octaveCount = module.m_turb_roughness;
    float xDistort = x + (Perlin_GetValue(m_DistortModule).Value * module.m_turb_power);
 
-   m_DistortModule = GetModule(x1, y1, z1);
+   m_DistortModule = GetModule_3(x1, y1, z1);
    m_DistortModule.m_seed = (int)(module.m_turb_seed) + 1;
    m_DistortModule.m_frequency = module.m_turb_frequency;
    m_DistortModule.m_octaveCount = module.m_turb_roughness;
    float yDistort = y + (Perlin_GetValue(m_DistortModule).Value * module.m_turb_power);
 
-   m_DistortModule = GetModule(x2, y2, z2);
+   m_DistortModule = GetModule_3(x2, y2, z2);
    m_DistortModule.m_seed = (int)(module.m_turb_seed) + 2;
    m_DistortModule.m_frequency = module.m_turb_frequency;
    m_DistortModule.m_octaveCount = module.m_turb_roughness;
@@ -1404,7 +1406,7 @@ struct Run_Settings{
 
 struct Materials{
     int4 material_types;
-    int4 material_ratios;
+    float4 material_ratios;
 };
 
 struct ISO_Material{
@@ -1446,7 +1448,7 @@ struct Polygon New_Polygon(float4 v1, float4 v2, float4 v3){
 struct Materials New_Materials(){
  struct Materials mat;
  mat.material_types = (int4)(0, 0, 0, 0);
- mat.material_ratios = (int4)(0, 0, 0, 0);
+ mat.material_ratios = (float4)(0, 0, 0, 0);
  return mat;
 }
 
@@ -1454,7 +1456,7 @@ struct ISO_Material New_ISO_Material(){
  struct ISO_Material mat;
  mat.final_iso = (float4)(0, 0, 0, 0);
  mat.material_types = (int4)(0, 0, 0, 0);
- mat.material_ratios = (int4)(0, 0, 0, 0);
+ mat.material_ratios = (float4)(0, 0, 0, 0);
  return mat;
 }
 
@@ -1465,7 +1467,7 @@ struct GridPoint New_GridPoint(){
  res.globalPosition = (float4)(0, 0, 0, 0);
  res.normal = (float4)(0, 0, 0, 0);
  res.type = (int4)(0, 0, 0, 0);
- res.type_ratio = (int4)(0, 0, 0, 0);
+ res.type_ratio = (float4)(0, 0, 0, 0);
  return res;
 }
 
@@ -1504,171 +1506,83 @@ int2 C_1D_to_2D(uint i, uint width) {
 
     return (int2)(x, y);
 }
-# 5 "Voxel_Lib/heightmap_field_lib.inc" 2
-# 1 "Voxel_Lib/sampler.inc" 1
-
-
-
-
-struct Settings{
-    uint ChunkSizeX;
-    uint ChunkSizeY;
-    uint ChunkSizeZ;
-
-    float VoxelsPerMeter;
-    uint quality;
-    int seed;
-    bool enableCaves;
-    float amp;
-    float caveDensity;
-    float grassOffset;
-};
-
-struct Settings New_Settings(){
- struct Settings s;
-
- s.ChunkSizeX = 0;
- s.ChunkSizeY = 0;
- s.ChunkSizeZ = 0;
- s.VoxelsPerMeter = 0;
- s.quality = 0;
- s.seed = 0;
- s.enableCaves = false;
- s.amp = 0;
- s.caveDensity = 0;
- s.grassOffset = 0;
-
- return s;
-}
-
-
-
-# 1 "Voxel_Lib/samplers/Sphere_Sampler.inc" 1
-# 10 "Voxel_Lib/samplers/Sphere_Sampler.inc"
-float sphere_sample(float radius, float3 center, float x, float y, float z){
-
-    return radius - sqrt(pow(x - center.x, 2) + pow(y - center.y, 2) + pow(z - center.z, 2));
-}
-
-float Sample_2D(struct Settings s, float x, float y)
-{
-    return 0;
-}
-
-float Sample_3D(struct Settings s, float x, float y, float z)
-{
-# 34 "Voxel_Lib/samplers/Sphere_Sampler.inc"
- float radius = 16;
-
- float3 sphere_center = (float3)(16, 16, 16);
-    float val = sphere_sample(radius, sphere_center, x, y, z);
-    return val;
-}
-# 39 "Voxel_Lib/sampler.inc" 2
-# 6 "Voxel_Lib/heightmap_field_lib.inc" 2
+# 5 "Voxel_Lib/smoothrender_mark_lib.inc" 2
 
 __global struct Static_Settings* in_static_settings;
-__global struct Run_Settings* in_run_settings;
 
-__global float* out_data;
+__global int* in_counts_data;
 
-__global float* out_debug_data;
+__global int* out_stitch_map_data;
+__global int4* out_counts_data;
+
+__global float4* out_debug_data;
 
 
-float height_sample(float x, float y, struct Settings s){
-
-    return Sample_2D(s, x, y);
+void SetStitchMap(uint voxel_index, int poly_buffer_index){
+ out_stitch_map_data[voxel_index] = poly_buffer_index;
 }
 
-float height_sample(float2 p, struct Settings s){
-    return height_sample(p.x, p.y, s);
+int GetCount(uint index){
+ return in_counts_data[index];
 }
 
-void setHeightVal(uint index, float height){
-
-
-
-
-
- out_data[index] = height;
-
+void Set_Debug_Data(uint index, float4 data){
+ out_debug_data[index] = data;
 }
 
-void heightmap_gen_main(uint index) {
+void CreateStitchMap(uint batch_index, uint batchesPerGroup, uint fullChunkSize){
 
+    uint batch_offset = (batch_index) * fullChunkSize;
 
- struct Static_Settings static_settings = in_static_settings[0];
+    int buffer_index = 0;
+ uint v_index = 0;
+    for (v_index = 0; v_index < fullChunkSize; ++v_index){
 
- uint ChunkSizeX = static_settings.ChunkSize.x;
-    uint ChunkSizeY = static_settings.ChunkSize.y;
+        int poly_count = GetCount(batch_offset + v_index);
 
- uint fullSize = (ChunkSizeX + 2) * (ChunkSizeY + 2);
+        if (poly_count == 0){
+            continue;
+        }
 
- uint inst_index = int(index) / fullSize;
-    struct Run_Settings run_settings = in_run_settings[inst_index];
+        SetStitchMap(batch_offset + v_index, buffer_index);
 
- uint numBatchesPerGroup = static_settings.batches[0];
-
- if (run_settings.Location.w == -1 || index >= (fullSize * numBatchesPerGroup)){
-        return;
+        buffer_index += poly_count;
     }
 
- uint batchIndex = (uint)(run_settings.Location.w);
-    uint batchIndexExpanded = (uint)(run_settings.Location.w);
-
- int4 batch = (int4)(0, batchIndexExpanded, 0, fullSize);
-
- uint voxel_index = GetVoxelIndex(batchIndexExpanded, index, fullSize);
-
- int2 index_pos = C_1D_to_2D(voxel_index, ChunkSizeY + 2);
-
- float xSideLength = static_settings.SideLength.x;
-    float ySideLength = static_settings.SideLength.y;
-
-
-    int x = index_pos.x;
-    int y = index_pos.y;
-
-
-    int cx = run_settings.Location.x;
-    int cy = run_settings.Location.y;
-
-
-    int xStart = cx * (int)(ChunkSizeX);
-    int yStart = cy * (int)(ChunkSizeY);
-
-
-    float xLocalWorld = x * xSideLength;
-    float yLocalWorld = y * ySideLength;
-    float2 pos_localWorld = (float2)(xLocalWorld, yLocalWorld);
-
-
-    float xWorldOrigin = (xStart * xSideLength) + xLocalWorld;
-    float yWorldOrigin = (yStart * ySideLength) + yLocalWorld;
-    float2 pos_originWorld = (float2)(xWorldOrigin, yWorldOrigin);
-
- struct Settings s = New_Settings();
-    s.ChunkSizeX = ChunkSizeX + 1;
-    s.ChunkSizeZ = ChunkSizeY + 1;
-    s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
-
- float height_sample_val = height_sample(pos_originWorld.x, pos_originWorld.y, s);
-
- setHeightVal(GetBatchIndex((batchIndexExpanded % (uint)(static_settings.batches[0])), voxel_index, fullSize), height_sample_val);
+ out_counts_data[batch_index] = (int4)(buffer_index, 0, batch_index, 0);
 
 }
-# 6 "1-heightmap_field_gen.cl" 2
+
+void smoothrender_mark_main(uint batch_index){
+
+    struct Static_Settings static_settings = in_static_settings[0];
+
+
+
+    CreateStitchMap(batch_index, static_settings.batches[0], (uint)(static_settings.FullChunkSize[0]));
+
+
+
+}
+# 6 "5-smoothrender_mark.cl" 2
 
 void kernel main_cl(
- global const struct Static_Settings* p_in_static_settings,
- global const struct Run_Settings* p_in_run_settings,
- global float* p_out_data,
- global float* p_out_debug_data)
+ global struct Static_Settings* p_in_static_settings,
+
+ global int* p_in_counts_data,
+
+ global int* p_out_stitch_map_data,
+ global int4* p_out_counts_data,
+
+ global float4* p_out_debug_data,
+)
 {
  in_static_settings = p_in_static_settings;
- in_run_settings = p_in_run_settings;
- out_data = p_out_data;
+ in_counts_data = p_in_counts_data;
+ out_stitch_map_data = p_out_stitch_map_data;
+ out_counts_data = p_out_counts_data;
  out_debug_data = p_out_debug_data;
 
- heightmap_gen_main(get_global_id(0));
+
+ smoothrender_mark_main(get_global_id(0));
 }

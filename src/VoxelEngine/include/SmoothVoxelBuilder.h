@@ -145,7 +145,7 @@ namespace VoxelEngine {
 		std::string m_shaderDir;
 		int m_WorkGroups = 0;
 
-		const int m_voxel_runtime{ VOXEL_RUNTIME_OPENCL };
+		const int m_voxel_runtime{ VOXEL_RUNTIME };
 
 		Vulkan_Device_Info m_device_vk;
 		OpenCL_Device_Info m_device_cl;

@@ -399,13 +399,13 @@ VkResult ComputeContext::createLogicalDevice()
 	vkGetMemoryWin32HandleKHR = (PFN_vkGetMemoryWin32HandleKHR)vkGetDeviceProcAddr(mDevice, "vkGetMemoryWin32HandleKHR");
 #endif
 
-	Utilities::Create_NVVK_Allocator(mPhysicalDevice, mDevice);
-	load_GL(window::sysGetProcAddress);
+	//Utilities::Create_NVVK_Allocator(mPhysicalDevice, mDevice);
+	//load_GL(window::sysGetProcAddress);
 
 
 	//nvvk::gl_vk_buffer::run_test(window::glfw_window(), *mInstance, mDevice, mPhysicalDevice);
-	nvvk::gl_vk_buffer::run_test();
-	printf("executed glCreateBuffers\n");
+	//nvvk::gl_vk_buffer::run_test();
+	//printf("executed glCreateBuffers\n");
 
 	VkResult res = VK_SUCCESS;
 	return res;

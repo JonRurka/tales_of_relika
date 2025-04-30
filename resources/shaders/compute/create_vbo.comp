@@ -1,6 +1,8 @@
+#version 450
+
 #define USL_DIRECTX_UNITY3D 0
-#define USL_VULKAN 0
-#define USL_OPENCL 1
+#define USL_VULKAN 1
+#define USL_OPENCL 0
 #include "libUSL/USL.inc"
 
 #define STRIDE 8
@@ -42,21 +44,10 @@ void insert(uvec3 id)
 }
 
 
-//layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
-//void main()
-//{
-	//insert(gl_GlobalInvocationID);
-//}
-
-void kernel main_cl(
-	global float* p_out_vbo, 
-	global fvec4* p_fvec4 in_vertices,
-	global fvec4* p_fvec4 in_normals,
-)
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+void main()
 {
-	out_vbo = p_out_vbo;
-	in_vertices = p_in_vertices;
-	in_normals = p_in_normals;
-	
-	insert(get_global_id(0));
+	insert(gl_GlobalInvocationID);
 }
+
+

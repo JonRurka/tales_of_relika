@@ -22,6 +22,7 @@ void VoxelComputeProgram::AddBuffer(int bind, IComputeBuffer* buffer)
 
 	IComputeProgram::BindIndex ind{};
 	ind.GlobalIndex = bind;
+	ind.ParameterIndex = bind;
 	m_program->KernelSetBuffer(kernel_name, buffer, ind);
 }
 
@@ -47,6 +48,14 @@ void VoxelComputeProgram::Initialize(IComputeController* controller, std::string
 	m_controller = controller;
 	m_name = name;
 
+	switch (type) {
+	case IComputeProgram::FileType::Binary_Data: // likely vulkan
+		kernel_name = "main";
+		break;
+	case IComputeProgram::FileType::Text_Data: // likely OpenCL
+		kernel_name = "main_cl";
+		break;
+	}
 
 
 	std::vector<char> shader_data_tmp = Resources::Get_Shader_bin(name);

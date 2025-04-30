@@ -287,7 +287,7 @@ def serialize_resources(prefix_letter, resource_map, data_map):
         
 
 print('Processing Shaders.')
-process_assets('resources/shaders', ['.cl', '.vert', '.frag'], process_shader_asset);
+process_assets('resources/shaders', ['.comp', '.cl', '.vert', '.frag'], process_shader_asset);
 serialize_shader_resources(shader_resources, shader_resource_file_bytes)
 #serialize_resources('s', data_resources, data_resource_bytes)
 print('\n')
