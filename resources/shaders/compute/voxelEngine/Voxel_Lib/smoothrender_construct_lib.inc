@@ -47,6 +47,64 @@ readwrite_buffer_int(12, out_stitch_map_data)
 readwrite_buffer(fvec4, 13, out_debug_data)
 
 
+
+
+#define VERTEX_SELECT(vert_list, res_idx, edge_ent, test, p1_idx, p2_idx, invalid)         \
+do {                                                                                       \
+    if ((edge_ent & test) == 0 || invalid){                                                \
+		vert_list[res_idx] = IVEC2(-1, -1);                                                \
+        break;                                                                             \
+    }                                                                                      \
+	vert_list[res_idx] = IVEC2(p1_idx, p2_idx);                                            \
+}while(false);
+
+
+#define VERTEX_INTERP(grid_vert, isoLevel, grid, p1_idx, p2_idx)                  \
+do{                                                                               \
+    float iso_1 = GRIDPOINT_ISO(grid, p1_idx);                                    \
+    fvec4 pos_1_local = GRIDPOINT_LOCAL_POS(grid, p1_idx);                        \
+	fvec4 normal_1 = GRIDPOINT_NORMAL(grid, p1_idx);                              \
+																				  \
+	float iso_2 = GRIDPOINT_ISO(grid, p2_idx);                                    \
+    fvec4 pos_2_local = GRIDPOINT_LOCAL_POS(grid, p2_idx);                        \
+    fvec4 normal_2 = GRIDPOINT_NORMAL(grid, p2_idx);                              \
+																				  \
+    if (FABS(isoLevel - iso_1) < 0.00001f)                                        \
+		GRID_VERTEX_LOCAL_POS(grid_vert, 0) = GRIDPOINT_LOCAL_POS(grid, p1_idx);  \
+		GRID_VERTEX_NORMAL(grid_vert, 0) = GRIDPOINT_NORMAL(grid, p1_idx);        \
+        break;                                                                    \
+    if (FABS(isoLevel - iso_2) < 0.00001f)                                        \
+		GRID_VERTEX_LOCAL_POS(grid_vert, 0) = GRIDPOINT_LOCAL_POS(grid, p2_idx);  \
+		GRID_VERTEX_NORMAL(grid_vert, 0) = GRIDPOINT_NORMAL(grid, p2_idx);        \
+        break;                                                                    \
+    if (FABS(iso_1 - iso_2) < 0.00001f)                                           \
+		GRID_VERTEX_LOCAL_POS(grid_vert, 0) = GRIDPOINT_LOCAL_POS(grid, p1_idx);  \
+		GRID_VERTEX_NORMAL(grid_vert, 0) = GRIDPOINT_NORMAL(grid, p1_idx);        \
+        break;                                                                    \
+																				  \
+    float mu = (isoLevel - iso_1) / (iso_2 - iso_1);                              \
+																				  \
+    fvec4 res_pos_local = FVEC4_ZERO;                                             \
+	fvec4 res_normal = FVEC4_ZERO;                                                \
+    ivec4 type = IVEC4_ZERO;                                                      \
+    fvec4 type_ratios = FVEC4_ZERO;                                               \
+																				  \
+    res_pos_local.x = pos_1_local.x + mu * (pos_2_local.x - pos_1_local.x);       \
+    res_pos_local.y = pos_1_local.y + mu * (pos_2_local.y - pos_1_local.y);       \
+    res_pos_local.z = pos_1_local.z + mu * (pos_2_local.z - pos_1_local.z);       \
+	res_normal.x = normal_1.x + mu * (normal_2.x - normal_1.x);                   \
+    res_normal.y = normal_1.y + mu * (normal_2.y - normal_1.y);                   \
+    res_normal.z = normal_1.z + mu * (normal_2.z - normal_1.z);                   \
+																				  \
+	GRID_VERTEX_LOCAL_POS(grid_vert, 0) = res_pos_local;                          \
+	GRID_VERTEX_NORMAL(grid_vert, 0) = res_normal;                                \
+}while(false);
+
+//type = mu < 0.5 ? p1.type : p2.type;
+//type_ratios = mu < 0.5 ? p1.type_ratio : p2.type_ratio;
+
+
+
 float iso_sample_3D_4(float x, float y, float z, STRUCT Settings s){
 
     return Sample_3D(s, x, y, z);
@@ -330,7 +388,7 @@ STRUCT GridPoint VertexInterp(int edge_ent, int test, float isoLevel, STRUCT Gri
     return gr_point;
 }
 
-void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_index, uint v_index, uint cubeIndex, int edge_ent, STRUCT GridPoint vertList[12])
+void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_index, uint v_index, uint cubeIndex, int edge_ent, ivec2 vert_map[12] /*,STRUCT GridPoint vertList[12]*/, fvec4 grid[GRIDPOINT_STRIDE * 8], float isoLevel)
 {
 	if(edge_ent == 0){
         return;
@@ -356,9 +414,30 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 
         int curTris = count;
 
-        STRUCT GridPoint p1 = vertList[Get_Tritable(cubeIndex * 16 + (i + 0))];
-        STRUCT GridPoint p2 = vertList[Get_Tritable(cubeIndex * 16 + (i + 1))];
-        STRUCT GridPoint p3 = vertList[Get_Tritable(cubeIndex * 16 + (i + 2))];
+        //STRUCT GridPoint p1 = vertList[Get_Tritable(cubeIndex * 16 + (i + 0))];
+        //STRUCT GridPoint p2 = vertList[Get_Tritable(cubeIndex * 16 + (i + 1))];
+        //STRUCT GridPoint p3 = vertList[Get_Tritable(cubeIndex * 16 + (i + 2))];
+		
+		NEW_GRID_VERTEX_1(gv_1)
+		NEW_GRID_VERTEX_1(gv_2)
+		NEW_GRID_VERTEX_1(gv_3)
+		
+		ivec2 edge1_idx = vert_map[Get_Tritable(cubeIndex * 16 + (i + 0))];
+		ivec2 edge2_idx = vert_map[Get_Tritable(cubeIndex * 16 + (i + 1))];
+		ivec2 edge3_idx = vert_map[Get_Tritable(cubeIndex * 16 + (i + 2))];
+		
+		if ((edge1_idx.x == -1 || edge1_idx.y == -1) ||
+			(edge2_idx.x == -1 || edge2_idx.y == -1) ||
+			(edge3_idx.x == -1 || edge3_idx.y == -1))
+		{
+			Print("Invalid edge detected\n");
+			continue;
+		}
+		
+		VERTEX_INTERP(gv_1, isoLevel, grid, edge1_idx.x, edge1_idx.y)
+		VERTEX_INTERP(gv_2, isoLevel, grid, edge2_idx.x, edge2_idx.y)
+		VERTEX_INTERP(gv_3, isoLevel, grid, edge3_idx.x, edge3_idx.y)
+		
 
         //p1.position.w = p1.type.x + p1.type_ratio.x;
         //p1.normal.w = p1.type.y + p1.type_ratio.y;
@@ -370,24 +449,27 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
         //p3.normal.w = p3.type.y + p3.type_ratio.y;
 
 
-        fvec3 dir = cross(p2.localPosition.xyz - p1.localPosition.xyz, p3.localPosition.xyz - p1.localPosition.xyz);
-        fvec3 norm = -normalize(dir);
-		fvec4 norm4 = FVEC4(norm.x, norm.y, norm.z, 0.0f);
+        //fvec3 dir = cross(p2.localPosition.xyz - p1.localPosition.xyz, p3.localPosition.xyz - p1.localPosition.xyz);
+        //fvec3 norm = -normalize(dir);
+		//fvec4 norm4 = FVEC4(norm.x, norm.y, norm.z, 0.0f);
 
         //vec4 n1 = vec4(norm.x, norm.y, norm.z, 0);
         int t1 = INT(curTris) + 2;
-		fvec3 norm1 = p1.normal.xyz;// normal_sample(s, index_pos, p1.globalPosition.xyz);
-        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p1.localPosition, FVEC4(norm1.x, norm1.y, norm1.z, 0), t1, count);
+		fvec3 norm1 = GRID_VERTEX_NORMAL(gv_1, 0).xyz;// p1.normal.xyz;// normal_sample(s, index_pos, p1.globalPosition.xyz);
+		fvec4 pos1 = GRID_VERTEX_LOCAL_POS(gv_1, 0);// p1.localPosition;
+        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), pos1, FVEC4(norm1.x, norm1.y, norm1.z, 0), t1, count);
         
         //vec4 n2 = vec4(norm.x, norm.y, norm.z, 0);
         int t2 = INT(curTris) + 1;
-		fvec3 norm2 = p2.normal.xyz;// normal_sample(s, index_pos, p2.globalPosition.xyz);
-        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p2.localPosition, FVEC4(norm2.x, norm2.y, norm2.z, 0), t2, count);
+		fvec3 norm2 = GRID_VERTEX_NORMAL(gv_2, 0).xyz;// p2.normal.xyz;// normal_sample(s, index_pos, p2.globalPosition.xyz);
+		fvec4 pos2 = GRID_VERTEX_LOCAL_POS(gv_2, 0);// p2.localPosition;
+        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), pos2, FVEC4(norm2.x, norm2.y, norm2.z, 0), t2, count);
         
         //vec4 n3 = vec4(norm.x, norm.y, norm.z, 0);
         int t3 = INT(curTris) + 0;
-		fvec3 norm3 = p3.normal.xyz;//normal_sample(s, index_pos, p3.globalPosition.xyz);
-        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), p3.localPosition, FVEC4(norm3.x, norm3.y, norm3.z, 0), t3, count);
+		fvec3 norm3 = GRID_VERTEX_NORMAL(gv_3, 0).xyz;// p3.normal.xyz;//normal_sample(s, index_pos, p3.globalPosition.xyz);
+		fvec4 pos3 = GRID_VERTEX_LOCAL_POS(gv_3, 0);// p3.localPosition;
+        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), pos3, FVEC4(norm3.x, norm3.y, norm3.z, 0), t3, count);
 		
     }
 
@@ -396,9 +478,11 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 	//Set_Debug_Data(v_index, FVEC4(count, 0, 0, 0));
 }
 
-void CreateVertList(STRUCT Static_Settings static_settings, ivec4 batch, uint g_index, uint v_index, STRUCT GridPoint grid[8], float isoLevel, uint ChunkSizeX, uint ChunkSizeY, uint ChunkSizeZ){
+void CreateVertList(STRUCT Static_Settings static_settings, ivec4 batch, uint g_index, uint v_index, fvec4 grid[8 * GRIDPOINT_STRIDE], float isoLevel, uint ChunkSizeX, uint ChunkSizeY, uint ChunkSizeZ){
 
-    STRUCT GridPoint vertList[12];
+    //STRUCT GridPoint vertList[12];
+	ivec2 vert_map[12];
+	
     int cubeIndex = 0;
 
     /*SetDebug_Grid(index, 0, grid[0]);
@@ -410,14 +494,22 @@ void CreateVertList(STRUCT Static_Settings static_settings, ivec4 batch, uint g_
     SetDebug_Grid(index, 6, grid[6]);
     SetDebug_Grid(index, 7, grid[7]);*/
 
-    if (grid[0].iso > isoLevel) cubeIndex |= 1;
+    /*if (grid[0].iso > isoLevel) cubeIndex |= 1;
     if (grid[1].iso > isoLevel) cubeIndex |= 2;
     if (grid[2].iso > isoLevel) cubeIndex |= 4;
     if (grid[3].iso > isoLevel) cubeIndex |= 8;
     if (grid[4].iso > isoLevel) cubeIndex |= 16;
     if (grid[5].iso > isoLevel) cubeIndex |= 32;
     if (grid[6].iso > isoLevel) cubeIndex |= 64;
-    if (grid[7].iso > isoLevel) cubeIndex |= 128;
+    if (grid[7].iso > isoLevel) cubeIndex |= 128;*/
+	if (GRIDPOINT_ISO(grid, 0) > isoLevel) cubeIndex |= 1;
+    if (GRIDPOINT_ISO(grid, 1) > isoLevel) cubeIndex |= 2;
+    if (GRIDPOINT_ISO(grid, 2) > isoLevel) cubeIndex |= 4;
+    if (GRIDPOINT_ISO(grid, 3) > isoLevel) cubeIndex |= 8;
+    if (GRIDPOINT_ISO(grid, 4) > isoLevel) cubeIndex |= 16;
+    if (GRIDPOINT_ISO(grid, 5) > isoLevel) cubeIndex |= 32;
+    if (GRIDPOINT_ISO(grid, 6) > isoLevel) cubeIndex |= 64;
+    if (GRIDPOINT_ISO(grid, 7) > isoLevel) cubeIndex |= 128;
 
     int edge_ent = Get_Edgetable(cubeIndex);
 
@@ -426,8 +518,25 @@ void CreateVertList(STRUCT Static_Settings static_settings, ivec4 batch, uint g_
 	//Set_Debug_Data(g_index, FVEC4(g_index, FLOAT(cubeIndex), edge_ent, 0));
 
     bool invalid = (edge_ent == 0);
+	
+	
+	VERTEX_SELECT(vert_map, 0,  edge_ent, 1,    0, 1, invalid);
+    VERTEX_SELECT(vert_map, 1,  edge_ent, 2,    1, 2, invalid);
+    VERTEX_SELECT(vert_map, 2,  edge_ent, 4,    2, 3, invalid);
+    VERTEX_SELECT(vert_map, 3,  edge_ent, 8,    3, 0, invalid);
 
-    vertList[0] = VertexInterp(edge_ent, 1, isoLevel, grid[0], grid[1], invalid);
+    VERTEX_SELECT(vert_map, 4,  edge_ent, 16,   4, 5, invalid);
+    VERTEX_SELECT(vert_map, 5,  edge_ent, 32,   5, 6, invalid);
+    VERTEX_SELECT(vert_map, 6,  edge_ent, 64,   6, 7, invalid);
+    VERTEX_SELECT(vert_map, 7,  edge_ent, 128,  7, 4, invalid);
+
+    VERTEX_SELECT(vert_map, 8,  edge_ent, 256,  0, 4, invalid);
+    VERTEX_SELECT(vert_map, 9,  edge_ent, 512,  1, 5, invalid);
+    VERTEX_SELECT(vert_map, 10, edge_ent, 1024, 2, 6, invalid);
+    VERTEX_SELECT(vert_map, 11, edge_ent, 2048, 3, 7, invalid);
+	
+    /*
+	vertList[0] = VertexInterp(edge_ent, 1, isoLevel, grid[0], grid[1], invalid);
     vertList[1] = VertexInterp(edge_ent, 2, isoLevel, grid[1], grid[2], invalid);
     vertList[2] = VertexInterp(edge_ent, 4, isoLevel, grid[2], grid[3], invalid);
     vertList[3] = VertexInterp(edge_ent, 8, isoLevel, grid[3], grid[0], invalid);
@@ -442,10 +551,10 @@ void CreateVertList(STRUCT Static_Settings static_settings, ivec4 batch, uint g_
     vertList[8] = VertexInterp(edge_ent, 256, isoLevel, grid[0], grid[4], invalid);
     vertList[9] = VertexInterp(edge_ent, 512, isoLevel, grid[1], grid[5], invalid);
     vertList[10] = VertexInterp(edge_ent, 1024, isoLevel, grid[2], grid[6], invalid);
-    vertList[11] = VertexInterp(edge_ent, 2048, isoLevel, grid[3], grid[7], invalid);
+    vertList[11] = VertexInterp(edge_ent, 2048, isoLevel, grid[3], grid[7], invalid);*/
 
 
-    Process_Voxel(static_settings, batch, g_index, v_index, cubeIndex, edge_ent, vertList);
+    Process_Voxel(static_settings, batch, g_index, v_index, cubeIndex, edge_ent, vert_map, grid, isoLevel);
     
 }
 
@@ -497,10 +606,19 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
     fvec4 pos_originWorld = FVEC4(xWorldOrigin, yWorldOrigin, zWorldOrigin, 0);
 
     uvec4 batch_settings = static_settings.batches;
-    STRUCT GridPoint grid[8];
+    //STRUCT GridPoint grid[8];
+	NEW_GRIDPOINT_ARRAY(grid, 8)
+
+	STRUCT Settings s = New_Settings();
+    s.ChunkSizeX = ChunkSizeX + 2;
+    s.ChunkSizeY = ChunkSizeY + 2;
+    s.ChunkSizeZ = ChunkSizeZ + 2;
+    s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
+    s.seed = 0;
+    s.quality = QUALITY_STD;
 
     for (int i = 0; i < 8; ++i){
-        grid[i] = GetGridPoint(
+        /*grid[i] = GetGridPoint(
 			static_settings,
             batch, 
             batch_settings, 
@@ -512,7 +630,38 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
             ChunkSizeX, 
             ChunkSizeY, 
             ChunkSizeZ
-        );
+        );*/
+		
+		uint index = v_index;
+		ivec4 p_index_pos = index_pos + Get_Direction_Offset(i);
+		fvec4 globalWorldPos = pos_originWorld + Get_Global_Offset(i);
+		fvec4 localWorldPos = pos_localWorld + Get_Global_Offset(i);
+		
+		uint index_exp = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX + 1, ChunkSizeZ + 1);
+
+		uint index2 = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX, ChunkSizeZ);
+		
+		uint batch_index = GetBatchIndex((UINT(batch[1]) % UINT(batch_settings[0])), index_exp, batch[3]);
+		
+		float iso_val = iso_sample_3(s, p_index_pos.xyz, globalWorldPos.xyz);
+		fvec3 normal = normal_sample(s, p_index_pos.xyz, globalWorldPos.xyz);
+		
+		//NEW_GRIDPOINT_1(gr_point)
+		GRIDPOINT_ISO(grid, i) = iso_val;
+		GRIDPOINT_LOCAL_POS(grid, i) = localWorldPos;
+		GRIDPOINT_GLOBAL_POS(grid, i) = globalWorldPos;
+		GRIDPOINT_VOXEL_ID(grid, i) = FVEC4(0, 0, 0, 0);
+		GRIDPOINT_NORMAL(grid, i) = FVEC4(normal.x, normal.y, normal.z, 0);
+		GRIDPOINT_TYPE(grid, i) = FVEC4(0, 0, 0, 0);
+		GRIDPOINT_TYPE_RATIO(grid, i) = FVEC4(0, 0, 0, 0);
+		
+		//STRUCT GridPoint gr_point = New_GridPoint();
+		//gr_point.iso = iso_val;
+		//gr_point.localPosition = localWorldPos;
+		//gr_point.globalPosition = globalWorldPos;
+		//gr_point.normal = FVEC4(normal.x, normal.y, normal.z, 0);
+		//gr_point.type = IVEC4(0, 0, 0, 0);// iso_mat.material_types;
+		//gr_point.type_ratio = FVEC4(0, 0, 0, 0);// iso_mat.material_ratios;
     }
 
     Set_Count(GetBatchIndex(batch[0], v_index, batch[2]), 0);

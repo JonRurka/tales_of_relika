@@ -24,6 +24,8 @@
 
 using namespace DynamicCompute::Compute::VK;
 
+#define WAIT_IDLE 1
+
 std::vector<VkExtensionProperties> ComputeEngine::mExtensions;
 VkInstance ComputeEngine::mInstance;
 nvvk::Context ComputeEngine::mVkctx;
@@ -783,7 +785,9 @@ int ComputeKernel::Execute(uint32_t x, uint32_t y, uint32_t z)
 		throw std::runtime_error("Failed to submit compute command buffer!");
 	}
 	//printf("ComputeKernel::Execute: Finish execute submit '%s'\n", mName);
-	//vkQueueWaitIdle(*mComputeQueue);
+#if WAIT_IDLE == 1
+	vkQueueWaitIdle(*mComputeQueue);
+#endif
 	vkWaitForFences(*mDevice, 1, &mFinished_fence, VK_TRUE, UINT64_MAX);
 	vkResetFences(*mDevice, 1, &mFinished_fence);
 	//printf("ComputeKernel::Execute: Finish execute wait '%s'\n", mName);

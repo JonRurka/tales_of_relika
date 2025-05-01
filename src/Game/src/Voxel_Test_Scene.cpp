@@ -262,9 +262,9 @@ void Voxel_Test_Scene::Init()
 
 	settings.GetSettings()->setString("programDir", std::string("C:/Users/jrurka/Source/repos/game_project/resources/shaders/compute/voxelEngine/Bin"));
 	settings.GetSettings()->setFloat("voxelsPerMeter", 1);
-	settings.GetSettings()->setInt("chunkMeterSizeX", 32);
-	settings.GetSettings()->setInt("chunkMeterSizeY", 32);
-	settings.GetSettings()->setInt("chunkMeterSizeZ", 32);
+	settings.GetSettings()->setInt("chunkMeterSizeX", 8);
+	settings.GetSettings()->setInt("chunkMeterSizeY", 8);
+	settings.GetSettings()->setInt("chunkMeterSizeZ", 8);
 	settings.GetSettings()->setInt("TotalBatchGroups", 1);
 	settings.GetSettings()->setInt("BatchesPerGroup", 1);
 	settings.GetSettings()->setInt("InvertTrianges", false);
@@ -295,15 +295,8 @@ void Voxel_Test_Scene::Init()
 	std::vector<glm::ivec4> counts = m_builder->GetSize();
 	glm::ivec4 chnk_count = counts[0];
 
-	auto end = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration<double>(end - start).count();
-	Logger::LogDebug(LOG_POS("Init"), "Generate Time: %f", (duration) * 1000.0f);
+	
 
-	Logger::LogDebug(LOG_POS("Init"), "Generate - Assemble: %f ms", gen_times.y * 1000);
-	Logger::LogDebug(LOG_POS("Init"), "Generate - Construct: %f ms", gen_times.z * 1000);
-
-	Logger::LogDebug(LOG_POS("Init"), "Render - Mark: %f ms", render_times.y * 1000);
-	Logger::LogDebug(LOG_POS("Init"), "Render - Stitch: %f ms", render_times.z * 1000);
 
 
 	/*
@@ -318,12 +311,33 @@ void Voxel_Test_Scene::Init()
 	glm::vec4* m_normals = new glm::vec4[chnk_count.x];
 	unsigned int* m_triangles = new unsigned int[chnk_count.x];
 
+	//auto end = std::chrono::high_resolution_clock::now();
+	//auto process_duration = std::chrono::duration<double>(end - start).count();
+
+	auto end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration<double>(end - start).count();
+
+	start = std::chrono::high_resolution_clock::now();
 	m_builder->Extract(
 		m_vertices,
 		m_normals,
 		m_triangles,
 		counts[0]
 	);
+
+	end = std::chrono::high_resolution_clock::now();
+	auto extract_duration = std::chrono::duration<double>(end - start).count();
+
+
+	Logger::LogDebug(LOG_POS("Init"), "Generate Time: %f", (duration) * 1000.0f);
+
+	Logger::LogDebug(LOG_POS("Init"), "Generate - Assemble: %f ms", gen_times.y * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "Generate - Construct: %f ms", gen_times.z * 1000);
+
+	Logger::LogDebug(LOG_POS("Init"), "Render - Mark: %f ms", render_times.y * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "Render - Stitch: %f ms", render_times.z * 1000);
+
+	Logger::LogDebug(LOG_POS("Init"), "Extract: %f ms", extract_duration * 1000);
 
 	/*for (int i = 0; i < chnk_count.x; i++) {
 		if (i % 5 == 0) {

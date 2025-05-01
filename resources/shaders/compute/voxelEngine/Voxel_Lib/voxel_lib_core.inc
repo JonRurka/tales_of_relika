@@ -40,6 +40,94 @@ struct GridPoint{
     fvec4 type_ratio;
 };
 
+// #### Start VERTEX ####
+#define GRID_VERTEX_STRIDE 2
+#define GRID_VERTEX_IDX(i) (i * GRID_VERTEX_STRIDE)
+
+#define GRID_VERTEX_LOCAL_POS(arr, i) 	(arr[GRID_VERTEX_IDX(i) + 0])
+#define GRID_VERTEX_NORMAL(arr, i) 		(arr[GRID_VERTEX_IDX(i) + 1])
+
+#define NEW_GRID_VERTEX_1(name) \
+fvec4 name[GRID_VERTEX_STRIDE * 1];
+// #### End VERTEX ####
+
+
+// #### Start Grid Point ####
+#define GRIDPOINT_STRIDE 7
+#define GRIDPOINT_IDX(i) (i * GRIDPOINT_STRIDE)
+
+#define GRIDPOINT_ISO(arr, i) 			(arr[GRIDPOINT_IDX(i) + 0].x)
+#define GRIDPOINT_LOCAL_POS(arr, i) 	(arr[GRIDPOINT_IDX(i) + 1])
+#define GRIDPOINT_GLOBAL_POS(arr, i)	(arr[GRIDPOINT_IDX(i) + 2])
+#define GRIDPOINT_VOXEL_ID(arr, i) 		(arr[GRIDPOINT_IDX(i) + 3])
+#define GRIDPOINT_NORMAL(arr, i) 		(arr[GRIDPOINT_IDX(i) + 4])
+#define GRIDPOINT_TYPE(arr, i) 			(arr[GRIDPOINT_IDX(i) + 5])
+#define GRIDPOINT_TYPE_RATIO(arr, i) 	(arr[GRIDPOINT_IDX(i) + 6])
+
+#define GRIDPOINT_ARRAY_GET(dst, arr, i) \
+GRIDPOINT_ISO(dst, 0) = GRIDPOINT_ISO(arr, i); \
+GRIDPOINT_LOCAL_POS(dst, 0) = GRIDPOINT_LOCAL_POS(arr, i); \
+GRIDPOINT_GLOBAL_POS(dst, 0) = GRIDPOINT_GLOBAL_POS(arr, i); \
+GRIDPOINT_VOXEL_ID(dst, 0) = GRIDPOINT_VOXEL_ID(arr, i); \
+GRIDPOINT_NORMAL(dst, 0) = GRIDPOINT_NORMAL(arr, i); \
+GRIDPOINT_TYPE(dst, 0) = GRIDPOINT_TYPE(arr, i); \
+GRIDPOINT_TYPE_RATIO(dst, 0) = GRIDPOINT_TYPE_RATIO(arr, i);
+
+#define GRIDPOINT_ARRAY_ASSIGN(dst, src, arr) \
+GRIDPOINT_ISO(arr, dst) = GRIDPOINT_ISO(arr, src); \
+GRIDPOINT_LOCAL_POS(arr, dst) = GRIDPOINT_LOCAL_POS(arr, src); \
+GRIDPOINT_GLOBAL_POS(arr, dst) = GRIDPOINT_GLOBAL_POS(arr, src); \
+GRIDPOINT_VOXEL_ID(arr, dst) = GRIDPOINT_VOXEL_ID(arr, src); \
+GRIDPOINT_NORMAL(arr, dst) = GRIDPOINT_NORMAL(arr, src); \
+GRIDPOINT_TYPE(arr, dst) = GRIDPOINT_TYPE(arr, src); \
+GRIDPOINT_TYPE_RATIO(arr, dst) = GRIDPOINT_TYPE_RATIO(arr, src);
+
+#define GRIDPOINT_ARRAY_GET_NEW(name, arr, i) \
+fvec4 name[GRIDPOINT_STRIDE]; \
+GRIDPOINT_ARRAY_GET(name, arr, i)
+
+#define GRIDPOINT_ARRAY_SET(arr, i, src) \
+GRIDPOINT_ISO(arr, i) = GRIDPOINT_ISO(src, 0); \
+GRIDPOINT_LOCAL_POS(arr, i) = GRIDPOINT_LOCAL_POS(src, 0); \
+GRIDPOINT_GLOBAL_POS(arr, i) = GRIDPOINT_GLOBAL_POS(src, 0); \
+GRIDPOINT_VOXEL_ID(arr, i) = GRIDPOINT_VOXEL_ID(src, 0) ;\
+GRIDPOINT_NORMAL(arr, i) = GRIDPOINT_NORMAL(src, 0); \
+GRIDPOINT_TYPE(arr, i) = GRIDPOINT_TYPE(src, 0); \
+GRIDPOINT_TYPE_RATIO(arr, i) = GRIDPOINT_TYPE_RATIO(src, 0); \
+
+#define NEW_GRIDPOINT_1(name) \
+fvec4 name[GRIDPOINT_STRIDE * 1]; \
+GRIDPOINT_ISO(name, 0) = FVEC4_ZERO; \
+GRIDPOINT_LOCAL_POS(name, 0) = FVEC4_ZERO; \
+GRIDPOINT_GLOBAL_POS(name, 0) = FVEC4_ZERO; \
+GRIDPOINT_VOXEL_ID(name, 0) = FVEC4_ZERO; \
+GRIDPOINT_NORMAL(name, 0) = FVEC4_ZERO; \
+GRIDPOINT_TYPE(name, 0) = FVEC4_ZERO; \
+GRIDPOINT_TYPE_RATIO(name, 0) = FVEC4_ZERO;
+
+#define NEW_GRIDPOINT_ARRAY(name, elements) \
+fvec4 name[GRIDPOINT_STRIDE * elements];
+// #### End Grid Point ####
+
+
+// #### Start ISO_Material ####
+#define ISO_MATERIAL_STRIDE 7
+#define ISO_MATERIAL_IDX(i) (i * ISO_MATERIAL_STRIDE)
+
+#define ISO_MATERIAL_ISO(arr, i) (arr[ISO_MATERIAL_IDX(i) + 0].x)
+#define ISO_MATERIAL_TYPES(arr, i) (arr[ISO_MATERIAL_IDX(i) + 1])
+#define ISO_MATERIAL_RATIOS(arr, i) (arr[ISO_MATERIAL_IDX(i) + 2])
+
+
+#define NEW_ISO_MATERIAL_1(name) \
+fvec4 name[ISO_MATERIAL_STRIDE * 1]; \
+ISO_MATERIAL_ISO(name, 0) = 0; \
+ISO_MATERIAL_TYPES(name, 0) = FVEC4_ZERO; \
+ISO_MATERIAL_RATIOS(name, 0) = FVEC4_ZERO;
+// #### End ISO_Material ####
+
+
+
 struct Polygon{
 	fvec4 vertices[3];
 	fvec4 normal;
@@ -122,5 +210,31 @@ ivec2 C_1D_to_2D(uint i, uint width) {
     return IVEC2(x, y);
 }
 
+#if USL_OPENCL == 1
+
+#define Print(str) \
+printf(str);
+
+#define Print_1(str, val) \
+printf(str, val);
+
+#define Print_2(str, val1, val2) \
+printf(str, val1, val2);
+
+#define Print_3(str, val1, val2, val3) \
+printf(str, val1, val2, val3);
+
+#define Print_4(str, val1, val2, val3, val4) \
+printf(str, val1, val2, val3, val4);
+
+/*#else
+
+#define Print(str) 
+#define Print_1(str, val)
+#define Print_2(str, val, val)
+#define Print_3(str, val, val, val)
+#define Print_4(str, val, val, val, val)*/
+
+#endif
 
 #endif // _VOXEL_LIB_CORE_INC_

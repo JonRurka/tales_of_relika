@@ -277,6 +277,18 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
     cl_ulong const_size;
     clGetDeviceInfo(deviceID, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(cl_ulong), &const_size, 0);
 
+    //CL_DEVICE_MAX_COMPUTE_UNITS
+    cl_ulong comp_units;
+    clGetDeviceInfo(deviceID, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_uint), &comp_units, 0);
+    
+    //CL_DEVICE_MAX_WORK_ITEM_SIZES
+    size_t work_items[1];
+    clGetDeviceInfo(deviceID, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(work_items), work_items, 0);
+     
+    //CL_DEVICE_MAX_WORK_GROUP_SIZE
+    size_t work_group_size;
+    clGetDeviceInfo(deviceID, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &work_group_size, 0);
+
     char driver_version[100];
     memset(driver_version, 0, 100);
     clGetDeviceInfo(deviceID, CL_DRIVER_VERSION, sizeof(driver_version), &driver_version, NULL);
@@ -284,6 +296,10 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
     printf("OpenCl Platform Version: %s\n", ComputeEngine::Get_CL_Version().c_str());
     printf("OpenCl max local memory: %i bytes\n", (int)local_size);
     printf("OpenCl max const memory: %i bytes\n", (int)const_size);
+
+    printf("OpenCl max compute units: %i\n", (int)comp_units);
+    printf("OpenCl max work item sizes: (%i, %i, %i)\n", (int)work_items[0], (int)work_items[1], (int)work_items[2]);
+    printf("OpenCl max group size: %i\n", (int)work_group_size);
 
     context = clCreateContext(properties, 1, &deviceID, NULL, NULL, &err);
 
