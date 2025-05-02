@@ -118,7 +118,8 @@ int ComputeProgram_OCL::RunKernel(std::string k_name, int size_x, int size_y, in
 
 	int K_ID = GetKernelID(k_name);
 
-	return RunKernel(K_ID, size_x, size_y, size_z);
+	int res = RunKernel(K_ID, size_x, size_y, size_z);
+	return res;
 }
 
 int ComputeProgram_OCL::RunKernel(int kernel_id, int size_x, int size_y, int size_z)
@@ -130,7 +131,13 @@ int ComputeProgram_OCL::RunKernel(int kernel_id, int size_x, int size_y, int siz
 	}
 
 	size_t global[] = { std::max(size_x, 1) , std::max(size_y, 1) , std::max(size_z, 1) };
-	return m_kernel_entries[kernel_id].kernel->Execute(3, global);
+	int res = m_kernel_entries[kernel_id].kernel->Execute(3, global);
+
+	if (res != 0) {
+		printf("%s: Failed to execute kernel.\n", m_program_name.c_str());
+	}
+
+	return res;
 }
 
 int ComputeProgram_OCL::RunKernel(std::string k_name, int num, int size_x, int size_y, int size_z)

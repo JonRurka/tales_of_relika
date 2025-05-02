@@ -13,13 +13,19 @@ read_buffer_int(4, in_tris_data)
 read_buffer_int(5, in_counts_data)
 read_buffer_int(6, in_stitch_map_data)
 
-readwrite_buffer(fvec4, 7, out_vertex_data)
-readwrite_buffer(fvec4, 8, out_normal_data)
-readwrite_buffer_int(9, out_triangles_data)
+#if USL_OPENCL == 1
+__constant ivec4* in_stitch_map_offsets;
+#else
+readwrite_buffer(ivec4, 7, in_stitch_map_offsets)	
+#endif
 
-readwrite_buffer(ivec4, 10, out_counts_data)
+readwrite_buffer(fvec4, 8, out_vertex_data)
+readwrite_buffer(fvec4, 9, out_normal_data)
+readwrite_buffer_int(10, out_triangles_data)
 
-readwrite_buffer(fvec4, 11, out_debug_data)
+readwrite_buffer(ivec4, 11, out_counts_data)
+
+readwrite_buffer(fvec4, 12, out_debug_data)
 
 
 void SetTriangle(uint index, int tris){
@@ -28,6 +34,10 @@ void SetTriangle(uint index, int tris){
 
 int GetStitchMap(uint voxel_index){
 	return get_buffer_scalar(in_stitch_map_data, voxel_index);
+}
+
+ivec4 GetStitchOffset(uint grid_global_idx){
+	return get_buffer_vector(in_stitch_map_offsets, grid_global_idx);
 }
 
 void Set_Debug_Data(uint index, fvec4 data){
@@ -67,13 +77,21 @@ int getSourceOffset(uint batch_num, uint total_batches, bool source){
     return -2147483648; // should not return here.
 }
 
-void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index){
+void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index, ivec4 chunkSize){
 
     //out_debug_data[g_index].values = vec4(batch[0], g_index, v_index, 0);
     //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(batch[0], g_index, v_index, 0);
 
+	uvec3 v_coord = C_1D_to_3D(v_index, chunkSize.x, chunkSize.y);
+	uvec2 grid_coord = UVEC2(v_coord.x, v_coord.y);
+	uint grid_size = (chunkSize.x * chunkSize.y);
+	uint grid_local_idx = C_2D_to_1D(grid_coord.x, grid_coord.y, chunkSize.y);
+	uint grid_global_idx = (batch[0] * grid_size) + grid_local_idx;
+	uint row_offset = GetStitchOffset(grid_global_idx).x;
+	
+
     int this_count = GetCount(GetBatchIndex(batch[0], v_index, batch[2]));
-    int buffer_index = GetStitchMap(GetBatchIndex(batch[0], v_index, batch[2]));
+    int buffer_index = row_offset + GetStitchMap(GetBatchIndex(batch[0], v_index, batch[2]));
 
     int batch_offset = batch[0] * (batch[2] * 15);
 
@@ -125,7 +143,7 @@ void smoothrender_async_stitch_main(uint index)
         return;
     }
 	
-	Process_Voxel(batch, static_settings.batches, index, voxel_index);
+	Process_Voxel(batch, static_settings.batches, index, voxel_index, static_settings.ChunkSize);
 	
 	//if (index == 0)
 	//	Set_Debug_Data(index, FVEC4(1, 1, 1, 1));

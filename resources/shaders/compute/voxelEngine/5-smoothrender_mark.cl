@@ -21,6 +21,6 @@ void kernel main_cl(
 	out_counts_data = p_out_counts_data;
 	out_debug_data = p_out_debug_data;
 	
-	smoothrender_mark_main(get_global_id(0));
+	smoothrender_mark_async_main(get_global_id(0));
 }
 

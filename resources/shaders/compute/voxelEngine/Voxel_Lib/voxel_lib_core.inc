@@ -2,7 +2,10 @@
 #define _VOXEL_LIB_CORE_INC_
 
 #include "../../libUSL/USL.inc"
+
+#ifdef USE_LIBNOISE
 #include "../../libnoise/libnoise.inc"
+#endif
 
 struct Static_Settings{
     fvec4 VoxelsPerMeter;
@@ -42,7 +45,7 @@ struct GridPoint{
 
 // #### Start VERTEX ####
 #define GRID_VERTEX_STRIDE 2
-#define GRID_VERTEX_IDX(i) (i * GRID_VERTEX_STRIDE)
+#define GRID_VERTEX_IDX(i) ((i) * GRID_VERTEX_STRIDE)
 
 #define GRID_VERTEX_LOCAL_POS(arr, i) 	(arr[GRID_VERTEX_IDX(i) + 0])
 #define GRID_VERTEX_NORMAL(arr, i) 		(arr[GRID_VERTEX_IDX(i) + 1])
@@ -54,7 +57,7 @@ fvec4 name[GRID_VERTEX_STRIDE * 1];
 
 // #### Start Grid Point ####
 #define GRIDPOINT_STRIDE 7
-#define GRIDPOINT_IDX(i) (i * GRIDPOINT_STRIDE)
+#define GRIDPOINT_IDX(i) ((i) * GRIDPOINT_STRIDE)
 
 #define GRIDPOINT_ISO(arr, i) 			(arr[GRIDPOINT_IDX(i) + 0].x)
 #define GRIDPOINT_LOCAL_POS(arr, i) 	(arr[GRIDPOINT_IDX(i) + 1])
@@ -226,6 +229,12 @@ printf(str, val1, val2, val3);
 
 #define Print_4(str, val1, val2, val3, val4) \
 printf(str, val1, val2, val3, val4);
+
+#define Print_Vec_1(str, val1) \
+printf(str, val1.x, val1.y, val1.z, val1.w);
+
+#define Print_Vec_2(str, val1, val2) \
+printf(str, val1.x, val1.y, val1.z, val1.w, val2.x, val2.y, val2.z, val2.w);
 
 /*#else
 

@@ -1,6 +1,7 @@
 #ifndef _HEIGHTMAP_FIELD_INC_
 #define _HEIGHTMAP_FIELD_INC_
 
+#define USE_LIBNOISE
 #include "voxel_lib_core.inc"
 #include "sampler.inc"
 

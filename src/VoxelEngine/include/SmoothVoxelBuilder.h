@@ -178,13 +178,16 @@ namespace VoxelEngine {
 		const std::string PROGRAM_SMOOTH_RENDER_CONSTRUCT = "4-smoothrender_construct";
 		VoxelComputeProgram* m_program_smoothrender_construct;
 
-		const std::string PROGRAM_SMOOTH_RENDER_MARK = "5-smoothrender_mark"; // DEPRICATED
+		const std::string PROGRAM_SMOOTH_RENDER_MARK = "5-smoothrender_mark";
 		VoxelComputeProgram* m_program_smoothrender_mark;
+
+		const std::string PROGRAM_SMOOTH_RENDER_MARK_OFFSETS = "6-smoothrender_mark_offsets";
+		VoxelComputeProgram* m_program_smoothrender_mark_offsets;
 
 		const std::string PROGRAM_SMOOTH_RENDER_STITCH = "smoothrender_stitch"; // DEPRICATED
 		VoxelComputeProgram* m_program_smoothrender_stitch;
 
-		const std::string PROGRAM_SMOOTH_RENDER_STITCH_ASYNC = "6-smoothrender_async_stitch";
+		const std::string PROGRAM_SMOOTH_RENDER_STITCH_ASYNC = "7-smoothrender_async_stitch";
 		VoxelComputeProgram* m_program_smoothrender_stitch_async;
 
 
@@ -226,6 +229,7 @@ namespace VoxelEngine {
 		IComputeBuffer* m_trans_counts_buffer;
 
 		IComputeBuffer* m_stitch_map_buffer;
+		IComputeBuffer* m_stitch_map_offset_buffer;
 
 		IComputeBuffer* out_Debug_Grid_buffer;
 

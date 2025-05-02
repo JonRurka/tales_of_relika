@@ -14,6 +14,7 @@ void kernel main_cl(
 	
 	global int* p_in_counts_data,
 	global int* p_in_stitch_map_data,
+	__constant ivec4* p_in_stitch_map_offsets,
 	
 	global fvec4* p_out_vertex_data,
 	global fvec4* p_out_normal_data,
@@ -33,6 +34,7 @@ void kernel main_cl(
 	
 	in_counts_data = p_in_counts_data;
 	in_stitch_map_data = p_in_stitch_map_data;
+	in_stitch_map_offsets = p_in_stitch_map_offsets;
 	
 	out_vertex_data = p_out_vertex_data;
 	out_normal_data = p_out_normal_data;
@@ -41,8 +43,6 @@ void kernel main_cl(
 	out_counts_data = p_out_counts_data;
 	
 	out_debug_data = p_out_debug_data;
-
-
 
 	smoothrender_async_stitch_main(get_global_id(0));
 }

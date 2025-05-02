@@ -350,6 +350,7 @@ void SmoothVoxelBuilder::InitializeComputePrograms()
 
     m_program_smoothrender_construct = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_CONSTRUCT + EXT, m_WorkGroups, type);
     m_program_smoothrender_mark = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK + EXT, m_WorkGroups, type);
+    m_program_smoothrender_mark_offsets = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK_OFFSETS + EXT, m_WorkGroups, type);
     //m_program_smoothrender_stitch = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_STITCH, 1);
     m_program_smoothrender_stitch_async = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_STITCH_ASYNC + EXT, m_WorkGroups, type);
 }
@@ -394,6 +395,7 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     
     m_stitch_map_buffer = m_controller->NewReadWriteBuffer(m_static_settings.FullChunkSize[0] * m_totalBatches, sizeof(int)); // 131,072 bytes / chunk
     // size of above: 17,956,864
+    m_stitch_map_offset_buffer = m_controller->NewReadWriteBuffer((m_static_settings.ChunkSize.x * m_static_settings.ChunkSize.y) * m_totalBatches, sizeof(glm::uvec4));
 
 
     //const int max_size = UINT16_MAX * sizeof(glm::vec4);
@@ -529,10 +531,16 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     // ##############
 
     m_program_smoothrender_mark->AddBuffer(0, m_in_static_settings_buffer);
-    m_program_smoothrender_mark->AddBuffer(1, m_trans_counts_buffer);
-    m_program_smoothrender_mark->AddBuffer(2, m_stitch_map_buffer);
-    m_program_smoothrender_mark->AddBuffer(3, m_out_counts_buffer);
-    m_program_smoothrender_mark->AddBuffer(4, m_out_debug_buffer_Mark);
+    m_program_smoothrender_mark->AddBuffer(1, m_in_run_settings_buffer);
+    m_program_smoothrender_mark->AddBuffer(2, m_trans_counts_buffer);
+    m_program_smoothrender_mark->AddBuffer(3, m_stitch_map_buffer);
+    m_program_smoothrender_mark->AddBuffer(4, m_stitch_map_offset_buffer);
+    m_program_smoothrender_mark->AddBuffer(5, m_out_counts_buffer);
+    m_program_smoothrender_mark->AddBuffer(6, m_out_debug_buffer_Mark);
+
+
+    m_program_smoothrender_mark_offsets->AddBuffer(0, m_in_static_settings_buffer);
+    m_program_smoothrender_mark_offsets->AddBuffer(1, m_stitch_map_offset_buffer);
 
     /*m_program_smoothrender_stitch->AddBuffer(0, m_in_static_settings_buffer);
     m_program_smoothrender_stitch->AddBuffer(1, m_in_run_settings_buffer);
@@ -552,11 +560,12 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_smoothrender_stitch_async->AddBuffer(4,  m_trans_triangles_buffer);
     m_program_smoothrender_stitch_async->AddBuffer(5,  m_trans_counts_buffer);
     m_program_smoothrender_stitch_async->AddBuffer(6,  m_stitch_map_buffer);
-    m_program_smoothrender_stitch_async->AddBuffer(7,  m_out_vertex_buffer);
-    m_program_smoothrender_stitch_async->AddBuffer(8,  m_out_normal_buffer);
-    m_program_smoothrender_stitch_async->AddBuffer(9,  m_out_triangles_buffer);
-    m_program_smoothrender_stitch_async->AddBuffer(10, m_out_counts_buffer);
-    m_program_smoothrender_stitch_async->AddBuffer(11, m_out_debug_buffer_Stitch_async);
+    m_program_smoothrender_stitch_async->AddBuffer(7,  m_stitch_map_offset_buffer);
+    m_program_smoothrender_stitch_async->AddBuffer(8,  m_out_vertex_buffer);
+    m_program_smoothrender_stitch_async->AddBuffer(9,  m_out_normal_buffer);
+    m_program_smoothrender_stitch_async->AddBuffer(10, m_out_triangles_buffer);
+    m_program_smoothrender_stitch_async->AddBuffer(11, m_out_counts_buffer);
+    m_program_smoothrender_stitch_async->AddBuffer(12, m_out_debug_buffer_Stitch_async);
     
     
 
@@ -881,21 +890,31 @@ glm::dvec4 SmoothVoxelBuilder::DoRender()
     //m_program_smoothrender_createvertlist->Execute(m_static_settings.FullChunkSize[0], 0, 0);
     //m_program_smoothrender_createmesh->Execute(1, 0, 0);
 
-    auto start = std::chrono::high_resolution_clock::now();
-    /*for (int i = 0; i < m_numBatchGroups; i++) {
-        m_in_run_settings_buffer->SetData(&m_run_settings[i * m_numBatchesPerGroup], m_numBatchesPerGroup * sizeof(Run_Settings));
-        m_program_smoothrender_construct->Execute(m_numBatchesPerGroup * m_static_settings.FullChunkSize[0], 0, 0);
-    }*/
+    /*auto start = std::chrono::high_resolution_clock::now();
+    
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration<double>(end - start).count();
-    double construct_t = duration;
+    double construct_t = duration;*/
+
+    auto start = std::chrono::high_resolution_clock::now();
+    //m_in_run_settings_buffer->SetData(m_run_settings);
+
+    //m_program_smoothrender_mark->Execute(m_totalBatches, 0, 0);
+    m_in_run_settings_buffer->SetData(m_run_settings, m_totalBatches * sizeof(Run_Settings));
+    m_program_smoothrender_mark->Execute((m_static_settings.ChunkSize.x * m_static_settings.ChunkSize.y) * m_totalBatches, 0, 0);
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration<double>(end - start).count();
+    double mark_t = duration;
+
 
     start = std::chrono::high_resolution_clock::now();
-    //m_in_run_settings_buffer->SetData(m_run_settings);
-    m_program_smoothrender_mark->Execute(m_totalBatches, 0, 0);
+
+    m_program_smoothrender_mark_offsets->Execute(m_totalBatches, 0, 0);
+
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration<double>(end - start).count();
-    double mark_t = duration;
+    double mark_offsets_t = duration;
 
 
     //glm::vec4* debug_data = new glm::vec4[m_totalBatches];
@@ -962,7 +981,7 @@ glm::dvec4 SmoothVoxelBuilder::DoRender()
     duration = std::chrono::duration<double>(end - start).count();
     double stitch_t = duration;
 
-    return glm::dvec4(construct_t, mark_t, stitch_t, 0);
+    return glm::dvec4(mark_t, mark_offsets_t, stitch_t, 0);
 }
 
 glm::ivec4 AddMeshEntry(glm::vec4 vert, glm::vec4 norm, int tris, glm::ivec4 counts) {

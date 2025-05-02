@@ -5,6 +5,8 @@
 #include "CL_SDK/opencl.hpp"
 #include "CL_SDK/Utils/Utils.h"
 
+#define WAIT_IDLE 1
+
 using namespace DynamicCompute::Compute::OCL;
 
 //#pragma comment(lib, "OpenCL.lib")
@@ -553,16 +555,19 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
     cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
 
     int res = clEnqueueNDRangeKernel(command_queue, kernel, work_dim, NULL, global_work_size, NULL, num_wait_events, wait_event_ptr, &finished_event);
-    
     g_wait_event = finished_event;
     
-    if (res != 0)
+    if (res != CL_SUCCESS)
     {
         printf("ComputeKernel.Execute: Failed to enqueue Kernel: %i\n", res);
     }
 
-   // printf("clFinish.\n");
-    res = clFinish(command_queue);
+    // printf("clFinish.\n");
+
+    if (WAIT_IDLE)
+        clWaitForEvents(1, &g_wait_event);
+
+    //res = clFinish(command_queue);
     //printf("Finished clFinish.\n");
 
     if (res != 0)
@@ -642,7 +647,7 @@ int ComputeBuffer::GetData(void* outData)
     wait_event_ptr = &g_wait_event;
     res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, 0, mSize, outData, 1, wait_event_ptr, &finished_event);
     g_wait_event = finished_event;
-
+    //clWaitForEvents(1, &g_wait_event);
     return res;
 }
 
@@ -684,7 +689,7 @@ int ComputeBuffer::GetData(void* outData, int size)
     wait_event_ptr = &g_wait_event;
     res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, outData, 1, wait_event_ptr, &finished_event);
     g_wait_event = finished_event;
-
+    //clWaitForEvents(1, &g_wait_event);
     return res;
 }
 
@@ -726,7 +731,7 @@ int ComputeBuffer::GetData(void* outData, int SrcStart, int size)
     wait_event_ptr = &g_wait_event;
     res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, SrcStart, size, outData, 1, wait_event_ptr, &finished_event);
     g_wait_event = finished_event;
-
+    //clWaitForEvents(1, &g_wait_event);
     return res;
 }
 

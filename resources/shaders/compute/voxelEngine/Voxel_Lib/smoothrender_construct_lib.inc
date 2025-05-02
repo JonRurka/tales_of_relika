@@ -1,6 +1,7 @@
 #ifndef _SMOOTHRENDER_CONSTRUCT_INC_
 #define _SMOOTHRENDER_CONSTRUCT_INC_
 
+#define USE_LIBNOISE
 #include "voxel_lib_core.inc"
 
 
@@ -69,19 +70,21 @@ do{                                                                             
     fvec4 pos_2_local = GRIDPOINT_LOCAL_POS(grid, p2_idx);                        \
     fvec4 normal_2 = GRIDPOINT_NORMAL(grid, p2_idx);                              \
 																				  \
-    if (FABS(isoLevel - iso_1) < 0.00001f)                                        \
+    if (FABS(isoLevel - iso_1) < 0.00001f){                                       \
 		GRID_VERTEX_LOCAL_POS(grid_vert, 0) = GRIDPOINT_LOCAL_POS(grid, p1_idx);  \
 		GRID_VERTEX_NORMAL(grid_vert, 0) = GRIDPOINT_NORMAL(grid, p1_idx);        \
         break;                                                                    \
-    if (FABS(isoLevel - iso_2) < 0.00001f)                                        \
+	}																			  \
+    if (FABS(isoLevel - iso_2) < 0.00001f) {                                      \
 		GRID_VERTEX_LOCAL_POS(grid_vert, 0) = GRIDPOINT_LOCAL_POS(grid, p2_idx);  \
 		GRID_VERTEX_NORMAL(grid_vert, 0) = GRIDPOINT_NORMAL(grid, p2_idx);        \
         break;                                                                    \
-    if (FABS(iso_1 - iso_2) < 0.00001f)                                           \
+	}                                                                             \
+    if (FABS(iso_1 - iso_2) < 0.00001f){                                          \
 		GRID_VERTEX_LOCAL_POS(grid_vert, 0) = GRIDPOINT_LOCAL_POS(grid, p1_idx);  \
 		GRID_VERTEX_NORMAL(grid_vert, 0) = GRIDPOINT_NORMAL(grid, p1_idx);        \
         break;                                                                    \
-																				  \
+	}																			  \
     float mu = (isoLevel - iso_1) / (iso_2 - iso_1);                              \
 																				  \
     fvec4 res_pos_local = FVEC4_ZERO;                                             \
@@ -430,13 +433,45 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 			(edge2_idx.x == -1 || edge2_idx.y == -1) ||
 			(edge3_idx.x == -1 || edge3_idx.y == -1))
 		{
-			Print("Invalid edge detected\n");
+			//Print("Invalid edge detected\n");
 			continue;
 		}
+		fvec4 g_pos_1 = GRIDPOINT_LOCAL_POS(grid, edge1_idx.x);
+		//fvec4 g_pos_2 = GRIDPOINT_LOCAL_POS(grid, edge2_idx.y);
+		//fvec4 g_pos_3 = GRIDPOINT_LOCAL_POS(grid, edge3_idx.y);
+		
+		/*Print_4("%i: Grid Verts 1: (%f, %f, %f)\n", i,
+			g_pos_1.x, g_pos_1.y, g_pos_1.z);
+		Print_4("%i: Grid Verts 2: (%f, %f, %f)\n", i,
+			g_pos_2.x, g_pos_2.y, g_pos_2.z);
+		Print_4("%i: Grid Verts 3: (%f, %f, %f)\n", i,
+			g_pos_3.x, g_pos_3.y, g_pos_3.z);*/
+		
+		//Print_2("Process edge: %i -> %i\n", edge1_idx.x, edge1_idx.y);
 		
 		VERTEX_INTERP(gv_1, isoLevel, grid, edge1_idx.x, edge1_idx.y)
 		VERTEX_INTERP(gv_2, isoLevel, grid, edge2_idx.x, edge2_idx.y)
 		VERTEX_INTERP(gv_3, isoLevel, grid, edge3_idx.x, edge3_idx.y)
+		
+		fvec4 g_pos_1_after = GRIDPOINT_LOCAL_POS(grid, edge1_idx.x);
+		
+		//Print_Vec_2("Before: (%f, %f, %f, %f), After: (%f, %f, %f, %f)\n", g_pos_1, g_pos_1_after);
+		
+		fvec4 pos1 = GRID_VERTEX_LOCAL_POS(gv_1, 0);// p1.localPosition;
+		fvec3 norm1 = GRID_VERTEX_NORMAL(gv_1, 0).xyz;// p1.normal.xyz;// normal_sample(s, index_pos, p1.globalPosition.xyz);
+		
+		fvec4 pos2 = GRID_VERTEX_LOCAL_POS(gv_2, 0);// p2.localPosition;
+		fvec3 norm2 = GRID_VERTEX_NORMAL(gv_2, 0).xyz;// p2.normal.xyz;// normal_sample(s, index_pos, p2.globalPosition.xyz);
+		
+		fvec4 pos3 = GRID_VERTEX_LOCAL_POS(gv_3, 0);// p3.localPosition;
+		fvec3 norm3 = GRID_VERTEX_NORMAL(gv_3, 0).xyz;// p3.normal.xyz;//normal_sample(s, index_pos, p3.globalPosition.xyz);
+		
+		/*Print_4("%i: Poly Verts 1: (%f, %f, %f)\n", i,
+			pos1.x, pos1.y, pos1.z);
+		Print_4("%i: Poly Verts 2: (%f, %f, %f)\n", i,
+			pos2.x, pos2.y, pos2.z);
+		Print_4("%i: Poly Verts 3: (%f, %f, %f)\n", i,
+			pos3.x, pos3.y, pos3.z);*/
 		
 
         //p1.position.w = p1.type.x + p1.type_ratio.x;
@@ -455,22 +490,23 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 
         //vec4 n1 = vec4(norm.x, norm.y, norm.z, 0);
         int t1 = INT(curTris) + 2;
-		fvec3 norm1 = GRID_VERTEX_NORMAL(gv_1, 0).xyz;// p1.normal.xyz;// normal_sample(s, index_pos, p1.globalPosition.xyz);
-		fvec4 pos1 = GRID_VERTEX_LOCAL_POS(gv_1, 0);// p1.localPosition;
         count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), pos1, FVEC4(norm1.x, norm1.y, norm1.z, 0), t1, count);
         
         //vec4 n2 = vec4(norm.x, norm.y, norm.z, 0);
         int t2 = INT(curTris) + 1;
-		fvec3 norm2 = GRID_VERTEX_NORMAL(gv_2, 0).xyz;// p2.normal.xyz;// normal_sample(s, index_pos, p2.globalPosition.xyz);
-		fvec4 pos2 = GRID_VERTEX_LOCAL_POS(gv_2, 0);// p2.localPosition;
         count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), pos2, FVEC4(norm2.x, norm2.y, norm2.z, 0), t2, count);
         
         //vec4 n3 = vec4(norm.x, norm.y, norm.z, 0);
         int t3 = INT(curTris) + 0;
-		fvec3 norm3 = GRID_VERTEX_NORMAL(gv_3, 0).xyz;// p3.normal.xyz;//normal_sample(s, index_pos, p3.globalPosition.xyz);
-		fvec4 pos3 = GRID_VERTEX_LOCAL_POS(gv_3, 0);// p3.localPosition;
         count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), pos3, FVEC4(norm3.x, norm3.y, norm3.z, 0), t3, count);
 		
+		
+		/*Print_4("%i: Poly Verts 1: (%f, %f, %f)\n", i,
+			pos1.x, pos1.y, pos1.z);
+		Print_4("%i: Poly Verts 2: (%f, %f, %f)\n", i,
+			pos2.x, pos2.y, pos2.z);
+		Print_4("%i: Poly Verts 3: (%f, %f, %f)\n", i,
+			pos3.x, pos3.y, pos3.z);*/
     }
 
     Set_Count(GetBatchIndex(batch[0], v_index, batch[2]), count);

@@ -6,6 +6,7 @@
 #define USE_MATERIALS 1
 #define GEN_CRATER_MAP 1
 
+#define USE_LIBNOISE
 #include "voxel_lib_core.inc"
 #include "sampler.inc"
 
