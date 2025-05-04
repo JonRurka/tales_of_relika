@@ -385,7 +385,7 @@ int ComputeProgram::Set_Source(const char* source)
    cl_int err = 0;
    //printf("%s\n", source);
    program = clCreateProgramWithSource(m_context, 1, (const char **)&source, NULL, &err);
-   args += "-cl-std=CL3.0 ";
+   args += "-cl-std=CL3.0"; // -Werror
    mInitialized = true;
    return err;
 }
@@ -478,6 +478,9 @@ int ComputeProgram::Build(char* errorStr, size_t e_size)
        printf("Build error: %s\n", errorStr);
        printf("###########################\\n");
    }
+   else {
+       printf("Build log: %s\n", errorStr);
+   }
 
    return build_res;
 }
@@ -549,7 +552,7 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
         4, 4, 4
     };*/
 
-
+    printf("Executing kernel...\n");
     cl_event finished_event;
     int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
     cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;

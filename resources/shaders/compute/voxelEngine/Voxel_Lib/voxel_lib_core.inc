@@ -142,6 +142,10 @@ struct Polygon{
 
 #define GET_RUN_SETTINGS(inst_index) get_buffer_object(in_run_settings, inst_index)
 
+#define RUN_SETTINGS_STRIDE 1
+#define RUN_SETTINGS_IDX(i) ((i) * RUN_SETTINGS_STRIDE)
+#define RUN_SETTINGS_LOCATION(inst_index) get_buffer_vector(in_run_settings, (RUN_SETTINGS_IDX(inst_index) + 0))
+
 STRUCT Polygon New_Polygon(fvec4 v1, fvec4 v2, fvec4 v3){
 	STRUCT Polygon res;
 	res.vertices[0] = v1;
@@ -229,6 +233,9 @@ printf(str, val1, val2, val3);
 
 #define Print_4(str, val1, val2, val3, val4) \
 printf(str, val1, val2, val3, val4);
+
+#define Print_5(str, val1, val2, val3, val4, val5) \
+printf(str, val1, val2, val3, val4, val5);
 
 #define Print_Vec_1(str, val1) \
 printf(str, val1.x, val1.y, val1.z, val1.w);

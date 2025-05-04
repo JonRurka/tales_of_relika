@@ -484,7 +484,7 @@ IComputeProgram_private::ProgramBuildState ComputeProgram_OCL::BuildProgramFromI
 
 int ComputeProgram_OCL::BindKernel(ComputeBuffer* buffer, ComputeKernel* kernel, int arg)
 {
-	printf("Bind buffer to kernel: %i\n", arg);
+	//printf("Bind buffer to kernel: %i\n", arg);
 	return kernel->SetBuffer(buffer, arg);
 }
 

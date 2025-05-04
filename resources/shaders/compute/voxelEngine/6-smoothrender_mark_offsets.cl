@@ -1,7 +1,9 @@
 #define USL_DIRECTX_UNITY3D 0
 #define USL_VULKAN 0
 #define USL_OPENCL 1
+
 #include "../libUSL/USL.inc"
+#include "Voxel_Lib/voxel_lib_core.inc"
 
 read_buffer_struct(Static_Settings, 0, in_static_settings)
 readwrite_buffer(ivec4, 1, out_stitch_map_offsets)
@@ -23,10 +25,11 @@ void kernel main_cl(
 	in_static_settings = p_in_static_settings;
 	out_stitch_map_offsets = p_out_stitch_map_offsets;
 	
+	uint inst_index = get_global_id(0);
+	
 	STRUCT Static_Settings static_settings = GET_STATIC_SETTINGS();
 	uvec4 chunkSize = static_settings.ChunkSize;
 	uint grid_size = (chunkSize.x * chunkSize.y);
-	uint inst_index = idx;
 	
 	uint start = inst_index * grid_size;
 	uint offset = 0;

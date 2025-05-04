@@ -77,21 +77,23 @@ int getSourceOffset(uint batch_num, uint total_batches, bool source){
     return -2147483648; // should not return here.
 }
 
-void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index, ivec4 chunkSize){
+void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index, uvec4 chunkSize){
 
     //out_debug_data[g_index].values = vec4(batch[0], g_index, v_index, 0);
     //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(batch[0], g_index, v_index, 0);
 
-	uvec3 v_coord = C_1D_to_3D(v_index, chunkSize.x, chunkSize.y);
-	uvec2 grid_coord = UVEC2(v_coord.x, v_coord.y);
+	ivec3 v_coord = C_1D_to_3D(v_index, chunkSize.x, chunkSize.y);
+	ivec2 grid_coord = IVEC2(v_coord.y, v_coord.z);
 	uint grid_size = (chunkSize.x * chunkSize.y);
-	uint grid_local_idx = C_2D_to_1D(grid_coord.x, grid_coord.y, chunkSize.y);
+	uint grid_local_idx = C_2D_to_1D(grid_coord.x, grid_coord.y, UINT(chunkSize.y));
 	uint grid_global_idx = (batch[0] * grid_size) + grid_local_idx;
-	uint row_offset = GetStitchOffset(grid_global_idx).x;
-	
+	ivec4 row_offset_data = GetStitchOffset(grid_global_idx);
+	int row_offset = row_offset_data.x;
+	int row_size = row_offset_data.y;
 
     int this_count = GetCount(GetBatchIndex(batch[0], v_index, batch[2]));
-    int buffer_index = row_offset + GetStitchMap(GetBatchIndex(batch[0], v_index, batch[2]));
+	int row_index = GetStitchMap(GetBatchIndex(batch[0], v_index, batch[2]));
+    int buffer_index = row_offset + row_index;
 
     int batch_offset = batch[0] * (batch[2] * 15);
 
@@ -103,13 +105,16 @@ void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index
         //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(g_index, buffer_index, this_count, 0);
         return;
     }
+	
+	
 
     int tri_start = buffer_index;
     //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(g_index, buffer_index, this_count, tri_start);
 
 	//Set_Debug_Data(v_index, FVEC4(v_index, buffer_index, this_count, 0));
 
-    for (int i = 0; i < this_count; ++i){
+	int i = 0;
+    for (i = 0; i < this_count; ++i){
  
         int source_index = batch_offset + (INT(v_index) * 15) + i;
 
@@ -120,7 +125,11 @@ void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index
 		//vert.w = dst_offset + buffer_index + i;
 		//Set_Debug_Data(v_index, vert);
 
-        AddMeshEntry(dst_offset + buffer_index + i, vert, norm, tris);
+		uint dst = dst_offset + buffer_index + i;
+		if (row_offset != 0 && (grid_local_idx == 28 || grid_local_idx == 29) ){
+			//Print_5("%i: In Offset (gdx: %i): %i + %i, dst: %i\n", i, grid_local_idx, row_offset, row_index, dst);
+		}
+        AddMeshEntry(dst, vert, norm, tris);
     }
 
     

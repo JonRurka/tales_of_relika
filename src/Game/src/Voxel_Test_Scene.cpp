@@ -332,20 +332,27 @@ void Voxel_Test_Scene::Init()
 	end = std::chrono::high_resolution_clock::now();
 	auto extract_duration = std::chrono::duration<double>(end - start).count();
 
+	double set_buffer_time = gen_times.z + render_times.w;
 
-	Logger::LogDebug(LOG_POS("Init"), "Generate - Assemble: %f ms", gen_times.y * 1000);
-	Logger::LogDebug(LOG_POS("Init"), "Generate - Construct: %f ms", gen_times.z * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "");
+	Logger::LogDebug(LOG_POS("Init"), "Generate - Assemble: %f ms", gen_times.x * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "Generate - Construct: %f ms", gen_times.y * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "");
 
 	Logger::LogDebug(LOG_POS("Init"), "Render - Mark: %f ms", render_times.x * 1000);
 	Logger::LogDebug(LOG_POS("Init"), "Render - Mark Offsets: %f ms", render_times.y * 1000);
 	Logger::LogDebug(LOG_POS("Init"), "Render - Stitch: %f ms", render_times.z * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "");
 	
 	double time_sum = (gen_times.y + gen_times.z + render_times.y + render_times.z);
 	Logger::LogDebug(LOG_POS("Init"), "Sum Generate Time: %f", time_sum * 1000.0f);
 	Logger::LogDebug(LOG_POS("Init"), "Actual Generate Time: %f", (duration) * 1000.0f);
 	Logger::LogDebug(LOG_POS("Init"), "Unaccounted Time: %f", (duration - time_sum) * 1000.0f);
+	Logger::LogDebug(LOG_POS("Init"), "");
 
+	Logger::LogDebug(LOG_POS("Init"), "SetBuffer: %f ms", set_buffer_time * 1000);
 	Logger::LogDebug(LOG_POS("Init"), "Extract: %f ms", extract_duration * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "");
 
 
 
