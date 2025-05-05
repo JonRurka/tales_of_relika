@@ -16,7 +16,7 @@ public:
 	public:
 		class Compute {
 		public:
-			inline static const std::string CREATE_VBO = "compute::create_vbo.comp";
+			inline static const std::string CREATE_VBO = "compute::create_vbo.cl";
 			inline static const std::string TEST_OPENCL_SPIRV = "compute::test::test_opencl_spirv.cl";
 		};
 

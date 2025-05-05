@@ -37,6 +37,8 @@ public:
 
 	static void Update_Window_Title(std::string title) { m_instance->update_window_title(title); }
 
+	static unsigned int CreateBufferGL(int size, const float* data, unsigned int usage);
+
 	void Initialize();
 	void Update(float dt);
 

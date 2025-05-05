@@ -32,6 +32,8 @@ namespace DynamicCompute {
 
                 int CopyTo(IComputeBuffer_private* other, int srcStart, int dstStart, int size) override;
 
+                void FlushExternal();
+
                 size_t GetSize() override;
 
                 void Dispose() override;

@@ -32,6 +32,16 @@
 
 Graphics* Graphics::m_instance{ nullptr };
 
+unsigned int Graphics::CreateBufferGL(int size, const float* data, unsigned int usage)
+{
+	GLuint ret_val = 0;
+	glGenBuffers(1, &ret_val);
+	glBindBuffer(GL_ARRAY_BUFFER, ret_val);
+	glBufferData(GL_ARRAY_BUFFER, size * sizeof(float), data, usage);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	return ret_val;
+}
+
 void Graphics::Initialize()
 {
 	m_instance = this;

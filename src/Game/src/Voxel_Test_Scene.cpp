@@ -274,7 +274,7 @@ void Voxel_Test_Scene::Init()
 	m_builder->Init(&settings);
 
 	Stitch_VBO* vbo_stitch = new Stitch_VBO();
-	//vbo_stitch->Init(m_builder->Get_Compute_Controller(), INT16_MAX);
+	vbo_stitch->Init(m_builder->Get_Compute_Controller(), INT16_MAX);
 
 	//IComputeBuffer* vert_transfer = m_builder->Get_Tranfer_Buffer(INT16_MAX, sizeof(float) * 4, false);
 	//IComputeBuffer* norm_transfer = m_builder->Get_Tranfer_Buffer(INT16_MAX, sizeof(float) * 4, false);
@@ -290,24 +290,15 @@ void Voxel_Test_Scene::Init()
 	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
 	glm::dvec4 render_times = m_builder->Render(&render_options);
 
+	
+
 	//double stop = Utilities::Get_Time();
 
 	auto end = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration<double>(end - start).count();
 
 	
-
 	
-	
-
-
-	/*
-	m_builder->Extract(
-		vbo_stitch->Input_Vertex_Buffer(),
-		vbo_stitch->Input_Normal_Buffer(),
-		nullptr,
-		counts[0]
-	);*/
 
 	//auto end = std::chrono::high_resolution_clock::now();
 	//auto process_duration = std::chrono::duration<double>(end - start).count();
@@ -322,10 +313,17 @@ void Voxel_Test_Scene::Init()
 	glm::vec4* m_normals = new glm::vec4[chnk_count.x];
 	unsigned int* m_triangles = new unsigned int[chnk_count.x];
 
-	m_builder->Extract(
+	/*m_builder->Extract(
 		m_vertices,
 		m_normals,
 		m_triangles,
+		counts[0]
+	);*/
+
+	m_builder->Extract(
+		vbo_stitch->Input_Vertex_Buffer(),
+		vbo_stitch->Input_Normal_Buffer(),
+		nullptr,
 		counts[0]
 	);
 
@@ -369,8 +367,11 @@ void Voxel_Test_Scene::Init()
 	std::vector<glm::vec4> verts(m_vertices, m_vertices + chnk_count.x);
 	std::vector<unsigned int> tris(m_triangles, m_triangles + chnk_count.x);
 	std::vector<glm::vec4> normals(m_normals, m_normals + chnk_count.x);
-
 	
+
+
+
+
 	//glm::vec4 max_val = glm::vec4(-1000, -1000, -1000, -1000);
 	//float max_val = -1000;
 	//for (/*int i = 0; i < (int)chnk_count.x; i++ */ const auto& elem : verts) {
@@ -386,15 +387,15 @@ void Voxel_Test_Scene::Init()
 
 	Mesh::VertexAttributeList vertex_list(Stitch_VBO::Stride());
 
-	//Mesh* voxel_mesh_test = new Mesh((int)chnk_count.x);
-	//voxel_mesh_test->Set_Vertex_Attributes(Stitch_VBO::Get_Vertex_Attributes());
-	//voxel_mesh_test->Load(vbo_stitch->Output_VBO_Buffer());
+	Mesh* voxel_mesh_test = new Mesh((int)chnk_count.x);
+	voxel_mesh_test->Set_Vertex_Attributes(Stitch_VBO::Get_Vertex_Attributes());
+	voxel_mesh_test->Load(vbo_stitch->Output_VBO_Buffer());
 
-	Mesh* voxel_mesh_test = new Mesh();
+	/*Mesh* voxel_mesh_test = new Mesh();
 	voxel_mesh_test->Vertices(Utilities::vec4_to_vec3_arr(verts));
 	voxel_mesh_test->Indices(tris);
 	voxel_mesh_test->Normals(Utilities::vec4_to_vec3_arr(normals));
-	voxel_mesh_test->Activate();
+	voxel_mesh_test->Activate();*/
 	//voxel_mesh_test->Generate_Normals();
 
 	WorldObject* obj = Instantiate("test_voxel_object");

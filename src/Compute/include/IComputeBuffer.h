@@ -28,6 +28,8 @@ namespace DynamicCompute {
 
             int CopyTo(IComputeBuffer* other, int srcStart, int dstStart, int size);
 
+            void FlushExternal();
+
             size_t GetSize();
 
             void Dispose();

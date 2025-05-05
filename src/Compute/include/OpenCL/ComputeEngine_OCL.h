@@ -29,6 +29,9 @@ namespace DynamicCompute {
                 int num;
                 size_t mSize;
 
+                cl_GLuint gl_buff;
+                cl_mem cl_gl_buff;
+
                 bool mInitialized{ false };
                 bool mDestroyed{ false };
                 bool mCanCallDispose{ true };
@@ -42,7 +45,7 @@ namespace DynamicCompute {
                 };
 
 
-                ComputeBuffer(cl_context context, cl_command_queue queue, int numContext, cl_mem_flags type, cl_mem_flags type_staging, size_t length);
+                ComputeBuffer(cl_context context, cl_command_queue queue, int numContext, cl_mem_flags type, cl_mem_flags type_staging, size_t length, bool external);
 
                 cl_mem* Get_CL_Mem()
                 {
@@ -66,6 +69,8 @@ namespace DynamicCompute {
                 int CopyTo(ComputeBuffer* other, int size);
 
                 int CopyTo(ComputeBuffer* other, int srcStart, int dstStart, int size);
+
+                void FlushExternal();
 
                 size_t GetSize() { return mSize; };
 
@@ -182,7 +187,7 @@ namespace DynamicCompute {
             {
                 static cl_platform_id platform_id;
                 static cl_uint num_of_platforms;
-                static cl_context_properties properties[3];
+                static cl_context_properties properties[7];
                 static cl_device_id device_ids[MAX_OCL_DEVICES];
                 static cl_uint num_of_devices;
 

@@ -547,6 +547,7 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
 
     m_program_smoothrender_mark_offsets->AddBuffer(0, m_in_static_settings_buffer);
     m_program_smoothrender_mark_offsets->AddBuffer(1, m_stitch_map_offset_buffer);
+    m_program_smoothrender_mark_offsets->AddBuffer(2, m_out_counts_buffer);
 
     /*m_program_smoothrender_stitch->AddBuffer(0, m_in_static_settings_buffer);
     m_program_smoothrender_stitch->AddBuffer(1, m_in_run_settings_buffer);

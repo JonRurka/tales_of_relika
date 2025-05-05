@@ -28,7 +28,7 @@ public:
 	static Mesh::VertexAttributeList Get_Vertex_Attributes();
 
 private:
-	std::string kernel_name = "main";
+	std::string kernel_name = "main_cl";
 	int m_elements{ 0 };
 	IComputeController* m_controller{nullptr};
 	IComputeProgram* m_program{ nullptr };

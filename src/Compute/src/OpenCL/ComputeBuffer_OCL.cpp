@@ -52,6 +52,11 @@ int ComputeBuffer_OCL::CopyTo(IComputeBuffer_private* other, int srcStart, int d
 	return m_buffer->CopyTo(other_vk->GetBuffer(), srcStart, dstStart, size);
 }
 
+void ComputeBuffer_OCL::FlushExternal()
+{
+	m_buffer->FlushExternal();
+}
+
 size_t ComputeBuffer_OCL::GetSize()
 {
 	return m_buffer->GetSize();

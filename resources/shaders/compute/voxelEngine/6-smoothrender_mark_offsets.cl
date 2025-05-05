@@ -7,6 +7,7 @@
 
 read_buffer_struct(Static_Settings, 0, in_static_settings)
 readwrite_buffer(ivec4, 1, out_stitch_map_offsets)
+readwrite_buffer(ivec4, 2, out_counts_data)
 
 ivec4 GetStitchOffset(uint grid_global_idx){
 	return get_buffer_vector(out_stitch_map_offsets, grid_global_idx);
@@ -19,11 +20,13 @@ void SetStitchOffset(uint grid_global_idx, ivec4 offset_data){
 
 void kernel main_cl(
 	global STRUCT Static_Settings* p_in_static_settings, 
-	global ivec4* p_out_stitch_map_offsets
+	global ivec4* p_out_stitch_map_offsets,
+	global ivec4* p_out_counts_data
 )
 {
 	in_static_settings = p_in_static_settings;
 	out_stitch_map_offsets = p_out_stitch_map_offsets;
+	out_counts_data = p_out_counts_data;
 	
 	uint inst_index = get_global_id(0);
 	
@@ -40,5 +43,6 @@ void kernel main_cl(
 		offset += grid_entry.y;
 		SetStitchOffset(g_index, grid_entry);
 	}
+	set_buffer_vector(out_counts_data, inst_index, IVEC4(offset, 0, inst_index, 0));
 }
 

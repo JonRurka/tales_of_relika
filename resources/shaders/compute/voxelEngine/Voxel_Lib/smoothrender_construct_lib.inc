@@ -508,7 +508,7 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 		Print_4("%i: Poly Verts 3: (%f, %f, %f)\n", i,
 			pos3.x, pos3.y, pos3.z);*/
     }
-
+	
     Set_Count(GetBatchIndex(batch[0], v_index, batch[2]), count);
 	//Set_Debug_Data(v_index, FVEC4(edge_ent, cubeIndex, count, i));
 	//Set_Debug_Data(v_index, FVEC4(count, 0, 0, 0));

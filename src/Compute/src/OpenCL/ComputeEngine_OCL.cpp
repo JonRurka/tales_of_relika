@@ -1,19 +1,38 @@
 //#include "ComputeEngine.h"
 #include "OpenCL/ComputeEngine_OCL.h"
 
+#include "Graphics.h"
+
 #include "CL_SDK/cl.h"
 #include "CL_SDK/opencl.hpp"
 #include "CL_SDK/Utils/Utils.h"
+
+#if WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#else
+#define GLFW_EXPOSE_NATIVE_X11
+#define GLFW_EXPOSE_NATIVE_GLX
+#endif
+
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
+#include "window.h"
 
 #define WAIT_IDLE 1
 
 using namespace DynamicCompute::Compute::OCL;
 
+#define USE_GL_CONTEXT 1
+
+#define CL_GL_DYNAMIC_DRAW 0x88E8
+
 //#pragma comment(lib, "OpenCL.lib")
 
 cl_platform_id ComputeEngine::platform_id = 0;
 cl_uint ComputeEngine::num_of_platforms = 0;
-cl_context_properties ComputeEngine::properties[3] = {0};
+cl_context_properties ComputeEngine::properties[7] = {0};
 cl_device_id ComputeEngine::device_ids[MAX_OCL_DEVICES] = { 0 };
 cl_uint ComputeEngine::num_of_devices = 0;
 std::string ComputeEngine::app_dir;
@@ -153,11 +172,30 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
    
     platform_id = (cl_platform_id)pltform.platform;
     printf("Init Platform ID: %X\n", platform_id);
+    
+#if USE_GL_CONTEXT == 1
 
-   // context properties list - must be terminated with 0
-   properties[0] = CL_CONTEXT_PLATFORM;
-   properties[1] = (cl_context_properties)platform_id;
-   properties[2] = 0;
+#if WIN32
+    printf("Creating context with WIN32 OpenGL context\n");
+    properties[0] = CL_GL_CONTEXT_KHR;
+    properties[1] = (cl_context_properties)glfwGetWGLContext(window::glfw_window());
+    properties[2] = CL_WGL_HDC_KHR;
+    properties[3] = (cl_context_properties)GetDC(glfwGetWin32Window(window::glfw_window()));
+#else
+    properties[0] = CL_GL_CONTEXT_KHR;
+    properties[1] = (cl_context_properties)glfwGetGLXContext(window::glfw_window());
+    properties[2] = CL_WGL_HDC_KHR;
+    properties[3] = (cl_context_properties)glfwGetX11Display();
+#endif
+    properties[4] = CL_CONTEXT_PLATFORM;
+    properties[5] = (cl_context_properties)platform_id;
+    properties[6] = 0;
+#else
+
+    properties[0] = CL_CONTEXT_PLATFORM;
+    properties[1] = (cl_context_properties)platform_id;
+    properties[2] = 0;
+#endif
 
    app_dir = dir;
 
@@ -233,7 +271,7 @@ ComputeBuffer* ComputeContext::GetBuffer(ComputeBuffer::Buffer_Type type, size_t
         return NULL;
     }
 
-    mBuffers.emplace_back(ComputeBuffer(context, command_queue, numContexts, flags, flags_staging, size));
+    mBuffers.emplace_back(ComputeBuffer(context, command_queue, numContexts, flags, flags_staging, size, external));
     auto& buf = mBuffers.back();
     //buf.mCanCallDispose = true;
     return &buf;
@@ -594,7 +632,7 @@ void ComputeKernel::Dispose()
 
 
 
-ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int numContext, cl_mem_flags type, cl_mem_flags type_staging, size_t length)
+ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int numContext, cl_mem_flags type, cl_mem_flags type_staging, size_t length, bool external)
 {
    num = numContext;
    //buffer = new cl_mem[numContext];
@@ -606,9 +644,16 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
 
    cl_int err;
 
+   //cl::BufferGL
 
-   buffer = clCreateBuffer(context, type, length, NULL, &err);
    buffer_staging = clCreateBuffer(context, type_staging, length, NULL, &err);
+   buffer = clCreateBuffer(context, type, length, NULL, &err);
+
+   if (external) {
+       cl_int res = 0;
+       gl_buff = Graphics::CreateBufferGL(length, NULL, CL_GL_DYNAMIC_DRAW);
+       cl_gl_buff = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, gl_buff, &res);
+   }
 
    mInitialized = true;
 }
@@ -747,7 +792,7 @@ int ComputeBuffer::CopyTo(ComputeBuffer* other)
 
     int src_size = mSize;
     int dst_size = other->mSize;
-    int size = std::min(src_size, dst_size);
+    int size = min(src_size, dst_size);
     cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, 0, 0, size, num_wait_events, wait_event_ptr, &finished_event);
     g_wait_event = finished_event;
     return res;
@@ -785,4 +830,20 @@ void ComputeBuffer::Dispose()
 
     mDestroyed = true;
     mInitialized = false;
+}
+
+void ComputeBuffer::FlushExternal()
+{
+    cl_event finished_event;
+    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+
+    clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, num_wait_events, wait_event_ptr, &finished_event);
+    g_wait_event = finished_event;
+
+
+    clEnqueueCopyBuffer(command_queue, buffer, cl_gl_buff, 0, 0, mSize, 1, &g_wait_event, &finished_event);
+    g_wait_event = finished_event;
+
+    clEnqueueReleaseGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, NULL);
 }
