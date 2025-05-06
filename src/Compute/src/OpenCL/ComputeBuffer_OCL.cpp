@@ -74,10 +74,10 @@ void* ComputeBuffer_OCL::Get_Native_Ptr()
 
 unsigned int ComputeBuffer_OCL::External_Buffer()
 {
-	return 0;
+	return m_buffer->External_GL_Buffer();
 }
 
 unsigned int ComputeBuffer_OCL::External_Memory()
 {
-	return 0;
+	return m_buffer->External_Memory();
 }

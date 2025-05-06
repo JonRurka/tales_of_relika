@@ -7,10 +7,15 @@
 
 #define STRIDE 8
 
-void Stitch_VBO::Init(IComputeController* controller, int elements)
+void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 {
-	m_controller = controller;
+	v_builder = builder;
+	m_controller = builder->Get_Compute_Controller();
 	m_elements = elements;
+
+	m_vertices = new glm::vec4[UINT16_MAX];
+	m_normals = new glm::vec4[UINT16_MAX];
+	m_triangles = new unsigned int[UINT16_MAX];
 
 	std::string resource = Game_Resources::Shaders::Compute::CREATE_VBO;
 
@@ -29,18 +34,22 @@ void Stitch_VBO::Init(IComputeController* controller, int elements)
 
 	vertex_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
 	normal_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
+	Logger::LogDebug(LOG_POS("Init"), "Create Extern VBO");
 	vbo_buffer = m_controller->NewReadWriteBuffer(elements, STRIDE * sizeof(float), true);
 
 	IComputeProgram::BindIndex ind{};
 	ind.GlobalIndex = 0;
+	ind.ParameterIndex = 0;
 	m_program->KernelSetBuffer(kernel_name, vbo_buffer, ind);
 
 	ind = {};
 	ind.GlobalIndex = 1;
+	ind.ParameterIndex = 1;
 	m_program->KernelSetBuffer(kernel_name, vertex_buffer, ind);
 
 	ind = {};
 	ind.GlobalIndex = 2;
+	ind.ParameterIndex = 2;
 	m_program->KernelSetBuffer(kernel_name, normal_buffer, ind);
 
 	m_program->FinishBuild();
@@ -49,9 +58,46 @@ void Stitch_VBO::Init(IComputeController* controller, int elements)
 
 void Stitch_VBO::Stitch(int elements)
 {
-	m_program->RunKernel(elements, m_elements, 1, 1);
+	m_program->RunKernel(kernel_name, elements, 1, 1);
 
 	Logger::LogDebug(LOG_POS("Stitch"), "Executed Kernel");
+}
+
+void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
+{
+	if (gpu_copy) {
+
+		v_builder->Extract(
+			Input_Vertex_Buffer(),
+			Input_Normal_Buffer(),
+			nullptr,
+			count
+		);
+
+		Stitch(count.x);
+		Output_VBO_Buffer()->FlushExternal();
+
+		mesh->Set_Vertex_Attributes(Get_Vertex_Attributes());
+		mesh->Load(Output_VBO_Buffer());
+	}
+	else {
+
+		v_builder->Extract(
+			m_vertices,
+			m_normals,
+			m_triangles,
+			count
+		);
+
+		std::vector<glm::vec4> verts(m_vertices, m_vertices + count.x);
+		std::vector<unsigned int> tris(m_triangles, m_triangles + count.x);
+		std::vector<glm::vec4> normals(m_normals, m_normals + count.x);
+
+		mesh->Vertices(Utilities::vec4_to_vec3_arr(verts));
+		mesh->Indices(tris);
+		mesh->Normals(Utilities::vec4_to_vec3_arr(normals));
+		mesh->Activate();
+	}
 }
 
 int Stitch_VBO::Stride()

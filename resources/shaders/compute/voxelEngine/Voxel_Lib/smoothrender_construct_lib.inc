@@ -679,8 +679,8 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
 		
 		uint batch_index = GetBatchIndex((UINT(batch[1]) % UINT(batch_settings[0])), index_exp, batch[3]);
 		
-		float iso_val = iso_sample_3(s, p_index_pos.xyz, globalWorldPos.xyz);
-		fvec3 normal = normal_sample(s, p_index_pos.xyz, globalWorldPos.xyz);
+		float iso_val = iso_sample_3(s, p_index_pos.xyz, localWorldPos.xyz);
+		fvec3 normal = normal_sample(s, p_index_pos.xyz, localWorldPos.xyz);
 		
 		//NEW_GRIDPOINT_1(gr_point)
 		GRIDPOINT_ISO(grid, i) = iso_val;

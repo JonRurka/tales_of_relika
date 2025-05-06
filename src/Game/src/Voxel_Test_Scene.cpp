@@ -262,9 +262,9 @@ void Voxel_Test_Scene::Init()
 
 	settings.GetSettings()->setString("programDir", std::string("C:/Users/jrurka/Source/repos/game_project/resources/shaders/compute/voxelEngine/Bin"));
 	settings.GetSettings()->setFloat("voxelsPerMeter", 1);
-	settings.GetSettings()->setInt("chunkMeterSizeX", 32);
-	settings.GetSettings()->setInt("chunkMeterSizeY", 32);
-	settings.GetSettings()->setInt("chunkMeterSizeZ", 32);
+	settings.GetSettings()->setInt("chunkMeterSizeX", 8);
+	settings.GetSettings()->setInt("chunkMeterSizeY", 8);
+	settings.GetSettings()->setInt("chunkMeterSizeZ", 8);
 	settings.GetSettings()->setInt("TotalBatchGroups", 1);
 	settings.GetSettings()->setInt("BatchesPerGroup", 1);
 	settings.GetSettings()->setInt("InvertTrianges", false);
@@ -274,15 +274,15 @@ void Voxel_Test_Scene::Init()
 	m_builder->Init(&settings);
 
 	Stitch_VBO* vbo_stitch = new Stitch_VBO();
-	vbo_stitch->Init(m_builder->Get_Compute_Controller(), INT16_MAX);
+	vbo_stitch->Init(m_builder, INT16_MAX);
 
-	//IComputeBuffer* vert_transfer = m_builder->Get_Tranfer_Buffer(INT16_MAX, sizeof(float) * 4, false);
-	//IComputeBuffer* norm_transfer = m_builder->Get_Tranfer_Buffer(INT16_MAX, sizeof(float) * 4, false);
-	//IComputeBuffer* vbo_transfer = m_builder->Get_Tranfer_Buffer(INT16_MAX, sizeof(float) * 11, false);
+	int num_chunks = 1;
 
-	glm::ivec4 chunk_loc = glm::ivec4(0, 0, 0, 0);
-	gen_options.locations.push_back(chunk_loc);
-	render_options.locations.push_back(chunk_loc);
+	for (int i = 0; i < num_chunks; i++) {
+		glm::ivec4 chunk_loc = glm::ivec4(i, 0, 0, 0);
+		gen_options.locations.push_back(chunk_loc);
+		render_options.locations.push_back(chunk_loc);
+	}
 
 	//double start = Utilities::Get_Time();
 	auto start = std::chrono::high_resolution_clock::now();
@@ -297,8 +297,6 @@ void Voxel_Test_Scene::Init()
 	auto end = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration<double>(end - start).count();
 
-	
-	
 
 	//auto end = std::chrono::high_resolution_clock::now();
 	//auto process_duration = std::chrono::duration<double>(end - start).count();
@@ -307,25 +305,16 @@ void Voxel_Test_Scene::Init()
 
 	start = std::chrono::high_resolution_clock::now();
 	std::vector<glm::ivec4> counts = m_builder->GetSize();
-	glm::ivec4 chnk_count = counts[0];
+	//glm::ivec4 chnk_count = counts[0];
 
-	glm::vec4* m_vertices = new glm::vec4[chnk_count.x];
-	glm::vec4* m_normals = new glm::vec4[chnk_count.x];
-	unsigned int* m_triangles = new unsigned int[chnk_count.x];
 
-	/*m_builder->Extract(
-		m_vertices,
-		m_normals,
-		m_triangles,
-		counts[0]
-	);*/
+	std::vector<Mesh*> chunk_meshes;
+	for (int i = 0; i < num_chunks; i++) {
+		Mesh* voxel_mesh_test = new Mesh((int)counts[i].x);
+		vbo_stitch->Process(voxel_mesh_test, counts[i], true);
+		chunk_meshes.push_back(voxel_mesh_test);
+	}
 
-	m_builder->Extract(
-		vbo_stitch->Input_Vertex_Buffer(),
-		vbo_stitch->Input_Normal_Buffer(),
-		nullptr,
-		counts[0]
-	);
 
 	end = std::chrono::high_resolution_clock::now();
 	auto extract_duration = std::chrono::duration<double>(end - start).count();
@@ -360,18 +349,6 @@ void Voxel_Test_Scene::Init()
 		}
 	}*/
 
-	//vbo_stitch->Stitch(chnk_count.x);
-
-	
-
-	std::vector<glm::vec4> verts(m_vertices, m_vertices + chnk_count.x);
-	std::vector<unsigned int> tris(m_triangles, m_triangles + chnk_count.x);
-	std::vector<glm::vec4> normals(m_normals, m_normals + chnk_count.x);
-	
-
-
-
-
 	//glm::vec4 max_val = glm::vec4(-1000, -1000, -1000, -1000);
 	//float max_val = -1000;
 	//for (/*int i = 0; i < (int)chnk_count.x; i++ */ const auto& elem : verts) {
@@ -383,34 +360,25 @@ void Voxel_Test_Scene::Init()
 	//Logger::LogDebug(LOG_POS("Init"), "Maximum vertex dist: (%f)", max_val);
 
 
-	Logger::LogDebug(LOG_POS("Init"), "Number of vertices: %i", (int)chnk_count.x);
+	//Logger::LogDebug(LOG_POS("Init"), "Number of vertices: %i", (int)chnk_count.x);
+	
+	for (int i = 0; i < num_chunks; i++) {
+		WorldObject* obj = Instantiate("test_voxel_object");
+		obj->Get_Transform()->Set_Verbos(true);
+		obj->Get_MeshRenderer()->Set_Mesh(chunk_meshes[i]);
+		//obj->Get_MeshRenderer()->Transparent(true);
+		//obj->Get_MeshRenderer()->Set_Shader(m_shader);
+		obj->Get_Transform()->Translate(i * 8, 0.0f, 0.0f);
+		obj->Get_MeshRenderer()->Set_Material(chunk_opaque_mat);
+		MeshCollider* mesh_col = obj->Add_Component<MeshCollider>();
+	}
 
-	Mesh::VertexAttributeList vertex_list(Stitch_VBO::Stride());
+	//Transform* obj_trans = obj->Get_Transform();
+	//Logger::LogDebug(LOG_POS("Init"), "Orig Obj Position:(%f, %f, %f)",
+	//	obj_trans->Position().x, obj_trans->Position().y, obj_trans->Position().z);
 
-	Mesh* voxel_mesh_test = new Mesh((int)chnk_count.x);
-	voxel_mesh_test->Set_Vertex_Attributes(Stitch_VBO::Get_Vertex_Attributes());
-	voxel_mesh_test->Load(vbo_stitch->Output_VBO_Buffer());
+	
 
-	/*Mesh* voxel_mesh_test = new Mesh();
-	voxel_mesh_test->Vertices(Utilities::vec4_to_vec3_arr(verts));
-	voxel_mesh_test->Indices(tris);
-	voxel_mesh_test->Normals(Utilities::vec4_to_vec3_arr(normals));
-	voxel_mesh_test->Activate();*/
-	//voxel_mesh_test->Generate_Normals();
-
-	WorldObject* obj = Instantiate("test_voxel_object");
-	obj->Get_Transform()->Set_Verbos(true);
-	obj->Get_MeshRenderer()->Set_Mesh(voxel_mesh_test);
-	//obj->Get_MeshRenderer()->Transparent(true);
-	//obj->Get_MeshRenderer()->Set_Shader(m_shader);
-	obj->Get_Transform()->Translate(0.0f, 0.0f, 0.0f);
-	obj->Get_MeshRenderer()->Set_Material(chunk_opaque_mat);
-
-	Transform* obj_trans = obj->Get_Transform();
-	Logger::LogDebug(LOG_POS("Init"), "Orig Obj Position:(%f, %f, %f)",
-		obj_trans->Position().x, obj_trans->Position().y, obj_trans->Position().z);
-
-	MeshCollider* mesh_col = obj->Add_Component<MeshCollider>();
 	//mesh_col->SetMesh(voxel_mesh_test);
 	//mesh_col->Activate();
 

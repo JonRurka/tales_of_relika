@@ -83,6 +83,7 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer)
 	//Logger::LogDebug(LOG_POS("Load"), "Loading %i Vertices.", (int)m_num_vertices);
 	//Logger::LogDebug(LOG_POS("Load"), "Load buffer size: %i", (int)size);
 
+	//buffer->FlushExternal();
 	GLuint glBuffer = buffer->External_Buffer();
 
 	//void* data = (float*)malloc(size);

@@ -15,6 +15,8 @@
 #define GLFW_EXPOSE_NATIVE_GLX
 #endif
 
+#include <signal.h>
+
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
@@ -42,7 +44,57 @@ std::list<ComputeContext> ComputeEngine::mContexts;
 bool ComputeEngine::mInitialized{ false };
 
 namespace {
+    typedef void (*SignalHandlerPointer)(int);
+    void SignalHandler(int signal)
+    {
+        printf("Signal %d", signal);
+        throw "!Access Violation!";
+    }
+
     cl_event g_wait_event{ NULL }; // TODO: This is stupid. Change this.
+
+    clGetGLContextInfoKHR_fn pclGetGLContextInfoKHR;
+
+    static const std::string CL_GL_SHARING_EXT = "cl_khr_gl_sharing";
+
+    bool checkExtnAvailability(cl_device_id pDevice, std::string pName)
+    {
+        char ext_chars[1024];
+        ZeroMemory(ext_chars, 1024);
+        // find extensions required
+        clGetDeviceInfo(pDevice, CL_DEVICE_EXTENSIONS, 1024, ext_chars, 0);
+        std::string ext_str = std::string(ext_chars);
+        //std::string exts = pDevice.getInfo<CL_DEVICE_EXTENSIONS>();
+        std::stringstream ss(ext_str);
+        std::string item;
+        bool found = false;
+        while (std::getline(ss, item, ' ')) {
+            if (item == pName) {
+                found = true;
+                break;
+            }
+        }
+        return found;
+    }
+
+    bool deviceSupportsExternGL(cl_device_id pDevice, cl_context_properties* props) {
+        size_t bytes = 0;
+        pclGetGLContextInfoKHR(props, CL_DEVICES_FOR_GL_CONTEXT_KHR, 0, NULL, &bytes);
+        size_t devNum = bytes / sizeof(cl_device_id);
+        cl_device_id* devices = new cl_device_id[devNum];
+        pclGetGLContextInfoKHR(props, CL_DEVICES_FOR_GL_CONTEXT_KHR, bytes, devices, NULL);
+        bool res = false;
+        for (size_t i = 0; i < devNum; i++)
+        {
+            if (devices[i] == pDevice) {
+                res = true;
+                break;
+            }
+        }
+        delete[] devices;
+        return res;
+    }
+    
 }
 
 /*std::vector<ComputeEngine::Platform> ComputeEngine::GetSupportedPlatforms()
@@ -173,18 +225,25 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
     platform_id = (cl_platform_id)pltform.platform;
     printf("Init Platform ID: %X\n", platform_id);
     
+    
+
 #if USE_GL_CONTEXT == 1
 
 #if WIN32
+
+    pclGetGLContextInfoKHR = (clGetGLContextInfoKHR_fn)clGetExtensionFunctionAddressForPlatform(platform_id, "clGetGLContextInfoKHR");
+    //wglGetCurrentContext
     printf("Creating context with WIN32 OpenGL context\n");
     properties[0] = CL_GL_CONTEXT_KHR;
-    properties[1] = (cl_context_properties)glfwGetWGLContext(window::glfw_window());
+    properties[1] = (cl_context_properties)wglGetCurrentContext();
+    //properties[1] = (cl_context_properties)glfwGetWGLContext(window::glfw_window());
     properties[2] = CL_WGL_HDC_KHR;
-    properties[3] = (cl_context_properties)GetDC(glfwGetWin32Window(window::glfw_window()));
+    properties[3] = (cl_context_properties)wglGetCurrentDC();
+    //properties[3] = (cl_context_properties)GetDC(glfwGetWin32Window(window::glfw_window()));
 #else
     properties[0] = CL_GL_CONTEXT_KHR;
     properties[1] = (cl_context_properties)glfwGetGLXContext(window::glfw_window());
-    properties[2] = CL_WGL_HDC_KHR;
+    properties[2] = CL_GLX_DISPLAY_KHR;
     properties[3] = (cl_context_properties)glfwGetX11Display();
 #endif
     properties[4] = CL_CONTEXT_PLATFORM;
@@ -311,6 +370,26 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
 
     deviceID = (cl_device_id)device.cl_device;
 
+
+    printf("Picked Device: %s\n", device.name);
+
+    bool external_supported = false;
+    if (checkExtnAvailability(deviceID, CL_GL_SHARING_EXT)) {
+        printf("CL_GL Extension Found.\n");
+        external_supported = true;
+    }
+    else {
+        printf("CL_GL Extension Not Found!!!\n");
+    }
+
+    if (deviceSupportsExternGL(deviceID, properties)) {
+        printf("CL_GL Device Supported.\n");
+        external_supported = true;
+    }
+    else {
+        printf("CL_GL Device NOT Supported!!!\n");
+    }
+
     cl_ulong local_size;
     clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &local_size, 0);
 
@@ -342,8 +421,15 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
     printf("OpenCl max group size: %i\n", (int)work_group_size);
 
     context = clCreateContext(properties, 1, &deviceID, NULL, NULL, &err);
+    if (err != CL_SUCCESS) {
+        printf("Failed to create CL context: %i", (int)err);
+    }
 
     command_queue = clCreateCommandQueue(context, deviceID, 0, &err);
+    if (err != CL_SUCCESS) {
+        printf("Failed to create CL command queue: %i", (int)err);
+    }
+
     numContexts = 1;
 
     //printf("Creating Compute Context with device: %s\n", device.name);
@@ -423,7 +509,7 @@ int ComputeProgram::Set_Source(const char* source)
    cl_int err = 0;
    //printf("%s\n", source);
    program = clCreateProgramWithSource(m_context, 1, (const char **)&source, NULL, &err);
-   args += "-cl-std=CL3.0"; // -Werror
+   args += "-cl-std=CL3.0 -cl-fast-relaxed-math"; // -Werror -cl-fast-relaxed-math
    mInitialized = true;
    return err;
 }
@@ -646,13 +732,25 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
 
    //cl::BufferGL
 
-   buffer_staging = clCreateBuffer(context, type_staging, length, NULL, &err);
-   buffer = clCreateBuffer(context, type, length, NULL, &err);
+   buffer_staging = clCreateBuffer(context, type_staging, mSize, NULL, &err);
+   buffer = clCreateBuffer(context, type, mSize, NULL, &err);
 
    if (external) {
+
+
        cl_int res = 0;
-       gl_buff = Graphics::CreateBufferGL(length, NULL, CL_GL_DYNAMIC_DRAW);
+       float* tmp_buff = new float[mSize];
+       gl_buff = Graphics::CreateBufferGL(mSize, tmp_buff, CL_GL_DYNAMIC_DRAW);
        cl_gl_buff = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, gl_buff, &res);
+       delete[] tmp_buff;
+
+       if (res != CL_SUCCESS) {
+           printf("Failed to create CL buffer from GL\n");
+       }
+       else {
+           printf("Created CL buffer from GL\n");
+       }
+       
    }
 
    mInitialized = true;
@@ -834,15 +932,23 @@ void ComputeBuffer::Dispose()
 
 void ComputeBuffer::FlushExternal()
 {
-    cl_event finished_event;
+    cl_event finished_event = 0;
     int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
     cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
 
-    clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, num_wait_events, wait_event_ptr, &finished_event);
+    if (!wglMakeCurrent(wglGetCurrentDC(), wglGetCurrentContext())) {
+        // Handle error: context not current
+        printf("Failed to make GL context current\n");
+    }
+
+    //clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, num_wait_events, wait_event_ptr, &finished_event);
+    glFinish();
+    clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, &finished_event);
     g_wait_event = finished_event;
+    clWaitForEvents(1, &g_wait_event);
 
 
-    clEnqueueCopyBuffer(command_queue, buffer, cl_gl_buff, 0, 0, mSize, 1, &g_wait_event, &finished_event);
+    clEnqueueCopyBuffer(command_queue, buffer, cl_gl_buff, 0, 0, mSize, num_wait_events, wait_event_ptr, &finished_event);
     g_wait_event = finished_event;
 
     clEnqueueReleaseGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, NULL);

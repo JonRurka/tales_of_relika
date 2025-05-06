@@ -7,8 +7,8 @@
 
 readwrite_buffer_float(0, out_vbo)
 
-read_buffer(fvec4, 1, in_vertices)
-read_buffer(fvec4, 2, in_normals)
+readwrite_buffer(fvec4, 1, in_vertices)
+readwrite_buffer(fvec4, 2, in_normals)
 //read_buffer(fvec4, 3, in_colors)
 //read_buffer(fvec4, 4, in_texcoords)
 
@@ -50,8 +50,8 @@ void insert(uvec3 id)
 
 void kernel main_cl(
 	global float* p_out_vbo, 
-	global fvec4* p_fvec4 in_vertices,
-	global fvec4* p_fvec4 in_normals,
+	global fvec4* p_in_vertices,
+	global fvec4* p_in_normals
 )
 {
 	out_vbo = p_out_vbo;

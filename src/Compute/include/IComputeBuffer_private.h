@@ -26,7 +26,7 @@ namespace DynamicCompute {
 
             virtual int CopyTo(IComputeBuffer_private* other, int srcStart, int dstStart, int size) = 0;
 
-            virtual void FlushExternal() = 0;
+            virtual void FlushExternal() {};
 
             virtual size_t GetSize() = 0;
 

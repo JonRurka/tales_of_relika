@@ -31,9 +31,9 @@ float Sample_3D(STRUCT Settings s, float x, float y, float z)
 	}*/
 	
     //float radius = (s.ChunkSizeX / 2) - 2;
-	float radius = 14;
+	float radius = 4;
     //fvec3 sphere_center = FVEC3((s.ChunkSizeX / 2) - 2, (s.ChunkSizeY / 2) - 2, (s.ChunkSizeZ / 2) - 2);
-	fvec3 sphere_center = FVEC3(16, 16, 16);
+	fvec3 sphere_center = FVEC3(4, 4, 4);
     float val = sphere_sample_5(radius, sphere_center, x, y, z);
     return val;
 }

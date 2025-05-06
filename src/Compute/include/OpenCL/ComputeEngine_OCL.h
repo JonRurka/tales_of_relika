@@ -52,6 +52,9 @@ namespace DynamicCompute {
                     return &buffer;
                 }
 
+                unsigned int External_GL_Buffer() { return gl_buff; }
+                unsigned int External_Memory() { return 0; }
+
                 int SetData(void* data);
 
                 int GetData(void* outData);

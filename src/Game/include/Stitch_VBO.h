@@ -1,7 +1,9 @@
 #pragma once
 
 #include "game_engine.h"
-
+#include "shared_structures.h"
+#include "IVoxelBuilder.h"
+#include "SmoothVoxelBuilder.h"
 
 namespace DynamicCompute {
 	namespace Compute {
@@ -12,12 +14,14 @@ namespace DynamicCompute {
 }
 
 using namespace DynamicCompute::Compute;
+using namespace VoxelEngine;
 
 class Stitch_VBO {
 public:
 
-	void Init(IComputeController* controller, int elements);
+	void Init(IVoxelBuilder_private* builder, int elements);
 	void Stitch(int elements);
+	void Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy);
 
 	IComputeBuffer* Input_Vertex_Buffer() { return vertex_buffer; }
 	IComputeBuffer* Input_Normal_Buffer() { return normal_buffer; }
@@ -32,6 +36,11 @@ private:
 	int m_elements{ 0 };
 	IComputeController* m_controller{nullptr};
 	IComputeProgram* m_program{ nullptr };
+	IVoxelBuilder_private* v_builder{ nullptr };
+
+	glm::vec4* m_vertices{nullptr};
+	glm::vec4* m_normals{ nullptr };
+	unsigned int* m_triangles{ nullptr };
 
 	IComputeBuffer* vertex_buffer{ nullptr };
 	IComputeBuffer* normal_buffer{ nullptr };

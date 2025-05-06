@@ -494,7 +494,7 @@ OpenCL_Device_Info Utilities::Get_Recommended_Device()
 			picked_device = elem;
 		}
 	}
-
+	//picked_device = devices[1];
 	return picked_device;
 }
 
