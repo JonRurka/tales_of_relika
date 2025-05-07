@@ -58,7 +58,7 @@ public:
 	void Name(std::string value) { m_name = value; }
 	std::string Name() { return m_name; }
 
-	void Load(DynamicCompute::Compute::IComputeBuffer* buffer);
+	void Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size = -1);
 
 	void Vertices(std::vector<glm::vec3> value) 
 	{ 

@@ -68,7 +68,8 @@ def compile_shader(working_dir, resource_path, file_path, file_name):
     
     glsl_compile_cmd = ['glslc.exe', file_name, '-o', '-', f'--target-env={spirv_target}', '-O0']
     
-    opencl_preprocess_cmd = ['gcc', '-E', '-x', 'c', file_name, '-o', '-']
+    #opencl_preprocess_cmd = ['gcc', '-E', '-x', 'c', file_name, '-o', '-']
+    opencl_preprocess_cmd = ['clang', '-E', '-x', 'c', file_name, '-o', '-']
     glsl_preprocess_cmd = ['glslc.exe', '-E', file_name, '-o', '-']
     
     if use_spirv and global_use_spirv:

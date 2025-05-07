@@ -34,8 +34,10 @@ namespace {
     void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     {
         glViewport(0, 0, width, height);
-
-        static_cast<Graphics*>(glfwGetWindowUserPointer(window))->OnWindowResize(width, height);
+        Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
+        if (user_ptr == nullptr)
+            return;
+        user_ptr->OnWindowResize(width, height);
     }
 
     void APIENTRY glDebugOutput(GLenum source,
@@ -91,16 +93,22 @@ namespace {
 
     void static_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
         Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
+        if (user_ptr == nullptr)
+            return;
         user_ptr->key_callback(window, key, scancode, action, mods);
     }
 
     void static_cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
         Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
+        if (user_ptr == nullptr)
+            return;
         user_ptr->cursor_position_callback(window, xpos, ypos);
     }
 
     void static_mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
         Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
+        if (user_ptr == nullptr)
+            return;
         user_ptr->mouse_button_callback(window, button, action, mods);
     }
 

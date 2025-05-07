@@ -49,9 +49,9 @@ int IComputeBuffer::CopyTo(IComputeBuffer* other, int srcStart, int dstStart, in
 	return p_inst->CopyTo(other->p_inst, srcStart, dstStart, size);
 }
 
-void IComputeBuffer::FlushExternal()
+void IComputeBuffer::FlushExternal(int size)
 {
-	p_inst->FlushExternal();
+	p_inst->FlushExternal(size);
 }
 
 size_t IComputeBuffer::GetSize()

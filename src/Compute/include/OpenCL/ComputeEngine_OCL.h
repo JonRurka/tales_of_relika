@@ -4,8 +4,8 @@
 
 #include "OCL_forwardDeclarations.h"
 //#include "CL/cl.h"
-#include "CL_SDK/cl.h"
-#include "CL_SDK/opencl.hpp"
+#include "CL/cl.h"
+#include "CL/opencl.hpp"
 
 // TODO: Clean up this file and the OpenCL implementation
 // to match the other SDK platforms.
@@ -73,7 +73,7 @@ namespace DynamicCompute {
 
                 int CopyTo(ComputeBuffer* other, int srcStart, int dstStart, int size);
 
-                void FlushExternal();
+                void FlushExternal(int size);
 
                 size_t GetSize() { return mSize; };
 

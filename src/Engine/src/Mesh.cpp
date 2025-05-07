@@ -42,6 +42,7 @@ Mesh::Mesh(size_t size)
 		glBufferData(GL_ARRAY_BUFFER, m_initial_size, NULL, GL_STATIC_COPY);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
+	
 
 	// position attribute
 	/*glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
@@ -73,10 +74,14 @@ Mesh::Mesh(size_t size)
 	m_num_indices = 0;
 }
 
-void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer)
+void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size)
 {
-	
-	size_t size = buffer->GetSize();
+	if (size < 0) {
+		size = buffer->GetSize();
+	}
+
+	//Logger::LogDebug(LOG_POS("Load"), "Load elements: %i", size / (sizeof(float) * 4));
+
 	//m_num_vertices = size / (sizeof(float) * 11);
 	m_num_vertices = size / m_attrib_list.m_stride;
 	m_virtual_mesh = true;
@@ -85,31 +90,6 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer)
 
 	//buffer->FlushExternal();
 	GLuint glBuffer = buffer->External_Buffer();
-
-	//void* data = (float*)malloc(size);
-	//memset(data, 0, size);
-
-	//glGetNamedBufferSubData(glBuffer, 0, size, data);
-	/*glCheckError();
-
-	if (data) {
-		float* floatData = (float*)data;
-		int numFloats = size / sizeof(float);
-		int num_elem = numFloats / 11;
-		for (int i = 0; i < num_elem; i++)
-		{
-			int b = i * 11;
-			Logger::LogDebug(LOG_POS("Load"), "\t Vert:(%f, %f, %f), norm:(%f, %f, %f), color:(%f, %f, %f), tex:(%f, %f)",
-				floatData[b + 0], floatData[b + 1], floatData[b + 2],
-				floatData[b + 3], floatData[b + 4], floatData[b + 5],
-				floatData[b + 6], floatData[b + 7], floatData[b + 8],
-				floatData[b + 9], floatData[b + 10]
-			);
-		}
-	}
-	else {
-		Logger::LogError(LOG_POS("Load"), "Failed to map buffer.");
-	}*/
 
 	glBindVertexArray(VAO);
 	glCheckError();
@@ -124,6 +104,25 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer)
 	glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ARRAY_BUFFER, 0, 0, size);
 	glCheckError();
 	glBindBuffer(GL_COPY_READ_BUFFER, 0);
+
+	/*void* data = (float*)malloc(size);
+	memset(data, 0, size);
+	glGetNamedBufferSubData(VBO, 0, size, data);
+	glCheckError();
+	if (data) {
+		glm::fvec4* vbo_data = (glm::fvec4*)data;
+		for (int i = 0; i < m_num_vertices; i++) {
+			glm::fvec4 vec1 = glm::fvec4(0);//out_vert[i];
+			glm::fvec4 vec2 = vbo_data[i * 2];
+
+			Logger::LogDebug(LOG_POS("Process"), "(%f, %f, %f, %f) == (%f, %f, %f, %f)",
+				vec1.x, vec1.y, vec1.z, vec1.w, vec2.x, vec2.y, vec2.z, vec2.w);
+		}
+
+	}
+	else {
+		Logger::LogError(LOG_POS("Load"), "Failed to map buffer.");
+	}*/
 
 	/*
 	// position attribute
@@ -140,7 +139,7 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer)
 	glEnableVertexAttribArray(3);*/
 	m_attrib_list.process();
 
-	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 11);
+	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, m_attrib_list.m_stride);
 	glCheckError();
 
 	glBindVertexArray(0);

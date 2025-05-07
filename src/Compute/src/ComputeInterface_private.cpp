@@ -154,8 +154,7 @@ std::vector<Platform> ComputeInterface_private::GetSupportedPlatforms_OpenCL()
     size_t n_size = 0;
     for (int i = 0; i < num_of_platforms; i++)
     {
-        Platform platform;
-        ZeroMemory(&platform, sizeof(Platform));
+        Platform platform{};
 
         platform.platform = all_platforms[i];
         printf("Platform ID: %llX\n", (long long)platform.platform);

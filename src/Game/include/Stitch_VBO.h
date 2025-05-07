@@ -25,7 +25,7 @@ public:
 
 	IComputeBuffer* Input_Vertex_Buffer() { return vertex_buffer; }
 	IComputeBuffer* Input_Normal_Buffer() { return normal_buffer; }
-	IComputeBuffer* Output_VBO_Buffer() { return normal_buffer; }
+	IComputeBuffer* Output_VBO_Buffer() { return vbo_buffer; }
 
 	static int Stride();
 
@@ -45,6 +45,9 @@ private:
 	IComputeBuffer* vertex_buffer{ nullptr };
 	IComputeBuffer* normal_buffer{ nullptr };
 	IComputeBuffer* vbo_buffer{ nullptr };
+
+	OpenCL_Device_Info m_device_cl;
+	IComputeController* create_controller();
 
 	inline static const std::string LOG_LOC{ "STITCH_VBO" };
 };

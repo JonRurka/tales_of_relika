@@ -3,9 +3,9 @@
 
 #include "Graphics.h"
 
-#include "CL_SDK/cl.h"
-#include "CL_SDK/opencl.hpp"
-#include "CL_SDK/Utils/Utils.h"
+#include "CL/cl.h"
+#include "CL/opencl.hpp"
+#include "CL/Utils/Utils.h"
 
 #if WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -20,15 +20,19 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
+#include <chrono>
+
 #include "window.h"
 
-#define WAIT_IDLE 1
+#define WAIT_IDLE 0
 
 using namespace DynamicCompute::Compute::OCL;
 
 #define USE_GL_CONTEXT 1
 
 #define CL_GL_DYNAMIC_DRAW 0x88E8
+#define CL_GL_STATIC_COPY 0x88E6
+#define CL_GL_DYNAMIC_COPY 0x88EA
 
 //#pragma comment(lib, "OpenCL.lib")
 
@@ -225,8 +229,6 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
     platform_id = (cl_platform_id)pltform.platform;
     printf("Init Platform ID: %X\n", platform_id);
     
-    
-
 #if USE_GL_CONTEXT == 1
 
 #if WIN32
@@ -389,6 +391,11 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
     else {
         printf("CL_GL Device NOT Supported!!!\n");
     }
+
+    cl_bool manual_sync;
+    //CL_DEVICE_PREFERRED_INTEROP_USER_SYNC
+    clGetDeviceInfo(deviceID, CL_DEVICE_PREFERRED_INTEROP_USER_SYNC, sizeof(cl_bool), &manual_sync, 0);
+    printf("Requires manual sync: %i\n", (int)manual_sync);
 
     cl_ulong local_size;
     clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &local_size, 0);
@@ -737,12 +744,14 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
 
    if (external) {
 
-
+       cl_event finished_event = 0;
        cl_int res = 0;
-       float* tmp_buff = new float[mSize];
-       gl_buff = Graphics::CreateBufferGL(mSize, tmp_buff, CL_GL_DYNAMIC_DRAW);
-       cl_gl_buff = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, gl_buff, &res);
-       delete[] tmp_buff;
+       //float* tmp_buff = new float[mSize / sizeof(float)];
+       gl_buff = Graphics::CreateBufferGL(mSize, nullptr, CL_GL_DYNAMIC_COPY);
+       cl_gl_buff = clCreateFromGLBuffer(context, CL_MEM_WRITE_ONLY, gl_buff, &res);
+       res = clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, &finished_event);
+       clWaitForEvents(1, &finished_event);
+       //delete[] tmp_buff;
 
        if (res != CL_SUCCESS) {
            printf("Failed to create CL buffer from GL\n");
@@ -805,12 +814,10 @@ int ComputeBuffer::SetData(void* data, int size)
 
     cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, data, num_wait_events, wait_event_ptr, &finished_event);
     g_wait_event = finished_event;
-
     if (res != 0)
     {
         return res;
     }
-
     wait_event_ptr = &g_wait_event;
     res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, 0, 0, size, 1, wait_event_ptr, &finished_event);
     g_wait_event = finished_event;
@@ -930,26 +937,68 @@ void ComputeBuffer::Dispose()
     mInitialized = false;
 }
 
-void ComputeBuffer::FlushExternal()
+void ComputeBuffer::FlushExternal(int size)
 {
+    bool manual_sync = false; // TODO
+
+    if (size < 0) {
+        size = mSize;
+    }
+
     cl_event finished_event = 0;
     int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
     cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
 
-    if (!wglMakeCurrent(wglGetCurrentDC(), wglGetCurrentContext())) {
+    auto start = std::chrono::high_resolution_clock::now();
+    /*if (!wglMakeCurrent(wglGetCurrentDC(), wglGetCurrentContext())) {
         // Handle error: context not current
         printf("Failed to make GL context current\n");
+    }*/
+    glFinish();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto glFinish_duration = std::chrono::duration<double>(end - start).count() * 1000;
+
+    // Acquire GL objects
+    start = std::chrono::high_resolution_clock::now();
+    
+    //clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, num_wait_events, wait_event_ptr, &finished_event);
+
+    glFinish();
+
+    if (manual_sync) {
+        cl_int res = clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, &finished_event);
+        if (res != CL_SUCCESS) {
+            printf("clEnqueueAcquireGLObjects failed: %i\n", res);
+        }
+        g_wait_event = finished_event;
+        wait_event_ptr = &g_wait_event;
+        //clWaitForEvents(1, &g_wait_event);
     }
 
-    //clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, num_wait_events, wait_event_ptr, &finished_event);
-    glFinish();
-    clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, &finished_event);
+    end = std::chrono::high_resolution_clock::now();
+    auto aquire_duration = std::chrono::duration<double>(end - start).count() * 1000;
+
+    // Copy Buffer
+    start = std::chrono::high_resolution_clock::now();
+    clEnqueueCopyBuffer(command_queue, buffer, cl_gl_buff, 0, 0, size, 1, wait_event_ptr, &finished_event);
     g_wait_event = finished_event;
+    wait_event_ptr = &g_wait_event;
+    end = std::chrono::high_resolution_clock::now();
+    auto copy_duration = std::chrono::duration<double>(end - start).count() * 1000;
+
+    // Release Gl objects
+    start = std::chrono::high_resolution_clock::now();
+    if (manual_sync) {
+        clEnqueueReleaseGLObjects(command_queue, 1, &cl_gl_buff, 1, wait_event_ptr, &finished_event);
+        g_wait_event = finished_event;
+    }
+
     clWaitForEvents(1, &g_wait_event);
+    end = std::chrono::high_resolution_clock::now();
+    auto release_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
+    //printf("FlushExternal: glFinish: %f ms, Acquire: %f ms, copy: %f ms, release: %f ms\n",
+    //    glFinish_duration, aquire_duration, copy_duration, release_duration);
 
-    clEnqueueCopyBuffer(command_queue, buffer, cl_gl_buff, 0, 0, mSize, num_wait_events, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
-
-    clEnqueueReleaseGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, NULL);
+    //printf("Did not crash.\n");
 }

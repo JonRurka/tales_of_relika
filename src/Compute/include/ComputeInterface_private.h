@@ -4,7 +4,7 @@
 #include "PlatformStructures_private.h"
 #include "IComputeController_private.h"
 //#include "CL/cl.h"
-#include "CL_SDK/cl.h"
+#include "CL/cl.h"
 #include "vulkan/vulkan.h"
 //#include "vulkan-hpp/vulkan.hpp"
 

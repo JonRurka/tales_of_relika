@@ -262,9 +262,9 @@ void Voxel_Test_Scene::Init()
 
 	settings.GetSettings()->setString("programDir", std::string("C:/Users/jrurka/Source/repos/game_project/resources/shaders/compute/voxelEngine/Bin"));
 	settings.GetSettings()->setFloat("voxelsPerMeter", 1);
-	settings.GetSettings()->setInt("chunkMeterSizeX", 8);
-	settings.GetSettings()->setInt("chunkMeterSizeY", 8);
-	settings.GetSettings()->setInt("chunkMeterSizeZ", 8);
+	settings.GetSettings()->setInt("chunkMeterSizeX", 32);
+	settings.GetSettings()->setInt("chunkMeterSizeY", 32);
+	settings.GetSettings()->setInt("chunkMeterSizeZ", 32);
 	settings.GetSettings()->setInt("TotalBatchGroups", 1);
 	settings.GetSettings()->setInt("BatchesPerGroup", 1);
 	settings.GetSettings()->setInt("InvertTrianges", false);
@@ -274,7 +274,7 @@ void Voxel_Test_Scene::Init()
 	m_builder->Init(&settings);
 
 	Stitch_VBO* vbo_stitch = new Stitch_VBO();
-	vbo_stitch->Init(m_builder, INT16_MAX);
+	vbo_stitch->Init(m_builder, UINT16_MAX);
 
 	int num_chunks = 1;
 
@@ -310,7 +310,7 @@ void Voxel_Test_Scene::Init()
 
 	std::vector<Mesh*> chunk_meshes;
 	for (int i = 0; i < num_chunks; i++) {
-		Mesh* voxel_mesh_test = new Mesh((int)counts[i].x);
+		Mesh* voxel_mesh_test = new Mesh((int)counts[i].x * Stitch_VBO::Stride());
 		vbo_stitch->Process(voxel_mesh_test, counts[i], true);
 		chunk_meshes.push_back(voxel_mesh_test);
 	}
@@ -339,6 +339,7 @@ void Voxel_Test_Scene::Init()
 
 	Logger::LogDebug(LOG_POS("Init"), "SetBuffer: %f ms", set_buffer_time * 1000);
 	Logger::LogDebug(LOG_POS("Init"), "Extract: %f ms", extract_duration * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "Total: %f ms", (duration + extract_duration) * 1000);
 	Logger::LogDebug(LOG_POS("Init"), "");
 
 

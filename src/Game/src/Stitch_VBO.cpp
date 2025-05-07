@@ -5,7 +5,10 @@
 #include "dynamic_compute.h"
 #include "Logger.h"
 
-#define STRIDE 8
+#include <chrono>
+
+#define VBO_ELEMENTS 2
+#define STRIDE (VBO_ELEMENTS * sizeof(float) * 4)
 
 void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 {
@@ -32,10 +35,14 @@ void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 	m_program->Build();
 	Logger::LogDebug(LOG_POS("Init"), "Build program");
 
+
 	vertex_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
 	normal_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
-	Logger::LogDebug(LOG_POS("Init"), "Create Extern VBO");
-	vbo_buffer = m_controller->NewReadWriteBuffer(elements, STRIDE * sizeof(float), true);
+	//Logger::LogDebug(LOG_POS("Init"), "Create Extern VBO");
+	vbo_buffer = m_controller->NewReadWriteBuffer(elements, STRIDE, true);
+	//Logger::LogDebug(LOG_POS("Init"), "Max vert capacity: %i, Max VBO capacity: %i", elements, elements * STRIDE);
+
+	float* zero_data = new float[elements * STRIDE];
 
 	IComputeProgram::BindIndex ind{};
 	ind.GlobalIndex = 0;
@@ -53,32 +60,69 @@ void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 	m_program->KernelSetBuffer(kernel_name, normal_buffer, ind);
 
 	m_program->FinishBuild();
-	Logger::LogDebug(LOG_POS("Init"), "Finish Build program");
+	//Logger::LogDebug(LOG_POS("Init"), "Finish Build program");
 }
 
 void Stitch_VBO::Stitch(int elements)
 {
 	m_program->RunKernel(kernel_name, elements, 1, 1);
-
-	Logger::LogDebug(LOG_POS("Stitch"), "Executed Kernel");
+	//Logger::LogDebug(LOG_POS("Stitch"), "Executed Kernel");
 }
 
 void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 {
+	
 	if (gpu_copy) {
 
+		auto start = std::chrono::high_resolution_clock::now();
 		v_builder->Extract(
 			Input_Vertex_Buffer(),
 			Input_Normal_Buffer(),
 			nullptr,
 			count
 		);
+		auto end = std::chrono::high_resolution_clock::now();
+		auto builder_extract_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
+		start = std::chrono::high_resolution_clock::now();
 		Stitch(count.x);
-		Output_VBO_Buffer()->FlushExternal();
+		end = std::chrono::high_resolution_clock::now();
+		auto stitch_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
+		//glm::fvec4* out_vert = new glm::fvec4[count.x];
+		//glm::fvec4* out_vbo = new glm::fvec4[count.x * VBO_ELEMENTS];
+		//Input_Vertex_Buffer()->GetData(out_vert, 0, count.x * sizeof(float) * 4);
+		//Output_VBO_Buffer()->GetData(out_vbo, 0, count.x * STRIDE);
+
+
+		/*for (int i = 0; i < count.x; i++) {
+			glm::fvec4 vec1 = out_vert[i];
+			glm::fvec4 vec2 = out_vbo[i * VBO_ELEMENTS];
+
+			//Logger::LogDebug(LOG_POS("Process"), "(%f, %f, %f, %f) == (%f, %f, %f, %f)",
+			//	vec1.x, vec1.y, vec1.z, vec1.w, vec2.x, vec2.y, vec2.z, vec2.w);
+		}*/
+
+
+		//Logger::LogDebug(LOG_POS("Process"), "Process Vert size: %i, Process VBO size: %i", count.x, count.x * STRIDE);
+		
+		int vbo_size = count.x * STRIDE;
+
+		start = std::chrono::high_resolution_clock::now();
+		Output_VBO_Buffer()->FlushExternal(vbo_size);
+		end = std::chrono::high_resolution_clock::now();
+		auto flush_duration = std::chrono::duration<double>(end - start).count() * 1000;
+
+		
+
+		start = std::chrono::high_resolution_clock::now();
 		mesh->Set_Vertex_Attributes(Get_Vertex_Attributes());
-		mesh->Load(Output_VBO_Buffer());
+		mesh->Load(Output_VBO_Buffer(), vbo_size);
+		end = std::chrono::high_resolution_clock::now();
+		auto load_mesh_duration = std::chrono::duration<double>(end - start).count() * 1000;
+
+		//Logger::LogDebug(LOG_POS("Process"), "Builder Extract: %f ms, Stitch: %f ms, Flush: %f ms, Load Mesh: %f ms\n",
+		//	builder_extract_duration, stitch_duration, flush_duration, load_mesh_duration);
 	}
 	else {
 
@@ -111,4 +155,19 @@ Mesh::VertexAttributeList Stitch_VBO::Get_Vertex_Attributes()
 	res.add_attribute(4, 0);
 	res.add_attribute(4, (4 * sizeof(float)));
 	return res;
+}
+
+IComputeController* Stitch_VBO::create_controller()
+{
+	IComputeProgram::FileType type = IComputeProgram::FileType::Text_Data;
+
+	m_device_cl = Utilities::Get_Recommended_Device();
+	Logger::LogDebug(LOG_POS("InitializeComputePrograms"), "Using OpenCL Compute Device: %s", m_device_cl.name);
+
+	ComputeInterface::ControllerInfo controllerInfo{};
+	controllerInfo.device = &m_device_cl;
+	controllerInfo.platform = m_device_cl.platform;
+	controllerInfo.SetProgramDir("");
+
+	return ComputeInterface::GetComputeController(ComputeInterface::OpenCL, controllerInfo);
 }

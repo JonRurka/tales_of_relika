@@ -17,9 +17,10 @@ void insert(uvec3 id)
 	uint i = id.x;
 	
 	uint vert_ptr =  ((STRIDE * i) + 0);
-	uint norm_ptr =  ((STRIDE * i) + 3);
-	uint color_ptr = ((STRIDE * i) + 6);
-	uint tex_ptr = 	 ((STRIDE * i) + 9);
+	uint norm_ptr =  ((STRIDE * i) + 4);
+	
+	//uint color_ptr = ((STRIDE * i) + 6);
+	//uint tex_ptr = 	 ((STRIDE * i) + 9);
 	
 	fvec4 vertex = get_buffer_vector(in_vertices, i);
 	fvec4 normal = get_buffer_vector(in_normals, i);
@@ -29,13 +30,18 @@ void insert(uvec3 id)
 
 	set_buffer_scalar(out_vbo, vert_ptr + 0,  vertex.x);
 	set_buffer_scalar(out_vbo, vert_ptr + 1,  vertex.y);
-	set_buffer_scalar(out_vbo, vert_ptr + 2 , vertex.z);    
-	set_buffer_scalar(out_vbo, vert_ptr + 3 , normal.x);    
-	set_buffer_scalar(out_vbo, vert_ptr + 4 , normal.y);    
-	set_buffer_scalar(out_vbo, vert_ptr + 5 , normal.z);    
+	set_buffer_scalar(out_vbo, vert_ptr + 2 , vertex.z);
+	set_buffer_scalar(out_vbo, vert_ptr + 3 , vertex.w);
+	
+	set_buffer_scalar(out_vbo, vert_ptr + 4 , normal.x);
+	set_buffer_scalar(out_vbo, vert_ptr + 5 , normal.y);
+	set_buffer_scalar(out_vbo, vert_ptr + 6 , normal.z);
+	set_buffer_scalar(out_vbo, vert_ptr + 7 , normal.z);
+	
 	//set_buffer_scalar(out_vbo, vert_ptr + 6 , color.x);     
 	//set_buffer_scalar(out_vbo, vert_ptr + 7 , color.y);     
-	//set_buffer_scalar(out_vbo, vert_ptr + 8 , color.z);     
+	//set_buffer_scalar(out_vbo, vert_ptr + 8 , color.z);
+	
 	//set_buffer_scalar(out_vbo, vert_ptr + 9 , texcoord.x);  
 	//set_buffer_scalar(out_vbo, vert_ptr + 10, texcoord.y);
 	
