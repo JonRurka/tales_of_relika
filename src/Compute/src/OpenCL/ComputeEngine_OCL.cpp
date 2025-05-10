@@ -23,12 +23,15 @@
 #include <chrono>
 
 #include "window.h"
+#include "Logger.h"
 
-#define WAIT_IDLE 0
+
 
 using namespace DynamicCompute::Compute::OCL;
 
 #define USE_GL_CONTEXT 1
+#define WAIT_IDLE 0
+#define FORCE_MANUAL_SYNC false
 
 #define CL_GL_DYNAMIC_DRAW 0x88E8
 #define CL_GL_STATIC_COPY 0x88E6
@@ -51,11 +54,12 @@ namespace {
     typedef void (*SignalHandlerPointer)(int);
     void SignalHandler(int signal)
     {
-        printf("Signal %d", signal);
+        //printf("Signal %d", signal);
         throw "!Access Violation!";
     }
 
-    cl_event g_wait_event{ NULL }; // TODO: This is stupid. Change this.
+    cl_event g_wait_event{ NULL }; // TODO: Change this.
+    bool g_manual_sync{ false }; // TODO: Change this.
 
     clGetGLContextInfoKHR_fn pclGetGLContextInfoKHR;
 
@@ -227,7 +231,7 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
 {
    
     platform_id = (cl_platform_id)pltform.platform;
-    printf("Init Platform ID: %X\n", platform_id);
+    Logger::LogDebug(LOG_POS("Init"), "Init Platform ID: %X", platform_id);
     
 #if USE_GL_CONTEXT == 1
 
@@ -235,7 +239,7 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
 
     pclGetGLContextInfoKHR = (clGetGLContextInfoKHR_fn)clGetExtensionFunctionAddressForPlatform(platform_id, "clGetGLContextInfoKHR");
     //wglGetCurrentContext
-    printf("Creating context with WIN32 OpenGL context\n");
+    Logger::LogDebug(LOG_POS("Init"), "Creating context with WIN32 OpenGL context");
     properties[0] = CL_GL_CONTEXT_KHR;
     properties[1] = (cl_context_properties)wglGetCurrentContext();
     //properties[1] = (cl_context_properties)glfwGetWGLContext(window::glfw_window());
@@ -373,29 +377,30 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
     deviceID = (cl_device_id)device.cl_device;
 
 
-    printf("Picked Device: %s\n", device.name);
+    Logger::LogInfo(LOG_POS("ComputeContext"), "Picked Device: %s", device.name);
 
     bool external_supported = false;
     if (checkExtnAvailability(deviceID, CL_GL_SHARING_EXT)) {
-        printf("CL_GL Extension Found.\n");
+        Logger::LogInfo(LOG_POS("ComputeContext"), "CL_GL Extension Found.");
         external_supported = true;
     }
     else {
-        printf("CL_GL Extension Not Found!!!\n");
+        Logger::LogError(LOG_POS("ComputeContext"), "CL_GL Extension Not Found!!!");
     }
 
     if (deviceSupportsExternGL(deviceID, properties)) {
-        printf("CL_GL Device Supported.\n");
+        Logger::LogInfo(LOG_POS("ComputeContext"), "CL_GL Device Supported.");
         external_supported = true;
     }
     else {
-        printf("CL_GL Device NOT Supported!!!\n");
+        Logger::LogError(LOG_POS("ComputeContext"), "CL_GL Device NOT Supported!!!");
     }
 
     cl_bool manual_sync;
     //CL_DEVICE_PREFERRED_INTEROP_USER_SYNC
     clGetDeviceInfo(deviceID, CL_DEVICE_PREFERRED_INTEROP_USER_SYNC, sizeof(cl_bool), &manual_sync, 0);
-    printf("Requires manual sync: %i\n", (int)manual_sync);
+    Logger::LogDebug(LOG_POS("ComputeContext"), "Requires manual sync: %i\n", (int)manual_sync);
+    g_manual_sync = manual_sync | FORCE_MANUAL_SYNC;
 
     cl_ulong local_size;
     clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &local_size, 0);
@@ -418,23 +423,23 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
     char driver_version[100];
     memset(driver_version, 0, 100);
     clGetDeviceInfo(deviceID, CL_DRIVER_VERSION, sizeof(driver_version), &driver_version, NULL);
-    printf("OpenCL Driver Version: %s\n", driver_version);
-    printf("OpenCl Platform Version: %s\n", ComputeEngine::Get_CL_Version().c_str());
-    printf("OpenCl max local memory: %i bytes\n", (int)local_size);
-    printf("OpenCl max const memory: %i bytes\n", (int)const_size);
+    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCL Driver Version: %s", driver_version);
+    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl Platform Version: %s", ComputeEngine::Get_CL_Version().c_str());
+    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max local memory: %i bytes", (int)local_size);
+    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max const memory: %i bytes", (int)const_size);
 
-    printf("OpenCl max compute units: %i\n", (int)comp_units);
-    printf("OpenCl max work item sizes: (%i, %i, %i)\n", (int)work_items[0], (int)work_items[1], (int)work_items[2]);
-    printf("OpenCl max group size: %i\n", (int)work_group_size);
+    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max compute units: %i", (int)comp_units);
+    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max work item sizes: (%i, %i, %i)", (int)work_items[0], (int)work_items[1], (int)work_items[2]);
+    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max group size: %i", (int)work_group_size);
 
     context = clCreateContext(properties, 1, &deviceID, NULL, NULL, &err);
     if (err != CL_SUCCESS) {
-        printf("Failed to create CL context: %i", (int)err);
+        Logger::LogError(LOG_POS("ComputeContext"), "Failed to create CL context: %i", (int)err);
     }
 
     command_queue = clCreateCommandQueue(context, deviceID, 0, &err);
     if (err != CL_SUCCESS) {
-        printf("Failed to create CL command queue: %i", (int)err);
+        Logger::LogError(LOG_POS("ComputeContext"), "Failed to create CL command queue: %i", (int)err);
     }
 
     numContexts = 1;
@@ -465,10 +470,10 @@ ComputeProgram* ComputeContext::Add_Program_SPIRV(std::string name, const void* 
     int res = program->Set_Binary(binary, length);
 
     if (res != 0) {
-        printf("Add_Program_SPIRV(): Failed to create program: %i\n", res);
+        Logger::LogError(LOG_POS("Add_Program_SPIRV"), "Failed to create program: %i", res);
     }
     else {
-        printf("Add_Program_SPIRV(): Created program: %i\n", res);
+        Logger::LogInfo(LOG_POS("Add_Program_SPIRV"), "Created program: %i", res);
     }
 
     programs[name] = program;
@@ -482,10 +487,10 @@ ComputeProgram* ComputeContext::Add_Program_SPIRV_File(std::string name, std::st
     int res = program->Set_Binary_File(file_path);
 
     if (res != 0) {
-        printf("Add_Program_SPIRV_File(): Failed to create program: %i\n", res);
+        Logger::LogError(LOG_POS("Add_Program_SPIRV_File"), "Failed to create program: %i", res);
     }
     else {
-        printf("Add_Program_SPIRV_File(): Created program: %i\n", res);
+        Logger::LogInfo(LOG_POS("Add_Program_SPIRV_File"), "Created program: %i", res);
     }
 
     programs[name] = program;
@@ -533,11 +538,11 @@ int ComputeProgram::Set_Binary(const void* binary, size_t length)
     cl_device_id dvc = mContextObj->Get_CL_Device_ID();
     program = clCreateProgramWithBinary(m_context, 1, &dvc, &length, (const unsigned char**)&binary, NULL, &err)
 #endif
-    if (err == CL_INVALID_OPERATION) {
-        printf("CL_INVALID_OPERATION\n");
-    }
+    //if (err == CL_INVALID_OPERATION) {
+        //printf("CL_INVALID_OPERATION\n");
+    //}
 
-    printf("clCreateProgramWithIL: res %i\n", err);
+    //printf("clCreateProgramWithIL: res %i\n", err);
     mInitialized = true;
     return err;
 }
@@ -565,12 +570,12 @@ int ComputeProgram::Set_Binary_File(std::string file_path)
         //infile.read(&buffer[0], length);
         //const void* binary = static_cast<void*>(buffer.data());
 
-        printf("ComputeProgram.Set_Binary_File: Reading binary file of length %i\n", (int)length);
+        //printf("ComputeProgram.Set_Binary_File: Reading binary file of length %i\n", (int)length);
         res =Set_Binary(buffer, length);
     }
     else
     {
-        printf("ComputeProgram.Set_Binary_File: File has length of zero.");
+        //printf("ComputeProgram.Set_Binary_File: File has length of zero.");
         res = -2;
     }
 
@@ -605,12 +610,12 @@ int ComputeProgram::Build(char* errorStr, size_t e_size)
    int res = clGetProgramBuildInfo(program, mContextObj->Get_CL_Device_ID(), CL_PROGRAM_BUILD_LOG, e_size, errorStr, &ret_e_size);
 
    if (build_res != 0) {
-       printf("### COMPILATION FAILED: ###\n");
-       printf("Build error: %s\n", errorStr);
-       printf("###########################\\n");
+       Logger::LogError(LOG_POS("Build"), "### COMPILATION FAILED: ###");
+       Logger::LogError(LOG_POS("Build"), "Build error: %s", errorStr);
+       Logger::LogError(LOG_POS("Build"), "###########################");
    }
    else {
-       printf("Build log: %s\n", errorStr);
+       Logger::LogInfo(LOG_POS("Build"), "Build log: %s", errorStr);
    }
 
    return build_res;
@@ -658,11 +663,9 @@ ComputeKernel::ComputeKernel(ComputeProgram* program_obj, char* name, cl_command
    
    //printf("ComputeKernel(): Create kernel %s\n", name);
    kernel = clCreateKernel(m_program, name, &err);
-
-   if (err != 0)
+   if (err != CL_SUCCESS)
    {
-       printf("ComputeKernel(): Failed to create kernel: %i\n", err);
-
+       Logger::LogError(LOG_POS("ComputeKernel"), "Failed to create kernel: %i", err);
    }
 
    status = err;
@@ -673,6 +676,9 @@ int ComputeKernel::SetBuffer(ComputeBuffer* buffer, int arg)
 {
     int res = 0;
     res = clSetKernelArg(kernel, (arg * 1) + 0, sizeof(cl_mem), (void*)buffer->Get_CL_Mem());
+    if (res != CL_SUCCESS) {
+        Logger::LogError(LOG_POS("Execute"), "Failed to set kernel arg %i: %i\n", arg, res);
+    }
     //res = clSetKernelArg(kernel, (arg * 2) + 1, buffer->GetSize(), NULL);
     return res;
 }
@@ -683,7 +689,7 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
         4, 4, 4
     };*/
 
-    printf("Executing kernel...\n");
+    //printf("Executing kernel...\n");
     cl_event finished_event;
     int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
     cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
@@ -693,7 +699,7 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
     
     if (res != CL_SUCCESS)
     {
-        printf("ComputeKernel.Execute: Failed to enqueue Kernel: %i\n", res);
+        Logger::LogError(LOG_POS("Execute"), "Failed to enqueue Kernel: %i\n", res);
     }
 
     // printf("clFinish.\n");
@@ -706,7 +712,7 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
 
     if (res != 0)
     {
-        printf("ComputeKernel.Execute: clFinish failed after kernel enqueue: %i\n", res);
+        Logger::LogError(LOG_POS("Execute"), "clFinish failed after kernel enqueue: %i\n", res);
     }
 
     return res;
@@ -740,7 +746,16 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
    //cl::BufferGL
 
    buffer_staging = clCreateBuffer(context, type_staging, mSize, NULL, &err);
+   if (err != CL_SUCCESS)
+   {
+       Logger::LogError(LOG_POS("Execute"), "Failed to create GPU buffer: %i\n", err);
+   }
+
    buffer = clCreateBuffer(context, type, mSize, NULL, &err);
+   if (err != CL_SUCCESS)
+   {
+       Logger::LogError(LOG_POS("Execute"), "Failed to create Staging buffer: %i\n", err);
+   }
 
    if (external) {
 
@@ -749,15 +764,23 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
        //float* tmp_buff = new float[mSize / sizeof(float)];
        gl_buff = Graphics::CreateBufferGL(mSize, nullptr, CL_GL_DYNAMIC_COPY);
        cl_gl_buff = clCreateFromGLBuffer(context, CL_MEM_WRITE_ONLY, gl_buff, &res);
-       res = clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, &finished_event);
-       clWaitForEvents(1, &finished_event);
+       if (res != CL_SUCCESS) {
+           Logger::LogError(LOG_POS("ComputeBuffer"), "Failed to create CL GL Interop buffer: %i", res);
+       }
+       if (g_manual_sync) {
+           cl_int res_acq = clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, &finished_event);
+           if (res != CL_SUCCESS) {
+               Logger::LogError(LOG_POS("ComputeBuffer"), "Failed to acquire for CL GL buffer: %i", res_acq);
+           }
+           clWaitForEvents(1, &finished_event);
+       }
        //delete[] tmp_buff;
 
        if (res != CL_SUCCESS) {
-           printf("Failed to create CL buffer from GL\n");
+           Logger::LogError(LOG_POS("ComputeBuffer"), "Failed to create CL buffer from GL: %i", res);
        }
        else {
-           printf("Created CL buffer from GL\n");
+           //printf("Created CL buffer from GL\n");
        }
        
    }
@@ -930,6 +953,8 @@ void ComputeBuffer::Dispose()
     if (mDestroyed || !mInitialized || !mCanCallDispose)
         return;
 
+
+
     clReleaseMemObject(buffer);
     clReleaseMemObject(buffer_staging);
 
@@ -939,7 +964,7 @@ void ComputeBuffer::Dispose()
 
 void ComputeBuffer::FlushExternal(int size)
 {
-    bool manual_sync = false; // TODO
+    bool manual_sync = g_manual_sync;
 
     if (size < 0) {
         size = mSize;
@@ -972,6 +997,7 @@ void ComputeBuffer::FlushExternal(int size)
         }
         g_wait_event = finished_event;
         wait_event_ptr = &g_wait_event;
+        num_wait_events = 1;
         //clWaitForEvents(1, &g_wait_event);
     }
 
@@ -980,7 +1006,10 @@ void ComputeBuffer::FlushExternal(int size)
 
     // Copy Buffer
     start = std::chrono::high_resolution_clock::now();
-    clEnqueueCopyBuffer(command_queue, buffer, cl_gl_buff, 0, 0, size, 1, wait_event_ptr, &finished_event);
+    cl_int cpy_res = clEnqueueCopyBuffer(command_queue, buffer, cl_gl_buff, 0, 0, size, num_wait_events, wait_event_ptr, &finished_event);
+    if (cpy_res != CL_SUCCESS) {
+        Logger::LogError(LOG_POS("FlushExternal"), "Failed to flush to GL buffer: %i", cpy_res);
+    }
     g_wait_event = finished_event;
     wait_event_ptr = &g_wait_event;
     end = std::chrono::high_resolution_clock::now();
@@ -1000,5 +1029,4 @@ void ComputeBuffer::FlushExternal(int size)
     //printf("FlushExternal: glFinish: %f ms, Acquire: %f ms, copy: %f ms, release: %f ms\n",
     //    glFinish_duration, aquire_duration, copy_duration, release_duration);
 
-    //printf("Did not crash.\n");
 }

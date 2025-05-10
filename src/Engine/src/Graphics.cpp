@@ -69,14 +69,14 @@ void Graphics::Initialize()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-	std::vector<glm::vec3> quad_verts = {
-		glm::vec3(-1.0f,  1.0f,  0.0f),
-		glm::vec3(-1.0f, -1.0f,  0.0f),
-		glm::vec3(1.0f, -1.0f,  0.0f),
+	std::vector<glm::vec4> quad_verts = {
+		glm::vec4(-1.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(-1.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f, -1.0f,  0.0f , 0.0f),
 
-		glm::vec3(-1.0f,  1.0f,  0.0f),
-		glm::vec3(1.0f, -1.0f,  0.0f),
-		glm::vec3(1.0f,  1.0f,  0.0f),
+		glm::vec4(-1.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f, -1.0f,  0.0f , 0.0f),
+		glm::vec4(1.0f,  1.0f,  0.0f , 0.0f),
 	};
 
 	std::vector<glm::vec2> quad_tex_coord = {
@@ -89,9 +89,9 @@ void Graphics::Initialize()
 		glm::vec2(1.0f, 1.0f),
 	};
 
-	std::vector<glm::vec3> line_verts = {
-		glm::vec3(0.0f,  0.0f,  0.0f),
-		glm::vec3(1.0f,  0.0f,  0.0f),
+	std::vector<glm::vec4> line_verts = {
+		glm::vec4(0.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
 	};
 
 	m_screen_mesh = new Mesh();

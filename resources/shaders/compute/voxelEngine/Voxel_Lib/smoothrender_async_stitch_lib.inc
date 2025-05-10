@@ -13,11 +13,15 @@ read_buffer_int(4, in_tris_data)
 read_buffer_int(5, in_counts_data)
 read_buffer_int(6, in_stitch_map_data)
 
+readwrite_buffer(ivec4, 7, in_stitch_map_offsets)	
+
+/*
 #if USL_OPENCL == 1
-__constant ivec4* in_stitch_map_offsets;
+ivec4* in_stitch_map_offsets;
 #else
 readwrite_buffer(ivec4, 7, in_stitch_map_offsets)	
 #endif
+*/
 
 readwrite_buffer(fvec4, 8, out_vertex_data)
 readwrite_buffer(fvec4, 9, out_normal_data)
@@ -124,8 +128,10 @@ void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index
 		
 		//vert.w = dst_offset + buffer_index + i;
 		//Set_Debug_Data(v_index, vert);
-
+		//if (v_index == 100)
+		
 		uint dst = dst_offset + buffer_index + i;
+		
 		if (row_offset != 0 && (grid_local_idx == 28 || grid_local_idx == 29) ){
 			//Print_5("%i: In Offset (gdx: %i): %i + %i, dst: %i\n", i, grid_local_idx, row_offset, row_index, dst);
 		}

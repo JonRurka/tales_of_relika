@@ -200,8 +200,8 @@ void Test_Scene::Init()
 	cube_colors.assign(vertices.size(), cube_color);
 
 	Mesh* cube_mesh = new Mesh();
-	cube_mesh->Vertices(vertices);
-	cube_mesh->Normals(normals);
+	//cube_mesh->Vertices(vertices);
+	//cube_mesh->Normals(normals);
 	cube_mesh->Colors(cube_colors);
 	cube_mesh->TexCoords(tex_coords);
 

@@ -60,23 +60,23 @@ public:
 
 	void Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size = -1);
 
-	void Vertices(std::vector<glm::vec3> value) 
+	void Vertices(std::vector<glm::vec4> value) 
 	{ 
 		m_vertices = value;
 		if (m_active)
 			sync_vertices(Vert_Update_Mode::VERTICES);
 	}
 
-	std::vector<glm::vec3>& Vertices() { return m_vertices; }
+	std::vector<glm::vec4>& Vertices() { return m_vertices; }
 
-	void Normals(std::vector<glm::vec3> value)
+	void Normals(std::vector<glm::vec4> value)
 	{
 		m_normals = value;
 		if (m_active)
 			sync_vertices(Vert_Update_Mode::NORMALS);
 	}
 
-	std::vector<glm::vec3>& Normals() { return m_normals; }
+	std::vector<glm::vec4>& Normals() { return m_normals; }
 
 
 	void Colors(std::vector<glm::vec4> value) 
@@ -138,8 +138,8 @@ private:
 
 	VertexAttributeList m_attrib_list;
 
-	std::vector<glm::vec3> m_vertices;
-	std::vector<glm::vec3> m_normals;
+	std::vector<glm::vec4> m_vertices;
+	std::vector<glm::vec4> m_normals;
 	std::vector<glm::vec4> m_colors;
 	std::vector<glm::vec2> m_texcoords;
 	std::vector<unsigned int> m_indices;

@@ -22,6 +22,7 @@ namespace DynamicCompute {
 
             class ComputeBuffer
             {
+            private:
                 cl_context context;
                 cl_mem buffer;
                 cl_mem buffer_staging;
@@ -35,6 +36,8 @@ namespace DynamicCompute {
                 bool mInitialized{ false };
                 bool mDestroyed{ false };
                 bool mCanCallDispose{ true };
+
+                inline static const std::string LOG_LOC{ "ComputeBuffer" };
 
             public:
                 enum class Buffer_Type
@@ -83,6 +86,8 @@ namespace DynamicCompute {
 
             class ComputeKernel
             {
+            private:
+
                 cl_program m_program;
                 cl_kernel kernel;
                 cl_command_queue command_queue;
@@ -95,6 +100,8 @@ namespace DynamicCompute {
                 bool mInitialized{ false };
                 bool mDestroyed{ false };
                 bool mCanCallDispose{ true };
+
+                inline static const std::string LOG_LOC{ "ComputeKernel" };
 
             public:
                 ComputeKernel(ComputeProgram* program_obj, char* name, cl_command_queue command_queue, cl_program program);
@@ -109,6 +116,7 @@ namespace DynamicCompute {
             };
 
             class ComputeProgram {
+            private:
                 std::map<std::string, ComputeKernel*> kernels;
                 cl_program program;
                 cl_context m_context;
@@ -122,6 +130,8 @@ namespace DynamicCompute {
                 bool mCanCallDispose{ true };
 
                 std::string args;
+
+                inline static const std::string LOG_LOC{ "ComputeProgram" };
 
             public:
                 ComputeProgram(ComputeContext* context_obj, cl_context context, cl_command_queue queue);
@@ -152,6 +162,7 @@ namespace DynamicCompute {
 
             class ComputeContext {
                 friend class ComputeEngine;
+            private:
 
                 std::map<std::string, ComputeProgram*> programs;
                 std::list<ComputeBuffer> mBuffers;
@@ -164,6 +175,8 @@ namespace DynamicCompute {
                 bool mInitialized{ false };
                 bool mDestroyed{ false };
                 bool mCanCallDispose{ true };
+
+                inline static const std::string LOG_LOC{ "ComputeContext" };
 
             public:
                 ComputeContext(cl_context_properties properties[3], OpenCL_Device_Info device);
@@ -188,6 +201,8 @@ namespace DynamicCompute {
 
             class ComputeEngine
             {
+            private:
+
                 static cl_platform_id platform_id;
                 static cl_uint num_of_platforms;
                 static cl_context_properties properties[7];
@@ -199,6 +214,8 @@ namespace DynamicCompute {
                 static std::list<ComputeContext> mContexts;
 
                 static bool mInitialized;
+
+                inline static const std::string LOG_LOC{ "ComputeEngine" };
 
             public:
 

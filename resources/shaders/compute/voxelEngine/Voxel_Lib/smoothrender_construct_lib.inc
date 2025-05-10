@@ -436,7 +436,7 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 			//Print("Invalid edge detected\n");
 			continue;
 		}
-		fvec4 g_pos_1 = GRIDPOINT_LOCAL_POS(grid, edge1_idx.x);
+		//fvec4 g_pos_1 = GRIDPOINT_LOCAL_POS(grid, edge1_idx.x);
 		//fvec4 g_pos_2 = GRIDPOINT_LOCAL_POS(grid, edge2_idx.y);
 		//fvec4 g_pos_3 = GRIDPOINT_LOCAL_POS(grid, edge3_idx.y);
 		
@@ -465,6 +465,10 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 		
 		fvec4 pos3 = GRID_VERTEX_LOCAL_POS(gv_3, 0);// p3.localPosition;
 		fvec3 norm3 = GRID_VERTEX_NORMAL(gv_3, 0).xyz;// p3.normal.xyz;//normal_sample(s, index_pos, p3.globalPosition.xyz);
+		
+		//pos1.w = v_index;
+		//pos2.w = v_index;
+		//pos3.w = v_index;
 		
 		/*Print_4("%i: Poly Verts 1: (%f, %f, %f)\n", i,
 			pos1.x, pos1.y, pos1.z);

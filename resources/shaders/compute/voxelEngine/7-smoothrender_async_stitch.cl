@@ -14,7 +14,7 @@ void kernel main_cl(
 	
 	global int* p_in_counts_data,
 	global int* p_in_stitch_map_data,
-	__constant ivec4* p_in_stitch_map_offsets,
+	global ivec4* p_in_stitch_map_offsets,
 	
 	global fvec4* p_out_vertex_data,
 	global fvec4* p_out_normal_data,

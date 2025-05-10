@@ -185,7 +185,7 @@ void Mesh::Recenter()
 {
 	m_min = glm::vec3(1000000.0f, 1000000.0f, 1000000.0f);
 	m_max = glm::vec3(-1000000.0f, -1000000.0f, -1000000.0f);
-	glm::vec3 sum(0.0f, 0.0f, 0.0f);
+	glm::vec4 sum(0.0f, 0.0f, 0.0f, 0.0f);
 	//printf("orig sum: (%f, %f, %f)\n", sum.x, sum.y, sum.z);
 	for (const auto& v : m_vertices)
 	{
@@ -200,7 +200,7 @@ void Mesh::Recenter()
 		m_max.z = std::max(m_max.z, v.z);
 	}
 
-	glm::vec3 m_center = sum / (float)m_vertices.size();
+	glm::vec4 m_center = sum / (float)m_vertices.size();
 
 	//glm::vec3 size = m_max - m_min;
 
@@ -239,11 +239,10 @@ void Mesh::Generate_Normals()
 		m_normals.reserve(m_num_vertices);
 		int num_poly = m_num_vertices / 3;
 		for (int i = 0; i < num_poly; i++) {
-			glm::vec3 norm = TRIANGLE_NORMAL(
-				m_vertices[(i * 3) + 0], 
-				m_vertices[(i * 3) + 1], 
-				m_vertices[(i * 3) + 2]
-			);
+			glm::vec3 v1 = m_vertices[(i * 3) + 0];
+			glm::vec3 v2 = m_vertices[(i * 3) + 1];
+			glm::vec3 v3 = m_vertices[(i * 3) + 2];
+			glm::vec4 norm = glm::vec4(TRIANGLE_NORMAL(v1, v2, v3), 0);
 			m_normals.push_back(norm);
 			m_normals.push_back(norm);
 			m_normals.push_back(norm);
@@ -257,7 +256,7 @@ void Mesh::Generate_Normals()
 			glm::vec3 vert1 = m_vertices[m_indices[i + 0]];
 			glm::vec3 vert2 = m_vertices[m_indices[i + 1]];
 			glm::vec3 vert3 = m_vertices[m_indices[i + 2]];
-			glm::vec3 norm = TRIANGLE_NORMAL(vert1, vert2, vert3);
+			glm::vec4 norm = glm::vec4(TRIANGLE_NORMAL(vert1, vert2, vert3), 0);
 			m_normals[m_indices[i + 0]] = norm;
 			m_normals[m_indices[i + 1]] = norm;
 			m_normals[m_indices[i + 2]] = norm;
@@ -388,7 +387,8 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 				norm_ptr[2] = m_normals[i].z;
 			}
 			else {
-				glm::vec3 default_normal = glm::normalize(m_vertices[i] - glm::vec3(0.0f));
+				glm::vec3 n_vert = m_vertices[i];
+				glm::vec3 default_normal = glm::normalize(n_vert - glm::vec3(0.0f));
 				norm_ptr[0] = default_normal.x;
 				norm_ptr[1] = default_normal.y;
 				norm_ptr[2] = default_normal.z;

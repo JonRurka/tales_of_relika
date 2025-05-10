@@ -6,6 +6,8 @@
 #include "IVoxelBuilder_private.h"
 #include "dynamic_compute.h"
 
+#include "Utilities.h"
+
 #include "VoxelComputeProgram.h"
 
 #include <queue>
@@ -145,6 +147,7 @@ namespace VoxelEngine {
 		std::string m_shaderDir;
 		int m_WorkGroups = 0;
 
+		const int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
 		const int m_voxel_runtime{ VOXEL_RUNTIME };
 
 		Vulkan_Device_Info m_device_vk;

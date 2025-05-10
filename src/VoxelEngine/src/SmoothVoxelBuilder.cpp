@@ -257,7 +257,7 @@ IComputeBuffer* SmoothVoxelBuilder::Get_Tranfer_Buffer(int size, int stride, boo
     return res;
 }
 
-IComputeController* VoxelEngine::SmoothVoxelBuilder::Get_Compute_Controller()
+IComputeController* SmoothVoxelBuilder::Get_Compute_Controller()
 {
     return m_controller;
 }
@@ -405,9 +405,9 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
 
 
     //const int max_size = UINT16_MAX * sizeof(glm::vec4);
-    m_out_vertex_buffer = m_controller->NewReadWriteBuffer(UINT16_MAX * m_totalBatches, VECTOR4_SIZE);
-    m_out_normal_buffer = m_controller->NewReadWriteBuffer(UINT16_MAX * m_totalBatches, VECTOR4_SIZE);
-    m_out_triangles_buffer = m_controller->NewReadWriteBuffer(UINT16_MAX * m_totalBatches, sizeof(int));
+    m_out_vertex_buffer = m_controller->NewReadWriteBuffer(Max_Verts * m_totalBatches, VECTOR4_SIZE);
+    m_out_normal_buffer = m_controller->NewReadWriteBuffer(Max_Verts * m_totalBatches, VECTOR4_SIZE);
+    m_out_triangles_buffer = m_controller->NewReadWriteBuffer(Max_Verts * m_totalBatches, sizeof(int));
     m_out_counts_buffer = m_controller->NewReadWriteBuffer(m_totalBatches, VECTOR4_SIZE);
 
 
@@ -1139,7 +1139,7 @@ void SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, u
             //m_out_triangles_buffer->GetData(out_trianges, counts.z * counts.x * sizeof(int), counts.x * sizeof(int));
             //All_Zero(out_vertex, counts.x, "Extract");
 
-            if (COMPUTE_TRIANGES) {
+            if (COMPUTE_TRIANGES && out_trianges != nullptr) {
 
                 for (int i = 0; i < counts.x; i += 3) {
                     unsigned int tris_start = i;

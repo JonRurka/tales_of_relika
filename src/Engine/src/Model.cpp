@@ -108,14 +108,14 @@ Model* Model::Get_Model(std::string directory, aiNode* node, const aiScene* scen
 
 Mesh* Model::Process_Mesh(aiMesh* mesh, const aiScene* scene)
 {
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec3> normals;
+    std::vector<glm::vec4> vertices;
+    std::vector<glm::vec4> normals;
     std::vector<glm::vec2> texCoords;
     std::vector<unsigned int> indices;
     
     for (int i = 0; i < mesh->mNumVertices; i++) {
-        glm::vec3 vert;
-        glm::vec3 norm;
+        glm::vec4 vert;
+        glm::vec4 norm;
         glm::vec2 t_coord;
 
         vert.x = mesh->mVertices[i].x;

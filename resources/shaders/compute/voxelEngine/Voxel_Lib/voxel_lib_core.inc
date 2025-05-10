@@ -243,6 +243,9 @@ printf(str, val1.x, val1.y, val1.z, val1.w);
 #define Print_Vec_2(str, val1, val2) \
 printf(str, val1.x, val1.y, val1.z, val1.w, val2.x, val2.y, val2.z, val2.w);
 
+#define Print_Vec_3(str, c, val1, val2, val3) \
+printf(str, c, val1.x, val1.y, val1.z, val1.w, val2.x, val2.y, val2.z, val2.w, val3.x, val3.y, val3.z, val3.w);
+
 /*#else
 
 #define Print(str) 

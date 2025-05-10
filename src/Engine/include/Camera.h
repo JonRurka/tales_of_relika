@@ -73,7 +73,7 @@ private:
 	unsigned int m_screen_height = 600;
 	float m_FOV = 45.0f;
 	float m_near = 0.1f;
-	float m_far = 100.0f;
+	float m_far = 500.0f;
 	bool m_isActive{ false };
 	glm::vec4 m_clear_color{glm::ivec4(0.0f, 0.0f, 0.0f, 1.0f)};
 

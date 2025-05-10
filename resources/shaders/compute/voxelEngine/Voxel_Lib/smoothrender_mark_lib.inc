@@ -98,7 +98,7 @@ void smoothrender_mark_async_main(uint idx){
 	
 	uint inst_index = idx / grid_size;
 	//STRUCT Run_Settings run_settings = GET_RUN_SETTINGS(0);
-	ivec4 loc = RUN_SETTINGS_LOCATION(0); //run_settings.Location;
+	ivec4 loc = RUN_SETTINGS_LOCATION(inst_index); //run_settings.Location;
 	int batch_index = loc.w;
 	uint row_index = idx % grid_size;
 	ivec2 row_coords = C_1D_to_2D(row_index, chunkSize.y);

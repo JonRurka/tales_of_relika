@@ -63,6 +63,12 @@ public:
 
 	static OpenCL_Device_Info Get_Recommended_Device();
 
+	enum class Vertex_Limit_Mode : int 
+	{
+		Max = UINT16_MAX,
+		Chunk_Max = 30000
+	};
+
 private:
 	inline static const std::string LOG_LOC{ "UTILITIES" };
 

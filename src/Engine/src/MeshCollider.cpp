@@ -4,6 +4,7 @@
 #include "Transform.h"
 #include "Mesh.h"
 #include "Logger.h"
+#include "Utilities.h"
 
 #define DEFAULT_SIZE (1.0f)
 
@@ -29,14 +30,16 @@ void MeshCollider::SetMesh(Mesh* mesh)
 	};
 
 	std::vector<unsigned int>& index = mesh->Indices();
-	std::vector<glm::vec3>& vert = mesh->Vertices();
+	std::vector<glm::vec4>& vert = mesh->Vertices();
+
+	std::vector<glm::vec3> vert3 = Utilities::vec4_to_vec3_arr(vert);
 
 	btIndexedMesh indexedMesh;
 	indexedMesh.m_numTriangles = mesh->Indices().size() / 3;
 	indexedMesh.m_triangleIndexBase = (unsigned char*)index.data();
 	indexedMesh.m_triangleIndexStride = 3 * sizeof(unsigned int);
 	indexedMesh.m_numVertices = mesh->Vertices().size();
-	indexedMesh.m_vertexBase = (unsigned char*)vert.data();
+	indexedMesh.m_vertexBase = (unsigned char*)vert3.data();
 	indexedMesh.m_vertexStride = sizeof(glm::vec3);
 
 	mTriangleIndexVertexArray = new btTriangleIndexVertexArray();

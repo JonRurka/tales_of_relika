@@ -28,48 +28,48 @@ void Voxel_Test_Scene::Init()
 {
 	Logger::LogInfo(LOG_POS("Init"), "Test Scene started");
 
-	std::vector<glm::vec3> floor_vertices = {
-		glm::vec3(-0.5f, -0.5f, -0.5f),
-		glm::vec3(0.5f, -0.5f, -0.5f),
-		glm::vec3(0.5f,  0.5f, -0.5f),
-		glm::vec3(0.5f,  0.5f, -0.5f),
-		glm::vec3(-0.5f,  0.5f, -0.5f),
-		glm::vec3(-0.5f, -0.5f, -0.5f),
+	std::vector<glm::vec4> floor_vertices = {
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
 
-		glm::vec3(-0.5f, -0.5f,  0.5f),
-		glm::vec3(0.5f, -0.5f,  0.5f),
-		glm::vec3(0.5f,  0.5f,  0.5f),
-		glm::vec3(0.5f,  0.5f,  0.5f),
-		glm::vec3(-0.5f,  0.5f,  0.5f),
-		glm::vec3(-0.5f, -0.5f,  0.5f),
+		glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
 
-		glm::vec3(-0.5f,  0.5f,  0.5f),
-		glm::vec3(-0.5f,  0.5f, -0.5f),
-		glm::vec3(-0.5f, -0.5f, -0.5f),
-		glm::vec3(-0.5f, -0.5f, -0.5f),
-		glm::vec3(-0.5f, -0.5f,  0.5f),
-		glm::vec3(-0.5f,  0.5f,  0.5f),
+		glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
 
-		glm::vec3(0.5f,  0.5f,  0.5f),
-		glm::vec3(0.5f,  0.5f, -0.5f),
-		glm::vec3(0.5f, -0.5f, -0.5f),
-		glm::vec3(0.5f, -0.5f, -0.5f),
-		glm::vec3(0.5f, -0.5f,  0.5f),
-		glm::vec3(0.5f,  0.5f,  0.5f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
 
-		glm::vec3(-0.5f, -0.5f, -0.5f),
-		glm::vec3(0.5f, -0.5f, -0.5f),
-		glm::vec3(0.5f, -0.5f,  0.5f),
-		glm::vec3(0.5f, -0.5f,  0.5f),
-		glm::vec3(-0.5f, -0.5f,  0.5f),
-		glm::vec3(-0.5f, -0.5f, -0.5f),
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
 
-		glm::vec3(-0.5f,  0.5f, -0.5f),
-		glm::vec3(0.5f,  0.5f, -0.5f),
-		glm::vec3(0.5f,  0.5f,  0.5f),
-		glm::vec3(0.5f,  0.5f,  0.5f),
-		glm::vec3(-0.5f,  0.5f,  0.5f),
-		glm::vec3(-0.5f,  0.5f, -0.5f)
+		glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f)
 	};
 
 	std::vector<glm::vec2> floor_tex_coords = {
@@ -116,48 +116,48 @@ void Voxel_Test_Scene::Init()
 		glm::vec2(0.0f, 1.0f),
 	};
 
-	std::vector<glm::vec3> floor_normals = {
-		glm::vec3(0.0f,  0.0f, -1.0f),
-		glm::vec3(0.0f,  0.0f, -1.0f),
-		glm::vec3(0.0f,  0.0f, -1.0f),
-		glm::vec3(0.0f,  0.0f, -1.0f),
-		glm::vec3(0.0f,  0.0f, -1.0f),
-		glm::vec3(0.0f,  0.0f, -1.0f),
+	std::vector<glm::vec4> floor_normals = {
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
 
-		glm::vec3(0.0f,  0.0f, 1.0f),
-		glm::vec3(0.0f,  0.0f, 1.0f),
-		glm::vec3(0.0f,  0.0f, 1.0f),
-		glm::vec3(0.0f,  0.0f, 1.0f),
-		glm::vec3(0.0f,  0.0f, 1.0f),
-		glm::vec3(0.0f,  0.0f, 1.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
 
-		glm::vec3(-1.0f,  0.0f,  0.0f),
-		glm::vec3(-1.0f,  0.0f,  0.0f),
-		glm::vec3(-1.0f,  0.0f,  0.0f),
-		glm::vec3(-1.0f,  0.0f,  0.0f),
-		glm::vec3(-1.0f,  0.0f,  0.0f),
-		glm::vec3(-1.0f,  0.0f,  0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
 
-		glm::vec3(1.0f,  0.0f,  0.0f),
-		glm::vec3(1.0f,  0.0f,  0.0f),
-		glm::vec3(1.0f,  0.0f,  0.0f),
-		glm::vec3(1.0f,  0.0f,  0.0f),
-		glm::vec3(1.0f,  0.0f,  0.0f),
-		glm::vec3(1.0f,  0.0f,  0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
 
-		glm::vec3(0.0f, -1.0f,  0.0f),
-		glm::vec3(0.0f, -1.0f,  0.0f),
-		glm::vec3(0.0f, -1.0f,  0.0f),
-		glm::vec3(0.0f, -1.0f,  0.0f),
-		glm::vec3(0.0f, -1.0f,  0.0f),
-		glm::vec3(0.0f, -1.0f,  0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
 
-		glm::vec3(0.0f,  1.0f,  0.0f),
-		glm::vec3(0.0f,  1.0f,  0.0f),
-		glm::vec3(0.0f,  1.0f,  0.0f),
-		glm::vec3(0.0f,  1.0f,  0.0f),
-		glm::vec3(0.0f,  1.0f,  0.0f),
-		glm::vec3(0.0f,  1.0f,  0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f)
 	};
 
 	glm::vec4 cube_color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -265,7 +265,7 @@ void Voxel_Test_Scene::Init()
 	settings.GetSettings()->setInt("chunkMeterSizeX", 32);
 	settings.GetSettings()->setInt("chunkMeterSizeY", 32);
 	settings.GetSettings()->setInt("chunkMeterSizeZ", 32);
-	settings.GetSettings()->setInt("TotalBatchGroups", 1);
+	settings.GetSettings()->setInt("TotalBatchGroups", 4);
 	settings.GetSettings()->setInt("BatchesPerGroup", 1);
 	settings.GetSettings()->setInt("InvertTrianges", false);
 
@@ -273,12 +273,18 @@ void Voxel_Test_Scene::Init()
 
 	m_builder->Init(&settings);
 
+	int max_vert = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
+
 	Stitch_VBO* vbo_stitch = new Stitch_VBO();
-	vbo_stitch->Init(m_builder, UINT16_MAX);
+	vbo_stitch->Init(m_builder, max_vert);
 
-	int num_chunks = 1;
+	int num_chunks = 4;
 
+	std::vector<Mesh*> chunk_meshes;
 	for (int i = 0; i < num_chunks; i++) {
+		Mesh* voxel_mesh_test = new Mesh(max_vert * Stitch_VBO::Stride());
+		chunk_meshes.push_back(voxel_mesh_test);
+
 		glm::ivec4 chunk_loc = glm::ivec4(i, 0, 0, 0);
 		gen_options.locations.push_back(chunk_loc);
 		render_options.locations.push_back(chunk_loc);
@@ -289,8 +295,6 @@ void Voxel_Test_Scene::Init()
 
 	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
 	glm::dvec4 render_times = m_builder->Render(&render_options);
-
-	
 
 	//double stop = Utilities::Get_Time();
 
@@ -308,11 +312,9 @@ void Voxel_Test_Scene::Init()
 	//glm::ivec4 chnk_count = counts[0];
 
 
-	std::vector<Mesh*> chunk_meshes;
+	
 	for (int i = 0; i < num_chunks; i++) {
-		Mesh* voxel_mesh_test = new Mesh((int)counts[i].x * Stitch_VBO::Stride());
-		vbo_stitch->Process(voxel_mesh_test, counts[i], true);
-		chunk_meshes.push_back(voxel_mesh_test);
+		vbo_stitch->Process(chunk_meshes[i], counts[i], true);
 	}
 
 
@@ -369,7 +371,7 @@ void Voxel_Test_Scene::Init()
 		obj->Get_MeshRenderer()->Set_Mesh(chunk_meshes[i]);
 		//obj->Get_MeshRenderer()->Transparent(true);
 		//obj->Get_MeshRenderer()->Set_Shader(m_shader);
-		obj->Get_Transform()->Translate(i * 8, 0.0f, 0.0f);
+		obj->Get_Transform()->Translate(i * 32, 0.0f, 0.0f);
 		obj->Get_MeshRenderer()->Set_Material(chunk_opaque_mat);
 		MeshCollider* mesh_col = obj->Add_Component<MeshCollider>();
 	}

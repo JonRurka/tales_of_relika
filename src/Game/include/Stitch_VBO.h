@@ -5,6 +5,8 @@
 #include "IVoxelBuilder.h"
 #include "SmoothVoxelBuilder.h"
 
+#include <unordered_map>
+
 namespace DynamicCompute {
 	namespace Compute {
 		class IComputeBuffer;
@@ -38,6 +40,8 @@ private:
 	IComputeProgram* m_program{ nullptr };
 	IVoxelBuilder_private* v_builder{ nullptr };
 
+	const int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
+
 	glm::vec4* m_vertices{nullptr};
 	glm::vec4* m_normals{ nullptr };
 	unsigned int* m_triangles{ nullptr };
@@ -48,6 +52,10 @@ private:
 
 	OpenCL_Device_Info m_device_cl;
 	IComputeController* create_controller();
+
+	void compute_triangles();
+
+	std::unordered_map<int, std::vector<glm::vec4>> debug_vert_data;
 
 	inline static const std::string LOG_LOC{ "STITCH_VBO" };
 };

@@ -73,49 +73,49 @@ void Camera::Load(json data)
 void Camera::Set_Skybox(Cubemap* value)
 {
 	if (m_cubemap_mesh == nullptr) {
-		std::vector<glm::vec3> skyboxVertices = {
+		std::vector<glm::vec4> skyboxVertices = {
 			// positions          
-			glm::vec3(-1.0f,  1.0f, -1.0f),
-			glm::vec3(-1.0f, -1.0f, -1.0f),
-			glm::vec3( 1.0f, -1.0f, -1.0f),
-			glm::vec3( 1.0f, -1.0f, -1.0f),
-			glm::vec3( 1.0f,  1.0f, -1.0f),
-			glm::vec3(-1.0f,  1.0f, -1.0f),
+			glm::vec4(-1.0f,  1.0f, -1.0f, 0.0f),
+			glm::vec4(-1.0f, -1.0f, -1.0f, 0.0f),
+			glm::vec4( 1.0f, -1.0f, -1.0f, 0.0f),
+			glm::vec4( 1.0f, -1.0f, -1.0f, 0.0f),
+			glm::vec4( 1.0f,  1.0f, -1.0f, 0.0f),
+			glm::vec4(-1.0f,  1.0f, -1.0f, 0.0f),
 										 
-			glm::vec3(-1.0f, -1.0f,  1.0f),
-			glm::vec3(-1.0f, -1.0f, -1.0f),
-			glm::vec3(-1.0f,  1.0f, -1.0f),
-			glm::vec3(-1.0f,  1.0f, -1.0f),
-			glm::vec3(-1.0f,  1.0f,  1.0f),
-			glm::vec3(-1.0f, -1.0f,  1.0f),
+			glm::vec4(-1.0f, -1.0f,  1.0f, 0.0f),
+			glm::vec4(-1.0f, -1.0f, -1.0f, 0.0f),
+			glm::vec4(-1.0f,  1.0f, -1.0f, 0.0f),
+			glm::vec4(-1.0f,  1.0f, -1.0f, 0.0f),
+			glm::vec4(-1.0f,  1.0f,  1.0f, 0.0f),
+			glm::vec4(-1.0f, -1.0f,  1.0f, 0.0f),
 										 
-			glm::vec3( 1.0f, -1.0f, -1.0f),
-			glm::vec3( 1.0f, -1.0f,  1.0f),
-			glm::vec3( 1.0f,  1.0f,  1.0f),
-			glm::vec3( 1.0f,  1.0f,  1.0f),
-			glm::vec3( 1.0f,  1.0f, -1.0f),
-			glm::vec3( 1.0f, -1.0f, -1.0f),
+			glm::vec4( 1.0f, -1.0f, -1.0f, 0.0f),
+			glm::vec4( 1.0f, -1.0f,  1.0f, 0.0f),
+			glm::vec4( 1.0f,  1.0f,  1.0f, 0.0f),
+			glm::vec4( 1.0f,  1.0f,  1.0f, 0.0f),
+			glm::vec4( 1.0f,  1.0f, -1.0f, 0.0f),
+			glm::vec4( 1.0f, -1.0f, -1.0f, 0.0f),
 										 
-			glm::vec3(-1.0f, -1.0f,  1.0f),
-			glm::vec3(-1.0f,  1.0f,  1.0f),
-			glm::vec3( 1.0f,  1.0f,  1.0f),
-			glm::vec3( 1.0f,  1.0f,  1.0f),
-			glm::vec3( 1.0f, -1.0f,  1.0f),
-			glm::vec3(-1.0f, -1.0f,  1.0f),
+			glm::vec4(-1.0f, -1.0f,  1.0f, 0.0f),
+			glm::vec4(-1.0f,  1.0f,  1.0f, 0.0f),
+			glm::vec4( 1.0f,  1.0f,  1.0f, 0.0f),
+			glm::vec4( 1.0f,  1.0f,  1.0f, 0.0f),
+			glm::vec4( 1.0f, -1.0f,  1.0f, 0.0f),
+			glm::vec4(-1.0f, -1.0f,  1.0f, 0.0f),
 										 
-			glm::vec3(-1.0f,  1.0f, -1.0f),
-			glm::vec3( 1.0f,  1.0f, -1.0f),
-			glm::vec3( 1.0f,  1.0f,  1.0f),
-			glm::vec3( 1.0f,  1.0f,  1.0f),
-			glm::vec3(-1.0f,  1.0f,  1.0f),
-			glm::vec3(-1.0f,  1.0f, -1.0f),
+			glm::vec4(-1.0f,  1.0f, -1.0f, 0.0f),
+			glm::vec4( 1.0f,  1.0f, -1.0f, 0.0f),
+			glm::vec4( 1.0f,  1.0f,  1.0f, 0.0f),
+			glm::vec4( 1.0f,  1.0f,  1.0f, 0.0f),
+			glm::vec4(-1.0f,  1.0f,  1.0f, 0.0f),
+			glm::vec4(-1.0f,  1.0f, -1.0f, 0.0f),
 										 
-			glm::vec3(-1.0f, -1.0f, -1.0f),
-			glm::vec3(-1.0f, -1.0f,  1.0f),
-			glm::vec3( 1.0f, -1.0f, -1.0f),
-			glm::vec3( 1.0f, -1.0f, -1.0f),
-			glm::vec3(-1.0f, -1.0f,  1.0f),
-			glm::vec3( 1.0f, -1.0f,  1.0f)
+			glm::vec4(-1.0f, -1.0f, -1.0f, 0.0f),
+			glm::vec4(-1.0f, -1.0f,  1.0f, 0.0f),
+			glm::vec4( 1.0f, -1.0f, -1.0f, 0.0f),
+			glm::vec4( 1.0f, -1.0f, -1.0f, 0.0f),
+			glm::vec4(-1.0f, -1.0f,  1.0f, 0.0f),
+			glm::vec4( 1.0f, -1.0f,  1.0f, 0.0f)
 		};
 		m_cubemap_mesh = new Mesh();
 		m_cubemap_mesh->Activate();
