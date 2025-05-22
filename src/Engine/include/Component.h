@@ -33,6 +33,10 @@ protected:
 	virtual void Init() = 0;
 	virtual void Update(float dt) = 0;
 
+	WorldObject* Instantiate();
+
+	WorldObject* Instantiate(std::string name);
+
 	void Type_Name(std::string value) { m_type_name = value; }
 };
 

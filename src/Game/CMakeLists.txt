@@ -18,6 +18,7 @@ set(${module}_headers
 	
 	include/Stitch_VBO.h
 	include/WorldGenController.h
+	include/TerrainChunk.h
 )
 
 set(${module}_sources
@@ -35,6 +36,7 @@ set(${module}_sources
 	
 	src/Stitch_VBO.cpp
 	src/WorldGenController.cpp
+	src/TerrainChunk.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})

@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "Light.h"
 #include "MeshRenderer.h"
+#include "Scene.h"
 
 Component* Component::Load_Component(WorldObject* obj, json data)
 {
@@ -31,4 +32,12 @@ Component* Component::Load_Component(WorldObject* obj, json data)
 
 
     return res;
+}
+
+WorldObject* Component::Instantiate() {
+    return Object()->scene()->Instantiate();
+}
+
+WorldObject* Component::Instantiate(std::string name) {
+    return Object()->scene()->Instantiate(name);
 }

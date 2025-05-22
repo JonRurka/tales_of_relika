@@ -25,5 +25,8 @@
 #include "window.h"
 #include "WorldObject.h"
 #include "Cubemap.h"
+#include "Physics.h"
+#include "BoxCollider.h"
+#include "MeshCollider.h"
 
 using namespace input;

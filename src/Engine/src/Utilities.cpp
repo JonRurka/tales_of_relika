@@ -498,4 +498,9 @@ OpenCL_Device_Info Utilities::Get_Recommended_Device()
 	return picked_device;
 }
 
+int Utilities::Hash_Chunk_Coord(int x, int y, int z)
+{
+	return (x << 16) ^ (y << 8) ^ z;
+}
+
 

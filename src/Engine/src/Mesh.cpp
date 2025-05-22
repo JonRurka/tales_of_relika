@@ -124,19 +124,7 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size)
 		Logger::LogError(LOG_POS("Load"), "Failed to map buffer.");
 	}*/
 
-	/*
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	// color attribute
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-	// texture coord attribute
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(9 * sizeof(float)));
-	glEnableVertexAttribArray(3);*/
+
 	m_attrib_list.process();
 
 	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, m_attrib_list.m_stride);

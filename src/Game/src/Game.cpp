@@ -3,6 +3,7 @@
 #include "Test_Scene.h"
 #include "Voxel_Test_Scene.h"
 #include "Test_OpenCL_Scene.h"
+#include "VoxelWorld_Scene.h"
 #include "Game_Resources.h"
 
 void Game::Init()
@@ -21,7 +22,8 @@ void Game::Init()
 
 	Logger::LogInfo(LOG_POS("Init"), "Game Initialized.");
 
-	Scene* s = Load_Scene<Voxel_Test_Scene>("test");
+	Scene* s = Load_Scene<VoxelWorld_Scene>("VoxelWorld");
+	//Scene* s = Load_Scene<Voxel_Test_Scene>("test");
 	//Scene* s = Load_Scene<Test_OpenCL_Scene>("test");
 	s->Activate(true);
 }
