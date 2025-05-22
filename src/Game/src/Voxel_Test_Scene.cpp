@@ -265,8 +265,8 @@ void Voxel_Test_Scene::Init()
 	settings.GetSettings()->setInt("chunkMeterSizeX", 32);
 	settings.GetSettings()->setInt("chunkMeterSizeY", 32);
 	settings.GetSettings()->setInt("chunkMeterSizeZ", 32);
-	settings.GetSettings()->setInt("TotalBatchGroups", 4);
-	settings.GetSettings()->setInt("BatchesPerGroup", 1);
+	settings.GetSettings()->setInt("TotalBatchGroups", 1);
+	settings.GetSettings()->setInt("BatchesPerGroup", 4);
 	settings.GetSettings()->setInt("InvertTrianges", false);
 
 	m_builder = new SmoothVoxelBuilder();
@@ -308,14 +308,20 @@ void Voxel_Test_Scene::Init()
 	
 
 	start = std::chrono::high_resolution_clock::now();
+
+	auto get_counts_start = std::chrono::high_resolution_clock::now();
 	std::vector<glm::ivec4> counts = m_builder->GetSize();
+	auto get_counts_end = std::chrono::high_resolution_clock::now();
+	double get_counts_duration = std::chrono::duration<double>(get_counts_end - get_counts_start).count();
 	//glm::ivec4 chnk_count = counts[0];
 
 
-	
+	auto vbo_process_start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < num_chunks; i++) {
 		vbo_stitch->Process(chunk_meshes[i], counts[i], true);
 	}
+	auto vbo_process_end = std::chrono::high_resolution_clock::now();
+	double vbo_process_duration = std::chrono::duration<double>(vbo_process_end - vbo_process_start).count();
 
 
 	end = std::chrono::high_resolution_clock::now();
@@ -341,10 +347,17 @@ void Voxel_Test_Scene::Init()
 
 	Logger::LogDebug(LOG_POS("Init"), "SetBuffer: %f ms", set_buffer_time * 1000);
 	Logger::LogDebug(LOG_POS("Init"), "Extract: %f ms", extract_duration * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "Extract - Get Counts : %f ms", get_counts_duration * 1000);
+	Logger::LogDebug(LOG_POS("Init"), "Extract - VBO Process : %f ms", vbo_process_duration * 1000);
 	Logger::LogDebug(LOG_POS("Init"), "Total: %f ms", (duration + extract_duration) * 1000);
+
+	double s_per_chunk = ((duration + extract_duration) / num_chunks);
+	double chunks_per_second = 1.0 / s_per_chunk;
+
+	Logger::LogDebug(LOG_POS("Init"), "Per Chunk: %f ms (%f chunks/second)", s_per_chunk * 1000, chunks_per_second);
 	Logger::LogDebug(LOG_POS("Init"), "");
 
-
+	vbo_stitch->Reset();
 
 	/*for (int i = 0; i < chnk_count.x; i++) {
 		if (i % 5 == 0) {

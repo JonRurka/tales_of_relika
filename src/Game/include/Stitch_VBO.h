@@ -24,6 +24,7 @@ public:
 	void Init(IVoxelBuilder_private* builder, int elements);
 	void Stitch(int elements);
 	void Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy);
+	void Reset();
 
 	IComputeBuffer* Input_Vertex_Buffer() { return vertex_buffer; }
 	IComputeBuffer* Input_Normal_Buffer() { return normal_buffer; }
@@ -52,6 +53,8 @@ private:
 
 	OpenCL_Device_Info m_device_cl;
 	IComputeController* create_controller();
+
+	glm::dvec4 times{ glm::dvec4(0.0) };
 
 	void compute_triangles();
 

@@ -17,7 +17,7 @@
 #define Surface_Type int
 
 read_buffer_struct(Static_Settings, 0, in_static_settings)
-read_buffer_struct(Run_Settings, 1, in_run_settings)
+readwrite_buffer_struct(Run_Settings, 1, in_run_settings)
 
 #if USL_OPENCL == 1
 __constant fvec4* in_locOffset;
@@ -715,8 +715,16 @@ void smoothrender_construct_main(uint index)
 {
 	STRUCT Static_Settings static_settings = GET_STATIC_SETTINGS();
 	
-	uint inst_index = INT(index) / static_settings.FullChunkSize[0];
+	uint numBatchesPerGroup = static_settings.batches[0];
+	uint numBatchGroups = static_settings.batches[1];
+	
+	STRUCT Run_Settings run_settings_ctrl = GET_RUN_SETTINGS_CTRL();
+	uint batch_group = run_settings_ctrl.Location.x;
+	uint start_index = (batch_group * numBatchesPerGroup);
+	
+	uint inst_index = start_index + (INT(index) / static_settings.FullChunkSize[0]);
 	STRUCT Run_Settings run_settings = GET_RUN_SETTINGS(inst_index);
+	
 	
 	int batchIndex = run_settings.Location.w;
     int batchIndexExpanded = run_settings.Location.w;
@@ -724,11 +732,18 @@ void smoothrender_construct_main(uint index)
 
 	uint voxel_index = GetVoxelIndex(batchIndex, index, batch[2]);
 	
+	//if (voxel_index == 0)
+	//	Print_1("construct: inst_index: %i\n", batchIndex);
+	//	Print_1("m_numBatchesPerGroup: %i\n", m_numBatchesPerGroup);
+	//	Print_2("%i: batch_group: %i\n", index, batch_group);
+	
 	if (run_settings.Location.w == -1){
         Set_Count(GetBatchIndex(batch[0], voxel_index, batch[2]), 0);
         SetStitchMap(GetBatchIndex(batch[0], voxel_index, batch[2]), -1);
         return;
     }
+	
+	
 	
 	//ISO_Material mat_point = in_iso_mat_data[index];
 	uint batch_ind = GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, batch[3]);
@@ -741,6 +756,17 @@ void smoothrender_construct_main(uint index)
 	
     RenderBlock(batch, index, voxel_index, mat_point, static_settings, run_settings);
 
+	if (index == 0){
+		run_settings_ctrl.Location.x = INT(batch_group) + 1;
+		
+		if (run_settings_ctrl.Location.x == numBatchGroups)
+		{
+			run_settings_ctrl.Location.x = 0;
+		}
+		
+		RUN_SETTINGS_CTRL_SET(run_settings_ctrl);
+	}
+	
 	//if (index == 0)
 	//	Set_Debug_Data(index, FVEC4(1, 1, 1, 1));
 }

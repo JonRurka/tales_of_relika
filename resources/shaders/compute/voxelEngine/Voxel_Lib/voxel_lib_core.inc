@@ -140,11 +140,13 @@ struct Polygon{
 
 #define GET_STATIC_SETTINGS() get_buffer_object(in_static_settings, 0)
 
-#define GET_RUN_SETTINGS(inst_index) get_buffer_object(in_run_settings, inst_index)
+#define GET_RUN_SETTINGS(inst_index) get_buffer_object(in_run_settings, (inst_index + 1))
+#define GET_RUN_SETTINGS_CTRL() get_buffer_object(in_run_settings, (0))
+#define RUN_SETTINGS_CTRL_SET(val) set_buffer_object(in_run_settings, 0, val)
 
 #define RUN_SETTINGS_STRIDE 1
 #define RUN_SETTINGS_IDX(i) ((i) * RUN_SETTINGS_STRIDE)
-#define RUN_SETTINGS_LOCATION(inst_index) get_buffer_vector(in_run_settings, (RUN_SETTINGS_IDX(inst_index) + 0))
+#define RUN_SETTINGS_LOCATION(inst_index) get_buffer_vector(in_run_settings, (RUN_SETTINGS_IDX(inst_index + 1) + 0))
 
 STRUCT Polygon New_Polygon(fvec4 v1, fvec4 v2, fvec4 v3){
 	STRUCT Polygon res;

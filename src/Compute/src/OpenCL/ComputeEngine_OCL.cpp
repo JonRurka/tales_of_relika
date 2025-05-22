@@ -30,12 +30,14 @@
 using namespace DynamicCompute::Compute::OCL;
 
 #define USE_GL_CONTEXT 1
-#define WAIT_IDLE 0
+#define WAIT_IDLE 1
 #define FORCE_MANUAL_SYNC false
+#define KERNEL_DIRECT_EXTERNAL_WRITE true
 
 #define CL_GL_DYNAMIC_DRAW 0x88E8
 #define CL_GL_STATIC_COPY 0x88E6
 #define CL_GL_DYNAMIC_COPY 0x88EA
+
 
 //#pragma comment(lib, "OpenCL.lib")
 
@@ -675,6 +677,11 @@ ComputeKernel::ComputeKernel(ComputeProgram* program_obj, char* name, cl_command
 int ComputeKernel::SetBuffer(ComputeBuffer* buffer, int arg)
 {
     int res = 0;
+
+    if (buffer->Is_External()) {
+        m_ext_buffers.push_back((cl_mem)buffer->External_Memory());
+    }
+
     res = clSetKernelArg(kernel, (arg * 1) + 0, sizeof(cl_mem), (void*)buffer->Get_CL_Mem());
     if (res != CL_SUCCESS) {
         Logger::LogError(LOG_POS("Execute"), "Failed to set kernel arg %i: %i\n", arg, res);
@@ -694,8 +701,26 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
     int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
     cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
 
+
+    if (g_manual_sync) {
+        cl_int res = clEnqueueAcquireGLObjects(command_queue, m_ext_buffers.size(), m_ext_buffers.data(), num_wait_events, wait_event_ptr, &finished_event);
+        if (res != CL_SUCCESS) {
+            printf("clEnqueueAcquireGLObjects failed: %i\n", res);
+        }
+        g_wait_event = finished_event;
+        wait_event_ptr = &g_wait_event;
+        num_wait_events = 1;
+    }
+
+
     int res = clEnqueueNDRangeKernel(command_queue, kernel, work_dim, NULL, global_work_size, NULL, num_wait_events, wait_event_ptr, &finished_event);
     g_wait_event = finished_event;
+
+
+    if (g_manual_sync) {
+        clEnqueueReleaseGLObjects(command_queue, m_ext_buffers.size(), m_ext_buffers.data(), 1, &g_wait_event, &finished_event);
+        g_wait_event = finished_event;
+    }
     
     if (res != CL_SUCCESS)
     {
@@ -751,28 +776,36 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
        Logger::LogError(LOG_POS("Execute"), "Failed to create GPU buffer: %i\n", err);
    }
 
-   buffer = clCreateBuffer(context, type, mSize, NULL, &err);
-   if (err != CL_SUCCESS)
-   {
-       Logger::LogError(LOG_POS("Execute"), "Failed to create Staging buffer: %i\n", err);
+   if (!external || (external && !KERNEL_DIRECT_EXTERNAL_WRITE)) {
+       buffer = clCreateBuffer(context, type, mSize, NULL, &err);
+       if (err != CL_SUCCESS)
+       {
+           Logger::LogError(LOG_POS("Execute"), "Failed to create Staging buffer: %i\n", err);
+       }
    }
 
    if (external) {
-
+       mIsExternal = true;
        cl_event finished_event = 0;
        cl_int res = 0;
        //float* tmp_buff = new float[mSize / sizeof(float)];
        gl_buff = Graphics::CreateBufferGL(mSize, nullptr, CL_GL_DYNAMIC_COPY);
        cl_gl_buff = clCreateFromGLBuffer(context, CL_MEM_WRITE_ONLY, gl_buff, &res);
+       if (KERNEL_DIRECT_EXTERNAL_WRITE)
+        buffer = cl_gl_buff;
        if (res != CL_SUCCESS) {
            Logger::LogError(LOG_POS("ComputeBuffer"), "Failed to create CL GL Interop buffer: %i", res);
        }
-       if (g_manual_sync) {
+       if (!g_manual_sync) {
            cl_int res_acq = clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, &finished_event);
            if (res != CL_SUCCESS) {
                Logger::LogError(LOG_POS("ComputeBuffer"), "Failed to acquire for CL GL buffer: %i", res_acq);
            }
            clWaitForEvents(1, &finished_event);
+           Logger::LogDebug(LOG_POS("ComputeBuffer"), "Pre-acquired GL object.");
+       }
+       else {
+           Logger::LogDebug(LOG_POS("ComputeBuffer"), "Pre-acquire GL object disabled.");
        }
        //delete[] tmp_buff;
 

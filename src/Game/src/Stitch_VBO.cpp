@@ -100,10 +100,10 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		end = std::chrono::high_resolution_clock::now();
 		auto stitch_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
-		glm::fvec4* out_vert = new glm::fvec4[count.x];
-		glm::fvec4* out_vbo = new glm::fvec4[count.x * VBO_ELEMENTS];
-		Input_Vertex_Buffer()->GetData(out_vert, 0, count.x * sizeof(float) * 4);
-		Output_VBO_Buffer()->GetData(out_vbo, 0, count.x * STRIDE);
+		//glm::fvec4* out_vert = new glm::fvec4[count.x];
+		//glm::fvec4* out_vbo = new glm::fvec4[count.x * VBO_ELEMENTS];
+		//Input_Vertex_Buffer()->GetData(out_vert, 0, count.x * sizeof(float) * 4);
+		//Output_VBO_Buffer()->GetData(out_vbo, 0, count.x * STRIDE);
 
 
 		/*for (int i = 0; i < count.x; i++) {
@@ -120,7 +120,7 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		int vbo_size = count.x * STRIDE;
 
 		start = std::chrono::high_resolution_clock::now();
-		Output_VBO_Buffer()->FlushExternal(vbo_size);
+		//Output_VBO_Buffer()->FlushExternal(vbo_size);
 		end = std::chrono::high_resolution_clock::now();
 		auto flush_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
@@ -129,6 +129,11 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		mesh->Load(Output_VBO_Buffer(), vbo_size);
 		end = std::chrono::high_resolution_clock::now();
 		auto load_mesh_duration = std::chrono::duration<double>(end - start).count() * 1000;
+
+		times.x += builder_extract_duration;
+		times.y += stitch_duration;
+		times.z += flush_duration;
+		times.w += load_mesh_duration;
 
 		//Logger::LogDebug(LOG_POS("Process"), "Builder Extract: %f ms, Stitch: %f ms, Flush: %f ms, Load Mesh: %f ms\n",
 		//	builder_extract_duration, stitch_duration, flush_duration, load_mesh_duration);
@@ -161,6 +166,14 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		mesh->Normals(normals);
 		mesh->Activate();
 	}
+}
+
+void Stitch_VBO::Reset()
+{
+	Logger::LogDebug(LOG_POS("Process"), "Builder Extract: %f ms, Stitch: %f ms, Flush: %f ms, Load Mesh: %f ms, Total: %f\n",
+		times.x, times.y, times.z, times.w, (times.x + times.y + times.z + times.w));
+
+	times = glm::dvec4(0.0);
 }
 
 int Stitch_VBO::Stride()

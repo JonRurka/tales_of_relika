@@ -107,7 +107,7 @@ void SmoothVoxelBuilder::Init(ChunkSettings* settings)
     m_numColumns = p_settings.getInt("MaxColumns");
     m_activeColumIndex.resize(m_numColumns);
 
-    m_run_settings = new Run_Settings[m_totalBatches];
+    m_run_settings = new Run_Settings[m_totalBatches + 1];
 
     m_shaderDir = p_settings.getString("programDir");
 
@@ -125,9 +125,10 @@ glm::vec4* norm_tmp;
 int* tris_tmp;
 
 void SmoothVoxelBuilder::SetRunSettings(std::vector<glm::ivec3> locations) {
+    m_run_settings[0].Location = glm::ivec4(0); // first element is metadata
     int stop = std::min(m_totalBatches, (int)locations.size());
     for (int i = 0; i < std::min(m_totalBatches, (int)locations.size()); i++) {
-        m_run_settings[i].Location = glm::ivec4(locations[i].x, locations[i].y, locations[i].z, i);
+        m_run_settings[i + 1].Location = glm::ivec4(locations[i].x, locations[i].y, locations[i].z, i);
     }
 }
 
@@ -150,7 +151,7 @@ glm::dvec4 SmoothVoxelBuilder::Render(ChunkRenderOptions* options)
     m_run_settings.Y = cy;
     m_run_settings.Z = cz;*/
 
-    SetRunSettings(options->locations);
+    //SetRunSettings(options->locations);
 
     //m_run_settings.Location = glm::ivec4(cx, cy, cz, 0);
 
@@ -187,18 +188,31 @@ glm::dvec4 SmoothVoxelBuilder::Generate(ChunkGenerationOptions* options)
 
     SetRunSettings(options->locations);
 
+
+
     glm::dvec4 result = glm::dvec4(0,0,0,0);
     double buffer_writes_time = 0;
+
+    auto start_buffer_writes = std::chrono::high_resolution_clock::now();
+    int start_index = 0;//(i * m_numBatchesPerGroup);
+    Run_Settings* start = m_run_settings + start_index;
+    m_in_run_settings_buffer->SetData(start, (m_totalBatches + 1) * sizeof(Run_Settings));
+    auto end_buffer_writes = std::chrono::high_resolution_clock::now();
+    buffer_writes_time += std::chrono::duration<double>(end_buffer_writes - start_buffer_writes).count();
+
 
 
     for (int i = 0; i < m_numBatchGroups; i++) {
 
-        auto start_buffer_writes = std::chrono::high_resolution_clock::now();
-        int start_index = (i * m_numBatchesPerGroup);
-        Run_Settings* start = m_run_settings + start_index;
-        m_in_run_settings_buffer->SetData(start, m_numBatchesPerGroup * sizeof(Run_Settings));
-        auto end_buffer_writes = std::chrono::high_resolution_clock::now();
-        buffer_writes_time += std::chrono::duration<double>(end_buffer_writes - start_buffer_writes).count();
+        //auto start_buffer_writes = std::chrono::high_resolution_clock::now();
+        //int start_index = (i * m_numBatchesPerGroup);
+        //Run_Settings* start = m_run_settings + start_index;
+        //m_in_run_settings_buffer->SetData(start, m_numBatchesPerGroup * sizeof(Run_Settings));
+        //auto end_buffer_writes = std::chrono::high_resolution_clock::now();
+        //buffer_writes_time += std::chrono::duration<double>(end_buffer_writes - start_buffer_writes).count();
+
+
+
 
         //auto start_t = std::chrono::high_resolution_clock::now();
         //auto end_t = std::chrono::high_resolution_clock::now();
@@ -370,7 +384,7 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     //m_out_Buffer = m_controller->NewWriteBuffer(DATA_SIZE, sizeof(float));
 
     m_in_static_settings_buffer = m_controller->NewReadBuffer(1, sizeof(Static_Settings));
-    m_in_run_settings_buffer = m_controller->NewReadBuffer(m_totalBatches, sizeof(Run_Settings));
+    m_in_run_settings_buffer = m_controller->NewReadWriteBuffer(m_totalBatches + 1, sizeof(Run_Settings));
 
     in_locOffset_buffer = m_controller->NewReadBuffer(8, sizeof(glm::fvec4));
     in_globalOffsets_buffer = m_controller->NewReadBuffer(8, sizeof(glm::fvec4));
@@ -912,7 +926,7 @@ glm::dvec4 SmoothVoxelBuilder::DoRender()
     //m_program_smoothrender_mark->Execute(m_totalBatches, 0, 0);
     auto start_buffer_writes = std::chrono::high_resolution_clock::now();
 
-    m_in_run_settings_buffer->SetData(m_run_settings, m_totalBatches * sizeof(Run_Settings));
+    //m_in_run_settings_buffer->SetData(m_run_settings, m_totalBatches * sizeof(Run_Settings));
     
     auto end_buffer_writes = std::chrono::high_resolution_clock::now();
     buffer_writes_time += std::chrono::duration<double>(end_buffer_writes - start_buffer_writes).count();
@@ -973,13 +987,16 @@ glm::dvec4 SmoothVoxelBuilder::DoRender()
     duration = 0;
     for (int i = 0; i < m_numBatchGroups; i++) {
 
-        auto start_buffer_writes = std::chrono::high_resolution_clock::now();
-        int start_index = (i * m_numBatchesPerGroup);
-        Run_Settings* start = m_run_settings + start_index;
-        m_in_run_settings_buffer->SetData(start, m_numBatchesPerGroup * sizeof(Run_Settings));
-        auto end_buffer_writes = std::chrono::high_resolution_clock::now();
-        buffer_writes_time += std::chrono::duration<double>(end_buffer_writes - start_buffer_writes).count();
+        //auto start_buffer_writes = std::chrono::high_resolution_clock::now();
+        //int start_index = (i * m_numBatchesPerGroup);
+        //Run_Settings* start = m_run_settings + start_index;
+        //m_in_run_settings_buffer->SetData(start, m_numBatchesPerGroup * sizeof(Run_Settings));
+        //auto end_buffer_writes = std::chrono::high_resolution_clock::now();
+        //buffer_writes_time += std::chrono::duration<double>(end_buffer_writes - start_buffer_writes).count();
         
+
+
+
         //m_in_run_settings_buffer->SetData(&m_run_settings[i * m_numBatchesPerGroup], m_numBatchesPerGroup * sizeof(Run_Settings));
 
         /*for (int i = 0; i < m_numBatchesPerGroup; i++) {
@@ -1275,7 +1292,7 @@ void SmoothVoxelBuilder::Extract(IComputeBuffer* out_vertex, IComputeBuffer* out
         return;
     }
 
-    Logger::LogDebug(LOG_POS("Extract"), "Running extract: %i, %i", counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
+    //Logger::LogDebug(LOG_POS("Extract"), "Running extract: %i, %i", counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
     //int start = 
     //printf("Extract: %i, %i, %i, %i\n", counts.x, counts.z, counts.y, counts.w);
 

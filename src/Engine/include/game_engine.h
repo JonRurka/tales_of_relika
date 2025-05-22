@@ -24,5 +24,6 @@
 #include "Utilities.h"
 #include "window.h"
 #include "WorldObject.h"
+#include "Cubemap.h"
 
 using namespace input;

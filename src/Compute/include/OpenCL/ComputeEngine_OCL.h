@@ -36,6 +36,7 @@ namespace DynamicCompute {
                 bool mInitialized{ false };
                 bool mDestroyed{ false };
                 bool mCanCallDispose{ true };
+                bool mIsExternal{ false };
 
                 inline static const std::string LOG_LOC{ "ComputeBuffer" };
 
@@ -55,8 +56,9 @@ namespace DynamicCompute {
                     return &buffer;
                 }
 
-                unsigned int External_GL_Buffer() { return gl_buff; }
-                unsigned int External_Memory() { return 0; }
+                unsigned long long int External_GL_Buffer() { return gl_buff; }
+                unsigned long long int External_Memory() { return (unsigned long long int)cl_gl_buff; }
+                bool Is_External() { return mIsExternal; }
 
                 int SetData(void* data);
 
@@ -94,6 +96,8 @@ namespace DynamicCompute {
                 int status;
 
                 ComputeProgram* mProgramObj;
+
+                std::vector<cl_mem> m_ext_buffers;
 
                 //int numKernels;
 

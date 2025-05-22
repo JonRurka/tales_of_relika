@@ -4,7 +4,7 @@
 #include "voxel_lib_core.inc"
 
 read_buffer_struct(Static_Settings, 0, in_static_settings)
-read_buffer_struct(Run_Settings, 1, in_run_settings)
+readwrite_buffer_struct(Run_Settings, 1, in_run_settings)
 
 read_buffer(fvec4, 2, in_vertex_data)
 read_buffer(fvec4, 3, in_normal_data)
@@ -145,8 +145,15 @@ void smoothrender_async_stitch_main(uint index)
 {
 	STRUCT Static_Settings static_settings = GET_STATIC_SETTINGS();
 	
-	uint inst_index = index / static_settings.FullChunkSize[0];
-    STRUCT Run_Settings run_settings = in_run_settings[inst_index]; 
+	uint numBatchesPerGroup = static_settings.batches[0];
+	uint numBatchGroups = static_settings.batches[1];
+	
+	STRUCT Run_Settings run_settings_ctrl = GET_RUN_SETTINGS_CTRL();
+	uint batch_group = run_settings_ctrl.Location.x;
+	uint start_index = (batch_group * numBatchesPerGroup);
+	
+	uint inst_index = start_index + (INT(index) / static_settings.FullChunkSize[0]);
+    STRUCT Run_Settings run_settings = GET_RUN_SETTINGS(inst_index);
 	
 	int batchIndex = run_settings.Location.w;
     int batchIndexExpanded = run_settings.Location.w;
@@ -158,7 +165,22 @@ void smoothrender_async_stitch_main(uint index)
         return;
     }
 	
+	//if (voxel_index == 0)
+	//	Print_1("stitch: inst_index: %i\n", batchIndex);
+	
 	Process_Voxel(batch, static_settings.batches, index, voxel_index, static_settings.ChunkSize);
+	
+	if (index == 0){
+		run_settings_ctrl.Location.x = INT(batch_group) + 1;
+		
+		if (run_settings_ctrl.Location.x == numBatchGroups)
+		{
+			run_settings_ctrl.Location.x = 0;
+		}
+		
+		//Print_2("set batch group from %i to %i\n", batch_group, run_settings_ctrl.Location.x);
+		RUN_SETTINGS_CTRL_SET(run_settings_ctrl);
+	}
 	
 	//if (index == 0)
 	//	Set_Debug_Data(index, FVEC4(1, 1, 1, 1));

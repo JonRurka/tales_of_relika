@@ -12,10 +12,12 @@ set(${module}_headers
 	include/Test_Scene.h
 	include/Voxel_Test_Scene.h
 	include/Test_OpenCL_Scene.h
+	include/VoxelWorld_Scene.h
 	
 	include/Editor_Camera_Control.h
 	
 	include/Stitch_VBO.h
+	include/WorldGenController.h
 )
 
 set(${module}_sources
@@ -27,10 +29,12 @@ set(${module}_sources
 	src/Test_Scene.cpp
 	src/Voxel_Test_Scene.cpp
 	src/Test_OpenCL_Scene.cpp
+	src/VoxelWorld_Scene.cpp
 	
 	src/Editor_Camera_Control.cpp
 	
 	src/Stitch_VBO.cpp
+	src/WorldGenController.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
