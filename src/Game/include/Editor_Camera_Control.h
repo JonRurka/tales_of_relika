@@ -6,6 +6,9 @@ class Editor_Camera_Control : public Component
 {
 public:
 
+	float Speed() { return m_move_speed; }
+	void Speed(float val) { m_move_speed = val; }
+
 protected:
 	void Init() override;
 

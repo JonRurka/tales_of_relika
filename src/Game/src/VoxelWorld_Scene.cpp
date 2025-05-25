@@ -38,7 +38,8 @@ void VoxelWorld_Scene::setup_camera()
 	Camera_obj->Get_Transform()->Position(glm::vec3(0, 10, -50));
 	Camera_obj->Get_Transform()->LookAt(glm::vec3(0.0f, 10.0f, 100.0f));
 	camera = Camera_obj->Add_Component<Camera>();
-	Camera_obj->Add_Component<Editor_Camera_Control>();
+	Editor_Camera_Control* cam_control = Camera_obj->Add_Component<Editor_Camera_Control>();
+	cam_control->Speed(10.0f);
 	//camera->Clear_Color(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	//camera->FOV(90.0f);
 	camera->Set_Skybox(skybox_cubmap);

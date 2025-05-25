@@ -1147,7 +1147,7 @@ void SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, u
     if (counts.x > 0) {
 
         if (!USE_CACHE) {
-            Logger::LogDebug(LOG_POS("Extract"), "Running extract: %i, %i", counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
+            //Logger::LogDebug(LOG_POS("Extract"), "Running extract: %i, %i", counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
             //int start = 
             //printf("Extract: %i, %i, %i, %i\n", counts.x, counts.z, counts.y, counts.w);
             m_out_vertex_buffer->GetData(out_vertex, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
