@@ -8,6 +8,11 @@
 
 WorldGenController* WorldGenController::m_Instance{nullptr};
 
+namespace {
+	std::vector<double> construct_times;
+	const int max_times = 1000;
+}
+
 void WorldGenController::Init()
 {
 	m_Instance = this;
@@ -16,7 +21,7 @@ void WorldGenController::Init()
 
 	mTarget = Object()->Get_Transform(); // TODO: Get player transform.
 
-	m_half = ((1 / m_voxelsPerMeter) / 2.0);
+	m_half = 0;// ((1 / m_voxelsPerMeter) / 2.0);
 
 	int padded_radius = m_max_chunk_radius + 2;
 	m_max_column_target = std::round(3.14 * (m_max_chunk_radius * m_max_chunk_radius));
@@ -113,9 +118,17 @@ void WorldGenController::process_additions()
 	{
 
 		if (m_create_queue.empty()) {
+
+			double sum = 0;
+			for (const auto& elem : construct_times) {
+				sum += elem;
+			}
+			double avg = sum / construct_times.size();
+
 			m_gen_stop = Utilities::Get_Time();
 			m_gen_finished = true;
-			Logger::LogInfo(LOG_POS("process_additions"), "Chunks generated in %f ms.", (m_gen_stop - m_gen_start) * 1000.0f);
+			Logger::LogInfo(LOG_POS("process_additions"), "Chunks generated in %f ms. Average construct time: %f ms.", 
+				(m_gen_stop - m_gen_start) * 1000.0f, avg * 1000.0f);
 		}
 
 		// TODO: Other stuff when chunk gen has finished.
@@ -159,6 +172,10 @@ bool WorldGenController::process_batch()
 		glm::ivec4 chunk_loc = glm::ivec4(ref.chunk_coord, 0);
 		gen_options.locations.push_back(chunk_loc);
 		render_options.locations.push_back(chunk_loc);
+
+
+
+
 	}
 
 	if (num_additions <= 0) {
@@ -167,6 +184,11 @@ bool WorldGenController::process_batch()
 
 	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
 	glm::dvec4 render_times = m_builder->Render(&render_options);
+
+	construct_times.push_back(gen_times.y);
+	if (construct_times.size() >= max_times) {
+		construct_times.erase(construct_times.begin());
+	}
 
 	std::vector<glm::ivec4> counts = m_builder->GetSize();
 
@@ -209,6 +231,8 @@ void WorldGenController::generate_circular()
 
 	std::vector<glm::ivec3> cols = get_columns_in_radius(target_chunk_pos.x, target_chunk_pos.z, m_max_chunk_radius);
 
+	//Logger::LogInfo(LOG_POS("generate_circular"), "Generating %i Columns", cols.size());
+
 	int y_start = target_chunk_pos.y - (m_chunks_depth / 2);
 
 	int queued_chunks_num = 0;
@@ -216,7 +240,7 @@ void WorldGenController::generate_circular()
 	for (const auto& c : cols) {
 		for (int i = 0; i < m_chunks_depth; i++) {
 			int y = y_start + i;
-			glm::ivec3 chunk_coord = glm::ivec3(c.x, y, c.z);
+			glm::ivec3 chunk_coord = glm::ivec3(c.x, y, c.y);
 			bool queued = queue_chunk_create(chunk_coord);
 			if (queued) {
 				queued_chunks_num++;
@@ -317,18 +341,18 @@ std::vector<glm::ivec3> WorldGenController::get_columns_in_radius(int center_x, 
 glm::ivec3 WorldGenController::worldPosToChunkCoord(glm::fvec3 pos)
 {
 	return glm::ivec3(
-		std::round(pos.x / m_chunkMeterSizeX + m_half), 
-		std::round(pos.y / m_chunkMeterSizeY + m_half),
-		std::round(pos.z / m_chunkMeterSizeZ + m_half)
+		std::round(pos.x / (m_chunkMeterSizeX + m_half)), 
+		std::round(pos.y / (m_chunkMeterSizeY + m_half)),
+		std::round(pos.z / (m_chunkMeterSizeZ + m_half))
 	);
 }
 
 glm::fvec3 WorldGenController::chunkCoordToWorldPos(glm::ivec3 chunk_coord)
 {
 	return glm::fvec3(
-		std::round(chunk_coord.x * m_chunkMeterSizeX - m_half),
-		std::round(chunk_coord.y * m_chunkMeterSizeY - m_half),
-		std::round(chunk_coord.z * m_chunkMeterSizeZ - m_half)
+		std::round((chunk_coord.x * m_chunkMeterSizeX) - m_half),
+		std::round((chunk_coord.y * m_chunkMeterSizeY) - m_half),
+		std::round((chunk_coord.z * m_chunkMeterSizeZ) - m_half)
 	);
 }
 

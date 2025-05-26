@@ -3,6 +3,8 @@
 
 
 struct Settings{
+	int column_index;
+	
     uint ChunkSizeX;
     uint ChunkSizeY;
     uint ChunkSizeZ;
@@ -19,6 +21,7 @@ struct Settings{
 STRUCT Settings New_Settings(){
 	STRUCT Settings s;
 	
+	s.chunk_index = 0;
 	s.ChunkSizeX = 0;
 	s.ChunkSizeY = 0;
 	s.ChunkSizeZ = 0;
@@ -34,8 +37,8 @@ STRUCT Settings New_Settings(){
 }
 
 
-//#include "samplers/Terrain_Sampler.inc"
-#include "samplers/Sphere_Sampler.inc"
+#include "samplers/Terrain_Sampler.inc"
+//#include "samplers/Sphere_Sampler.inc"
 
 
 #endif // _SAMPLER_INC_

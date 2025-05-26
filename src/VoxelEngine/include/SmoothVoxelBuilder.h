@@ -9,6 +9,7 @@
 #include "Utilities.h"
 
 #include "VoxelComputeProgram.h"
+#include "HeightmapGenerator.h"
 
 #include <queue>
 
@@ -49,6 +50,8 @@ namespace VoxelEngine {
 
 		IComputeController* Get_Compute_Controller();
 
+		HeightmapGenerator* Get_Heightmap_Generator() { return m_HeightmapGenerator; }
+
 		//void SetBlock(int x, int y, int z, Block block);
 
 		//Block GetBlock(int x, int y, int z);
@@ -59,6 +62,7 @@ namespace VoxelEngine {
 
 		struct Run_Settings {
 			glm::ivec4 Location;
+			glm::ivec4 int_data_1;
 		};
 
 	private:
@@ -154,6 +158,10 @@ namespace VoxelEngine {
 		OpenCL_Device_Info m_device_cl;
 		ComputeInterface::ControllerInfo m_controllerInfo{};
 		IComputeController* m_controller;
+
+		HeightmapGenerator* m_HeightmapGenerator{ nullptr };
+
+		IComputeProgram::FileType m_type;
 
 		// Programs
 

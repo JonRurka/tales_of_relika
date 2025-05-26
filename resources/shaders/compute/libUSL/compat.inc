@@ -54,7 +54,7 @@ float vector_angle(fvec3 from, fvec3 to){
 
 #define FABS(val) fabs(val)
 #define LERP(_start_, _end_, _delta_) lerp(_start_, _end_, _delta_)
-
+#define RountToInt(x) (convert_int(x))
 
 #elif USL_DIRECTX_UNITY3D == 1
 

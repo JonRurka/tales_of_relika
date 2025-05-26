@@ -20,6 +20,7 @@ struct Static_Settings{
 
 struct Run_Settings{
     ivec4 Location;
+	ivec4 int_data_1;
 };
 
 struct Materials{
@@ -144,7 +145,7 @@ struct Polygon{
 #define GET_RUN_SETTINGS_CTRL() get_buffer_object(in_run_settings, (0))
 #define RUN_SETTINGS_CTRL_SET(val) set_buffer_object(in_run_settings, 0, val)
 
-#define RUN_SETTINGS_STRIDE 1
+#define RUN_SETTINGS_STRIDE 2
 #define RUN_SETTINGS_IDX(i) ((i) * RUN_SETTINGS_STRIDE)
 #define RUN_SETTINGS_LOCATION(inst_index) get_buffer_vector(in_run_settings, (RUN_SETTINGS_IDX(inst_index + 1) + 0))
 

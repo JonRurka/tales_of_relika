@@ -2,6 +2,8 @@
 
 #include "marchingcubes_arrays.h"
 
+#include "HeightmapGenerator.h"
+
 #include "Logger.h"
 #include "Utilities.h"
 
@@ -17,6 +19,8 @@ using namespace VoxelEngine;
 
 #define VECTOR4_SIZE (sizeof(float) * 4)
 
+#define MAX_COLUMNS 500
+
 #define VK_EXT ".comp"
 #define CL_EXT ".cl"
 
@@ -29,58 +33,61 @@ using namespace VoxelEngine;
 
 #define BASE_RESOURCE_DIR "compute::voxelEngine::"
 
-glm::fvec4 DirectionOffsets_f(int index) {
-    return (glm::fvec4)MarchingCubesArrays::directionOffsets[index];
-}
+namespace {
+    glm::fvec4 DirectionOffsets_f(int index) {
+        return (glm::fvec4)MarchingCubesArrays::directionOffsets[index];
+    }
 
-glm::ivec4 DirectionOffsets_i(int index) {
-    return MarchingCubesArrays::directionOffsets[index];
-}
+    glm::ivec4 DirectionOffsets_i(int index) {
+        return MarchingCubesArrays::directionOffsets[index];
+    }
 
-int Hash_3D(int x, int y, int z) {
-    return x ^ y << 2 ^ z >> 2;
-}
+    int Hash_3D(int x, int y, int z) {
+        return x ^ y << 2 ^ z >> 2;
+    }
 
-int Hash_2D(int x, int y) {
-    return Hash_3D(x, y, 0);
-}
+    int Hash_2D(int x, int y) {
+        return Hash_3D(x, y, 0);
+    }
 
-/*#define MAX_HEIGHTMAPS_X 10000000
-int C_2D_To_1D(int x, int y) {
-    return y * MAX_HEIGHTMAPS_X + x;
-}*/
+    /*#define MAX_HEIGHTMAPS_X 10000000
+    int C_2D_To_1D(int x, int y) {
+        return y * MAX_HEIGHTMAPS_X + x;
+    }*/
 
-int* get_null() {
-    return nullptr;
-}
+    int* get_null() {
+        return nullptr;
+    }
 
-void All_Zero(glm::vec4* data, int num, std::string marker) {
-    bool all_zero = true;
-    for (int i = 0; i < num; i++) {
-        if (data[i].x != 0 ||
-            data[i].y != 0 ||
-            data[i].z != 0) {
-            all_zero = false;
+    void All_Zero(glm::vec4* data, int num, std::string marker) {
+        bool all_zero = true;
+        for (int i = 0; i < num; i++) {
+            if (data[i].x != 0 ||
+                data[i].y != 0 ||
+                data[i].z != 0) {
+                all_zero = false;
+            }
+        }
+
+        if (all_zero) {
+            //printf("%s: All zero!!\n", marker.c_str());
         }
     }
 
-    if (all_zero) {
-        //printf("%s: All zero!!\n", marker.c_str());
-    }
-}
+    int GetBatchNumIndex(SmoothVoxelBuilder::Run_Settings* group_start, int numGroups, glm::ivec3 search) {
+        for (int i = 0; i < numGroups; i++) {
+            if (search.x == group_start[i].Location.x &&
+                search.y == group_start[i].Location.y &&
+                search.z == group_start[i].Location.z) {
 
-int GetBatchNumIndex(SmoothVoxelBuilder::Run_Settings* group_start, int numGroups, glm::ivec3 search) {
-    for (int i = 0; i < numGroups; i++) {
-        if (search.x == group_start[i].Location.x &&
-            search.y == group_start[i].Location.y &&
-            search.z == group_start[i].Location.z) {
-            
-            return i;
+                return i;
+            }
+            //printf("(%i, %i, %i)\n",
+            //    group_start[i].Location.x, group_start[i].Location.y, group_start[i].Location.z);
         }
-        //printf("(%i, %i, %i)\n",
-        //    group_start[i].Location.x, group_start[i].Location.y, group_start[i].Location.z);
+        return -1;
     }
-    return -1;
+
 }
 
 void SmoothVoxelBuilder::Init(ChunkSettings* settings)
@@ -118,6 +125,13 @@ void SmoothVoxelBuilder::Init(ChunkSettings* settings)
     InitializeComputePrograms();
     CreateComputeBuffers();
     FinalizePrograms();
+
+    m_HeightmapGenerator = new HeightmapGenerator(
+        m_controller,
+        m_static_settings.ChunkSize.x, m_static_settings.ChunkSize.z,
+        m_in_static_settings_buffer,
+        MAX_COLUMNS, EXT, m_type
+    );
 }
 
 glm::vec4* verts_tmp;
@@ -320,9 +334,8 @@ void SmoothVoxelBuilder::CalculateVariables()
 
 void SmoothVoxelBuilder::InitializeComputePrograms()
 {
-    IComputeProgram::FileType type;
     if (m_voxel_runtime == VOXEL_RUNTIME_OPENCL) {
-        type = IComputeProgram::FileType::Text_Data;
+        m_type = IComputeProgram::FileType::Text_Data;
 
         m_device_cl = Utilities::Get_Recommended_Device();
         Logger::LogDebug(LOG_POS("InitializeComputePrograms"), "Using OpenCL Compute Device: %s", m_device_cl.name);
@@ -334,7 +347,7 @@ void SmoothVoxelBuilder::InitializeComputePrograms()
         m_controller = ComputeInterface::GetComputeController(ComputeInterface::OpenCL, m_controllerInfo);
     }
     else if (m_voxel_runtime == VOXEL_RUNTIME_VULKAN) {
-        type = IComputeProgram::FileType::Binary_Data;
+        m_type = IComputeProgram::FileType::Binary_Data;
 
         // TODO: Smarter logic for getting device.
         std::vector<Vulkan_Device_Info> devices = ComputeInterface::GetSupportedDevices_Vulkan();
@@ -359,20 +372,20 @@ void SmoothVoxelBuilder::InitializeComputePrograms()
     
     //m_program_compute = new VoxelComputeProgram(m_controller, PROGRAM);
 
-    m_program_heightmap = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_HEIGHTMAP + EXT, m_WorkGroups, type);
-    m_program_iso_field = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_ISO_FIELD + EXT, m_WorkGroups, type);
+    //m_program_heightmap = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_HEIGHTMAP + EXT, m_WorkGroups, type);
+    //m_program_iso_field = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_ISO_FIELD + EXT, m_WorkGroups, type);
     //m_program_material_field = new VoxelComputeProgram(m_controller, PROGRAM_MATERIAL_FIELD, m_WorkGroups);
-    m_program_unify_fields = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_UNIFY_FIELDS + EXT, m_WorkGroups, type);
+    //m_program_unify_fields = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_UNIFY_FIELDS + EXT, m_WorkGroups, type);
 
     //m_program_smoothrender_createvertlist = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_CREATE_VERTLIST, m_WorkGroups);
     //m_program_smoothrender_createmesh = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_CREATE_MESH, m_WorkGroups);
 
 
-    m_program_smoothrender_construct = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_CONSTRUCT + EXT, m_WorkGroups, type);
-    m_program_smoothrender_mark = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK + EXT, m_WorkGroups, type);
-    m_program_smoothrender_mark_offsets = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK_OFFSETS + EXT, m_WorkGroups, type);
+    m_program_smoothrender_construct = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_CONSTRUCT + EXT, m_WorkGroups, m_type);
+    m_program_smoothrender_mark = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK + EXT, m_WorkGroups, m_type);
+    m_program_smoothrender_mark_offsets = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK_OFFSETS + EXT, m_WorkGroups, m_type);
     //m_program_smoothrender_stitch = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_STITCH, 1);
-    m_program_smoothrender_stitch_async = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_STITCH_ASYNC + EXT, m_WorkGroups, type);
+    m_program_smoothrender_stitch_async = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_STITCH_ASYNC + EXT, m_WorkGroups, m_type);
 }
 
 void SmoothVoxelBuilder::CreateComputeBuffers()
@@ -398,10 +411,10 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     int expanded_chunk_size_1 = (m_static_settings.ChunkSize.x + 1) * (m_static_settings.ChunkSize.y + 1) * (m_static_settings.ChunkSize.z + 1);
     int expanded_chunk_size_2 = (m_static_settings.ChunkSize.x + 2) * (m_static_settings.ChunkSize.y + 2) * (m_static_settings.ChunkSize.z + 2);
     int expanded_heightmap_size = (m_static_settings.ChunkSize.x + 2) * (m_static_settings.ChunkSize.y + 2);
-    m_heightmap_data_buffer = m_controller->NewReadWriteBuffer(expanded_heightmap_size * m_numBatchesPerGroup, sizeof(float)); // 4356 bytes / chunk
-    m_iso_field_buffer = m_controller->NewReadWriteBuffer(expanded_chunk_size_2 * m_numBatchesPerGroup, sizeof(glm::fvec4)); // 574,992 bytes / chunk
-    m_material_buffer = m_controller->NewReadWriteBuffer(expanded_chunk_size_2 * m_numBatchesPerGroup, sizeof(glm::fvec4) * 2); // 1,048,576 bytes / chunk
-    m_iso_mat_buffer = m_controller->NewReadWriteBuffer(expanded_chunk_size_1 * m_numBatchesPerGroup, sizeof(ISO_Material)); // 1,572,864 bytes / chunk
+    m_heightmap_data_buffer = m_controller->NewReadWriteBuffer(/*expanded_heightmap_size * m_numBatchesPerGroup */ 1, sizeof(float)); // 4356 bytes / chunk
+    m_iso_field_buffer = m_controller->NewReadWriteBuffer(/*expanded_chunk_size_2 * m_numBatchesPerGroup */ 1, sizeof(glm::fvec4)); // 574,992 bytes / chunk
+    m_material_buffer = m_controller->NewReadWriteBuffer(/*expanded_chunk_size_2 * m_numBatchesPerGroup */ 1, sizeof(glm::fvec4) * 2); // 1,048,576 bytes / chunk
+    m_iso_mat_buffer = m_controller->NewReadWriteBuffer(/*expanded_chunk_size_1 * m_numBatchesPerGroup */ 1, sizeof(ISO_Material)); // 1,572,864 bytes / chunk
     // size of above: 3,200,788 bytes / chunk
 
 
@@ -483,7 +496,7 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     //m_program_compute.AddBuffer(1, m_out_Buffer);
 
 
-    m_program_heightmap->AddBuffer(0, m_in_static_settings_buffer);
+    /*m_program_heightmap->AddBuffer(0, m_in_static_settings_buffer);
     m_program_heightmap->AddBuffer(1, m_in_run_settings_buffer);
     m_program_heightmap->AddBuffer(2, m_heightmap_data_buffer);
     m_program_heightmap->AddBuffer(3, m_out_debug_buffer_Heightmap);
@@ -502,7 +515,7 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_unify_fields->AddBuffer(3, m_iso_field_buffer);
     m_program_unify_fields->AddBuffer(4, m_material_buffer);
     m_program_unify_fields->AddBuffer(5, m_iso_mat_buffer);
-    m_program_unify_fields->AddBuffer(6, m_out_debug_buffer_Unify_Fields);
+    m_program_unify_fields->AddBuffer(6, m_out_debug_buffer_Unify_Fields);*/
 
 
     // ##### OLD ####
@@ -596,10 +609,10 @@ void SmoothVoxelBuilder::FinalizePrograms()
 {
     //m_program_compute.Finalize();
     
-    m_program_heightmap->Finalize();
-    m_program_iso_field->Finalize();
+    //m_program_heightmap->Finalize();
+    //m_program_iso_field->Finalize();
     //m_program_material_field->Finalize();
-    m_program_unify_fields->Finalize();
+    //m_program_unify_fields->Finalize();
 
     //m_program_smoothrender_createvertlist->Finalize();
     //m_program_smoothrender_createmesh->Finalize();
