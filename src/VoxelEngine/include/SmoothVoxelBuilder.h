@@ -144,12 +144,14 @@ namespace VoxelEngine {
 		glm::ivec4 BuildMesh();
 
 
-		 void SetRunSettings(std::vector<glm::ivec3> locations);
+		void SetRunSettings(std::vector<glm::ivec3> locations);
 
-		
+		void Generate_Heightmaps(std::vector<glm::ivec3> chunk_locations);
 
 		std::string m_shaderDir;
 		int m_WorkGroups = 0;
+
+		int m_active_batches{ 0 };
 
 		const int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
 		const int m_voxel_runtime{ VOXEL_RUNTIME };

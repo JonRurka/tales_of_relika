@@ -10,6 +10,7 @@
 // https://stackoverflow.com/questions/7610631/glsl-mod-vs-hlsl-fmod
 #define FMOD(x, y) (x - y * floor(x/y))
 
+#define FRAC(x) (x - floor(x))
 
 #define SQR_MAG(val) dot(val, val)
 

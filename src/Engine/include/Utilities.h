@@ -70,7 +70,7 @@ public:
 	enum class Vertex_Limit_Mode : int 
 	{
 		Max = UINT16_MAX,
-		Chunk_Max = 30000
+		Chunk_Max = 40000
 	};
 
 private:

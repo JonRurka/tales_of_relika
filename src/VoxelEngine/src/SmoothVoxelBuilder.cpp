@@ -19,7 +19,7 @@ using namespace VoxelEngine;
 
 #define VECTOR4_SIZE (sizeof(float) * 4)
 
-#define MAX_COLUMNS 500
+#define MAX_COLUMNS 1500
 
 #define VK_EXT ".comp"
 #define CL_EXT ".cl"
@@ -125,13 +125,7 @@ void SmoothVoxelBuilder::Init(ChunkSettings* settings)
     InitializeComputePrograms();
     CreateComputeBuffers();
     FinalizePrograms();
-
-    m_HeightmapGenerator = new HeightmapGenerator(
-        m_controller,
-        m_static_settings.ChunkSize.x, m_static_settings.ChunkSize.z,
-        m_in_static_settings_buffer,
-        MAX_COLUMNS, EXT, m_type
-    );
+    
 }
 
 glm::vec4* verts_tmp;
@@ -139,11 +133,33 @@ glm::vec4* norm_tmp;
 int* tris_tmp;
 
 void SmoothVoxelBuilder::SetRunSettings(std::vector<glm::ivec3> locations) {
+    memset(m_run_settings, -1, m_totalBatches * sizeof(Run_Settings));
     m_run_settings[0].Location = glm::ivec4(0); // first element is metadata
-    int stop = std::min(m_totalBatches, (int)locations.size());
-    for (int i = 0; i < std::min(m_totalBatches, (int)locations.size()); i++) {
+    m_active_batches = std::min(m_totalBatches, (int)locations.size());
+    for (int i = 0; i < m_active_batches; i++) {
         m_run_settings[i + 1].Location = glm::ivec4(locations[i].x, locations[i].y, locations[i].z, i);
+        m_run_settings[i + 1].int_data_1.x = m_HeightmapGenerator->Get_Column_Data_Offset(glm::ivec2(locations[i].x, locations[i].z));
     }
+}
+
+void SmoothVoxelBuilder::Generate_Heightmaps(std::vector<glm::ivec3> chunk_locations)
+{
+    std::unordered_map<int, glm::ivec2> columns;
+    for (int i = 0; i < chunk_locations.size(); i++) {
+        int hash = Utilities::Hash_Chunk_Coord(glm::ivec3(chunk_locations[i].x, chunk_locations[i].z, 0));
+        if (!columns.contains(hash)) {
+            columns[hash] = glm::ivec2(chunk_locations[i].x, chunk_locations[i].z);
+        }
+    }
+
+    for (const auto& pair : columns) {
+        //Logger::LogDebug(LOG_POS("Generate_Heightmaps"), "(%i, %i)", pair.second.x, pair.second.y);
+        bool res = m_HeightmapGenerator->Spawn_Column(pair.second);
+        if (!res) {
+            Logger::LogError(LOG_POS("Generate_Heightmaps"), "Failed to generate heightmap for column (%i, %i)", pair.second.x, pair.second.y);
+        }
+    }
+
 }
 
 glm::dvec4 SmoothVoxelBuilder::Render(ChunkRenderOptions* options)
@@ -200,6 +216,8 @@ glm::dvec4 SmoothVoxelBuilder::Generate(ChunkGenerationOptions* options)
     }
     */
 
+    Generate_Heightmaps(options->locations);
+
     SetRunSettings(options->locations);
 
 
@@ -215,6 +233,7 @@ glm::dvec4 SmoothVoxelBuilder::Generate(ChunkGenerationOptions* options)
     buffer_writes_time += std::chrono::duration<double>(end_buffer_writes - start_buffer_writes).count();
 
 
+    
 
     for (int i = 0; i < m_numBatchGroups; i++) {
 
@@ -386,6 +405,13 @@ void SmoothVoxelBuilder::InitializeComputePrograms()
     m_program_smoothrender_mark_offsets = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK_OFFSETS + EXT, m_WorkGroups, m_type);
     //m_program_smoothrender_stitch = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_STITCH, 1);
     m_program_smoothrender_stitch_async = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_STITCH_ASYNC + EXT, m_WorkGroups, m_type);
+
+    m_HeightmapGenerator = new HeightmapGenerator(
+        m_controller,
+        m_static_settings.ChunkSize.x, m_static_settings.ChunkSize.z,
+        MAX_COLUMNS, EXT, m_type
+    );
+
 }
 
 void SmoothVoxelBuilder::CreateComputeBuffers()
@@ -540,13 +566,14 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_smoothrender_construct->AddBuffer(4, in_directionOffsets_buffer);
     m_program_smoothrender_construct->AddBuffer(5, in_edgeTable_Buffer);
     m_program_smoothrender_construct->AddBuffer(6, in_TriTable_Buffer);
-    m_program_smoothrender_construct->AddBuffer(7, m_iso_mat_buffer);
-    m_program_smoothrender_construct->AddBuffer(8, m_trans_vertex_buffer);
-    m_program_smoothrender_construct->AddBuffer(9, m_trans_normal_buffer);
-    m_program_smoothrender_construct->AddBuffer(10, m_trans_triangles_buffer);
-    m_program_smoothrender_construct->AddBuffer(11, m_trans_counts_buffer);
-    m_program_smoothrender_construct->AddBuffer(12, m_stitch_map_buffer);
-    m_program_smoothrender_construct->AddBuffer(13, m_out_debug_buffer_Construct);
+    m_program_smoothrender_construct->AddBuffer(7, m_HeightmapGenerator->Height_Data());
+    m_program_smoothrender_construct->AddBuffer(8, m_HeightmapGenerator->Height_Extended_Data());
+    m_program_smoothrender_construct->AddBuffer(9, m_trans_vertex_buffer);
+    m_program_smoothrender_construct->AddBuffer(10, m_trans_normal_buffer);
+    m_program_smoothrender_construct->AddBuffer(11, m_trans_triangles_buffer);
+    m_program_smoothrender_construct->AddBuffer(12, m_trans_counts_buffer);
+    m_program_smoothrender_construct->AddBuffer(13, m_stitch_map_buffer);
+    m_program_smoothrender_construct->AddBuffer(14, m_out_debug_buffer_Construct);
 
     // ##### OLD ####
     /*
@@ -622,6 +649,8 @@ void SmoothVoxelBuilder::FinalizePrograms()
     m_program_smoothrender_mark_offsets->Finalize();
     //m_program_smoothrender_stitch->Finalize();
     m_program_smoothrender_stitch_async->Finalize();
+
+    m_HeightmapGenerator->Finalize(m_in_static_settings_buffer);
 }
 
 

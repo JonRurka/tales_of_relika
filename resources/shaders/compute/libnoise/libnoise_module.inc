@@ -2,6 +2,7 @@
 #define _LIBNOISE_MODULE_
 
 #include "libnoise_core.inc"
+#include "lygia/pnoise.inc"
 
 ///
 /// Base modules
@@ -50,6 +51,36 @@ STRUCT Module Perlin_GetValue(STRUCT Module module)
    return module;
 }
 
+STRUCT Module Fast_Perlin_GetValue(STRUCT Module module)
+{
+	float x = module.m_X;
+	float y = module.m_Y;
+	float z = module.m_Z;
+	
+	float value = 0.0;
+	float signal = 0.0;
+    float curPersistence = 1.0;
+	int seed;
+	
+	x *= module.m_frequency;
+	y *= module.m_frequency;
+	z *= module.m_frequency;
+	
+	for (int curOctave = 0; curOctave < module.m_octaveCount && curOctave < MAX_OCTAVE; curOctave++) {
+		
+		seed = (module.m_seed + curOctave) & 0xffffffff;
+		signal = pnoise(FVEC3(x + seed, y + seed, z + seed), FVEC3(100, 100, 100));
+		value += signal * curPersistence;
+		
+		x *= module.m_lacunarity;
+		y *= module.m_lacunarity;
+		z *= module.m_lacunarity;
+		curPersistence *= module.m_persistence;
+	}
+	
+	module.Value = value;
+    return module;
+}
 
 STRUCT Module Billow_GetValue(STRUCT Module module)
 {
@@ -95,6 +126,43 @@ STRUCT Module Billow_GetValue(STRUCT Module module)
    return module;
 }
 
+STRUCT Module Fast_Billow_GetValue(STRUCT Module module)
+{
+   float x = module.m_X;
+   float y = module.m_Y;
+   float z = module.m_Z;
+
+   float value = 0.0;
+   float signal = 0.0;
+   float curPersistence = 1.0;
+   float nx, ny, nz;
+   int seed;
+
+   x *= module.m_frequency;
+   y *= module.m_frequency;
+   z *= module.m_frequency;
+
+   for (int curOctave = 0; curOctave < module.m_octaveCount && curOctave < MAX_OCTAVE; curOctave++) {
+	   
+      // Get the coherent-noise value from the input value and add it to the
+      // final result.
+      seed = (module.m_seed + curOctave) & 0xffffffff;
+	  signal = pnoise(FVEC3(x + seed, y + seed, z + seed), FVEC3(100, 100, 100));
+      signal = 2.0f * FABS(signal) - 1.0f;
+      value += signal * curPersistence;
+
+      // Prepare the next octave.
+      x *= module.m_lacunarity;
+      y *= module.m_lacunarity;
+      z *= module.m_lacunarity;
+      curPersistence *= module.m_persistence;
+   }
+   value += 0.5;
+
+   module.Value = value;
+   return module;
+}
+
 STRUCT Module RidgedMulti_GetValue(STRUCT Module module)
 {
    float x = module.m_X;
@@ -125,6 +193,67 @@ STRUCT Module RidgedMulti_GetValue(STRUCT Module module)
       // Get the coherent-noise value.
       int seed = (module.m_seed + curOctave) & 0x7fffffff;
       signal = GradientCoherentNoise3D(nx, ny, nz, seed, module.m_noiseQuality);
+
+      // Make the ridges.
+      signal = FABS(signal);
+      signal = module.m_ridged_offset - signal;
+
+      // Square the signal to increase the sharpness of the ridges.
+      signal *= signal;
+
+      // The weighting from the previous octave is applied to the signal.
+      // Larger values have higher weights, producing sharp points along the
+      // ridges.
+      signal *= weight;
+
+      // Weight successive contributions by the previous signal.
+      weight = signal * module.m_ridged_gain;
+      if (weight > 1.0) {
+         weight = 1.0;
+      }
+      if (weight < 0.0) {
+         weight = 0.0;
+      }
+
+      // Add the signal to the output value.
+      pSpectralWeight = pow(specFreq, -module.m_ridged_H);
+      specFreq *= module.m_lacunarity;
+
+      value += (signal * pSpectralWeight);
+
+      // Go to the next octave.
+      x *= module.m_lacunarity;
+      y *= module.m_lacunarity;
+      z *= module.m_lacunarity;
+   }
+
+   module.Value = (value * 1.25) - 1.0;
+   return module;
+}
+
+STRUCT Module Fast_RidgedMulti_GetValue(STRUCT Module module)
+{
+   float x = module.m_X;
+   float y = module.m_Y;
+   float z = module.m_Z;
+
+   x *= module.m_frequency;
+   y *= module.m_frequency;
+   z *= module.m_frequency;
+
+   float signal = 0.0;
+   float value = 0.0;
+   float weight = 1.0;
+
+
+   float specFreq = 1.0;
+   float pSpectralWeight = 0;
+
+   for (int curOctave = 0; curOctave < module.m_octaveCount && curOctave < MAX_OCTAVE; curOctave++) {
+
+      // Get the coherent-noise value.
+      int seed = (module.m_seed + curOctave) & 0x7fffffff;
+	  signal = pnoise(FVEC3(x + seed, y + seed, z + seed), FVEC3(100, 100, 100));
 
       // Make the ridges.
       signal = FABS(signal);

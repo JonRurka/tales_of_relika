@@ -173,9 +173,6 @@ bool WorldGenController::process_batch()
 		gen_options.locations.push_back(chunk_loc);
 		render_options.locations.push_back(chunk_loc);
 
-
-
-
 	}
 
 	if (num_additions <= 0) {
@@ -318,6 +315,7 @@ std::vector<glm::ivec3> WorldGenController::get_columns_in_radius(int center_x, 
 
 	for (int x = 0; x < (padded_rad * 2); ++x) {
 		for (int z = 0; z < (padded_rad * 2); ++z) {
+			//break; // TODO
 
 			int chunk_x = x_start + x;
 			int chunk_z = z_start + z;
@@ -331,6 +329,7 @@ std::vector<glm::ivec3> WorldGenController::get_columns_in_radius(int center_x, 
 			}
 		}
 	}
+	//col_list.push_back(glm::ivec3(0, 0, 0));
 
 	std::ranges::sort(col_list, std::ranges::less{}, &glm::ivec3::z);
 

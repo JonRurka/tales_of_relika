@@ -21,7 +21,7 @@ struct Settings{
 STRUCT Settings New_Settings(){
 	STRUCT Settings s;
 	
-	s.chunk_index = 0;
+	s.column_index = 0;
 	s.ChunkSizeX = 0;
 	s.ChunkSizeY = 0;
 	s.ChunkSizeZ = 0;

@@ -26,7 +26,8 @@ float CaveSample(STRUCT Settings s, float x, float y, float z, float scale, floa
 
 float GetHeight(STRUCT Settings s, float x, float y)
 {
-	//return 1.0f;
+	//return x / 5.0;
+	//return 1;
 	
 	x /= 100.0f;
 	y /= 100.0f;
@@ -49,7 +50,7 @@ float GetHeight(STRUCT Settings s, float x, float y)
 	perlin_planes.m_frequency = 0.1;
 	perlin_planes.m_noiseQuality = INT(s.quality);
 	perlin_planes = Perlin_GetValue(perlin_planes);
-	perlin_planes.Value = perlin_planes.Value * 20.0f;
+	perlin_planes.Value = perlin_planes.Value * 40.0f;
 
 
 
@@ -99,7 +100,7 @@ float Sample_2D(STRUCT Settings s, float x, float y)
 
 float Sample_3D(STRUCT Settings s, float x, float y, float z)
 {
-	return 0.0;// CaveSample(s, x, y, z, 14.0, 10, 1);
+	return CaveSample(s, x, y, z, 14.0f, 1.0f, 1) - 0.1f;
 }
 
 

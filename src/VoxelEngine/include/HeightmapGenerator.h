@@ -16,10 +16,11 @@ public:
 	HeightmapGenerator(
 		IComputeController* controller,
 		int size_x, int size_z,
-		IComputeBuffer* static_settings,
 		int max_columns, 
 		std::string extension, IComputeProgram::FileType type
 	);
+
+	void Finalize(IComputeBuffer* static_settings);
 
 	bool Spawn_Column(glm::ivec2 column_coord);
 
@@ -27,7 +28,10 @@ public:
 
 	bool Has_Column(glm::ivec2 column_coord);
 
+	int Get_Column_Data_Offset(glm::ivec2 column_coord);
+
 	IComputeBuffer* Height_Data() { return m_out_height_data; }
+	IComputeBuffer* Height_Extended_Data() { return m_out_height_neighboor_data; }
 	IComputeBuffer* Biome_Data() { return m_out_biome_data; }
 
 private:
@@ -44,10 +48,12 @@ private:
 
 	int m_current_index{ 0 };
 
+	int m_total_size{ 0 };
+
 	glm::ivec4* m_column_offsets{ nullptr };
 	std::unordered_map<int, int> m_column_map;
 
-	const std::string PROGRAM_GEN_HEIGHTMAP = "";
+	const std::string PROGRAM_GEN_HEIGHTMAP = "heightmap_gen";
 	VoxelComputeProgram* m_program_gen_heightmap{ nullptr };
 
 	IComputeBuffer* m_in_static_settings_buffer{ nullptr };
@@ -56,6 +62,7 @@ private:
 	IComputeBuffer* m_in_column_offsets{ nullptr };
 
 	IComputeBuffer* m_out_height_data{ nullptr };
+	IComputeBuffer* m_out_height_neighboor_data{ nullptr };
 	IComputeBuffer* m_out_biome_data{ nullptr };
 
 	IComputeController* m_controller{nullptr};

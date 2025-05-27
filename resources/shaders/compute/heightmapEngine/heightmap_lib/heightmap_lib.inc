@@ -22,12 +22,14 @@ struct Run_Settings{
 read_buffer_struct(Static_Settings, 0, in_static_settings)
 read_buffer_struct(Run_Settings, 1, in_run_settings)
 
-// x: start
-// y: size
-read_buffer(ivec4, 2, in_column_offsets)
-
-readwrite_buffer_float(3, out_height_data)
+readwrite_buffer_float(2, out_height_data)
+readwrite_buffer(fvec4, 3, out_height_neighboor_data)
 readwrite_buffer_int(4, out_biome_data)
+
+#define HEIGHTMAP_PADDING 4
+#define HEIGHTMAP_OFFSET 2
+
+#define EPSILON 0.003f
 
 #define GET_STATIC_SETTINGS() get_buffer_object(in_static_settings, 0)
 #define GET_RUN_SETTINGS() get_buffer_object(in_run_settings, (0))
@@ -53,8 +55,10 @@ float height_sample_2(fvec2 p, STRUCT Settings s){
 void heightmap_gen_main(uint index) 
 {
 	STRUCT Static_Settings static_settings = GET_STATIC_SETTINGS();
-	uint ChunkSizeX = static_settings.ChunkSize.x + 1;
-    uint ChunkSizeZ = static_settings.ChunkSize.z + 1;
+	uint ChunkSizeX = static_settings.ChunkSize.x + HEIGHTMAP_PADDING;
+    uint ChunkSizeZ = static_settings.ChunkSize.z + HEIGHTMAP_PADDING;
+	
+	//printf("ChunkSize: (%i, %i)\n", ChunkSizeX, ChunkSizeZ);
 	
 	STRUCT Run_Settings run_settings = GET_RUN_SETTINGS();
 	
@@ -69,12 +73,12 @@ void heightmap_gen_main(uint index)
 	int chunk_data_index = run_settings.Location.w;
 	
 	// Global coordinate of first voxel in chunk.
-    int xStart = cx * INT(ChunkSizeX);
-    int zStart = cz * INT(ChunkSizeZ);
+    int xStart = cx * INT(ChunkSizeX - HEIGHTMAP_PADDING);
+    int zStart = cz * INT(ChunkSizeZ - HEIGHTMAP_PADDING);
 	
 	// World position of voxel relative to chunk
-    float xLocalWorld = loc.x * xSideLength;
-    float zLocalWorld = loc.z * zSideLength;
+    float xLocalWorld = (loc.x - HEIGHTMAP_OFFSET) * xSideLength;
+    float zLocalWorld = (loc.y - HEIGHTMAP_OFFSET) * zSideLength;
     fvec2 pos_localWorld = FVEC2(xLocalWorld, zLocalWorld);
 	
 	// World position of voxel relative to world origin
@@ -83,16 +87,23 @@ void heightmap_gen_main(uint index)
     fvec2 pos_originWorld = FVEC2(xWorldOrigin, zWorldOrigin);
 	
 	STRUCT Settings s = New_Settings();
-    s.ChunkSizeX = ChunkSizeX + 1;
-    s.ChunkSizeZ = ChunkSizeZ + 1;
+	s.column_index = chunk_data_index;
+    s.ChunkSizeX = ChunkSizeX;
+    s.ChunkSizeZ = ChunkSizeZ;
     s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
 	
 	float height_sample_val = height_sample_3(pos_originWorld.x, pos_originWorld.y, s);
+	
+	float x_p = height_sample_3(pos_originWorld.x + EPSILON, pos_originWorld.y, s);
+	float x_n = height_sample_3(pos_originWorld.x - EPSILON, pos_originWorld.y, s);
+	float z_p = height_sample_3(pos_originWorld.x, pos_originWorld.y + EPSILON, s);
+	float z_n = height_sample_3(pos_originWorld.x, pos_originWorld.y - EPSILON, s);
 	
 	int start_offset = chunk_data_index * ChunkSizeX * ChunkSizeZ;
 	int out_index = start_offset + index;
 	
 	set_buffer_scalar(out_height_data, out_index, height_sample_val);
+	set_buffer_scalar(out_height_neighboor_data, out_index, FVEC4(x_n, x_p, z_n, z_p));
 	set_buffer_scalar(out_biome_data, out_index, 0);
 }
 

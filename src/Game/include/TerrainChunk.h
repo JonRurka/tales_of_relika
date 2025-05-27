@@ -27,6 +27,7 @@ protected:
 private:
 
 	glm::ivec3 m_chunk_coords;
+	glm::fvec3 m_chunk_world_pos;
 	glm::ivec4 m_counts;
 	WorldGenController* m_controller;
 	Stitch_VBO* m_vbo_stitch;
@@ -36,5 +37,7 @@ private:
 	Mesh* m_voxel_opaque_mesh{ nullptr };
 
 	void test_despawn();
+
+	void draw_debug_cube();
 
 };

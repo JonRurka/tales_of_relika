@@ -43,6 +43,16 @@ void VoxelWorld_Scene::setup_camera()
 	//camera->Clear_Color(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	//camera->FOV(90.0f);
 	camera->Set_Skybox(skybox_cubmap);
+
+	/*
+	Light* l_comp = Camera_obj->Add_Component<Light>();
+	l_comp->Type(Light::Light_Type::SPOT);
+	l_comp->Color(glm::vec4(1, 1, 1, 1));
+	l_comp->Strength(2.0f);
+	l_comp->Linear_Coefficient(0.027f);
+	l_comp->Quadratic_Coefficient(0.0028f);
+	l_comp->CutOff(glm::cos(glm::radians(12.5f)));
+	l_comp->OuterCutOff(glm::cos(glm::radians(15.5f)));*/
 }
 
 void VoxelWorld_Scene::setup_lights()

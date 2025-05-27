@@ -9,6 +9,7 @@
 
 #define VBO_ELEMENTS 2
 #define STRIDE (VBO_ELEMENTS * sizeof(float) * 4)
+#define DEBUG_DRAW_NORMALS false
 
 void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 {
@@ -73,7 +74,12 @@ void Stitch_VBO::Stitch(int elements)
 
 void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 {
-	
+	if (count.x > (int)Utilities::Vertex_Limit_Mode::Chunk_Max) {
+		Logger::LogError(LOG_POS("Process"), "Chunk size of %i is greate that chunk max of %i",
+			count.x, (int)Utilities::Vertex_Limit_Mode::Chunk_Max);
+		return;
+	}
+
 	if (gpu_copy) {
 
 		auto start = std::chrono::high_resolution_clock::now();
@@ -158,6 +164,13 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		std::vector<glm::vec4> verts(m_vertices, m_vertices + count.x);
 		std::vector<unsigned int> tris(m_triangles, m_triangles + count.x);
 		std::vector<glm::vec4> normals(m_normals, m_normals + count.x);
+
+		if (DEBUG_DRAW_NORMALS) {
+			for (int i = 0; i < count.x; i++) {
+				Graphics::DrawDebugRay(m_vertices[i], m_normals[i], glm::vec3(0, 0, 1), 10000);
+			}
+		}
+
 
 		//Logger::LogDebug(LOG_POS("Process"), "Applying %i verts out of max %i", count.x, (int)Utilities::Vertex_Limit_Mode::Chunk_Max);
 

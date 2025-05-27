@@ -4,9 +4,11 @@
 #include "WorldGenController.h"
 #include "Opaque_Chunk_Material.h"
 
+#define DRAW_DEBUG_BOX false
+
 void TerrainChunk::Init()
 {
-	//Instantiate("")
+	
 
 }
 
@@ -35,11 +37,13 @@ void TerrainChunk::Assign(glm::ivec3 chunk_coord)
 	Object()->Name("Voxel Chunk (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
 	m_opaque_chunk_obj->Name("Voxel Chunk - Opaque (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
 
-	glm::fvec3 chunk_world_pos = WorldGenController::ChunkCoordToWorldPos(chunk_coord);
+	m_chunk_world_pos = WorldGenController::ChunkCoordToWorldPos(chunk_coord);
 
-	Object()->Get_Transform()->Position(chunk_world_pos);
-	m_opaque_chunk_obj->Get_Transform()->Position(chunk_world_pos);
+	Object()->Get_Transform()->Position(m_chunk_world_pos);
+	m_opaque_chunk_obj->Get_Transform()->Position(m_chunk_world_pos);
 
+	if (DRAW_DEBUG_BOX)
+		draw_debug_cube();
 }
 
 void TerrainChunk::Unassign()
@@ -80,3 +84,44 @@ void TerrainChunk::test_despawn()
 		m_controller->Despawn_Chunk(m_chunk_coords);
 	}
 }
+
+void TerrainChunk::draw_debug_cube()
+{
+	glm::ivec4 directionOffsets[8] =
+	{
+		glm::ivec4(0, 0, 1, 0),
+		glm::ivec4(1, 0, 1, 0),
+		glm::ivec4(1, 0, 0, 0),
+		glm::ivec4(0, 0, 0, 0),
+		glm::ivec4(0, 1, 1, 0),
+		glm::ivec4(1, 1, 1, 0),
+		glm::ivec4(1, 1, 0, 0),
+		glm::ivec4(0, 1, 0, 0),
+	};
+
+	glm::vec3 edge[8];
+	
+	int size = 32;
+
+	//Graphics::DrawDebugLine()
+	for (int i = 0; i < 8; i++) {
+		edge[i] = m_chunk_world_pos + glm::fvec3(directionOffsets[i].x * size, directionOffsets[i].y * size, directionOffsets[i].z * size);
+	}
+	
+
+	Graphics::DrawDebugLine(edge[0], edge[1], glm::vec3(0, 1, 0), 100000);
+	Graphics::DrawDebugLine(edge[1], edge[2], glm::vec3(0, 1, 0), 100000);
+	Graphics::DrawDebugLine(edge[2], edge[3], glm::vec3(0, 1, 0), 100000);
+	Graphics::DrawDebugLine(edge[3], edge[0], glm::vec3(0, 1, 0), 100000);
+
+	Graphics::DrawDebugLine(edge[4], edge[5], glm::vec3(0, 1, 0), 100000);
+	Graphics::DrawDebugLine(edge[5], edge[6], glm::vec3(0, 1, 0), 100000);
+	Graphics::DrawDebugLine(edge[6], edge[7], glm::vec3(0, 1, 0), 100000);
+	Graphics::DrawDebugLine(edge[7], edge[4], glm::vec3(0, 1, 0), 100000);
+
+	Graphics::DrawDebugLine(edge[0], edge[4], glm::vec3(0, 1, 0), 100000);
+	Graphics::DrawDebugLine(edge[1], edge[5], glm::vec3(0, 1, 0), 100000);
+	Graphics::DrawDebugLine(edge[2], edge[6], glm::vec3(0, 1, 0), 100000);
+	Graphics::DrawDebugLine(edge[3], edge[7], glm::vec3(0, 1, 0), 100000);
+}
+
