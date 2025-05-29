@@ -3,6 +3,7 @@
 #include "Stitch_VBO.h"
 #include "Opaque_Chunk_Material.h"
 #include "TerrainChunk.h"
+#include "Game_Resources.h"
 
 #include <algorithm>
 
@@ -29,14 +30,22 @@ void WorldGenController::Init()
 
 	m_max_cached_chunks = m_max_cached_columns * m_chunks_depth;
 
+	m_diffuse_texture_array = Texture::Create_Texture2D_Array({
+		Game_Resources::Textures::Natural::DIRT_1_DIFFUSE,
+		Game_Resources::Textures::Natural::GRASS_1_DIFFUSE,
+		Game_Resources::Textures::Natural::STONE_1_DIFFUSE
+	});
+
+
 	m_chunk_opaque_mat = new Opaque_Chunk_Material();
-	m_chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
+	m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
+	m_chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
 	m_chunk_opaque_mat->setFloat("material.shininess", 32.0f);
 	m_chunk_opaque_mat->setFloat("material.specular_intensity", 1.0f);
 	m_chunk_opaque_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	m_chunk_opaque_mat->setFloat("globalAmbientIntensity", 0.1f);
+	m_chunk_opaque_mat->setFloat("globalAmbientIntensity", 0.01f);
 
 	//Logger::LogDebug(LOG_POS("Init"), "Max cached chunks: %i", m_max_cached_chunks);
 

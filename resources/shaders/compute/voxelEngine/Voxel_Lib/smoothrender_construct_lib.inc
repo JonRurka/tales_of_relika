@@ -173,24 +173,19 @@ float Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso
 	float result = 0;
 	
 	float raw_height_iso = height - world_pos.y;
-	float height_iso = clamp(raw_height_iso, -1.0f, 1.0f);
+	float height_iso = clamp(raw_height_iso, -2.0f, 2.0f);
 	//height_iso = iso_invert(height_iso);
 	
-	float raw_cave_iso = iso_3D;//sphere_sample_5(10, FVEC3(5, 17, 0), world_pos.x, world_pos.y, world_pos.z);
-	float cave_iso = raw_cave_iso;//Scale(raw_cave_iso, 0.0f, 10.0f, 0.0f, caveDensity);
+	float raw_cave_iso = iso_3D;//;sphere_sample_5(10, FVEC3(5, 17, 0), world_pos.x, world_pos.y, world_pos.z);
+	float cave_iso = clamp(raw_cave_iso, -5.0f, 5.0f);
 	//cave_iso = iso_invert(cave_iso);
 	
-	if (height_iso > 0.0f){
-		result = clamp(clamp(height_iso, 0.0f, 1.0f) - cave_iso, -1.0f, 1.0f);
+	if (raw_cave_iso > 0.0 && world_pos.y < (height - 0.0f)){
+		result = clamp(clamp(height_iso, -5.0f, 5.0f) - cave_iso, -5.0f, 5.0f);
 	}
 	else{
 		result = height_iso;
 	}
-	
-	
-	
-
-	
 	
 	return result;
 
@@ -331,7 +326,7 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 		
 		fvec3 dir = cross(pos2.xyz - pos1.xyz, pos3.xyz - pos1.xyz);
         fvec3 norm = -normalize(dir);
-		fvec4 norm4 = FVEC4(norm.x, norm.y, norm.z, 0.0f);
+		fvec4 norm_v4 = FVEC4(norm.x, norm.y, norm.z, 0.0f);
 		
 		fvec3 norm1 = GRID_VERTEX_NORMAL(gv_1, 0).xyz;// p1.normal.xyz;// normal_sample(s, index_pos, p1.globalPosition.xyz);
 		fvec3 norm2 = GRID_VERTEX_NORMAL(gv_2, 0).xyz;// p2.normal.xyz;// normal_sample(s, index_pos, p2.globalPosition.xyz);
@@ -354,7 +349,17 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 
         //fvec3 dir = cross(p2.localPosition.xyz - p1.localPosition.xyz, p3.localPosition.xyz - p1.localPosition.xyz);
         //fvec3 norm = -normalize(dir);
-		//fvec4 norm4 = FVEC4(norm.x, norm.y, norm.z, 0.0f);
+		//fvec4 norm_v4 = FVEC4(norm.x, norm.y, norm.z, 0.0f);
+		
+		if (vector_angle(norm, norm1) > 45.0f){
+			norm1 = norm;
+		}
+		if (vector_angle(norm, norm2) > 45.0f){
+			norm2 = norm;
+		}
+		if (vector_angle(norm, norm3) > 45.0f){
+			norm3 = norm;
+		}
 
         //vec4 n1 = vec4(norm.x, norm.y, norm.z, 0);
         int t1 = INT(curTris) + 2;

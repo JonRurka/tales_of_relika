@@ -108,6 +108,7 @@ private:
 
 	Opaque_Chunk_Material* m_chunk_opaque_mat{ nullptr };
 
+	Texture* m_diffuse_texture_array{nullptr};
 
 	ChunkRef get_chunk(glm::ivec3 coord);
 

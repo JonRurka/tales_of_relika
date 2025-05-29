@@ -57,14 +57,15 @@ void VoxelWorld_Scene::setup_camera()
 
 void VoxelWorld_Scene::setup_lights()
 {
-	// Create Directional light
+	Create_Ambient_Lights();
+	
+	// Create Sun Directional light
 	glm::vec4 light_color_dir = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	glm::vec3 light_pos_dir = glm::vec3(0.0f, 0.0f, 100.0f);
 	create_light_object(&light_obj_dir, &light_comp_dir, Light::Light_Type::DIRECTIONAL, light_pos_dir, 1, light_color_dir);
 	light_comp_dir->Enabled(true);
 	light_obj_dir->Get_Transform()->LookAt(glm::vec3(10.0f, -50.0f, -20.0f));
-
-	light_comp_dir->Strength(1.0f);
+	light_comp_dir->Strength(0.9f);
 }
 
 void VoxelWorld_Scene::setup_chunk_gen()

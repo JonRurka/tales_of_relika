@@ -53,6 +53,18 @@ public:
 		inline static const std::string SKYBOX_LEFT = "skybox::left.jpg";
 		inline static const std::string SKYBOX_RIGHT = "skybox::right.jpg";
 		inline static const std::string SKYBOX_TOP = "skybox::top.jpg";
+
+		class Natural {
+		public:
+			inline static const std::string DIRT_1_DIFFUSE = "Natural::dirt::dirt_1::dirt_1_diffuse.jpg";
+			inline static const std::string DIRT_1_NORMAL = "Natural::dirt::dirt_1::dirt_1_normals.bmp";
+
+			inline static const std::string GRASS_1_DIFFUSE = "Natural::grass::grass_1::grass_1_diffuse.jpg";
+			inline static const std::string GRASS_1_NORMAL = "Natural::grass::grass_1::grass_1_normals.bmp";
+
+			inline static const std::string STONE_1_DIFFUSE = "Natural::stone::stone_1::stone_1_diffuse.jpg";
+			inline static const std::string STONE_1_NORMAL = "Natural::stone::stone_1::stone_1_normals.bmp";
+		};
 	};
 
 private:

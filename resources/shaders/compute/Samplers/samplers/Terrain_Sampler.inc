@@ -1,5 +1,14 @@
 
 
+float cubic_exp(float val){
+	float a = -2.71828f;
+	float b = 2.52009f;
+	float c = 0;
+	float d = 3.15069;
+	float e = 2.71828182846f;
+	return (a * pow(e, val)) + (b * (val * val * val)) + (d * val) + e;
+}
+
 float CaveSample(STRUCT Settings s, float x, float y, float z, float scale, float height, float power){
     STRUCT Module cave_module = GetModule_3(x / scale, y / scale, z / scale);
     cave_module.m_seed = s.seed;
@@ -12,7 +21,7 @@ float CaveSample(STRUCT Settings s, float x, float y, float z, float scale, floa
     cave_module = RidgedMulti_GetValue(cave_module);
     //cave_module = Perlin_GetValue(cave_module);
 
-    rValue = cave_module.Value;
+    rValue = cubic_exp(cave_module.Value);
     rValue *= height;
 
     if (power != 0){
@@ -21,8 +30,6 @@ float CaveSample(STRUCT Settings s, float x, float y, float z, float scale, floa
 
     return rValue;
 }
-
-
 
 float GetHeight(STRUCT Settings s, float x, float y)
 {
@@ -100,7 +107,7 @@ float Sample_2D(STRUCT Settings s, float x, float y)
 
 float Sample_3D(STRUCT Settings s, float x, float y, float z)
 {
-	return CaveSample(s, x, y, z, 14.0f, 1.0f, 1) - 0.1f;
+	return CaveSample(s, x, y, z, 14.0f, 5.0f, 1.0f);
 }
 
 

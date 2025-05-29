@@ -15,6 +15,12 @@ class Texture
 	friend class Framebuffer;
 public:
 
+	enum class Dimensions {
+		TEXTURE_2D,
+		RENDER_TEXTURE_2D,
+		TEXTURE_2D_ARRAY,
+	};
+
 	enum class Type {
 		DIFFUSE,
 		SPECULAR,
@@ -31,14 +37,21 @@ public:
 
 	Texture(const std::string resource_name, const std::vector<char> data, bool flip = true);
 
+	Texture(const std::vector<Texture*> textures);
+
 	Texture(const int width, const int height);
 
 	GLuint Tex() { return m_texture; }
 
 	unsigned char* Data() { return m_raw_data; }
+	size_t Data_Size() { return m_data_size; }
 
 	void type(Type value) { m_type = value; }
 	Type type() { return m_type; }
+
+	GLenum Target_Type();
+
+	GLenum Format() { return m_format; }
 
 	std::string Name() { return m_name; }
 
@@ -57,11 +70,13 @@ public:
 
 	void Wrap(Wrap_Mode value);
 
-
+	static Texture* Create_Texture2D_Array(std::vector<std::string> resource_names, bool flip = true);
 
 private:
 	GLuint m_texture{ 0 };
 	Type m_type{ Type::DIFFUSE };
+	Dimensions m_dim{ Dimensions::TEXTURE_2D };
+	GLenum m_format{ 0 };
 	std::string m_name;
 	std::string m_path;
 	int m_width{ 0 };
@@ -73,6 +88,6 @@ private:
 
 	std::vector<Framebuffer*> m_linked_framebuffers;
 
-	const std::string LOG_LOC{ "TEXTURE" };
+	inline static const std::string LOG_LOC{ "TEXTURE" };
 };
 
