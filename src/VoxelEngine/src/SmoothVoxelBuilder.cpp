@@ -460,6 +460,7 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     //const int max_size = UINT16_MAX * sizeof(glm::vec4);
     m_out_vertex_buffer = m_controller->NewReadWriteBuffer(Max_Verts * m_totalBatches, VECTOR4_SIZE);
     m_out_normal_buffer = m_controller->NewReadWriteBuffer(Max_Verts * m_totalBatches, VECTOR4_SIZE);
+    m_out_mat_buffer = m_controller->NewReadWriteBuffer(Max_Verts * m_totalBatches, VECTOR4_SIZE);
     m_out_triangles_buffer = m_controller->NewReadWriteBuffer(Max_Verts * m_totalBatches, sizeof(int));
     m_out_counts_buffer = m_controller->NewReadWriteBuffer(m_totalBatches, VECTOR4_SIZE);
 
@@ -624,9 +625,10 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_smoothrender_stitch_async->AddBuffer(7,  m_stitch_map_offset_buffer);
     m_program_smoothrender_stitch_async->AddBuffer(8,  m_out_vertex_buffer);
     m_program_smoothrender_stitch_async->AddBuffer(9,  m_out_normal_buffer);
-    m_program_smoothrender_stitch_async->AddBuffer(10, m_out_triangles_buffer);
-    m_program_smoothrender_stitch_async->AddBuffer(11, m_out_counts_buffer);
-    m_program_smoothrender_stitch_async->AddBuffer(12, m_out_debug_buffer_Stitch_async);
+    m_program_smoothrender_stitch_async->AddBuffer(10, m_out_mat_buffer);
+    m_program_smoothrender_stitch_async->AddBuffer(11, m_out_triangles_buffer);
+    m_program_smoothrender_stitch_async->AddBuffer(12, m_out_counts_buffer);
+    m_program_smoothrender_stitch_async->AddBuffer(13, m_out_debug_buffer_Stitch_async);
     
     
 
@@ -1183,7 +1185,7 @@ glm::ivec4 SmoothVoxelBuilder::BuildMesh()
     return counts;
 }
 
-void SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, unsigned int* out_trianges, glm::ivec4 counts)
+void SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, glm::vec4* out_mat, unsigned int* out_trianges, glm::ivec4 counts)
 {
 
     if (counts.x > 0) {
@@ -1194,6 +1196,7 @@ void SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, u
             //printf("Extract: %i, %i, %i, %i\n", counts.x, counts.z, counts.y, counts.w);
             m_out_vertex_buffer->GetData(out_vertex, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
             m_out_normal_buffer->GetData(out_normal, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
+            m_out_mat_buffer->GetData(out_mat, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
 
             //m_out_triangles_buffer->GetData(out_trianges, counts.z * counts.x * sizeof(int), counts.x * sizeof(int));
             //All_Zero(out_vertex, counts.x, "Extract");
@@ -1328,7 +1331,7 @@ void SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, u
 
 }
 
-void SmoothVoxelBuilder::Extract(IComputeBuffer* out_vertex, IComputeBuffer* out_normal, IComputeBuffer* out_trianges, glm::ivec4 counts)
+void SmoothVoxelBuilder::Extract(IComputeBuffer* out_vertex, IComputeBuffer* out_normal, IComputeBuffer* out_mat, IComputeBuffer* out_trianges, glm::ivec4 counts)
 {
     if (counts.x <= 0) {
         return;
@@ -1346,6 +1349,9 @@ void SmoothVoxelBuilder::Extract(IComputeBuffer* out_vertex, IComputeBuffer* out
 
     if (m_out_normal_buffer != nullptr)
         m_out_normal_buffer->CopyTo(out_normal, counts.y * VECTOR4_SIZE, 0, counts.x * VECTOR4_SIZE);
+
+    if (m_out_mat_buffer != nullptr)
+        m_out_mat_buffer->CopyTo(out_mat, counts.y * VECTOR4_SIZE, 0, counts.x * VECTOR4_SIZE);
 
     if (out_trianges != nullptr)
         m_out_triangles_buffer->CopyTo(out_trianges, counts.z * counts.x * sizeof(int), 0, counts.x * sizeof(int));

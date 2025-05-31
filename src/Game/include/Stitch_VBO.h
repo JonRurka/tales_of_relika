@@ -28,6 +28,7 @@ public:
 
 	IComputeBuffer* Input_Vertex_Buffer() { return vertex_buffer; }
 	IComputeBuffer* Input_Normal_Buffer() { return normal_buffer; }
+	IComputeBuffer* Input_Mat_Buffer() { return mat_buffer; }
 	IComputeBuffer* Output_VBO_Buffer() { return vbo_buffer; }
 
 	static int Stride();
@@ -43,12 +44,17 @@ private:
 
 	const int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
 
+	Mesh::VertexAttributeList m_attribute_list;
+
 	glm::vec4* m_vertices{nullptr};
 	glm::vec4* m_normals{ nullptr };
+	glm::vec4* m_mats{ nullptr };
 	unsigned int* m_triangles{ nullptr };
+	float* m_raw_vert_data{nullptr};
 
 	IComputeBuffer* vertex_buffer{ nullptr };
 	IComputeBuffer* normal_buffer{ nullptr };
+	IComputeBuffer* mat_buffer{ nullptr };
 	IComputeBuffer* vbo_buffer{ nullptr };
 
 	OpenCL_Device_Info m_device_cl;

@@ -196,6 +196,12 @@ void Voxel_Test_Scene::Init()
 	//camera->FOV(90.0f);
 	camera->Set_Skybox(skybox_cubmap);
 
+	Texture* m_diffuse_texture_array = Texture::Create_Texture2D_Array({
+		Game_Resources::Textures::Natural::DIRT_1_DIFFUSE,
+		Game_Resources::Textures::Natural::GRASS_1_DIFFUSE,
+		Game_Resources::Textures::Natural::STONE_1_DIFFUSE
+	});
+
 	standard_mat = new Standard_Material();
 	standard_mat->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	standard_mat->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -208,6 +214,7 @@ void Voxel_Test_Scene::Init()
 	standard_mat->setTexture("material_specular", Game_Resources::Textures::CONTAINER_SPECULAR);
 
 	chunk_opaque_mat = new Opaque_Chunk_Material();
+	chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
 	chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	chunk_opaque_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
@@ -266,7 +273,7 @@ void Voxel_Test_Scene::Init()
 	settings.GetSettings()->setInt("chunkMeterSizeY", 32);
 	settings.GetSettings()->setInt("chunkMeterSizeZ", 32);
 	settings.GetSettings()->setInt("TotalBatchGroups", 1);
-	settings.GetSettings()->setInt("BatchesPerGroup", 4);
+	settings.GetSettings()->setInt("BatchesPerGroup", 1);
 	settings.GetSettings()->setInt("InvertTrianges", false);
 
 	m_builder = new SmoothVoxelBuilder();
@@ -278,7 +285,7 @@ void Voxel_Test_Scene::Init()
 	Stitch_VBO* vbo_stitch = new Stitch_VBO();
 	vbo_stitch->Init(m_builder, max_vert);
 
-	int num_chunks = 4;
+	int num_chunks = 1;
 
 	std::vector<Mesh*> chunk_meshes;
 	for (int i = 0; i < num_chunks; i++) {
@@ -293,8 +300,11 @@ void Voxel_Test_Scene::Init()
 	//double start = Utilities::Get_Time();
 	auto start = std::chrono::high_resolution_clock::now();
 
+	Logger::LogDebug(LOG_POS("Init"), "Do Generate...");
 	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
+	Logger::LogDebug(LOG_POS("Init"), "Do Render...");
 	glm::dvec4 render_times = m_builder->Render(&render_options);
+	Logger::LogDebug(LOG_POS("Init"), "Render Finished");
 
 	//double stop = Utilities::Get_Time();
 
@@ -318,7 +328,8 @@ void Voxel_Test_Scene::Init()
 
 	auto vbo_process_start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < num_chunks; i++) {
-		vbo_stitch->Process(chunk_meshes[i], counts[i], true);
+		Logger::LogDebug(LOG_POS("Init"), "Do VBO Process...");
+		vbo_stitch->Process(chunk_meshes[i], counts[i], false);
 	}
 	auto vbo_process_end = std::chrono::high_resolution_clock::now();
 	double vbo_process_duration = std::chrono::duration<double>(vbo_process_end - vbo_process_start).count();

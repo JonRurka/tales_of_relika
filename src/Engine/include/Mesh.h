@@ -25,10 +25,12 @@ public:
 	public:
 
 		VertexAttributeList() : m_stride{ 11 }
-		{}
+		{
+		}
 
-		VertexAttributeList(int stride) : m_stride{stride}
-		{}
+		VertexAttributeList(int stride) : m_stride{ stride }
+		{
+		}
 
 		void add_attribute(int size, int offset) {
 			m_attributes.push_back(glm::ivec4(size, offset, 0, 0));
@@ -43,9 +45,11 @@ public:
 			return res;
 		}
 
+		int Stride() { return m_stride; }
+
 	private:
 		std::vector<glm::ivec4> m_attributes;
-		int m_stride{0};
+		int m_stride{ 0 };
 
 		void process();
 	};
@@ -53,15 +57,19 @@ public:
 	Mesh();
 	Mesh(size_t size);
 
-	void Set_Vertex_Attributes(VertexAttributeList list) { m_attrib_list = list; }
+	void Set_Vertex_Attributes(VertexAttributeList list)
+	{
+		m_attrib_list = list;
+		stride = m_attrib_list.m_stride;
+	}
 
 	void Name(std::string value) { m_name = value; }
 	std::string Name() { return m_name; }
 
 	void Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size = -1);
 
-	void Vertices(std::vector<glm::vec4> value) 
-	{ 
+	void Vertices(std::vector<glm::vec4> value)
+	{
 		m_vertices = value;
 		if (m_active)
 			sync_vertices(Vert_Update_Mode::VERTICES);
@@ -79,8 +87,8 @@ public:
 	std::vector<glm::vec4>& Normals() { return m_normals; }
 
 
-	void Colors(std::vector<glm::vec4> value) 
-	{ 
+	void Colors(std::vector<glm::vec4> value)
+	{
 		m_colors = value;
 		if (m_active)
 			sync_vertices(Vert_Update_Mode::COLORS);
@@ -89,18 +97,18 @@ public:
 	std::vector<glm::vec4>& Colors() { return m_colors; }
 
 
-	void TexCoords(std::vector<glm::vec2> val) 
-	{ 
-		m_texcoords = val; 
+	void TexCoords(std::vector<glm::vec2> val)
+	{
+		m_texcoords = val;
 		sync_vertices(Vert_Update_Mode::TEXCORDS);
 	}
 
 	std::vector<glm::vec2>& TexCoords() { return m_texcoords; }
 
 
-	void Indices(std::vector<unsigned int> val) 
-	{ 
-		m_indices = val; 
+	void Indices(std::vector<unsigned int> val)
+	{
+		m_indices = val;
 		sync_indices();
 	}
 
@@ -127,13 +135,13 @@ public:
 	}
 
 	void Generate_Normals();
-		
+
 	void Draw(GLenum mode = GL_TRIANGLES);
 
 	void Dispose();
 
 private:
-	
+
 	std::string m_name;
 
 	VertexAttributeList m_attrib_list;
@@ -149,7 +157,7 @@ private:
 	glm::vec3 m_min;
 	glm::vec3 m_max;
 
-	const size_t stride = 11;
+	size_t stride {11};
 
 	enum class Vert_Update_Mode {
 		VERTICES,

@@ -14,7 +14,7 @@ float sphere_sample_5(float radius, fvec3 center, float x, float y, float z){
 
 float Sample_2D(STRUCT Settings s, float x, float y)
 {
-    return 0;
+    return 5;
 }
 
 float Sample_3D(STRUCT Settings s, float x, float y, float z)

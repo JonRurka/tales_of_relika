@@ -79,11 +79,13 @@ Resources::Resources()
         load_shaders_fs();
         load_textures_fs();
         load_models_fs();
+        load_data_fs();
         break;
     case LoadMode::Binary:
         load_shaders_binary();
         load_textures_binary();
         load_models_binary();
+        load_data_binary();
         break;
     }
 
@@ -167,7 +169,7 @@ void Resources::load_texture(std::vector<std::string> names, bool flip)
 void Resources::load_model(std::string name)
 {
     if (!Has_Model(name)) {
-        Logger::LogError(LOG_POS("Load_Model"), "Model not found: %s \n", name.c_str());
+        Logger::LogError(LOG_POS("load_model"), "Model not found: %s \n", name.c_str());
         return;
     }
 
@@ -184,7 +186,7 @@ void Resources::load_model(std::string name)
             asset->loaded = true;
         }
         else {
-            Logger::LogError(LOG_POS("Load_Model"), "Failed to load Model: %s \n", name.c_str());
+            Logger::LogError(LOG_POS("load_model"), "Failed to load Model: %s \n", name.c_str());
         }
     }
     else if (LOAD_MODE == LOAD_MODE_BIN)
@@ -211,6 +213,37 @@ void Resources::load_model(std::vector<std::string> names)
     }
 }
 
+void Resources::load_data_file(std::string name)
+{
+    if (!Has_Data_File(name)) {
+        Logger::LogError(LOG_POS("load_data_file"), "Data File not found: %s \n", name.c_str());
+        return;
+    }
+
+    Asset* asset = &m_data_assets[name];
+    if (asset->loaded) {
+        return;
+    }
+
+    if (LOAD_MODE == LOAD_MODE_FS) 
+    {
+        // ...
+    }
+    else {
+        load_pack_data(asset, PackType::Data_File_Type);
+        //char* data_ptr = (char*)asset->data;
+        //size_t data_size = asset->data_size;
+    }
+}
+
+void Resources::load_data_file(std::vector<std::string> names)
+{
+    for (const auto& elem : names)
+    {
+        load_data_file(elem);
+    }
+}
+
 void Resources::load_pack_data(Asset* asset, Resources::PackType type)
 {
     std::string prefix = "";
@@ -224,7 +257,7 @@ void Resources::load_pack_data(Asset* asset, Resources::PackType type)
     case PackType::Shader_Type:
         prefix = "s";
         break;
-    case PackType::Data_Type:
+    case PackType::Data_File_Type:
         prefix = "d";
         break;
     }
@@ -249,7 +282,7 @@ void Resources::load_pack_data(Asset* asset, Resources::PackType type)
 Texture* Resources::get_texture(std::string name)
 {
     if (!Has_Texture(name)) {
-        Logger::LogError(LOG_POS("Get_Texture"), "Texture not found: %s \n", name.c_str());
+        Logger::LogError(LOG_POS("get_texture"), "Texture not found: %s \n", name.c_str());
         return nullptr;
     }
 
@@ -261,7 +294,7 @@ Texture* Resources::get_texture(std::string name)
 std::string Resources::get_shader_file(std::string name)
 {
     if (!Has_Shader(name)) {
-        Logger::LogError(LOG_POS("Get_Shader_File"), "Shader File not found: %s \n", name.c_str());
+        Logger::LogError(LOG_POS("get_shader_file"), "Shader File not found: %s \n", name.c_str());
         return std::string();
     }
 
@@ -273,7 +306,7 @@ std::string Resources::get_shader_file(std::string name)
 std::vector<char> Resources::get_shader_bin(std::string name)
 {
     if (!Has_Shader(name)) {
-        Logger::LogError(LOG_POS("Get_Shader_File"), "Shader File not found: %s \n", name.c_str());
+        Logger::LogError(LOG_POS("get_shader_bin"), "Shader File not found: %s \n", name.c_str());
         return std::vector<char>();
     }
 
@@ -288,13 +321,41 @@ std::vector<char> Resources::get_shader_bin(std::string name)
 Model* Resources::get_model(std::string name)
 {
     if (!Has_Model(name)) {
-        Logger::LogError(LOG_POS("Get_Model"), "Model not found: %s \n", name.c_str());
+        Logger::LogError(LOG_POS("get_model"), "Model not found: %s \n", name.c_str());
         return nullptr;
     }
 
     Load_Model(name);
 
     return static_cast<Model*>(m_models_assets[name].handle);
+}
+
+std::string Resources::get_data_file_string(std::string name)
+{
+    if (!Has_Data_File(name)) {
+        Logger::LogError(LOG_POS("get_data_file_string"), "Data File not found: %s \n", name.c_str());
+        return "";
+    }
+
+    Load_Data_File(name);
+
+    std::string res;
+    res.assign((char*)m_data_assets[name].data, m_data_assets[name].data_size);
+    return res;
+}
+
+std::vector<char> Resources::get_data_file_bin(std::string name)
+{
+    if (!Has_Model(name)) {
+        Logger::LogError(LOG_POS("get_data_file_string"), "Data File not found: %s \n", name.c_str());
+        return std::vector<char>();
+    }
+
+    Load_Data_File(name);
+
+    char* dta_ptr = (char*)m_data_assets[name].data;
+    size_t dta_size = m_data_assets[name].data_size;
+    return std::vector<char>(dta_ptr, dta_ptr + dta_size);
 }
 
 std::string Resources::Get_Resources_Director()
@@ -585,6 +646,24 @@ void Resources::load_models_binary()
         m_models_assets[a.name] = a;
         Logger::LogDebug(LOG_POS("load_models_binary"), "\t - %s", a.name.c_str());
     }
+}
+
+void Resources::load_data_binary()
+{
+    std::string data_dir = Get_Data_Director();
+    std::string data_data_file = data_dir + "d000.dat";
+
+    std::vector<Asset> assets;
+
+    get_binary_assets(data_data_file, assets);
+
+    Logger::LogDebug(LOG_POS("load_data_binary"), "Loaded Data Files:");
+    for (auto& a : assets)
+    {
+        m_data_assets[a.name] = a;
+        Logger::LogDebug(LOG_POS("load_data_binary"), "\t - %s", a.name.c_str());
+    }
+
 }
 
 

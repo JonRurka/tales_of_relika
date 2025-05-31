@@ -38,9 +38,9 @@ namespace VoxelEngine {
 
 		std::vector<glm::ivec4> GetSize();
 
-		void Extract(glm::vec4* out_vertex, glm::vec4* out_normal, unsigned int* out_trianges, glm::ivec4 counts);
+		void Extract(glm::vec4* out_vertex, glm::vec4* out_normal, glm::vec4* out_mat, unsigned int* out_trianges, glm::ivec4 counts) override;
 
-		void Extract(IComputeBuffer* out_vertex, IComputeBuffer* out_normal, IComputeBuffer* out_trianges, glm::ivec4 counts);
+		void Extract(IComputeBuffer* out_vertex, IComputeBuffer* out_normal, IComputeBuffer* out_mat, IComputeBuffer* out_trianges, glm::ivec4 counts) override;
 
 		void ReleaseHeightmap(int x, int z);
 
@@ -168,110 +168,111 @@ namespace VoxelEngine {
 		// Programs
 
 		const std::string PROGRAM = "compute";
-		VoxelComputeProgram* m_program_compute;
+		VoxelComputeProgram* m_program_compute{ nullptr };
 
 		const std::string PROGRAM_HEIGHTMAP = "1-heightmap_field_gen";
-		VoxelComputeProgram* m_program_heightmap;
+		VoxelComputeProgram* m_program_heightmap{ nullptr };
 
 		const std::string PROGRAM_ISO_FIELD = "2-iso_field_gen";
-		VoxelComputeProgram* m_program_iso_field;
+		VoxelComputeProgram* m_program_iso_field{ nullptr };
 
 		const std::string PROGRAM_MATERIAL_FIELD = "material_field"; // DEPRICATED
-		VoxelComputeProgram* m_program_material_field;
+		VoxelComputeProgram* m_program_material_field{ nullptr };
 
 		const std::string PROGRAM_UNIFY_FIELDS = "3-unify_fields";
-		VoxelComputeProgram* m_program_unify_fields;
+		VoxelComputeProgram* m_program_unify_fields{ nullptr };
 
 		const std::string PROGRAM_SMOOTH_RENDER_CREATE_VERTLIST = "smoothrender_createvertlist"; // DEPRICATED
-		VoxelComputeProgram* m_program_smoothrender_createvertlist;
+		VoxelComputeProgram* m_program_smoothrender_createvertlist{ nullptr };
 
 		const std::string PROGRAM_SMOOTH_RENDER_CREATE_MESH = "smoothrender_createmesh"; // DEPRICATED
-		VoxelComputeProgram* m_program_smoothrender_createmesh;
+		VoxelComputeProgram* m_program_smoothrender_createmesh{ nullptr };
 
 		const std::string PROGRAM_SMOOTH_RENDER_CONSTRUCT = "4-smoothrender_construct";
-		VoxelComputeProgram* m_program_smoothrender_construct;
+		VoxelComputeProgram* m_program_smoothrender_construct{ nullptr };
 
 		const std::string PROGRAM_SMOOTH_RENDER_MARK = "5-smoothrender_mark";
-		VoxelComputeProgram* m_program_smoothrender_mark;
+		VoxelComputeProgram* m_program_smoothrender_mark{ nullptr };
 
 		const std::string PROGRAM_SMOOTH_RENDER_MARK_OFFSETS = "6-smoothrender_mark_offsets";
-		VoxelComputeProgram* m_program_smoothrender_mark_offsets;
+		VoxelComputeProgram* m_program_smoothrender_mark_offsets{ nullptr };
 
 		const std::string PROGRAM_SMOOTH_RENDER_STITCH = "smoothrender_stitch"; // DEPRICATED
-		VoxelComputeProgram* m_program_smoothrender_stitch;
+		VoxelComputeProgram* m_program_smoothrender_stitch{ nullptr };
 
 		const std::string PROGRAM_SMOOTH_RENDER_STITCH_ASYNC = "7-smoothrender_async_stitch";
-		VoxelComputeProgram* m_program_smoothrender_stitch_async;
+		VoxelComputeProgram* m_program_smoothrender_stitch_async{ nullptr };
 
 
 		// Buffers
 
-		IComputeBuffer* m_in_static_settings_buffer;
-		IComputeBuffer* m_in_run_settings_buffer;
+		IComputeBuffer* m_in_static_settings_buffer{ nullptr };
+		IComputeBuffer* m_in_run_settings_buffer{ nullptr };
 
-		IComputeBuffer* in_locOffset_buffer;
-		IComputeBuffer* in_globalOffsets_buffer;
+		IComputeBuffer* in_locOffset_buffer{ nullptr };
+		IComputeBuffer* in_globalOffsets_buffer{ nullptr };
 
-		IComputeBuffer* in_directionOffsets_buffer;
+		IComputeBuffer* in_directionOffsets_buffer{ nullptr };
 
-		IComputeBuffer* in_edgeTable_Buffer;
-		IComputeBuffer* in_TriTable_Buffer;
+		IComputeBuffer* in_edgeTable_Buffer{ nullptr };
+		IComputeBuffer* in_TriTable_Buffer{ nullptr };
 
-		IComputeBuffer* m_in_Buffer;
-		IComputeBuffer* m_out_Buffer;
+		IComputeBuffer* m_in_Buffer{ nullptr };
+		IComputeBuffer* m_out_Buffer{ nullptr };
 
-		IComputeBuffer* m_out_debug_buffer_Heightmap;
-		IComputeBuffer* m_out_debug_buffer_ISO_Field;
-		IComputeBuffer* m_out_debug_buffer_Unify_Fields;
-		IComputeBuffer* m_out_debug_buffer_Construct;
-		IComputeBuffer* m_out_debug_buffer_Mark;
-		IComputeBuffer* m_out_debug_buffer_Stitch_async;
+		IComputeBuffer* m_out_debug_buffer_Heightmap{ nullptr };
+		IComputeBuffer* m_out_debug_buffer_ISO_Field{ nullptr };
+		IComputeBuffer* m_out_debug_buffer_Unify_Fields{ nullptr };
+		IComputeBuffer* m_out_debug_buffer_Construct{ nullptr };
+		IComputeBuffer* m_out_debug_buffer_Mark{ nullptr };
+		IComputeBuffer* m_out_debug_buffer_Stitch_async{ nullptr };
 
-		IComputeBuffer* m_heightmap_run_settings_buffer;
-		IComputeBuffer* m_heightmap_data_buffer;
-		IComputeBuffer* m_iso_field_buffer;
-		IComputeBuffer* m_material_buffer;
-		IComputeBuffer* m_iso_mat_buffer;
+		IComputeBuffer* m_heightmap_run_settings_buffer{ nullptr };
+		IComputeBuffer* m_heightmap_data_buffer{ nullptr };
+		IComputeBuffer* m_iso_field_buffer{ nullptr };
+		IComputeBuffer* m_material_buffer{ nullptr };
+		IComputeBuffer* m_iso_mat_buffer{ nullptr };
 
-		IComputeBuffer* m_vertList_buffer;
-		IComputeBuffer* m_cubeIndex_buffer;
+		IComputeBuffer* m_vertList_buffer{ nullptr };
+		IComputeBuffer* m_cubeIndex_buffer{ nullptr };
 
-		IComputeBuffer* m_trans_vertex_buffer;
-		IComputeBuffer* m_trans_normal_buffer;
-		IComputeBuffer* m_trans_triangles_buffer;
-		IComputeBuffer* m_trans_counts_buffer;
+		IComputeBuffer* m_trans_vertex_buffer{ nullptr };
+		IComputeBuffer* m_trans_normal_buffer{ nullptr };
+		IComputeBuffer* m_trans_triangles_buffer{ nullptr };
+		IComputeBuffer* m_trans_counts_buffer{ nullptr };
 
-		IComputeBuffer* m_stitch_map_buffer;
-		IComputeBuffer* m_stitch_map_offset_buffer;
+		IComputeBuffer* m_stitch_map_buffer{ nullptr };
+		IComputeBuffer* m_stitch_map_offset_buffer{ nullptr };
 
-		IComputeBuffer* out_Debug_Grid_buffer;
+		IComputeBuffer* out_Debug_Grid_buffer{ nullptr };
 
-		IComputeBuffer* m_out_vertex_buffer;
-		IComputeBuffer* m_out_normal_buffer;
-		IComputeBuffer* m_out_triangles_buffer;
-		IComputeBuffer* m_out_counts_buffer;
+		IComputeBuffer* m_out_vertex_buffer{ nullptr };
+		IComputeBuffer* m_out_normal_buffer{ nullptr };
+		IComputeBuffer* m_out_mat_buffer{ nullptr };
+		IComputeBuffer* m_out_triangles_buffer{ nullptr };
+		IComputeBuffer* m_out_counts_buffer{ nullptr };
 
 		
 		Static_Settings m_static_settings{};
-		Run_Settings* m_run_settings;
+		Run_Settings* m_run_settings{ nullptr };
 
-		int m_numBatchGroups;
-		int m_numBatchesPerGroup;
-		int m_totalBatches;
+		int m_numBatchGroups{ 0 };
+		int m_numBatchesPerGroup{ 0 };
+		int m_totalBatches{ 0 };
 		
 		bool m_invert_tris = false;
 
 		// output cache
 		bool extract_cached = false;
-		glm::vec4* vertex_cache;
-		glm::vec4* normal_cache;
-		int* tris_cache;
+		glm::vec4* vertex_cache{ nullptr };
+		glm::vec4* normal_cache{ nullptr };
+		int* tris_cache{ nullptr };
 		std::vector<glm::ivec4> counts_cache;
 
 		// heightmap cache
 		std::map<int, IComputeBuffer*> m_heightmap_cache;
 		std::queue<IComputeBuffer*> m_unused_heightmaps;
-		int m_numColumns;
+		int m_numColumns{ 0 };
 		std::vector<int> m_activeColumIndex;
 
 

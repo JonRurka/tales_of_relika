@@ -15,7 +15,7 @@ void VoxelWorld_Scene::Init()
 
 void VoxelWorld_Scene::Update(float dt)
 {
-
+	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 
 

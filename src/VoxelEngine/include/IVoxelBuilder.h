@@ -24,7 +24,7 @@ namespace VoxelEngine {
 
 		std::vector<glm::ivec4> GetSize();
 
-		void Extract(glm::vec4* out_vertex, glm::vec4* out_normal, unsigned int* out_trianges, glm::ivec4 counts);
+		void Extract(glm::vec4* out_vertex, glm::vec4* out_normal, glm::vec4* mats, unsigned int* out_trianges, glm::ivec4 counts);
 
 		void ReleaseHeightmap(int x, int z);
 

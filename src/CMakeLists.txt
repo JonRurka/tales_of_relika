@@ -47,6 +47,7 @@ target_link_libraries(${PROJECT_NAME}
 	lua::lua
 	Bullet::Bullet
 	OpenAL::OpenAL
+	inih::inih
 	#vulkan-headers::vulkan-headers
 	nvpro_core
 	#GPUOpen::VulkanMemoryAllocator

@@ -18,6 +18,10 @@ void WorldGenController::Init()
 {
 	m_Instance = this;
 
+	std::string block_types_str = Resources::Get_Data_File_String(Game_Resources::Data_Files::BLOCK_TYPES);
+	Logger::LogDebug(LOG_POS("Init"), "%s", block_types_str.c_str());
+
+
 	Logger::LogInfo(LOG_POS("Init"), "Initialized");
 
 	mTarget = Object()->Get_Transform(); // TODO: Get player transform.
@@ -42,7 +46,7 @@ void WorldGenController::Init()
 	m_chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
-	m_chunk_opaque_mat->setFloat("material.shininess", 32.0f);
+	m_chunk_opaque_mat->setFloat("material.shininess", 8.0f);
 	m_chunk_opaque_mat->setFloat("material.specular_intensity", 1.0f);
 	m_chunk_opaque_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->setFloat("globalAmbientIntensity", 0.01f);

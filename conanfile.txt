@@ -12,6 +12,7 @@ lua/5.4.7
 bullet3/3.25
 fmt/11.1.4
 openal/1.22.2
+inih/60
 
 [generators]
 CMakeDeps

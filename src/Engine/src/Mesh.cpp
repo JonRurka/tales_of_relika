@@ -139,30 +139,14 @@ void Mesh::Set_Raw_Vertex_Data(float* data, size_t size)
 {
 	delete[] raw_vert_data;
 	raw_vert_data = data;
+	m_num_vertices = size / stride;
+	m_virtual_mesh = true;
+	//Logger::LogDebug(LOG_POS("Set_Raw_Vertex_Data"), "Raw Vertices Set: %i", m_num_vertices);
 
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, size, raw_vert_data, GL_STATIC_DRAW);
-
-	/*
-	// FOR CUBE
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// texture coord attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(2);*/
-
-	// position attribute
-	/*glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	// texture coord attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);*/
 
 	m_attrib_list.process();
 
@@ -447,6 +431,7 @@ void Mesh::VertexAttributeList::process()
 	int attrib_ptr = 0;
 	for (const auto& attrib : m_attributes)
 	{
+		//Logger::LogDebug(LOG_POS("VertexAttributeList::process"), "VBO: (%i, %i, %i)", attrib_ptr, attrib.x, attrib.y);
 		glVertexAttribPointer(attrib_ptr, attrib.x, GL_FLOAT, GL_FALSE, m_stride, (void*)attrib.y);
 		glEnableVertexAttribArray(attrib_ptr);
 		attrib_ptr++;

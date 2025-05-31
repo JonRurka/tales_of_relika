@@ -19,6 +19,7 @@ set(${module}_headers
 	include/Stitch_VBO.h
 	include/WorldGenController.h
 	include/TerrainChunk.h
+	include/Material_Types.h
 )
 
 set(${module}_sources
@@ -37,6 +38,7 @@ set(${module}_sources
 	src/Stitch_VBO.cpp
 	src/WorldGenController.cpp
 	src/TerrainChunk.cpp
+	src/Material_Types.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
@@ -52,6 +54,7 @@ target_link_libraries(${module}
 	lua::lua
 	Bullet::Bullet
 	OpenAL::OpenAL
+	inih::inih
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
 )

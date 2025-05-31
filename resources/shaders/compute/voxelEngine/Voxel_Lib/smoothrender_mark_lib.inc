@@ -62,8 +62,13 @@ void CreateStitchMapAsync(uint idx, uint grid_size, int batch_index, uint row_in
 	int row_y = row_coords.x;
 	int row_z = row_coords.y;
 	for (x = 0; x < chunkSize.x; ++x){
-		uint v_index = C_3D_to_1D(INT(x), row_y, row_z, chunkSize.x, chunkSize.y);
+		uint v_index = C_3D_to_1D(INT(x), row_y, row_z, chunkSize.x, chunkSize.y);		
 		int poly_count = GetCount(batch_offset + v_index);
+		
+		//if (x == 15 && row_y == 4 && row_z == 15){
+		//	Print_1("Map Count: %i\n", poly_count);
+		//}
+		
 		if (poly_count > 0){
 			SetStitchMap(batch_offset + v_index, buffer_index);
 			buffer_index = buffer_index + poly_count;

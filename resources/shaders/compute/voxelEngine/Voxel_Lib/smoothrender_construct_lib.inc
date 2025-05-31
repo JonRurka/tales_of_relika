@@ -51,7 +51,10 @@ readwrite_buffer_int(13, out_stitch_map_data)
 
 readwrite_buffer(fvec4, 14, out_debug_data)
 
-
+struct IsoSample{
+	float iso;
+	int type_id;
+};
 
 
 #define VERTEX_SELECT(vert_list, res_idx, edge_ent, test, p1_idx, p2_idx, invalid)         \
@@ -63,9 +66,13 @@ do {                                                                            
 	vert_list[res_idx] = IVEC2(p1_idx, p2_idx);                                            \
 }while(false);
 
-
+//GRIDPOINT_ARRAY_PACK_MATERIAL(grid, p1_idx);
+//GRIDPOINT_ARRAY_PACK_MATERIAL(grid, p2_idx);
 #define VERTEX_INTERP(grid_vert, isoLevel, grid, p1_idx, p2_idx)                  \
 do{                                                                               \
+	GRIDPOINT_ARRAY_PACK_MATERIAL(grid, p1_idx);								  \
+	GRIDPOINT_ARRAY_PACK_MATERIAL(grid, p2_idx);								  \
+																				  \
     float iso_1 = GRIDPOINT_ISO(grid, p1_idx);                                    \
     fvec4 pos_1_local = GRIDPOINT_LOCAL_POS(grid, p1_idx);                        \
 	fvec4 normal_1 = GRIDPOINT_NORMAL(grid, p1_idx);                              \
@@ -103,17 +110,22 @@ do{                                                                             
     res_normal.y = normal_1.y + mu * (normal_2.y - normal_1.y);                   \
     res_normal.z = normal_1.z + mu * (normal_2.z - normal_1.z);                   \
 																				  \
+	res_pos_local.w = (mu < 0.5) ? pos_1_local.w : pos_2_local.w;				  \
+																				  \
 	GRID_VERTEX_LOCAL_POS(grid_vert, 0) = res_pos_local;                          \
 	GRID_VERTEX_NORMAL(grid_vert, 0) = res_normal;                                \
 }while(false);
 
+// res_pos_local.w = (mu < 0.5) ? pos_1_local.w : pos_2_local.w;
+
+
 //type = mu < 0.5 ? p1.type : p2.type;
 //type_ratios = mu < 0.5 ? p1.type_ratio : p2.type_ratio;
 
-float sphere_sample_5(float radius, fvec3 center, float x, float y, float z){
+/*float sphere_sample_5(float radius, fvec3 center, float x, float y, float z){
 
     return radius - sqrt(pow(x - center.x, 2) + pow(y - center.y, 2) + pow(z - center.z, 2));
-}
+}*/
 
 
 float iso_sample_3D_4(float x, float y, float z, STRUCT Settings s){
@@ -166,11 +178,12 @@ float iso_invert(float iso){
 	}
 }
 
-float Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, float edit_iso){
+STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, float edit_iso){
 	
 	float caveDensity = 5.0f;
 	
-	float result = 0;
+	float iso_result = 0;
+	int type_res = 1; //grass
 	
 	float raw_height_iso = height - world_pos.y;
 	float height_iso = clamp(raw_height_iso, -2.0f, 2.0f);
@@ -181,17 +194,27 @@ float Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso
 	//cave_iso = iso_invert(cave_iso);
 	
 	if (raw_cave_iso > 0.0 && world_pos.y < (height - 0.0f)){
-		result = clamp(clamp(height_iso, -5.0f, 5.0f) - cave_iso, -5.0f, 5.0f);
+		iso_result = clamp(clamp(height_iso, -5.0f, 5.0f) - cave_iso, -5.0f, 5.0f);
 	}
 	else{
-		result = height_iso;
+		iso_result = height_iso;
 	}
 	
-	return result;
+	if (world_pos.y < (height - 5)){
+		type_res = 2; // Stone
+	}
+	else if (world_pos.y < (height - 2)){
+		type_res = 0; // dirt
+	}
+	
+	STRUCT IsoSample sample_res;
+	sample_res.iso = iso_result;
+	sample_res.type_id = type_res;
+	return sample_res;
 
 }
 
-float iso_sample_4(STRUCT Settings s, ivec3 p, fvec3 world_pos, int n_index){
+STRUCT IsoSample iso_sample_4(STRUCT Settings s, ivec3 p, fvec3 world_pos, int n_index){
     float iso = iso_sample_3D_2(world_pos, s);
     //float height = height_sample_3(world_pos.x, world_pos.z, s);
 	float height = height_sample_5(p.x, p.z, s.column_index, s, n_index);
@@ -204,15 +227,15 @@ fvec3 normal_sample(STRUCT Settings s, ivec3 p, fvec3 world_pos)
 	float epsilon = 0.01;
 	
 	// sample from extended heightmap data
-	float x1 = iso_sample_4(s, p, world_pos - FVEC3(epsilon, 0, 0), 0);
-	float x2 = iso_sample_4(s, p, world_pos + FVEC3(epsilon, 0, 0), 1);
+	float x1 = iso_sample_4(s, p, world_pos - FVEC3(epsilon, 0, 0), 0).iso;
+	float x2 = iso_sample_4(s, p, world_pos + FVEC3(epsilon, 0, 0), 1).iso;
 	
-	float z1 = iso_sample_4(s, p, world_pos - FVEC3(0, 0, epsilon), 2);
-	float z2 = iso_sample_4(s, p, world_pos + FVEC3(0, 0, epsilon), 3);
+	float z1 = iso_sample_4(s, p, world_pos - FVEC3(0, 0, epsilon), 2).iso;
+	float z2 = iso_sample_4(s, p, world_pos + FVEC3(0, 0, epsilon), 3).iso;
 
 	// sample using the epsilon above and below
-	float y1 = iso_sample_4(s, p, world_pos - FVEC3(0, epsilon, 0), 4);
-	float y2 = iso_sample_4(s, p, world_pos + FVEC3(0, epsilon, 0), 4);
+	float y1 = iso_sample_4(s, p, world_pos - FVEC3(0, epsilon, 0), 4).iso;
+	float y2 = iso_sample_4(s, p, world_pos + FVEC3(0, epsilon, 0), 4).iso;
 
 	//Set_Debug_Data(g_index, FVEC4(y1, y2, y1 - y2, 1));
 
@@ -268,7 +291,7 @@ int SetMeshEntry(uint voxelIndex, fvec4 p1, fvec4 n1, int t1, int count){
     return count;
 }
 
-void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_index, uint v_index, uint cubeIndex, int edge_ent, ivec2 vert_map[12] /*,STRUCT GridPoint vertList[12]*/, fvec4 grid[GRIDPOINT_STRIDE * 8], float isoLevel)
+void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_index, uint v_index, uint cubeIndex, int edge_ent, ivec2 vert_map[12], fvec4 grid[GRIDPOINT_STRIDE * 8], float isoLevel)
 {
 	if(edge_ent == 0){
         return;
@@ -315,7 +338,7 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 		VERTEX_INTERP(gv_2, isoLevel, grid, edge2_idx.x, edge2_idx.y)
 		VERTEX_INTERP(gv_3, isoLevel, grid, edge3_idx.x, edge3_idx.y)
 		
-		fvec4 g_pos_1_after = GRIDPOINT_LOCAL_POS(grid, edge1_idx.x);
+		//fvec4 g_pos_1_after = GRIDPOINT_LOCAL_POS(grid, edge1_idx.x);
 		
 		//Print_Vec_2("Before: (%f, %f, %f, %f), After: (%f, %f, %f, %f)\n", g_pos_1, g_pos_1_after);
 		
@@ -517,17 +540,22 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
 		
 		uint batch_index = GetBatchIndex((UINT(batch[1]) % UINT(batch_settings[0])), index_exp, batch[3]);
 		
-		float iso_val = iso_sample_4(s, p_index_pos.xyz, globalWorldPos.xyz, 4);
+		STRUCT IsoSample iso_sample = iso_sample_4(s, p_index_pos.xyz, globalWorldPos.xyz, 4);
 		fvec3 normal = normal_sample(s, p_index_pos.xyz, globalWorldPos.xyz);
 		
+		//if (i == 3 && p_index_pos.x == 0 && p_index_pos.z == 0){
+			//Print_2("(%i): ISO: %f\n", p_index_pos.y, iso_val);
+		//}
+		
+		
 		//NEW_GRIDPOINT_1(gr_point)
-		GRIDPOINT_ISO(grid, i) = iso_val;
+		GRIDPOINT_ISO(grid, i) = iso_sample.iso;
 		GRIDPOINT_LOCAL_POS(grid, i) = localWorldPos;
 		GRIDPOINT_GLOBAL_POS(grid, i) = globalWorldPos;
-		GRIDPOINT_VOXEL_ID(grid, i) = FVEC4(0, 0, 0, 0);
+		GRIDPOINT_VOXEL_ID(grid, i) = FVEC4(p_index_pos.x, p_index_pos.y, p_index_pos.z, 0);
 		GRIDPOINT_NORMAL(grid, i) = FVEC4(normal.x, normal.y, normal.z, 0);
-		GRIDPOINT_TYPE(grid, i) = FVEC4(0, 0, 0, 0);
-		GRIDPOINT_TYPE_RATIO(grid, i) = FVEC4(0, 0, 0, 0);
+		GRIDPOINT_TYPE(grid, i) = FVEC4(iso_sample.type_id, 0, 0, 0);
+		GRIDPOINT_TYPE_RATIO(grid, i) = FVEC4(1, 0, 0, 0);
 		
 		//STRUCT GridPoint gr_point = New_GridPoint();
 		//gr_point.iso = iso_val;

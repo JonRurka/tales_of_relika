@@ -196,7 +196,8 @@ void Material::Internal_Update(float dt, bool force)
 	for (const auto& pair : m_tex) {
 		if (pair.second.do_bind || force) {
 			m_shader->setInt(pair.second.name, pair.second.bind_index);
-			pair.second.texture->Bind(GL_TEXTURE0 + pair.second.bind_index);
+			if (pair.second.texture != nullptr)
+				pair.second.texture->Bind(GL_TEXTURE0 + pair.second.bind_index);
 		}
 	}
 

@@ -7,7 +7,7 @@
 
 #include <chrono>
 
-#define VBO_ELEMENTS 2
+#define VBO_ELEMENTS 3
 #define STRIDE (VBO_ELEMENTS * sizeof(float) * 4)
 #define DEBUG_DRAW_NORMALS false
 
@@ -17,9 +17,12 @@ void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 	m_controller = builder->Get_Compute_Controller();
 	m_elements = elements;
 
+	m_attribute_list = Get_Vertex_Attributes();
+
 	m_vertices = new glm::vec4[Max_Verts];
 	m_normals = new glm::vec4[Max_Verts];
 	m_triangles = new unsigned int[Max_Verts];
+	m_raw_vert_data = new float[Max_Verts * m_attribute_list.Stride()];
 
 	compute_triangles();
 
@@ -41,6 +44,7 @@ void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 
 	vertex_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
 	normal_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
+	mat_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
 	//Logger::LogDebug(LOG_POS("Init"), "Create Extern VBO");
 	vbo_buffer = m_controller->NewReadWriteBuffer(elements, STRIDE, true);
 	//Logger::LogDebug(LOG_POS("Init"), "Max vert capacity: %i, Max VBO capacity: %i", elements, elements * STRIDE);
@@ -62,6 +66,11 @@ void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 	ind.ParameterIndex = 2;
 	m_program->KernelSetBuffer(kernel_name, normal_buffer, ind);
 
+	ind = {};
+	ind.GlobalIndex = 3;
+	ind.ParameterIndex = 3;
+	m_program->KernelSetBuffer(kernel_name, mat_buffer, ind);
+
 	m_program->FinishBuild();
 	//Logger::LogDebug(LOG_POS("Init"), "Finish Build program");
 }
@@ -80,31 +89,37 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		return;
 	}
 
+	auto start = std::chrono::high_resolution_clock::now();
+	v_builder->Extract(
+		Input_Vertex_Buffer(),
+		Input_Normal_Buffer(),
+		Input_Mat_Buffer(),
+		nullptr,
+		count
+	);
+	auto end = std::chrono::high_resolution_clock::now();
+	auto builder_extract_duration = std::chrono::duration<double>(end - start).count() * 1000;
+
+	//glm::vec4* data = new glm::vec4[count.x];
+	//Input_Vertex_Buffer()->GetData(data, count.x * sizeof(float) * 4);
+
+	//Logger::LogDebug(LOG_POS("Process"), "Count: %i", count.x);
+	//for (int i = 0; i < count.x; i++) {
+		//Logger::LogDebug(LOG_POS("Process"), "%i: (%f, %f, %f, %f)", 
+		//	i, data[i].x, data[i].y, data[i].z, data[i].w);
+	//}
+
+	start = std::chrono::high_resolution_clock::now();
+	Stitch(count.x);
+	end = std::chrono::high_resolution_clock::now();
+	auto stitch_duration = std::chrono::duration<double>(end - start).count() * 1000;
+
+	times.x += builder_extract_duration;
+	times.y += stitch_duration;
+
 	if (gpu_copy) {
 
-		auto start = std::chrono::high_resolution_clock::now();
-		v_builder->Extract(
-			Input_Vertex_Buffer(),
-			Input_Normal_Buffer(),
-			nullptr,
-			count
-		);
-		auto end = std::chrono::high_resolution_clock::now();
-		auto builder_extract_duration = std::chrono::duration<double>(end - start).count() * 1000;
-
-		//glm::vec4* data = new glm::vec4[count.x];
-		//Input_Vertex_Buffer()->GetData(data, count.x * sizeof(float) * 4);
-
-		//Logger::LogDebug(LOG_POS("Process"), "Count: %i", count.x);
-		//for (int i = 0; i < count.x; i++) {
-			//Logger::LogDebug(LOG_POS("Process"), "%i: (%f, %f, %f, %f)", 
-			//	i, data[i].x, data[i].y, data[i].z, data[i].w);
-		//}
-
-		start = std::chrono::high_resolution_clock::now();
-		Stitch(count.x);
-		end = std::chrono::high_resolution_clock::now();
-		auto stitch_duration = std::chrono::duration<double>(end - start).count() * 1000;
+		
 
 		//glm::fvec4* out_vert = new glm::fvec4[count.x];
 		//glm::fvec4* out_vbo = new glm::fvec4[count.x * VBO_ELEMENTS];
@@ -131,13 +146,12 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		auto flush_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
 		start = std::chrono::high_resolution_clock::now();
-		mesh->Set_Vertex_Attributes(Get_Vertex_Attributes());
+		mesh->Set_Vertex_Attributes(m_attribute_list);
 		mesh->Load(Output_VBO_Buffer(), vbo_size);
 		end = std::chrono::high_resolution_clock::now();
 		auto load_mesh_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
-		times.x += builder_extract_duration;
-		times.y += stitch_duration;
+		
 		times.z += flush_duration;
 		times.w += load_mesh_duration;
 
@@ -146,17 +160,20 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 	}
 	else {
 
-		v_builder->Extract(
+
+
+		/*v_builder->Extract(
 			m_vertices,
 			m_normals,
+			m_mats,
 			nullptr,
 			count
-		);
+		);*/
 
 		//Logger::LogDebug(LOG_POS("Process"), "Batch: %i", count.z);
 		
 		/*Logger::LogDebug(LOG_POS("Process"), "Count: %i", count.x);
-		for (int i = 0; i < count.x; i++) {
+		for (int i = 0; i < 6; i++) {
 			Logger::LogDebug(LOG_POS("Process"), "%i: (%f, %f, %f, %f)",
 				i, m_vertices[i].x, m_vertices[i].y, m_vertices[i].z, m_vertices[i].w);
 		}*/
@@ -174,10 +191,31 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 
 		//Logger::LogDebug(LOG_POS("Process"), "Applying %i verts out of max %i", count.x, (int)Utilities::Vertex_Limit_Mode::Chunk_Max);
 
-		mesh->Vertices(verts);
-		mesh->Indices(tris);
-		mesh->Normals(normals);
+		//mesh->Vertices(verts);
+		//mesh->Indices(tris);
+		//mesh->Normals(normals);
+
+		int vbo_size = count.x * STRIDE;
+
+		start = std::chrono::high_resolution_clock::now();
+		mesh->Set_Vertex_Attributes(m_attribute_list);
+		Output_VBO_Buffer()->GetData(m_raw_vert_data, vbo_size);
+
+		/*Logger::LogDebug(LOG_POS("Process"), "Sync %i elements", count.x);
+		for (int i = 0; i < 6; i++) {
+			int j = i * STRIDE;
+			Logger::LogDebug(LOG_POS("Process"), "VBO %i: v:(%f, %f, %f, %f), n:(%f, %f, %f, %f), m:(%f, %f, %f, %f)",
+				i, m_raw_vert_data[(j + 0)], m_raw_vert_data[j + 1], m_raw_vert_data[j + 2], m_raw_vert_data[j + 3],
+				m_raw_vert_data[(j + 4)], m_raw_vert_data[j + 5], m_raw_vert_data[j + 6], m_raw_vert_data[j + 7],
+				m_raw_vert_data[(j + 8)], m_raw_vert_data[j + 9], m_raw_vert_data[j + 10], m_raw_vert_data[j + 11]);
+		}*/
+
+		mesh->Set_Raw_Vertex_Data(m_raw_vert_data, vbo_size);
 		mesh->Activate();
+		end = std::chrono::high_resolution_clock::now();
+		auto load_mesh_duration = std::chrono::duration<double>(end - start).count() * 1000;
+
+		times.w += load_mesh_duration;
 	}
 }
 
@@ -199,6 +237,7 @@ Mesh::VertexAttributeList Stitch_VBO::Get_Vertex_Attributes()
 	Mesh::VertexAttributeList res(STRIDE);
 	res.add_attribute(4, 0);
 	res.add_attribute(4, (4 * sizeof(float)));
+	res.add_attribute(4, (8 * sizeof(float)));
 	return res;
 }
 

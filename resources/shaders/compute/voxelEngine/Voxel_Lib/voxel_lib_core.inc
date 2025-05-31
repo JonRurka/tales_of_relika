@@ -68,6 +68,8 @@ fvec4 name[GRID_VERTEX_STRIDE * 1];
 #define GRIDPOINT_TYPE(arr, i) 			(arr[GRIDPOINT_IDX(i) + 5])
 #define GRIDPOINT_TYPE_RATIO(arr, i) 	(arr[GRIDPOINT_IDX(i) + 6])
 
+#define GRIDPOINT_ARRAY_PACK_MATERIAL(arr, i) (GRIDPOINT_LOCAL_POS(arr, i).w = GRIDPOINT_TYPE(arr, i).x)
+
 #define GRIDPOINT_ARRAY_GET(dst, arr, i) \
 GRIDPOINT_ISO(dst, 0) = GRIDPOINT_ISO(arr, i); \
 GRIDPOINT_LOCAL_POS(dst, 0) = GRIDPOINT_LOCAL_POS(arr, i); \

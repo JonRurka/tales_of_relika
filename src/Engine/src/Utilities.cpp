@@ -8,6 +8,7 @@
 #include <cctype>
 #include <algorithm>
 #include <sstream>
+#include <iterator>
 
 #include <boost/dll.hpp>
 #include <boost/filesystem.hpp>
@@ -16,6 +17,9 @@
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/archive/iterators/insert_linebreaks.hpp>
 #include <boost/archive/iterators/remove_whitespace.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/find_iterator.hpp>
 
 #include "shared_structures.h"
 #include "dynamic_compute.h"
@@ -96,6 +100,13 @@ std::string Utilities::toLowerCase(std::string str)
 	std::transform(str.begin(), str.end(), str.begin(),
 		[](unsigned char c) { return std::tolower(c); });
 	return str;
+}
+
+std::vector<std::string> Utilities::Split(std::string s, std::string delim)
+{
+	std::vector<std::string> result;
+	boost::split(result, s, boost::is_any_of(delim));
+	return result;
 }
 
 std::string Utilities::getFileExtension(const std::string& filePath)

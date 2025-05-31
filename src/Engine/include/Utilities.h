@@ -33,6 +33,8 @@ public:
 
 	static std::string toLowerCase(std::string str);
 
+	static std::vector<std::string> Split(std::string src, std::string delim);
+
 	static std::string getFileExtension(const std::string& filePath);
 
 	static std::string Get_Filename(const std::string& path);

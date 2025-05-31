@@ -95,6 +95,7 @@ int VoxelEngine::ChunkProcessor_private::Process()
 			m_builder->Extract(
 				(glm::vec4*)req.requests[i]->m_vertices,
 				(glm::vec4*)req.requests[i]->m_normals,
+				nullptr,
 				req.requests[i]->m_triangles,
 				counts[i]
 			);

@@ -18,6 +18,7 @@ void kernel main_cl(
 	
 	global fvec4* p_out_vertex_data,
 	global fvec4* p_out_normal_data,
+	global fvec4* p_out_mat_data,
 	global int* p_out_triangles_data,
 	
 	global ivec4* p_out_counts_data,
@@ -38,6 +39,7 @@ void kernel main_cl(
 	
 	out_vertex_data = p_out_vertex_data;
 	out_normal_data = p_out_normal_data;
+	out_mat_data = p_out_mat_data;
 	out_triangles_data = p_out_triangles_data;
 	
 	out_counts_data = p_out_counts_data;

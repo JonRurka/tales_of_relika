@@ -125,6 +125,8 @@ struct Material {
 
 layout (location = 0) in vec3 FragPos;
 layout (location = 1) in vec3 Normal;
+layout (location = 2) in vec2 TexCoords;
+layout (location = 3) in vec4 Mats;
 //layout (location = 2) in vec3 Color;
 //layout (location = 3) in vec2 TexCoords;
 
@@ -145,6 +147,25 @@ struct SampleResult{
 	vec3 normal;
 };
 
+SampleResult lerp_sample(SampleResult val_1, SampleResult val_2, float dt){
+	val_1.color = mix(val_1.color, val_2.color, dt);
+	val_1.normal = mix(val_1.normal, val_2.normal, dt);
+	return val_1;
+}
+
+int GetClosest(vec2 points[3], vec2 uv){
+	int res = -1;//float3(-1, -1, -1);
+	float smallest = 100;
+	for (int i = 0; i < 3; i++){
+		float dist = distance(points[i], uv);
+		if (dist < smallest){
+			smallest = dist;
+			res = i;// points[i];
+		}
+	}
+	return res;
+}
+
 vec3 UnpackNormal(vec3 normalTex){
 	return -normalize(normalTex.xyz * 2.0 - 1.0);
 }
@@ -161,7 +182,7 @@ SampleResult PlainSample(vec2 pos, float bf, vec3 tint_color, int layer)
 	return res;
 }
 
-SampleResult TriSample(vec3 pos, vec3 normal, float scale, vec3 tint_color, ivec3 layers){
+SampleResult TriSample(vec3 pos, vec3 normal, float scale, vec3 tint_color, int layer){
 	
 	// Blending factor of triplanar mapping
     vec3 bf = normalize(abs(normal));
@@ -172,17 +193,33 @@ SampleResult TriSample(vec3 pos, vec3 normal, float scale, vec3 tint_color, ivec
     vec2 ty = pos.zx * scale;
     vec2 tz = pos.xy * scale;
 	
-	SampleResult rx = PlainSample(tx, bf.x, tint_color, layers.x);
-	SampleResult ry = PlainSample(ty, bf.y, tint_color, layers.y);
-	SampleResult rz = PlainSample(tz, bf.z, tint_color, layers.z);
+	SampleResult rx = PlainSample(tx, bf.x, tint_color, layer);
+	SampleResult ry = PlainSample(ty, bf.y, tint_color, layer);
+	SampleResult rz = PlainSample(tz, bf.z, tint_color, layer);
 	
 	vec4 res_color = (rx.color + ry.color + rz.color) * vec4(tint_color, 1);
-	vec3 res_normal = vec3(0.0f, 0.0f, 0.0f);//UnpackNormal(rx.normal + ry.normal + rz.normal);
+	vec3 res_normal = vec3(0.0, 0.0, 0.0);//UnpackNormal(rx.normal + ry.normal + rz.normal);
 	
 	SampleResult res;
 	res.color = res_color;
 	res.normal = res_normal;
 	return res;
+}
+
+SampleResult MatSample(vec3 pos, vec3 normal, vec2 blend_coords, vec4 material_ids){
+	
+	int mat_idx_1 = int(round(material_ids.x));
+	int mat_idx_2 = int(round(material_ids.y));
+	int mat_idx_3 = int(round(material_ids.z));
+	
+	SampleResult s1 = TriSample(pos, normal, 0.25f, vec3(1.0, 1.0, 1.0), mat_idx_1);
+	SampleResult s2 = TriSample(pos, normal, 0.25f, vec3(1.0, 1.0, 1.0), mat_idx_2);
+	SampleResult s3 = TriSample(pos, normal, 0.25f, vec3(1.0, 1.0, 1.0), mat_idx_3);
+	
+	SampleResult blend_x = lerp_sample(s1, s2, blend_coords.x);
+	SampleResult sample_val = lerp_sample(blend_x, s3, blend_coords.y);
+
+	return sample_val;
 }
 
 
@@ -194,7 +231,8 @@ void main()
 	//vec3 ambient = 1.0 * globalAmbientLightColor * vec3(1.0f) * vec3(texture(material.diffuse, TexCoords));
 	resColor += ambient;
 	
-	SampleResult sample_res = TriSample(FragPos.xyz, Normal, 0.25f, vec3(1.0f, 1.0f, 1.0f), ivec3(2, 1, 2));
+	SampleResult sample_res = MatSample(FragPos.xyz, Normal, TexCoords, Mats);
+	//SampleResult sample_res = TriSample(FragPos.xyz, Normal, 0.25f, vec3(1.0f, 1.0f, 1.0f), ivec3(2, 1, 2));
 	
 	vec3 diffuse_sample = sample_res.color.xyz;
 	vec3 spec_sample = vec3(0.0f, 0.0f, 0.0f);
