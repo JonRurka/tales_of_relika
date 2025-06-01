@@ -4,6 +4,7 @@
 #include "Opaque_Chunk_Material.h"
 #include "TerrainChunk.h"
 #include "Game_Resources.h"
+#include "Material_Types.h"
 
 #include <algorithm>
 
@@ -34,15 +35,11 @@ void WorldGenController::Init()
 
 	m_max_cached_chunks = m_max_cached_columns * m_chunks_depth;
 
-	m_diffuse_texture_array = Texture::Create_Texture2D_Array({
-		Game_Resources::Textures::Natural::DIRT_1_DIFFUSE,
-		Game_Resources::Textures::Natural::GRASS_1_DIFFUSE,
-		Game_Resources::Textures::Natural::STONE_1_DIFFUSE
-	});
 
-
-	m_chunk_opaque_mat = new Opaque_Chunk_Material();
-	m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
+	m_chunk_opaque_mat = new Opaque_Chunk_Material(); 
+	//m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
+	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance()->Diffuse_Texture_Array());
+	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance()->Normal_Texture_Array());
 	m_chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));

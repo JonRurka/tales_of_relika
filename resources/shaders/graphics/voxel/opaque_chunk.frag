@@ -125,8 +125,10 @@ struct Material {
 
 layout (location = 0) in vec3 FragPos;
 layout (location = 1) in vec3 Normal;
-layout (location = 2) in vec2 TexCoords;
-layout (location = 3) in vec4 Mats;
+layout (location = 2) in vec3 Tangent;
+layout (location = 3) in vec3 Bitangent;
+layout (location = 4) in vec2 TexCoords;
+layout (location = 5) in vec4 Mats;
 //layout (location = 2) in vec3 Color;
 //layout (location = 3) in vec2 TexCoords;
 
@@ -139,6 +141,7 @@ layout (location = 12) uniform vec3 viewPos;
 layout (location = 13) uniform Material material;
 
 uniform sampler2DArray diffuse;
+uniform sampler2DArray normal_maps;
 
 
 
@@ -153,32 +156,26 @@ SampleResult lerp_sample(SampleResult val_1, SampleResult val_2, float dt){
 	return val_1;
 }
 
-int GetClosest(vec2 points[3], vec2 uv){
-	int res = -1;//float3(-1, -1, -1);
-	float smallest = 100;
-	for (int i = 0; i < 3; i++){
-		float dist = distance(points[i], uv);
-		if (dist < smallest){
-			smallest = dist;
-			res = i;// points[i];
-		}
-	}
-	return res;
-}
-
 vec3 UnpackNormal(vec3 normalTex){
 	return -normalize(normalTex.xyz * 2.0 - 1.0);
+}
+
+vec3 TranslateNormal(vec3 vertex_normal, vec3 vertex_tangent, vec3 vertex_bitangent, vec3 tangent_normal){
+	mat3 TBN = mat3(vertex_tangent, vertex_bitangent, vertex_normal);
+	return normalize(TBN * tangent_normal);
 }
 
 SampleResult PlainSample(vec2 pos, float bf, vec3 tint_color, int layer)
 {	
 	vec4 sample_col = vec4(texture(diffuse, vec3(pos.xy, layer)));
+	vec4 sample_norm = vec4(texture(normal_maps, vec3(pos.xy, layer)));
 	
 	vec4 col = sample_col * vec4(tint_color.xyz, 1.0) * vec4(bf);
+	vec4 norm = sample_norm * vec4(bf);
 	
 	SampleResult res;
 	res.color = col;
-	res.normal = vec3(0.0);
+	res.normal = norm.xyz;
 	return res;
 }
 
@@ -198,7 +195,7 @@ SampleResult TriSample(vec3 pos, vec3 normal, float scale, vec3 tint_color, int 
 	SampleResult rz = PlainSample(tz, bf.z, tint_color, layer);
 	
 	vec4 res_color = (rx.color + ry.color + rz.color) * vec4(tint_color, 1);
-	vec3 res_normal = vec3(0.0, 0.0, 0.0);//UnpackNormal(rx.normal + ry.normal + rz.normal);
+	vec3 res_normal = UnpackNormal((rx.normal + ry.normal + rz.normal) / 3); // TODO: Better method of normal blending
 	
 	SampleResult res;
 	res.color = res_color;
@@ -237,7 +234,9 @@ void main()
 	vec3 diffuse_sample = sample_res.color.xyz;
 	vec3 spec_sample = vec3(0.0f, 0.0f, 0.0f);
 	
-	resColor += Calculate_Lighting(Normal, viewPos, FragPos, diffuse_sample, material.shininess, material.specular_intensity, spec_sample);
+	vec3 frag_normal = TranslateNormal(Normal, Tangent, Bitangent, sample_res.normal);
+	
+	resColor += Calculate_Lighting(frag_normal, viewPos, FragPos, diffuse_sample, material.shininess, material.specular_intensity, spec_sample);
 	
 	
 	//FragColor = vec4(resColor, 1.0f);

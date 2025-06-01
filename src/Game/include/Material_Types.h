@@ -12,6 +12,7 @@ public:
 
 	struct Terrain_Material {
 		int ID;
+		int Texture_IDX;
 		std::string Material_Name;
 		std::string Diffuse_Texture_Name;
 		std::string Normals_Texture_Name;
@@ -26,6 +27,8 @@ public:
 	Material_Types();
 
 	void Load_Materials(std::string resource_file_name);
+
+	void Initialize_Materials();
 
 	int Terrain_Material_ID(std::string name);
 
@@ -44,6 +47,9 @@ public:
 	std::vector<Terrain_Material> Get_Terrain_Materials();
 	std::vector<Structure_Material> Get_Structure_Materials();
 
+	Texture* Diffuse_Texture_Array() { return m_diffuse_texture_array; }
+	Texture* Normal_Texture_Array() { return m_normal_texture_array; }
+
 	static Material_Types* Instance() { return m_instance; }
 
 private:
@@ -54,5 +60,12 @@ private:
 	std::unordered_map<std::string, int> m_terrain_mat_to_id;
 	std::unordered_map<int, Structure_Material> m_structure_materials;
 	std::unordered_map<std::string, int> m_structure_mat_to_id;
+
+	Texture* m_diffuse_texture_array{ nullptr };
+	Texture* m_normal_texture_array{ nullptr };
+
+	void load_terrain_textures();
+
+	void set_terrain_gen_macros();
 
 };

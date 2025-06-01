@@ -318,6 +318,21 @@ std::vector<char> Resources::get_shader_bin(std::string name)
     return std::vector<char>(data_ptr, data_ptr + data_size);
 }
 
+void Resources::modify_shader_bin(std::string name, std::vector<char> data)
+{
+    if (!Has_Shader(name)) {
+        Logger::LogError(LOG_POS("modify_shader_bin"), "Shader File not found: %s \n", name.c_str());
+        return;
+    }
+
+    Load_Shader(name);
+
+    delete[] m_shader_assets[name].data;
+    m_shader_assets[name].data = new char[data.size()];
+    m_shader_assets[name].data_size = data.size();
+    memcpy(m_shader_assets[name].data, data.data(), data.size());
+}
+
 Model* Resources::get_model(std::string name)
 {
     if (!Has_Model(name)) {

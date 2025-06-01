@@ -50,6 +50,7 @@ public:
 	static Texture* Get_Texture(std::string name) { return m_instance->get_texture(name); }
 	static std::string Get_Shader_File(std::string name){ return m_instance->get_shader_file(name);}
 	static std::vector<char> Get_Shader_bin(std::string name) { return m_instance->get_shader_bin(name); }
+	static void Modify_Shader_Bin(std::string name, std::vector<char> data) { return m_instance->modify_shader_bin(name, data); }
 	static Model* Get_Model(std::string name) { return m_instance->get_model(name); }
 
 	static std::string Get_Data_File_String(std::string name) { return m_instance->get_data_file_string(name); }
@@ -147,6 +148,7 @@ private:
 
 	std::string get_shader_file(std::string name);
 	std::vector<char> get_shader_bin(std::string name);
+	void modify_shader_bin(std::string name, std::vector<char> data);
 	Model* get_model(std::string name);
 
 	std::string get_data_file_string(std::string name);

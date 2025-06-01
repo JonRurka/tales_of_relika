@@ -4,6 +4,7 @@
 #define USE_LIBNOISE
 #include "voxel_lib_core.inc"
 
+#include "block_types.inc"
 
 #define USE_HEIGHTMAP 1
 #define USE_MATERIALS 0
@@ -183,7 +184,7 @@ STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos
 	float caveDensity = 5.0f;
 	
 	float iso_result = 0;
-	int type_res = 1; //grass
+	int type_res = grass(); //grass
 	
 	float raw_height_iso = height - world_pos.y;
 	float height_iso = clamp(raw_height_iso, -2.0f, 2.0f);
@@ -201,10 +202,10 @@ STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos
 	}
 	
 	if (world_pos.y < (height - 5)){
-		type_res = 2; // Stone
+		type_res = stone(); // Stone
 	}
 	else if (world_pos.y < (height - 2)){
-		type_res = 0; // dirt
+		type_res = dirt(); // dirt
 	}
 	
 	STRUCT IsoSample sample_res;

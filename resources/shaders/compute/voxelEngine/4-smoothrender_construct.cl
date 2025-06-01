@@ -1,6 +1,7 @@
 #define USL_DIRECTX_UNITY3D 0
 #define USL_VULKAN 0
 #define USL_OPENCL 1
+#define RUNTIME_INSERTED_TYPES
 #include "../libUSL/USL.inc"
 #include "Voxel_Lib/smoothrender_construct_lib.inc"
 

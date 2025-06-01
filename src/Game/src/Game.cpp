@@ -5,6 +5,7 @@
 #include "Test_OpenCL_Scene.h"
 #include "VoxelWorld_Scene.h"
 #include "Game_Resources.h"
+#include "Material_Types.h"
 
 void Game::Init()
 {
@@ -16,6 +17,7 @@ void Game::Init()
 	Logger::LogInfo(LOG_POS("Init"), "Load container specular");
 	Resources::Load_Texture(Game_Resources::Textures::CONTAINER_SPECULAR);
 
+	init_block_types();
 	init_shaders();
 	
 	
@@ -59,6 +61,13 @@ void Game::init_shaders()
 		{"material.diffuse",Resources::Get_Texture(Game_Resources::Textures::CONTAINER_DIFFUSE)},
 		{"material.specular",Resources::Get_Texture(Game_Resources::Textures::CONTAINER_SPECULAR)},
 	});*/
+}
+
+void Game::init_block_types()
+{
+	m_material_types = new Material_Types();
+	m_material_types->Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
+	m_material_types->Initialize_Materials();
 }
 
 void Game::Update(float dt)
