@@ -59,7 +59,7 @@ target_link_libraries(${module}
 	#GPUOpen::VulkanMemoryAllocator
 )
 
-target_link_libraries(${module} LuaCpp Compute VoxelEngine Engine)
+target_link_libraries(${module} LuaCpp Compute VoxelEngine Engine Server)
 
 
 

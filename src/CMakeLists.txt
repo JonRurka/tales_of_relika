@@ -5,12 +5,15 @@ include_directories(Compute/include)
 include_directories(VoxelEngine/include)
 include_directories(Engine/include)
 include_directories(Game/include)
+include_directories(Server/include)
 
 add_subdirectory(LuaCpp)
 add_subdirectory(Compute)
 add_subdirectory(VoxelEngine)
 add_subdirectory(Engine)
 add_subdirectory(Game)
+add_subdirectory(Server)
+add_subdirectory(Server_Exe)
 
 # Add X11 for screenshot support on linux
 if(UNIX)
@@ -26,7 +29,7 @@ endif()
 
 
 set(${PROJECT_NAME}_sources
-    exe_main.cpp
+    game_exe_main.cpp
 )
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
@@ -52,4 +55,4 @@ target_link_libraries(${PROJECT_NAME}
 	nvpro_core
 	#GPUOpen::VulkanMemoryAllocator
 )
-target_link_libraries(${PROJECT_NAME} LuaCpp Compute VoxelEngine Engine Game)
+target_link_libraries(${PROJECT_NAME} LuaCpp Compute VoxelEngine Engine Game Server)
