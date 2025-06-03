@@ -1,5 +1,5 @@
 #include "UDP_Server.h"
-#include "../Logger.h"
+#include "Logger.h"
 #include "AsyncServer.h"
 #include "SocketUser.h"
 #include "../Server_Main.h"
@@ -188,7 +188,7 @@ void udp_server::RunService(udp_server* svr)
 
 void udp_main_server::close()
 {
-	Logger::Log("close UDP service.");
+	Logger::Log(LOG_POS("close"), "close UDP service.");
 	m_run = false;
 	io_service_.stop();
 	m_thread.join();
@@ -203,12 +203,12 @@ udp_connection::pointer udp_main_server::create(address addr)
 
 void udp_main_server::RunService(udp_main_server* svr)
 {
-	Logger::Log("Running UPD io_service");
+	Logger::Log(LOG_POS("RunService"), "Running UPD io_service");
 	while (svr->m_run) {
 		svr->io_service_.run();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
-	Logger::Log("UDP io_service stopped running.");
+	Logger::Log(LOG_POS("RunService"), "UDP io_service stopped running.");
 
 }
 

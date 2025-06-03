@@ -33,7 +33,7 @@ private:
 public:
 	typedef boost::shared_ptr<tcp_connection> pointer;
 
-	static pointer create(boost::asio::io_service& io_service)
+	static pointer create(boost::asio::io_context& io_service)
 	{
 		return pointer(new tcp_connection(io_service));
 	}
@@ -62,7 +62,7 @@ public:
 	}
 
 private:
-	tcp_connection(boost::asio::io_service& io_service)
+	tcp_connection(boost::asio::io_context& io_service)
 		: socket_(io_service)
 	{
 		sent = 0;

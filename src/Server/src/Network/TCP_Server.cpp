@@ -9,7 +9,7 @@ void tcp_server::start_accept()
 	tcp_connection::pointer new_connection =
 		tcp_connection::create(io_service_);
 
-	Logger::Log("Waiting for connection....");
+	Logger::Log(LOG_POS("start_accept"), "Waiting for connection....");
 
 	acceptor_.async_accept(new_connection->socket(),
 		boost::bind(&tcp_server::handle_accept, this, new_connection,
@@ -22,14 +22,14 @@ void tcp_server::handle_accept(tcp_connection::pointer new_connection, const boo
 
 	if (!error)
 	{
-		Logger::Log("Accepting new connection.");
+		Logger::Log(LOG_POS("handle_accept"), "Accepting new connection.");
 		auto user = std::shared_ptr<SocketUser>(new SocketUser(
 			async_server, 
 			new_connection));
 		user->HandleStartConnect();
 	}
 	else {
-		Logger::Log("New connection failed.");
+		Logger::Log(LOG_POS("handle_accept"), "New connection failed.");
 	}
 
 	Server_Main::SetMemoryUsageForThread("tcp_service");
@@ -44,9 +44,9 @@ void tcp_server::close()
 
 void tcp_server::RunService(tcp_server* svr)
 {
-	Logger::Log("Begin TCP service Run");
+	Logger::Log(LOG_POS("RunService"), "Begin TCP service Run");
 	while (svr->m_run) {
 		svr->io_service_.run();
 	}
-	Logger::Log("End TCP service Run");
+	Logger::Log(LOG_POS("RunService"), "End TCP service Run");
 }

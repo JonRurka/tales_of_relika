@@ -7,7 +7,7 @@
 #include "Data.h"
 #include "BufferUtils.h"
 #include "PlayerAuthenticator.h"
-#include "../Logger.h"
+#include "Logger.h"
 #include "OpCodes.h"
 
 #include <boost/asio.hpp>
@@ -109,10 +109,12 @@ private:
 	bool m_run;
 	bool m_run_async_commands;
 
+	
+
 	PlayerAuthenticator m_authenticator;
 	Server_Main* m_server;
-	boost::asio::io_service m_io_service_udp;
-	boost::asio::io_service m_io_service_tcp;
+	boost::asio::io_context m_io_service_udp;
+	boost::asio::io_context m_io_service_tcp;
 	tcp_server* m_tcp_server;
 	//udp_server* m_udp_server; // TODO: Might be good to make several.
 	udp_main_server* m_udp_server;
@@ -154,5 +156,7 @@ private:
 		svr->System_Cmd(socket_user, data);
 	}
 	void System_Cmd(SocketUser& socket_user, Data data);
+
+	inline static const std::string LOG_LOC{ "ASYNC_SERVER" };
 
 };

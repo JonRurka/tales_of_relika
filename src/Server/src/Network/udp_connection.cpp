@@ -1,13 +1,13 @@
 #include "udp_connection.h"
 #include "UDP_Server.h"
-#include "../Logger.h"
+#include "Logger.h"
 #include "AsyncServer.h"
 #include "SocketUser.h"
 #include "../Server_Main.h"
 
 void udp_connection::Close()
 {
-	Logger::Log("close UDP service.");
+	Logger::Log(LOG_POS("Close"), "close UDP service.");
 	m_running = false;
 	m_socket_.close();
 	m_thread_sends.join();
@@ -94,13 +94,13 @@ void udp_connection::handle_receive(const boost::system::error_code& error, size
 			return;
 		}
 
-		Logger::Log("UDP Receive Error (" + std::to_string(error.value()) + "): " + error.what());
+		Logger::LogError(LOG_POS("handle_receive"), "UDP Receive Error (" + std::to_string(error.value()) + "): " + error.what());
 		start_receive();
 		return;
 	}
 
 	if (transfered <= 0) {
-		Logger::Log("UDP Receive Buffer empty!");
+		Logger::LogError(LOG_POS("handle_receive"), "UDP Receive Buffer empty!");
 		start_receive();
 		return;
 	}
@@ -122,11 +122,11 @@ void udp_connection::handle_receive(const boost::system::error_code& error, size
 
 void udp_connection::RunService(udp_connection* svr)
 {
-	Logger::Log("Running UPD io_service");
+	Logger::Log(LOG_POS("RunService"), "Running UPD io_service");
 	while (svr->m_running && svr->m_udp_server->m_run) {
 		//svr->m_own_io_service.run();
 		svr->m_udp_server->io_service_.run();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
-	Logger::Log("UDP io_service stopped running.");
+	Logger::Log(LOG_POS("RunService"), "UDP io_service stopped running.");
 }

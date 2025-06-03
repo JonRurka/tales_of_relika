@@ -1,7 +1,7 @@
 #include "AsyncServer.h"
 #include "SocketUser.h"
 #include "../Server_Main.h"
-#include "../Logger.h"
+#include "Logger.h"
 #include "../HashHelper.h"
 #include <thread>
 
@@ -20,7 +20,7 @@ AsyncServer::AsyncServer(Server_Main* server)
 
     AddCommand(OpCodes::Server::System_Reserved, System_Cmd_cb, this);
 
-	Logger::Log("Net server started.");
+	Logger::Log(LOG_POS("AsyncServer"), "Net server started.");
 
     if (RUN_ASYNC_COMMANDS) {
         m_thread_1 = std::thread(Process_Async, this);
@@ -241,7 +241,7 @@ void AsyncServer::Receive_UDP(std::vector<uint8_t> buffer, boost::asio::ip::addr
     if (buffer.size() >= 3)
     {
         if (buffer.size() > MAX_UDP_SIZE) {
-            Logger::LogWarning("Received malformed UDP packet");
+            Logger::LogWarning(LOG_POS("Receive_UDP"), "Received malformed UDP packet");
             //return;
         }
 
@@ -262,11 +262,11 @@ void AsyncServer::Receive_UDP(std::vector<uint8_t> buffer, boost::asio::ip::addr
             //Process(socket_user, data);
         }
         else {
-            Logger::Log("UDP ID Not Found: " + std::to_string(udp_id));
+            Logger::Log(LOG_POS("Receive_UDP"), "UDP ID Not Found: " + std::to_string(udp_id));
         }
     }
     else {
-        Logger::Log(std::to_string(Protocal_Udp) + ": Received empty buffer!");
+        Logger::Log(LOG_POS("Receive_UDP"), std::to_string(Protocal_Udp) + ": Received empty buffer!");
     }
 }
 
@@ -293,20 +293,20 @@ void AsyncServer::Receive_UDP(uint8_t* data, uint16_t size, boost::asio::ip::add
             Process(socket_user, command, buffer, size, Protocal_Udp);
         }
         else {
-            Logger::Log("UDP ID Not Found: " + std::to_string(udp_id));
+            Logger::Log(LOG_POS("Receive_UDP"), "UDP ID Not Found: " + std::to_string(udp_id));
         }
     }
     else {
-        Logger::Log(std::to_string(Protocal_Udp) + ": Received empty buffer!");
+        Logger::Log(LOG_POS("Receive_UDP"), std::to_string(Protocal_Udp) + ": Received empty buffer!");
     }
     assert(size <= MAX_UDP_SIZE);
 }
 
 void AsyncServer::handle_accept(const boost::system::error_code& error) {
     if (!error)
-        Logger::Log("Client connected");
+        Logger::Log(LOG_POS("handle_accept"), "Client connected");
     else
-        Logger::Log("Client connect failed");
+        Logger::Log(LOG_POS("handle_accept"), "Client connect failed");
 }
 
 /*void AsyncServer::Process(SocketUser* socket_user, Data data)
@@ -393,7 +393,7 @@ uint16_t AsyncServer::Get_New_UDP_ID()
 void AsyncServer::DoProcess(std::string socket_user, Data data) {
 
     if (!HasCommand(data.command)) {
-        Logger::LogWarning("Invalid command submitted");
+        Logger::LogWarning(LOG_POS("DoProcess"), "Invalid command submitted");
         return;
     }
 

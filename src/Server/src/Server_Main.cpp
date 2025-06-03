@@ -29,7 +29,7 @@ void Server_Main::UserConnected(std::shared_ptr<SocketUser> socket_user)
 		}
 	}
 
-	Logger::Log("User '" + socket_user->SessionToken + "' has connected.");
+	Logger::Log(LOG_POS("UserConnected"), "User '" + socket_user->SessionToken + "' has connected.");
 
 	// Request basic user information
 	//socket_user->Send(OpCodes::Client::Request_Identity, std::vector<uint8_t>({ 0x01 }));
@@ -39,7 +39,7 @@ void Server_Main::UserDisconnected(SocketUser* socket_user)
 {
 	//SocketUser* socket_user = (SocketUser*)socket_usr;
 
-	Logger::Log("Socket '" + socket_user->SessionToken + "' has disconnected.");
+	Logger::Log(LOG_POS("UserDisconnected"), "Socket '" + socket_user->SessionToken + "' has disconnected.");
 
 	if (!socket_user->GetUser().expired()) {
 		Player* player = std::dynamic_pointer_cast<Player>(socket_user->GetUser().lock()).get();
@@ -47,7 +47,7 @@ void Server_Main::UserDisconnected(SocketUser* socket_user)
 		if (Has_Player(player->Get_UserID())) {
 			m_players.erase(player->Get_UserID());
 		}
-		Logger::Log("Player '" + username + "' removed.");
+		Logger::Log(LOG_POS("UserDisconnected"), "Player '" + username + "' removed.");
 	}
 	
 }
@@ -55,10 +55,10 @@ void Server_Main::UserDisconnected(SocketUser* socket_user)
 void Server_Main::PlayerAuthenticated(std::shared_ptr<Player> player, bool authorized)
 {
 	if (authorized) {
-		Logger::Log(player->Get_UserName() + " authenticated successfully!");
+		Logger::Log(LOG_POS("PlayerAuthenticated"), player->Get_UserName() + " authenticated successfully!");
 
 		if (Has_Player(player->Get_UserID())) {
-			Logger::Log(player->Get_UserName() + " logged on again!");
+			Logger::Log(LOG_POS("PlayerAuthenticated"), player->Get_UserName() + " logged on again!");
 			player->Socket_User()->Close(true);
 			//delete player;
 		}
@@ -68,7 +68,7 @@ void Server_Main::PlayerAuthenticated(std::shared_ptr<Player> player, bool autho
 		}
 	}
 	else {
-		Logger::Log(player->Get_UserName() + " not authorized.");
+		Logger::Log(LOG_POS("PlayerAuthenticated"), player->Get_UserName() + " not authorized.");
 		player->Socket_User()->Close(true);
 		//delete player;
 	}
@@ -83,7 +83,7 @@ void Server_Main::PrintQueueLengths()
 	queue_lenths_str += "\tMain_ReceiveQueue: " + std::to_string(m_queue_lengths.Main_ReceiveQueue) + "\n";
 	queue_lenths_str += "\tAsync_ReceiveQueue: " + std::to_string(m_queue_lengths.Async_ReceiveQueue) + "\n";
 
-	Logger::Log(queue_lenths_str);
+	Logger::Log(LOG_POS("PrintQueueLengths"), queue_lenths_str);
 }
 
 std::shared_ptr<Player> Server_Main::CreateFakePlayer(uint32_t id)
@@ -141,7 +141,6 @@ void Server_Main::Init()
 	m_com_executer = new CommandExecuter();
 	m_com_executer->Run(false);
 
-	Logger::Init();
 	//Logger::Log("Server Started!");
 
 	m_authenticator = new PlayerAuthenticator(this);
@@ -154,7 +153,7 @@ void Server_Main::Init()
 
 	m_last_memory_print_time = GetEpoch();
 
-	Logger::Log("Server Initialized Successfully!");
+	Logger::Log(LOG_POS("Init"), "Server Initialized Successfully!");
 }
 
 void Server_Main::Loop()
@@ -208,13 +207,13 @@ void Server_Main::Update(double dt)
 		PrintQueueLengths();
 
 		glm::uvec2 udp_sends = m_net_server->Get_UDP_Sends();
-		Logger::Log("UDP packets sent: " + std::to_string(udp_sends.y) + " out of " + std::to_string(udp_sends.x));
+		Logger::Log(LOG_POS("Update"), "UDP packets sent: " + std::to_string(udp_sends.y) + " out of " + std::to_string(udp_sends.x));
 
 		m_last_memory_print_time = now;
 	}
 
 
-	Logger::Update();
+	Logger::Update(); // TODO: decide if this should be called
 
 }
 
@@ -281,7 +280,7 @@ void Server_Main::JoinMatch(SocketUser& user, Data data)
 
 	std::string json_string = HashHelper::BytesToString(data.Buffer);
 
-	Logger::Log(json_string);
+	Logger::Log(LOG_POS("JoinMatch"), json_string);
 
 	json::parse_options opt;
 	opt.allow_trailing_commas = true;
@@ -290,7 +289,7 @@ void Server_Main::JoinMatch(SocketUser& user, Data data)
 	json::value json_val = json::parse(json_string, ec, json::storage_ptr(), opt);
 
 	if (ec) {
-		Logger::Log("Failed to parse match json.");
+		Logger::Log(LOG_POS("JoinMatch"), "Failed to parse match json.");
 		// send fail
 		user.Send(OpCodes::Client::Join_Match_Result, std::vector<uint8_t>({ 0x00, 0x00, 0x00 }));
 		return;
@@ -313,12 +312,12 @@ void Server_Main::JoinMatch(SocketUser& user, Data data)
 		res = 0x01;
 	}
 	else {
-		Logger::Log("Match join failed: " + std::to_string(join_res));
+		Logger::Log(LOG_POS("JoinMatch"), "Match join failed: " + std::to_string(join_res));
 	}
 
 
 
-	Logger::Log("Join " + player->Get_UserName() + " To match " + match_id + ", " + std::to_string(match_short_id));
+	Logger::Log(LOG_POS("JoinMatch"), "Join " + player->Get_UserName() + " To match " + match_id + ", " + std::to_string(match_short_id));
 
 	user.Send(OpCodes::Client::Join_Match_Result, std::vector<uint8_t>({res, ((uint8_t*)&match_short_id)[0], ((uint8_t*)&match_short_id)[1]}));
 }

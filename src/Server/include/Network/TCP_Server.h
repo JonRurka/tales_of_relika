@@ -16,7 +16,7 @@ class AsyncServer;
 
 class tcp_server {
 private:
-	boost::asio::io_service& io_service_;
+	boost::asio::io_context& io_service_;
 	tcp::acceptor acceptor_;
 	AsyncServer* async_server;
 	std::thread m_thread;
@@ -25,7 +25,7 @@ private:
 
 public:
 
-	tcp_server(AsyncServer* server_inst, boost::asio::io_service& io_service, int port)
+	tcp_server(AsyncServer* server_inst, boost::asio::io_context& io_service, int port)
 		: io_service_(io_service),
 		acceptor_(io_service, tcp::endpoint(tcp::v4(), port))
 	{
@@ -46,6 +46,7 @@ public:
 private:
 	static void RunService(tcp_server* svr);
 
+	inline static const std::string LOG_LOC{ "TCP_SERVER" };
 
 };
 

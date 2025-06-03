@@ -83,7 +83,7 @@ public:
 	}
 
 private:
-	udp_connection(udp_main_server* udp_server, boost::asio::io_service& io_service, address addr, int port)
+	udp_connection(udp_main_server* udp_server, boost::asio::io_context& io_service, address addr, int port)
 		: m_socket_(io_service, udp::endpoint(udp::v4(), port))
 	{
 		m_udp_server = udp_server;
@@ -120,5 +120,7 @@ private:
 	void handle_receive(const boost::system::error_code& error, size_t transfered);
 
 	static void RunService(udp_connection* svr);
+
+	inline static const std::string LOG_LOC{ "UDP_CONNECTION" };
 
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../stdafx.h"
-#include "../Logger.h"
+#include "Logger.h"
 
 #include <boost/asio.hpp>
 #include <boost/timer.hpp>
@@ -132,7 +132,7 @@ private:
 class udp_main_server {
 	friend class udp_connection;
 
-	boost::asio::io_service& io_service_;
+	boost::asio::io_context& io_service_;
 	AsyncServer* m_async_server;
 	std::thread m_thread;
 	bool m_run;
@@ -144,7 +144,7 @@ class udp_main_server {
 	static udp_main_server* m_instance;
 
 public:
-	udp_main_server(AsyncServer* server_inst, boost::asio::io_service& io_service, uint16_t ports_start, uint16_t ports_end)
+	udp_main_server(AsyncServer* server_inst, boost::asio::io_context& io_service, uint16_t ports_start, uint16_t ports_end)
 		: io_service_(io_service)
 	{
 		m_port_range_start = ports_start;
@@ -172,4 +172,6 @@ private:
 	}
 
 	static void RunService(udp_main_server* svr);
+
+	inline static const std::string LOG_LOC{ "UDP_MAIN_SERVER" };
 };

@@ -171,4 +171,7 @@ public:
 		m_instance->JoinMatch(user, data);
 	}
 	void JoinMatch(SocketUser& user, Data data);
+
+	inline static const std::string LOG_LOC{ "SERVER_MAIN" };
+
 };

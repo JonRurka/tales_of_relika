@@ -27,6 +27,7 @@ public:
 
 
 	static void Log(Level level, std::string source, const std::string message);
+	static void Log(std::string source, const std::string format, ...); // LogInfo
 
 	static void LogFatal(std::string source, const std::string format, ...);
 	static void LogError(std::string source, const std::string format, ...);

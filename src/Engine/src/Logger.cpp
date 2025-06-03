@@ -28,6 +28,17 @@ void Logger::Log(Logger::Level level, std::string source, std::string message)
 	}
 }
 
+void Logger::Log(std::string source, const std::string format, ...)
+{
+	char buffer[MESSAGE_BUFFER_SIZE];
+	va_list args;
+	va_start(args, format);
+	vsnprintf(buffer, sizeof(buffer), format.c_str(), args);
+	va_end(args);
+	std::string message = std::string(buffer);
+	Log(Level::Info, source, message);
+}
+
 void Logger::LogFatal(std::string source, const std::string format, ...)
 {
 	char buffer[MESSAGE_BUFFER_SIZE];

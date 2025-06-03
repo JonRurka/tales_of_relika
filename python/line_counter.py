@@ -35,7 +35,10 @@ def count_lines(directory):
 directory = os.getcwd() + '/..';
 
 count_lines(directory + '/src/Engine')
-count_lines(directory + '/src/Game')
+#count_lines(directory + '/src/Game')
+#count_lines(directory + '/src/Server')
+#count_lines(directory + '/src/Compute')
+#count_lines(directory + '/src/VoxelEngine') 
 #count_lines(directory + '/src')
 #count_lines(directory + '/resources/shaders')
             
