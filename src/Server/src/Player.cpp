@@ -10,7 +10,6 @@ using namespace boost;
 Player::Player()
 {
 	m_sent_last_jump = Server_Main::GetEpoch();
-	m_active_match = nullptr;
 	m_match_instance_id = 0;
 	m_location = glm::vec3(0, 0, 0);
 	m_rotation = glm::quat();
@@ -29,8 +28,8 @@ std::shared_ptr<Player> Player::Cast_IUser(std::weak_ptr<IUser> user)
 
 bool Player::SetIdentity(std::string json_identity)
 {
-	Logger::Log(json_identity);
-
+	//Logger::Log( json_identity);
+	/*
 	json::parse_options opt;
 	opt.allow_trailing_commas = true;
 
@@ -38,7 +37,7 @@ bool Player::SetIdentity(std::string json_identity)
 	json::value json_val = json::parse(json_identity, ec, json::storage_ptr(), opt);
 
 	if (ec) {
-		Logger::Log("Failed to parse user identity.");
+		//Logger::Log("Failed to parse user identity.");
 		return false;
 	}
 
@@ -50,7 +49,7 @@ bool Player::SetIdentity(std::string json_identity)
 
 	//Logger::Log("Is Number: " + std::to_string((int)ident_obj.at("Distributor").is_number()) + ", " + std::to_string((int)ident_obj.at("Distributor").is_int64()));
 	m_identity.Distributor = ident_obj.at("Distributor").as_int64();
-
+	*/
 	return true;
 }
 

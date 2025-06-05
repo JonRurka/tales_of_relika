@@ -32,6 +32,7 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
 //#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <glm/vec4.hpp>
@@ -45,6 +46,7 @@
 #define CL_HPP_TARGET_OPENCL_VERSION 210
 
 //#include <boost/stacktrace.hpp>
+#define BOOST_TIMER_ENABLE_DEPRECATED
 #include <boost/asio.hpp>
 #include <boost/timer.hpp>
 #include <boost/bind.hpp>

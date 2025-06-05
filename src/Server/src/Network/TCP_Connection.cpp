@@ -1,8 +1,9 @@
 #include "TCP_Connection.h"
 #include "AsyncServer.h"
 #include "SocketUser.h"
-#include "../Logger.h"
+#include "Logger.h"
 #include "../Server_Main.h"
+#include "HashHelper.h"
 
 void tcp_connection::Send(uint8_t* sending, size_t len)
 {
@@ -38,17 +39,19 @@ void tcp_connection::Start_Read()
 	m_lock.unlock();
 }
 
-void tcp_connection::Start_Initial_Connect(std::shared_ptr<SocketUser> p_socket_user)
+void tcp_connection::Start_Initial_Connect(SocketUser* p_socket_user)
 {
-	Set_Socket_User(p_socket_user);
-	tmp_socket_ref.push_back(p_socket_user);
+	//Set_Socket_User(p_socket_user);
+	//tmp_socket_ref.push_back(p_socket_user);
+	int key = HashHelper::RandomNumber(0, INT32_MAX - 1);
+	//tmp_socket_ref[key] = p_socket_user;
 
 	m_lock.lock();
 	boost::asio::async_read(socket_, boost::asio::buffer(length_buff, 2),
 		boost::bind(&tcp_connection::Handle_Initial_Connect, shared_from_this(),
 			boost::asio::placeholders::error,
 			boost::asio::placeholders::bytes_transferred,
-			p_socket_user.get()));
+			p_socket_user, key));
 	m_lock.unlock();
 }
 
@@ -101,11 +104,11 @@ void tcp_connection::handle_write(const boost::system::error_code&, size_t trans
 void tcp_connection::Handle_Initial_Connect(
 	const boost::system::error_code& err, 
 	size_t transfered, 
-	SocketUser* p_socket_user)
+	SocketUser* p_socket_user, int key)
 {
-	Logger::Log("Handle_Initial_Connect");
+	Logger::Log(LOG_POS("Handle_Initial_Connect"), "Handle_Initial_Connect");
 	if (err) {
-		Logger::Log("Initial Connection error: " + err.what());
+		Logger::Log(LOG_POS("Handle_Initial_Connect"), "Initial Connection error: " + err.what());
 		return;
 	}
 
@@ -116,21 +119,23 @@ void tcp_connection::Handle_Initial_Connect(
 
 	bool successfull = (size == 3 && message[0] == 0xff && message[1] == 0x01 && message[2] == 0x01);
 
-	Logger::Log("Handle_Initial_Connect: " + std::to_string(successfull));
+	Logger::Log(LOG_POS("Handle_Initial_Connect"), "Handle_Initial_Connect: " + std::to_string(successfull));
 	if (!successfull) {
-		Logger::Log("size: " + std::to_string(size));
-		Logger::Log("message[0]: " + std::to_string(message[0]));
-		Logger::Log("message[1]: " + std::to_string(message[1]));
-		Logger::Log("message[2]: " + std::to_string(message[2]));
+		Logger::Log(LOG_POS("Handle_Initial_Connect"), "size: " + std::to_string(size));
+		Logger::Log(LOG_POS("Handle_Initial_Connect"), "message[0]: " + std::to_string(message[0]));
+		Logger::Log(LOG_POS("Handle_Initial_Connect"), "message[1]: " + std::to_string(message[1]));
+		Logger::Log(LOG_POS("Handle_Initial_Connect"), "message[2]: " + std::to_string(message[2]));
 	}
 
 	delete[] message;
-	
-	//SocketUser* socket_usr = (SocketUser*)socket_user;
-	tmp_socket_ref[0]->HandleStartConnect_Finished(successfull);
-	tmp_socket_ref.clear();
 
-	Server_Main::SetMemoryUsageForThread("tcp_service");
+	p_socket_user->HandleStartConnect_Finished(successfull);
+
+	//SocketUser* socket_usr = (SocketUser*)socket_user;
+	//tmp_socket_ref[key]->HandleStartConnect_Finished(successfull);
+	//tmp_socket_ref.erase(key);
+
+	//Server_Main::SetMemoryUsageForThread("tcp_service");
 }
 
 void tcp_connection::handle_read(const boost::system::error_code& err, size_t transfered)
@@ -139,19 +144,19 @@ void tcp_connection::handle_read(const boost::system::error_code& err, size_t tr
 
 	if (err) {
 		if (err.value() == 10054) {
-			Logger::Log("TCP client disconnected.");
+			Logger::Log(LOG_POS("handle_read"), "TCP client disconnected.");
 			socket_user.lock()->Close(false);
 			return;
 		}
 
-		Logger::Log("TCP Read Error (" + std::to_string(err.value()) + "): " + err.what());
+		Logger::Log(LOG_POS("handle_read"), "TCP Read Error (" + std::to_string(err.value()) + "): " + err.what());
 		return;
 	}
 
 	uint16_t size = *((uint16_t*)&length_buff);
 
 	if (size == 0) {
-		Logger::Log("TCP Buffer empty!");
+		Logger::Log(LOG_POS("handle_read"), "TCP Buffer empty!");
 		AsyncServer::GetInstance()->RemovePlayer(socket_user.lock()->SessionToken);
 		return;
 	}
@@ -159,7 +164,7 @@ void tcp_connection::handle_read(const boost::system::error_code& err, size_t tr
 	uint8_t* message = new uint8_t[size];
 
 	if (!socket_.is_open()) {
-		Logger::Log("TCP Socket closed!");
+		Logger::Log(LOG_POS("handle_read"), "TCP Socket closed!");
 		AsyncServer::GetInstance()->RemovePlayer(socket_user.lock()->SessionToken);
 		return;
 	}

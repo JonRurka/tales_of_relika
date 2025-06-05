@@ -2,7 +2,7 @@
 #include "SocketUser.h"
 #include "TCP_Connection.h"
 #include "TCP_Server.h"
-#include "../Logger.h"
+#include "Logger.h"
 #include "../HashHelper.h"
 #include "../Server_Main.h"
 #include "../IUser.h"
@@ -42,7 +42,7 @@ void SocketUser::Update(float dt)
 
 void SocketUser::HandleStartConnect()
 {
-	tcp_connection_client->Start_Initial_Connect(shared_from_this());
+	tcp_connection_client->Start_Initial_Connect(this);
 }
 
 void SocketUser::HandleStartConnect_Finished(bool successfull)
@@ -70,15 +70,16 @@ void SocketUser::HandleStartConnect_Finished(bool successfull)
 
 		//user.Send(0xff, BufferUtils.Add(new byte[]{ 0x01, result }, udpidBuff));
 
-		Logger::Log("UDP ID: " + std::to_string(udp_id));
+		Logger::Log(LOG_POS("HandleStartConnect_Finished"), "UDP ID: " + std::to_string(udp_id));
 
-		Send(OpCodes::Client::System_Reserved, BufferUtils::Add({0x01, result}, {udp_buf[0], udp_buf[1], udp_port_buf[0], udp_port_buf[1]}));
+		//Send(OpCodes::Client::System_Reserved, BufferUtils::Add({0x01, result}, {udp_buf[0], udp_buf[1], udp_port_buf[0], udp_port_buf[1]}));
 
 		// handle messages
 
 		tcp_connection_client->Start_Read();
 	}
 	else {
+		Logger::Log(LOG_POS("HandleStartConnect_Finished"), "Sending a message to say failer...");
 		Send(OpCodes::Client::System_Reserved, BufferUtils::Add({0x01, result}, {0x00, 0x00}), Protocal_Tcp);
 
 		//user.Send(0xff, BufferUtils.Add(new byte[]{ 0x01, result }, udpidBuff));
@@ -105,11 +106,11 @@ void SocketUser::SetUser(std::shared_ptr<IUser> user)
 		User = user;
 		user->Set_Socket_User(shared_from_this());
 		has_user = true;
-		Logger::Log("Set user");
+		Logger::Log(LOG_POS("SetUser"), "Set user");
 	}
 	else
 	{
-		Logger::Log("IUser null");
+		Logger::Log(LOG_POS("SetUser"), "IUser null");
 	}
 }
 
@@ -229,7 +230,7 @@ void SocketUser::ProcessReceiveBuffer(std::vector<uint8_t> buffer, Protocal type
 		_server->Process(this, command, buffer.data(), buffer.size(), type);
 	}
 	else {
-		Logger::Log(std::to_string(type) + ": Received empty buffer!");
+		Logger::Log(LOG_POS("ProcessReceiveBuffer"), std::to_string(type) + ": Received empty buffer!");
 	}
 }
 

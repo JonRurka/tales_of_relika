@@ -1,10 +1,11 @@
 #pragma once
 #include "../stdafx.h"
-#include "../Logger.h"
+#include "Logger.h"
 
 class AsyncServer;
 class SocketUser;
 
+#define BOOST_TIMER_ENABLE_DEPRECATED
 #include <boost/asio.hpp>
 #include <boost/timer.hpp>
 #include <boost/bind.hpp>
@@ -26,7 +27,8 @@ private:
 	std::map<uint64_t, uint8_t*> send_buffers;
 	int numSends = 0;
 	std::weak_ptr<SocketUser> socket_user;
-	std::vector<std::shared_ptr<SocketUser>> tmp_socket_ref;
+	//std::vector<std::shared_ptr<SocketUser>> tmp_socket_ref;
+	std::unordered_map<int, std::shared_ptr<SocketUser>> tmp_socket_ref;
 	std::mutex m_lock;
 
 	uint8_t m_send_buffer[UINT16_MAX];
@@ -53,7 +55,7 @@ public:
 
 	void Start_Read();
 
-	void Start_Initial_Connect(std::shared_ptr<SocketUser> p_socket_user);
+	void Start_Initial_Connect(SocketUser* p_socket_user);
 
 	void close();
 
@@ -77,7 +79,7 @@ private:
 	void Handle_Initial_Connect(
 		const boost::system::error_code&, 
 		size_t transfered,
-		SocketUser* p_socket_user);
+		SocketUser* p_socket_user, int key);
 
 	static void RunSend(tcp_connection* srv) {
 		while (srv->m_running) {
@@ -103,4 +105,7 @@ private:
 	std::binary_semaphore m_sends_semaphore_1{ 0 };
 	std::binary_semaphore m_sends_semaphore_2{ 0 };
 	std::mutex m_send_lock;
+
+	inline static const std::string LOG_LOC{ "TCP_CONNECTION" };
+
 };

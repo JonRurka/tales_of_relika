@@ -1,8 +1,9 @@
 #pragma once
 
 #include "../stdafx.h"
-#include "../Logger.h"
+#include "Logger.h"
 
+#define BOOST_TIMER_ENABLE_DEPRECATED
 #include <boost/asio.hpp>
 #include <boost/timer.hpp>
 #include <boost/bind.hpp>

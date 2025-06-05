@@ -14,13 +14,13 @@ set(${module}_headers
 	include/Network/TCP_Server.h
 	include/Network/udp_connection.h
 	include/Network/UDP_Server.h
+	
+	include/Network/NetClient.h
 
 	include/CommandExecuter.h
 	include/HashHelper.h
 	include/IUser.h
 	include/Linux_conio.h
-	include/Match.h
-	include/MatchManager.h
 	include/Player.h
 	include/Server_Main.h
 	include/stdafx.h
@@ -36,11 +36,11 @@ set(${module}_sources
 	src/Network/udp_connection.cpp
 	src/Network/UDP_Server.cpp
 	
+	src/Network/NetClient.cpp
+	
 	src/CommandExecuter.cpp
 	src/IUser.cpp
 	src/Linux_conio.cpp
-	src/Match.cpp
-	src/MatchManager.cpp
 	src/Player.cpp
 	src/Server_Main.cpp
 )
@@ -51,6 +51,7 @@ target_link_libraries(${module}
 	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
+	glaze::glaze 
 	boost::boost
 	Vulkan::Vulkan
 	glm::glm

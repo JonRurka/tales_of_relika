@@ -101,4 +101,6 @@ private:
 
 	void DoSendUdp(std::vector<uint8_t> data);
 
+	inline static const std::string LOG_LOC{ "SOCKET_USER" };
+
 }; // End SocketUser

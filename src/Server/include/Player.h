@@ -6,7 +6,6 @@
 
 #define PLAYER_ORIENTATION_SIZE (7 * sizeof(float))
 
-class Match;
 
 class Player : public IUser {
 public:
@@ -58,14 +57,6 @@ public:
 
 	int Get_Distributor() {
 		return m_identity.Distributor;
-	}
-
-	void Set_Active_Match(Match* match) {
-		m_active_match = match;
-	}
-
-	Match* Get_Active_Match() {
-		return m_active_match;
 	}
 
 	void Set_Location(glm::vec3 location) {
@@ -169,8 +160,6 @@ private:
 	uint8_t m_match_instance_id;
 
 	std::queue<PlayerEvent> m_active_events;
-
-	Match* m_active_match;
 
 	glm::vec3 m_location;
 	glm::quat m_rotation;

@@ -1,20 +1,38 @@
 #include "VoxelWorld_Scene.h"
 
 #include "Game_Resources.h"
-
 #include "WorldGenController.h"
-
 #include "Editor_Camera_Control.h"
+#include "GameClient.h"
+#include "Client_Server_Interface.h"
 
 void VoxelWorld_Scene::Init()
 {
+	m_remote_connection = false;
+
 	setup_camera();
 	setup_lights();
 	setup_chunk_gen();
+	setup_client_server();
+	setup_game_client();
+
+	m_start_time = Utilities::Get_Time();
 }
 
 void VoxelWorld_Scene::Update(float dt)
 {
+	if (!m_client_server_inited) {
+
+		double cur_time = Utilities::Get_Time();
+		if (cur_time - m_start_time > 1.0)
+		{
+			game_client->Connect();
+			m_client_server_inited = true;
+		}
+
+	}
+
+
 	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 
@@ -71,7 +89,23 @@ void VoxelWorld_Scene::setup_lights()
 void VoxelWorld_Scene::setup_chunk_gen()
 {
 	world_gen_controller_obj = Instantiate("World_Gen_Controller");
-	world_gen_controller = world_gen_controller_obj->Add_Component<WorldGenController>();
+	//world_gen_controller = world_gen_controller_obj->Add_Component<WorldGenController>();
+}
+
+void VoxelWorld_Scene::setup_client_server()
+{
+	client_server_obj = Instantiate("Client_Server");
+	client_server = client_server_obj->Add_Component<Client_Server>();
+	if (!m_remote_connection) {
+		client_server->Initialize_Server();
+	}
+}
+
+void VoxelWorld_Scene::setup_game_client()
+{
+	game_client_obj = Instantiate("Game_Client");
+	game_client = game_client_obj->Add_Component<GameClient>();
+	game_client->Init("test_user", 1, m_remote_connection);
 }
 
 void VoxelWorld_Scene::create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color)

@@ -6,8 +6,6 @@
 #include "HashHelper.h"
 #include "Network/OpCodes.h"
 #include "Network/PlayerAuthenticator.h"
-#include "MatchManager.h"
-#include "Match.h"
 #include "IUser.h"
 #include "Player.h"
 
@@ -23,10 +21,7 @@ void Server_Main::UserConnected(std::shared_ptr<SocketUser> socket_user)
 
 	if (socket_user->Has_User() && !socket_user->GetUser().expired()) {
 		std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(socket_user->GetUser().lock());
-		Match* player_match = player->Get_Active_Match();
-		if (player_match != nullptr) {
-			player_match->RemovePlayer(player);
-		}
+
 	}
 
 	Logger::Log(LOG_POS("UserConnected"), "User '" + socket_user->SessionToken + "' has connected.");
@@ -102,9 +97,12 @@ std::shared_ptr<Player> Server_Main::CreateFakePlayer(uint32_t id)
 
 Server_Main::Server_Main(char* args)
 {
+	m_cmdArgs = args;
+
 	m_instance = this;
 
-	m_cmdArgs = args;
+	m_options.m_type = Server_Type::Remote;
+
 	frameCounter = 0;
 	m_curCommand = "";
 	m_executedCommand = "";
@@ -121,7 +119,28 @@ Server_Main::Server_Main(char* args)
 
 	m_app_dir = pBuf;
 	m_app_dir = m_app_dir.substr(0, m_app_dir.find_last_of('\\'));
+}
 
+Server_Main::Server_Main(Options options)
+{
+	m_instance = this;
+
+	frameCounter = 0;
+	m_curCommand = "";
+	m_executedCommand = "";
+	m_options = options;
+
+	char pBuf[256]{};
+	size_t len = sizeof(pBuf);
+#ifdef WINDOWS_PLATFROM
+	int bytes = GetModuleFileName(NULL, pBuf, len);
+#else // linux
+	readlink("/proc/self/exe", pBuf, len);
+
+#endif
+
+	m_app_dir = pBuf;
+	m_app_dir = m_app_dir.substr(0, m_app_dir.find_last_of('\\'));
 }
 
 void Server_Main::Start()
@@ -147,9 +166,7 @@ void Server_Main::Init()
 	m_net_server = new AsyncServer(this);
 
 	m_net_server->AddCommand(OpCodes::Server::Submit_Identity, Server_Main::UserIdentify_cb, this);
-	m_net_server->AddCommand(OpCodes::Server::Join_Match, Server_Main::JoinMatch_cb, this);
-
-	m_match_manager = new MatchManager();
+	//m_net_server->AddCommand(OpCodes::Server::Join_Match, Server_Main::JoinMatch_cb, this);
 
 	m_last_memory_print_time = GetEpoch();
 
@@ -179,7 +196,6 @@ void Server_Main::Update(double dt)
 
 	m_com_executer->Process();
 	m_net_server->Update(dt);
-	m_match_manager->Update(dt);
 
 	if (m_executedCommand != "")
 	{
@@ -268,56 +284,4 @@ void Server_Main::UserIdentify(SocketUser& user, Data data)
 	user.Send(OpCodes::Client::Identify_Result, std::vector<uint8_t>({ res }));
 }
 
-void Server_Main::JoinMatch(SocketUser& user, Data data)
-{
-	if (!user.Get_Authenticated()) {
-		// send fail
-		user.Send(OpCodes::Client::Join_Match_Result, std::vector<uint8_t>({ 0x00, 0x00, 0x00 }));
-		return;
-	}
 
-	std::shared_ptr<Player> player = Player::Cast_IUser(user.GetUser());
-
-	std::string json_string = HashHelper::BytesToString(data.Buffer);
-
-	Logger::Log(LOG_POS("JoinMatch"), json_string);
-
-	json::parse_options opt;
-	opt.allow_trailing_commas = true;
-
-	json::error_code ec;
-	json::value json_val = json::parse(json_string, ec, json::storage_ptr(), opt);
-
-	if (ec) {
-		Logger::Log(LOG_POS("JoinMatch"), "Failed to parse match json.");
-		// send fail
-		user.Send(OpCodes::Client::Join_Match_Result, std::vector<uint8_t>({ 0x00, 0x00, 0x00 }));
-		return;
-	}
-
-	json::object ident_obj = json_val.as_object();
-	std::string match_id = std::string(ident_obj.at("Match_ID").as_string());
-
-	//m_match_manager->AddMatchPlayer(CreateFakePlayer(0), match_id);
-
-	bool join_res = m_match_manager->AddMatchPlayer(player, match_id);
-	
-
-	bool res = 0x00;
-	uint16_t match_short_id = 0;
-	std::shared_ptr<Match> match = m_match_manager->GetMatchFromID(match_id);
-	if (match != nullptr && join_res) {
-		res = join_res;
-		match_short_id = match->ShortID();
-		res = 0x01;
-	}
-	else {
-		Logger::Log(LOG_POS("JoinMatch"), "Match join failed: " + std::to_string(join_res));
-	}
-
-
-
-	Logger::Log(LOG_POS("JoinMatch"), "Join " + player->Get_UserName() + " To match " + match_id + ", " + std::to_string(match_short_id));
-
-	user.Send(OpCodes::Client::Join_Match_Result, std::vector<uint8_t>({res, ((uint8_t*)&match_short_id)[0], ((uint8_t*)&match_short_id)[1]}));
-}

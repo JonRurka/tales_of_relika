@@ -48,7 +48,8 @@ void CommandExecuter::Process()
         printf("\n");
         //std::string output = Logger::InputStr();
         //Logger::InputStr("", 0);
-        Logger::ResetInput();
+        
+        //Logger::ResetInput(); // TODO
 
 
         Server_Main::Instance()->SetCommand(GetCurrentInput());

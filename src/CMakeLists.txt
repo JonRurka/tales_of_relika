@@ -11,8 +11,8 @@ add_subdirectory(LuaCpp)
 add_subdirectory(Compute)
 add_subdirectory(VoxelEngine)
 add_subdirectory(Engine)
-add_subdirectory(Game)
 add_subdirectory(Server)
+add_subdirectory(Game)
 add_subdirectory(Server_Exe)
 
 # Add X11 for screenshot support on linux
@@ -39,6 +39,7 @@ target_link_libraries(${PROJECT_NAME}
 	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
+	glaze::glaze
 	boost::boost
 	Vulkan::Vulkan
 	glm::glm

@@ -1,6 +1,9 @@
 #pragma once
 
-#include "../stdafx.h"
+//#include "../stdafx.h"
+
+#include <stdint.h>
+#include <vector>
 
 typedef unsigned int Remove;
 

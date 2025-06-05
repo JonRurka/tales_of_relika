@@ -3,7 +3,7 @@
 #include "stdafx.h"
 #include "Network/Data.h"
 
-
+#define BOOST_TIMER_ENABLE_DEPRECATED
 #include <boost/timer.hpp>
 
 class CommandExecuter;
@@ -15,6 +15,17 @@ class PlayerAuthenticator;
 class Player;
 
 class Server_Main {
+public:
+
+	enum class Server_Type {
+		Remote,
+		Local
+	};
+
+	struct Options {
+		Server_Type m_type;
+	};
+
 private:
 
 	struct QueueLengths {
@@ -26,6 +37,8 @@ private:
 	};
 
 	static Server_Main* m_instance;
+
+	Options m_options;
 
 	std::string m_cmdArgs;
 	std::string m_app_dir;
@@ -54,6 +67,8 @@ private:
 	static QueueLengths m_queue_lengths;
 
 public:
+
+	
 
 	static Server_Main* Instance() {
 		return m_instance;
@@ -147,6 +162,8 @@ public:
 
 	Server_Main(char* args);
 
+	Server_Main(Options options);
+
 
 	void Start();
 
@@ -166,11 +183,6 @@ public:
 		m_instance->UserIdentify(user, data);
 	}
 	void UserIdentify(SocketUser& user, Data data);
-
-	static void JoinMatch_cb(void* obj, SocketUser& user, Data data) {
-		m_instance->JoinMatch(user, data);
-	}
-	void JoinMatch(SocketUser& user, Data data);
 
 	inline static const std::string LOG_LOC{ "SERVER_MAIN" };
 

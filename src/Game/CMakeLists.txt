@@ -13,6 +13,8 @@ set(${module}_headers
 	include/Voxel_Test_Scene.h
 	include/Test_OpenCL_Scene.h
 	include/VoxelWorld_Scene.h
+	include/GameClient.h
+	include/Client_Server_Interface.h
 	
 	include/Editor_Camera_Control.h
 	
@@ -32,6 +34,8 @@ set(${module}_sources
 	src/Voxel_Test_Scene.cpp
 	src/Test_OpenCL_Scene.cpp
 	src/VoxelWorld_Scene.cpp
+	src/GameClient.cpp
+	src/Client_Server_Interface.cpp
 	
 	src/Editor_Camera_Control.cpp
 	
@@ -47,6 +51,7 @@ target_link_libraries(${module}
 	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
+	glaze::glaze 
 	boost::boost
 	Vulkan::Vulkan
 	glm::glm
