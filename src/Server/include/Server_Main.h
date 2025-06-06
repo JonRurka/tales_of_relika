@@ -23,7 +23,8 @@ public:
 	};
 
 	struct Options {
-		Server_Type m_type;
+		Server_Type Type;
+		bool Async;
 	};
 
 private:
@@ -47,6 +48,8 @@ private:
 	CommandExecuter* m_com_executer;
 	std::string m_curCommand;
 	std::string m_executedCommand;
+
+	std::thread m_loop_thread;
 
 	int frameCounter;
 	boost::timer timer;
@@ -146,7 +149,7 @@ public:
 		m_executedCommand = command;
 	}
 
-	void UserConnected(std::shared_ptr<SocketUser> socket_user);
+	void UserConnected(boost::shared_ptr<SocketUser> socket_user);
 
 	void UserDisconnected(SocketUser* socket_user);
 
@@ -171,6 +174,9 @@ public:
 
 	void Init();
 
+	static void Async_Loop(Server_Main* srv) {
+		srv->Loop();
+	}
 	void Loop();
 
 	void Update(double dt);

@@ -52,11 +52,12 @@ void SocketUser::HandleStartConnect_Finished(bool successfull)
 	if (successfull) {
 		result = 0x01;
 
-		_server->AddPlayer(shared_from_this());
+		boost::shared_ptr<SocketUser> user_ptr = _server->AddPlayer(this);
 
 		uint16_t udp_id = _server->Get_New_UDP_ID();
 		Set_UDP_ID(udp_id);
-		_server->Add_UDP_ID(udp_id, shared_from_this());
+		_server->Add_UDP_ID(udp_id, user_ptr);
+		tcp_connection_client->Set_Socket_User(user_ptr);
 		
 		uint16_t udp_port = EnableUdp();
 
@@ -72,7 +73,7 @@ void SocketUser::HandleStartConnect_Finished(bool successfull)
 
 		Logger::Log(LOG_POS("HandleStartConnect_Finished"), "UDP ID: " + std::to_string(udp_id));
 
-		//Send(OpCodes::Client::System_Reserved, BufferUtils::Add({0x01, result}, {udp_buf[0], udp_buf[1], udp_port_buf[0], udp_port_buf[1]}));
+		Send(OpCodes::Client::System_Reserved, BufferUtils::Add({0x01, result}, {udp_buf[0], udp_buf[1], udp_port_buf[0], udp_port_buf[1]}));
 
 		// handle messages
 

@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 
 #define LOG_POS(loc) (LOG_LOC + "::" + loc)
 
@@ -49,7 +50,7 @@ private:
 	inline static bool m_direct{false};
 	std::vector<LogEntry> m_entries;
 
-	
+	static std::mutex m_lock;
 
 	//std::vector<LogEntry> m_entries_processing;
 };

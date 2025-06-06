@@ -7,15 +7,15 @@ class IUser {
 private:
 	
 	bool m_is_connected;
-	std::shared_ptr<SocketUser> m_socket_user;
+	boost::shared_ptr<SocketUser> m_socket_user;
 
-	virtual void Set_Socket_User(std::shared_ptr<SocketUser> socket_user) {
+	virtual void Set_Socket_User(boost::shared_ptr<SocketUser> socket_user) {
 		m_is_connected = true;
 		m_socket_user = socket_user;
 	}
 
 public:
-	virtual std::shared_ptr<SocketUser> Socket_User() {
+	virtual boost::shared_ptr<SocketUser> Socket_User() {
 		return m_socket_user;
 	}
 

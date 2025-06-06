@@ -56,17 +56,17 @@ public:
 	
 	uint16_t Get_New_UDP_ID();
 
-	void Add_UDP_ID(uint16_t id, std::shared_ptr<SocketUser> user) {
+	void Add_UDP_ID(uint16_t id, boost::shared_ptr<SocketUser> user) {
 		m_udp_id_map[id] = user;
 	}
 
-	void AddPlayer(std::shared_ptr<SocketUser> user);
+	boost::shared_ptr<SocketUser> AddPlayer(SocketUser* user);
 	
 	void RemovePlayer(std::string user);
 
 	bool HasPlayerSession(std::string session_key);
 
-	void PlayerAuthenticated(std::shared_ptr<SocketUser> user, bool authorized);
+	void PlayerAuthenticated(boost::shared_ptr<SocketUser> user, bool authorized);
 
 	int Get_TCP_Send_Queue_Size_All();
 
@@ -124,12 +124,12 @@ private:
 	std::thread m_thread_2;
 
 	std::unordered_map<uint8_t, NetCommand> m_commands;
-	std::unordered_map<std::string, std::shared_ptr<SocketUser>> m_socket_users;
-	std::unordered_map<uint16_t, std::shared_ptr<SocketUser>> m_udp_id_map;
-	std::vector<std::shared_ptr<SocketUser>> m_Socket_user_list;
+	std::unordered_map<std::string, boost::shared_ptr<SocketUser>> m_socket_users;
+	std::unordered_map<uint16_t, boost::shared_ptr<SocketUser>> m_udp_id_map;
+	std::vector<boost::shared_ptr<SocketUser>> m_Socket_user_list;
 	std::recursive_mutex m_user_mtx;
 
-	std::queue<std::shared_ptr<SocketUser>> m_queue_user_add;
+	std::queue<boost::shared_ptr<SocketUser>> m_queue_user_add;
 	std::queue<std::string> m_queue_user_remove;
 
 	std::queue<ThreadCommand> m_main_command_queue;
@@ -144,7 +144,7 @@ private:
 
 	void PopulateUserList();
 
-	void DoAddPlayer(std::shared_ptr<SocketUser> user);
+	void DoAddPlayer(boost::shared_ptr<SocketUser> user);
 
 	void DoRemovePlayer(std::string user);
 

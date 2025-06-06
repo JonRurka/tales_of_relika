@@ -6,6 +6,7 @@
 
 #define PLAYER_ORIENTATION_SIZE (7 * sizeof(float))
 
+class World;
 
 class Player : public IUser {
 public:
@@ -33,7 +34,15 @@ public:
 
 	bool SetIdentity(PlayerIdentity identity);
 
-	void MatchUpdate(float dt);
+	void WorldUpdate(float dt);
+
+	void Set_Current_World(World* match) {
+		m_current_world = match;
+	}
+
+	World* Get_Current_World() {
+		return m_current_world;
+	}
 
 	std::string Get_UserName() {
 		return m_identity.UserName;
@@ -156,6 +165,8 @@ private:
 	//uint32_t m_UserID;
 	//int m_distributor;
 	PlayerIdentity m_identity;
+
+	World* m_current_world;
 
 	uint8_t m_match_instance_id;
 

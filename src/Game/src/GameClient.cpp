@@ -49,7 +49,7 @@ void GameClient::ClientConnected(bool success)
 {
 	if (success) {
 		Logger::Log(LOG_POS("ClientConnected"), "We're connected!");
-		//do_identify();
+		do_identify();
 
 	}
 	else {
@@ -59,7 +59,7 @@ void GameClient::ClientConnected(bool success)
 
 void GameClient::OnIdentifyResult(Data data)
 {
-
+	Logger::LogDebug(LOG_POS("OnIdentifyResult"), "Received an identify result.");
 
 
 }
@@ -68,9 +68,10 @@ void GameClient::do_identify()
 {
 	json ident_json;
 
-	ident_json["UserName"] = "";
-	ident_json["UserID"] = 0;
+	ident_json["UserName"] = m_debug_userName;
+	ident_json["UserID"] = m_user_ID;
 	
 	std::string ident_jsn_str = ident_json.dump();
 
+	m_client->Send(OpCodes::Server::Submit_Identity, ident_jsn_str);
 }

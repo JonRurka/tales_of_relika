@@ -1,9 +1,8 @@
 #include "Player.h"
 #include "Server_Main.h"
 
-#include <boost/json.hpp>
-
-using namespace boost;
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 #define SEND_DEBUG_JUMP 3000
 
@@ -28,6 +27,11 @@ std::shared_ptr<Player> Player::Cast_IUser(std::weak_ptr<IUser> user)
 
 bool Player::SetIdentity(std::string json_identity)
 {
+	json data = json::parse(json_identity);
+
+	m_identity.UserName = data["UserName"];
+	m_identity.UserID = data["UserID"];
+
 	//Logger::Log( json_identity);
 	/*
 	json::parse_options opt;
@@ -60,7 +64,7 @@ bool Player::SetIdentity(PlayerIdentity identity)
 	return true;
 }
 
-void Player::MatchUpdate(float dt)
+void Player::WorldUpdate(float dt)
 {
 	
 

@@ -132,7 +132,8 @@ void NetClient::Process()
     }
     
 
-    if ((now - last_sent_ping) >= PING_SEND_MS) {
+    if (m_ping_enabled && (now - last_sent_ping) >= PING_SEND_MS) {
+        //Logger::LogDebug(LOG_POS("Process"), "Sending ping....");
         send_ping();
     }
 
@@ -222,6 +223,7 @@ void NetClient::Disconnect(bool sendClose)
 
 void NetClient::send_ping()
 {
+    //Logger::LogDebug(LOG_POS("send_ping"), "Sending ping....");
     last_sent_ping = GetEpoch();
     Send(OpCodes::Server::System_Reserved, std::vector<uint8_t>({ 0x03, 0x01 }), Protocal_Tcp);
 }
@@ -363,8 +365,14 @@ void NetClient::do_tcp_send(std::vector<uint8_t> data)
         return;
     }
 
+    std::string send_str = "";
+    for (const auto& elem : data) {
+        send_str += std::to_string(elem) + ", ";
+    }
+
     data = BufferUtils::AddLength(data);
 
+    //Logger::LogDebug(LOG_POS("do_tcp_send"), "Sending: %s", send_str.c_str());
     boost::asio::write(m_socket_tcp, boost::asio::buffer(data));
 }
 
@@ -408,6 +416,7 @@ void NetClient::SystemCmds_internal(Data data)
             //std::vector<uint8_t> port_arr = std::vector<uint8_t>((uint8_t*)&udp_port, 2);
             //Send(OpCodes::Server::System_Reserved, BufferUtils::AddFirst(0x04, port_arr));
             OnConnect_delegate(OnConnect_obj, true);
+            m_ping_enabled = true;
         }
         else {
             OnConnect_delegate(OnConnect_obj, false);
@@ -419,7 +428,7 @@ void NetClient::SystemCmds_internal(Data data)
         break;
     case 0x03:
         last_received_ping = GetEpoch();
-        //UE_LOG(GameClient_Log, Display, TEXT("Received pong"));
+        //Logger::Log(LOG_POS("System_Cmd"), "Received pong for client.");
         break;
     }
 }

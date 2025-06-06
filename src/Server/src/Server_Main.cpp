@@ -8,15 +8,11 @@
 #include "Network/PlayerAuthenticator.h"
 #include "IUser.h"
 #include "Player.h"
-
-#include <boost/json/src.hpp>
-
-using namespace boost;
  
 Server_Main* Server_Main::m_instance = nullptr;
 Server_Main::QueueLengths Server_Main::m_queue_lengths{};
 
-void Server_Main::UserConnected(std::shared_ptr<SocketUser> socket_user)
+void Server_Main::UserConnected(boost::shared_ptr<SocketUser> socket_user)
 {
 
 	if (socket_user->Has_User() && !socket_user->GetUser().expired()) {
@@ -101,7 +97,7 @@ Server_Main::Server_Main(char* args)
 
 	m_instance = this;
 
-	m_options.m_type = Server_Type::Remote;
+	m_options.Type = Server_Type::Remote;
 
 	frameCounter = 0;
 	m_curCommand = "";
@@ -146,7 +142,12 @@ Server_Main::Server_Main(Options options)
 void Server_Main::Start()
 {
 	Init();
-	Loop();
+	if (m_options.Async) {
+		m_loop_thread = std::thread(&Async_Loop, this);
+	}
+	else {
+		Loop();
+	}
 }
 
 void Server_Main::LoadSettings(std::string file)
@@ -175,6 +176,8 @@ void Server_Main::Init()
 
 void Server_Main::Loop()
 {
+	//Logger::Log(LOG_POS("Loop"), "Main Server Loop.");
+
 	timer.restart();
 	lastTime = timer.elapsed();
 	while (m_running)
@@ -220,10 +223,10 @@ void Server_Main::Update(double dt)
 		m_memory_lock.unlock();*/
 
 
-		PrintQueueLengths();
+		//PrintQueueLengths();
 
 		glm::uvec2 udp_sends = m_net_server->Get_UDP_Sends();
-		Logger::Log(LOG_POS("Update"), "UDP packets sent: " + std::to_string(udp_sends.y) + " out of " + std::to_string(udp_sends.x));
+		//Logger::Log(LOG_POS("Update"), "UDP packets sent: " + std::to_string(udp_sends.y) + " out of " + std::to_string(udp_sends.x));
 
 		m_last_memory_print_time = now;
 	}
@@ -266,6 +269,8 @@ void Server_Main::SetCurrentCommand(std::string command)
 
 void Server_Main::UserIdentify(SocketUser& user, Data data)
 {
+	Logger::LogDebug(LOG_POS("UserIdentify"), "Identifying user.");
+
 	std::shared_ptr<Player> player = std::make_shared<Player>();
 	user.SetUser(std::static_pointer_cast<IUser>(player));
 

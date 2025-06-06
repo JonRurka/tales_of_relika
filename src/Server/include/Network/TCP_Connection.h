@@ -26,7 +26,7 @@ private:
 	uint8_t length_buff[2]{};
 	std::map<uint64_t, uint8_t*> send_buffers;
 	int numSends = 0;
-	std::weak_ptr<SocketUser> socket_user;
+	boost::weak_ptr<SocketUser> socket_user;
 	//std::vector<std::shared_ptr<SocketUser>> tmp_socket_ref;
 	std::unordered_map<int, std::shared_ptr<SocketUser>> tmp_socket_ref;
 	std::mutex m_lock;
@@ -45,7 +45,7 @@ public:
 		return socket_;
 	}
 
-	void Set_Socket_User(std::weak_ptr<SocketUser> p_socket_user) {
+	void Set_Socket_User(boost::weak_ptr<SocketUser> p_socket_user) {
 		socket_user = p_socket_user;
 	}
 

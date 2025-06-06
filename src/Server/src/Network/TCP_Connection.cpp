@@ -31,6 +31,7 @@ void tcp_connection::Send(std::vector<uint8_t> sending)
 
 void tcp_connection::Start_Read()
 {
+	//Logger::LogDebug(LOG_POS("Start_Read"), "Awaiting new messages...");
 	m_lock.lock();
 	boost::asio::async_read(socket_, boost::asio::buffer(length_buff, 2),
 		boost::bind(&tcp_connection::handle_read, shared_from_this(),
@@ -41,7 +42,6 @@ void tcp_connection::Start_Read()
 
 void tcp_connection::Start_Initial_Connect(SocketUser* p_socket_user)
 {
-	//Set_Socket_User(p_socket_user);
 	//tmp_socket_ref.push_back(p_socket_user);
 	int key = HashHelper::RandomNumber(0, INT32_MAX - 1);
 	//tmp_socket_ref[key] = p_socket_user;
@@ -112,22 +112,24 @@ void tcp_connection::Handle_Initial_Connect(
 		return;
 	}
 
-	uint16_t size = *((uint16_t*)&length_buff);
+	uint16_t desired_size = 3;// *((uint16_t*)&length_buff);
+	uint16_t actual_size = *((uint16_t*)&length_buff);
 
-	uint8_t* message = new uint8_t[size];
-	boost::asio::read(socket_, boost::asio::buffer(message, size));
+	uint8_t message[3];
+	boost::asio::read(socket_, boost::asio::buffer(message, desired_size));
 
-	bool successfull = (size == 3 && message[0] == 0xff && message[1] == 0x01 && message[2] == 0x01);
+	bool successfull = (actual_size == 3 && message[0] == 0xff && message[1] == 0x01 && message[2] == 0x01);
 
-	Logger::Log(LOG_POS("Handle_Initial_Connect"), "Handle_Initial_Connect: " + std::to_string(successfull));
+	//Logger::Log(LOG_POS("Handle_Initial_Connect"), "Handle_Initial_Connect: " + std::to_string(successfull));
 	if (!successfull) {
-		Logger::Log(LOG_POS("Handle_Initial_Connect"), "size: " + std::to_string(size));
+		Logger::Log(LOG_POS("Handle_Initial_Connect"), "size: " + std::to_string(actual_size));
 		Logger::Log(LOG_POS("Handle_Initial_Connect"), "message[0]: " + std::to_string(message[0]));
 		Logger::Log(LOG_POS("Handle_Initial_Connect"), "message[1]: " + std::to_string(message[1]));
 		Logger::Log(LOG_POS("Handle_Initial_Connect"), "message[2]: " + std::to_string(message[2]));
 	}
-
-	delete[] message;
+	else {
+		Logger::Log(LOG_POS("Handle_Initial_Connect"), "Client connected successflly.");
+	}
 
 	p_socket_user->HandleStartConnect_Finished(successfull);
 
@@ -183,8 +185,9 @@ void tcp_connection::handle_read(const boost::system::error_code& err, size_t tr
 	std::vector msg(message, message + size);
 	delete[] message;
 
-	if (!socket_user.expired())
+	if (!socket_user.expired()) {
 		socket_user.lock()->ProcessReceiveBuffer(msg, Protocal_Tcp);
+	}
 
 	Start_Read();
 

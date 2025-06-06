@@ -75,25 +75,26 @@ private:
 
     std::string m_name;
     std::string m_host;
-    HostType m_hostType;
-    uint16_t m_server_port_tcp;
-    uint16_t m_server_port_udp;
-    uint16_t m_client_port_udp;
-
+    HostType m_hostType{ HostType::Local };
+    uint16_t m_server_port_tcp{ 0 };
+    uint16_t m_server_port_udp{ 0 };
+    uint16_t m_client_port_udp{ 0 };
+    
     std::thread m_thread_recv_tcp;
     std::thread m_thread_recv_udp;
     std::thread m_thread_send;
 
-    bool m_udp_socket_connected;
-    bool m_tcp_socket_connected;
-    bool m_run;
-    bool trigger_stop;
-    bool m_udp_started;
+    bool m_udp_socket_connected{ false };
+    bool m_tcp_socket_connected{ false };
+    bool m_run{ false };
+    bool trigger_stop{ false };
+    bool m_udp_started{ false };
+    bool m_ping_enabled{ false };
 
-    uint64_t last_sent_ping;
-    uint64_t last_received_ping;
+    uint64_t last_sent_ping{ 0 };
+    uint64_t last_received_ping{ 0 };
 
-    uint16_t m_UDP_ID;
+    uint16_t m_UDP_ID{ 0 };
 
     boost::asio::io_context m_io_context;
 
@@ -112,7 +113,7 @@ private:
     std::queue<std::vector<uint8_t>> m_udp_send_queue;
 
     OnConnectActionPtr OnConnect_delegate;
-    void* OnConnect_obj;
+    void* OnConnect_obj{ nullptr };
 
 
     std::unordered_map<uint8_t, NetCommand> m_commands;

@@ -31,8 +31,10 @@ AsyncServer::AsyncServer(Server_Main* server)
 
 void AsyncServer::Update(float dt)
 {
+    //Logger::Log(LOG_POS("Update"), "server update.");
+
     while (!m_queue_user_add.empty()) {
-        std::shared_ptr<SocketUser>& user = m_queue_user_add.front();
+        boost::shared_ptr<SocketUser>& user = m_queue_user_add.front();
         m_queue_user_add.pop();
 
         DoAddPlayer(user);
@@ -52,8 +54,8 @@ void AsyncServer::Update(float dt)
         use_count_str += std::to_string(usr.use_count()) + ", ";
     }
 
-    Server_Main::SetQueueLength_TCP_SendQeue(Get_TCP_Send_Queue_Size_All());
-    Server_Main::SetQueueLength_UDP_SendQeue(Get_UDP_Send_Queue_Size_All());
+    //Server_Main::SetQueueLength_TCP_SendQeue(Get_TCP_Send_Queue_Size_All());
+    //Server_Main::SetQueueLength_UDP_SendQeue(Get_UDP_Send_Queue_Size_All()); // TODO: Caused crash
 
     //if (m_Socket_user_list.size() > 0)
     //    Logger::Log("User use counts: " + use_count_str);
@@ -63,6 +65,12 @@ void AsyncServer::Update(float dt)
 
     m_main_cmd_q_len = numEntries;
     Server_Main::SetQueueLength_Main_ReceiveQueue(numEntries);
+
+    if (numEntries <= 0) {
+        return;
+    }
+
+    //Logger::LogDebug(LOG_POS("Update"), "We did receive a command on main thread. %i", m_main_command_queue.size());
 
     while (!current_command_queue.empty()) {
         ThreadCommand thr_command = current_command_queue.front();
@@ -84,6 +92,8 @@ void AsyncServer::Process_Async(AsyncServer* svr) {
     while (svr->m_run) {
 
         std::this_thread::sleep_for(std::chrono::nanoseconds(ns_wait));
+
+        //Logger::LogDebug(LOG_POS("Process_Async"), "We did receive a command on async thread. %i", svr->m_async_command_queue.size());
 
         std::queue<ThreadCommand> current_command_queue;
         int numEntries = svr->threadSafeCommandQueueDuplicate(svr->m_async_command_queue_lock, svr->m_async_command_queue, current_command_queue);
@@ -145,9 +155,11 @@ void AsyncServer::AddCommand(OpCodes::Server cmd, CommandActionPtr callback, voi
     }
 }
 
-void AsyncServer::AddPlayer(std::shared_ptr<SocketUser> user)
+boost::shared_ptr<SocketUser> AsyncServer::AddPlayer(SocketUser* user)
 {
-    m_queue_user_add.push(user);
+    boost::shared_ptr<SocketUser> res = boost::shared_ptr<SocketUser>(user);
+    m_queue_user_add.push(res);
+    return res;
 }
 
 void AsyncServer::RemovePlayer(std::string user)
@@ -155,7 +167,7 @@ void AsyncServer::RemovePlayer(std::string user)
     m_queue_user_remove.push(user);
 }
 
-void AsyncServer::DoAddPlayer(std::shared_ptr<SocketUser> user) {
+void AsyncServer::DoAddPlayer(boost::shared_ptr<SocketUser> user) {
     if (!HasPlayerSession(user->SessionToken)) {
         m_user_mtx.lock();
         m_socket_users[user->SessionToken] = user;
@@ -189,7 +201,7 @@ bool AsyncServer::HasPlayerSession(std::string session_key)
     return m_socket_users.find(session_key) != m_socket_users.end();
 }
 
-void AsyncServer::PlayerAuthenticated(std::shared_ptr<SocketUser> user, bool authorized)
+void AsyncServer::PlayerAuthenticated(boost::shared_ptr<SocketUser> user, bool authorized)
 {
 	if (authorized) {
 		// set to authorized/
@@ -353,12 +365,14 @@ void AsyncServer::Process(SocketUser* socket_user, uint8_t command, uint8_t* dat
 
         if (command_obj.Is_Async && m_run_async_commands) {
             //Logger::Log("Received async command: " + std::to_string(data.command));
+            //Logger::LogDebug(LOG_POS("Process"), "Async message recieved: %i", m_async_command_queue.size());
             m_async_command_queue_lock.lock();
             m_async_command_queue.push(thread_cmd);
             m_async_command_queue_lock.unlock();
         }
         else {
             //Logger::Log("Received main command: " + std::to_string(data.command));
+            //Logger::LogDebug(LOG_POS("Process"), "Main message recieved: %i", m_async_command_queue.size());
             m_main_command_queue_lock.lock();
             m_main_command_queue.push(thread_cmd);
             m_main_cmd_q_len++;
@@ -425,7 +439,7 @@ void AsyncServer::System_Cmd(SocketUser& socket_user, Data data)
     case 0x03: // ping
         socket_user.ResetPingCounter();
         socket_user.Send(OpCodes::Client::System_Reserved, std::vector<uint8_t>({ 0x03, 0x01 }), Protocal_Tcp);
-        //Logger::Log("Received ping for client: " + socket_user->SessionToken);
+        //Logger::Log(LOG_POS("System_Cmd"), "Received ping for client: " + socket_user.SessionToken);
         break;
     case 0x04: // set UDP client port
         uint16_t port = *((uint16_t*)data.Buffer.data());

@@ -21,6 +21,8 @@ set(${module}_headers
 	include/HashHelper.h
 	include/IUser.h
 	include/Linux_conio.h
+	include/WorldController.h
+	include/World.h
 	include/Player.h
 	include/Server_Main.h
 	include/stdafx.h
@@ -40,6 +42,8 @@ set(${module}_sources
 	
 	src/CommandExecuter.cpp
 	src/IUser.cpp
+	src/WorldController.cpp
+	src/World.cpp
 	src/Linux_conio.cpp
 	src/Player.cpp
 	src/Server_Main.cpp

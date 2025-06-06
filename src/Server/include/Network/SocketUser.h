@@ -6,7 +6,7 @@
 
 class AsyncServer;
 
-class SocketUser : public std::enable_shared_from_this<SocketUser> {
+class SocketUser : public boost::enable_shared_from_this<SocketUser> {
 	friend class tcp_connection;
 	friend class AsyncServer;
 

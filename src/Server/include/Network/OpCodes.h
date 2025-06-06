@@ -7,11 +7,11 @@ public:
 	enum class Server : uint8_t {
 		System_Reserved = 0xff,
 		Submit_Identity = 0x01,
-		Match_Command = 0x02,
+		World_Command = 0x02,
 		Join_Match = 0x03
 	};
 
-	enum class Server_Match : uint8_t {
+	enum class Server_World : uint8_t {
 		Debug_Start = 0x01, 
 		Update_Orientation = 0x02,
 		Player_Event = 0x03

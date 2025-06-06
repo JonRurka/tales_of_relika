@@ -13,6 +13,7 @@
 #include "Engine.h"
 
 Logger Logger::m_logger;
+std::mutex Logger::m_lock;
 
 void Logger::Log(Logger::Level level, std::string source, std::string message)
 {
@@ -21,7 +22,9 @@ void Logger::Log(Logger::Level level, std::string source, std::string message)
 	entry.source = source;
 	entry.message = message;
 
+	m_lock.lock();
 	m_logger.m_entries.push_back(entry);
+	m_lock.unlock();
 
 	if (m_direct) {
 		Update();
@@ -128,10 +131,12 @@ std::vector<Logger::LogEntry> Logger::GetLogEntries()
 	// Declaring new vector
 	std::vector<Logger::LogEntry> res;
 
+	m_lock.lock();
 	// Copying vector by copy function
 	std::copy(m_logger.m_entries.begin(), m_logger.m_entries.end(), std::back_inserter(res));
 
 	m_logger.m_entries.clear();
+	m_lock.unlock();
 
 	return res;
 }
