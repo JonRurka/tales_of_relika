@@ -21,6 +21,11 @@ WorldController::~WorldController()
 {
 }
 
+void WorldController::Init()
+{
+	Create_World();
+}
+
 void WorldController::Update(float dt)
 {
 }
@@ -44,15 +49,32 @@ void WorldController::RoutWorldNetCommand(SocketUser& user, Data data)
 
 void WorldController::Create_World()
 {
+	World::WorldCreationOptions options{};
+	World* world = World::New_World(options);
 
-
-
-
+	uint64_t world_id = world->World_ID();
+	m_loaded_worlds[world_id] = world;
 }
 
 void WorldController::Load_Worlds()
 {
+	World::WorldCreationOptions options{};
+	World* world = World::New_World(options);
 
+	uint64_t world_id = world->World_ID();
+	m_loaded_worlds[world_id] = world;
+}
 
+bool WorldController::World_Exists(uint64_t world_id)
+{
+	return m_loaded_worlds.contains(world_id);
+}
 
+World* WorldController::Get_World(uint64_t world_id)
+{
+	if (!World_Exists(world_id)) {
+		return nullptr;
+	}
+
+	return m_loaded_worlds[world_id];
 }

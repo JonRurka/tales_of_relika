@@ -80,7 +80,6 @@ target_link_libraries(${module}
 	OpenCL OpenCLUtils OpenCLUtilsCpp
 	glm::glm
 	glfw
-	lua::lua
 	Bullet::Bullet
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator

@@ -13,6 +13,7 @@ class SocketUser;
 class MatchManager;
 class PlayerAuthenticator;
 class Player;
+class LuaEngine;
 
 class Server_Main {
 public:
@@ -60,6 +61,8 @@ private:
 	MatchManager* m_match_manager;
 
 	PlayerAuthenticator* m_authenticator;
+
+	LuaEngine* m_lua_engine;
 
 	std::unordered_map<uint32_t, std::shared_ptr<Player>> m_players;
 
@@ -142,6 +145,10 @@ public:
 		m_instance->m_memory_lock.unlock();
 	}
 
+	static std::shared_ptr<Player> GetPlayer(uint32_t id);
+
+	static LuaEngine* GetLuaEngine() { return m_instance->m_lua_engine; }
+
 	void SetCurrentCommand(std::string command);
 
 	void SetCommand(std::string command)
@@ -153,7 +160,9 @@ public:
 
 	void UserDisconnected(SocketUser* socket_user);
 
-	void PlayerAuthenticated(std::shared_ptr<Player>, bool authorized);
+	void PlayerAuthenticated(std::shared_ptr<Player> player, bool authorized);
+
+	void PlayerJoined(std::shared_ptr<Player> player);
 
 	bool Has_Player(uint32_t p_id) {
 		return m_players.find(p_id) != m_players.end();

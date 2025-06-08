@@ -1,17 +1,22 @@
 #include "World.h"
-
+#include "Server_Main.h"
 #include "Network/AsyncServer.h"
 #include "Network/SocketUser.h"
 #include "IUser.h"
 #include "Player.h"
 #include "HashHelper.h"
 
+#define ORIENTATION_SEND_RATE ((1 / 20.0) * 1000) // MS
+
 void World::Init()
 {
+	m_thread = std::thread(Run, this);
 }
 
 void World::Stop()
 {
+
+
 }
 
 void World::Update(float dt)
@@ -25,10 +30,11 @@ void World::SubmitPlayerEvent(Player& player, OpCodes::Player_Events event_cmd, 
 	}
 }
 
-World* World::New_World()
+World* World::New_World(WorldCreationOptions options)
 {
 	World* world = new World();
-	world->create_new();
+	world->create_new(options);
+	world->Init();
 	return world;
 }
 
@@ -36,7 +42,27 @@ World* World::Load_World(uint64_t world_id)
 {
 	World* world = new World();
 	world->load(world_id);
+	world->Init();
 	return world;
+}
+
+void World::AssignPlayer(World* world, Player::pointer player)
+{
+	World* current_world = player->Get_Current_World();
+
+	if (current_world != nullptr) {
+
+		if (world != nullptr) {
+			if (current_world->World_ID() == world->World_ID()) {
+				return;
+			}
+		}
+		current_world->remove_player(player);
+	}
+
+	if (world != nullptr) {
+		world->add_player(player);
+	}
 }
 
 void World::SubmitWorldCommand(Player* user, Data data)
@@ -55,12 +81,88 @@ bool World::HasPlayer(uint32_t player_id)
 	return m_players.contains(player_id);
 }
 
-bool World::HasPlayer(std::shared_ptr<Player> player)
+bool World::HasPlayer(Player::pointer player)
 {
 	return m_players.contains(player->Get_UserID());
 }
 
-void World::create_new()
+std::vector<Player::pointer> World::GetPlayers()
+{
+	std::vector<Player::pointer> current_players;
+	current_players.reserve(m_players.size());
+	m_player_mtx.lock();
+	for (auto& pair : m_players) {
+		current_players.push_back(pair.second);
+	}
+	m_player_mtx.unlock();
+
+	return std::vector<Player::pointer>();
+}
+
+std::vector<Player::pointer> World::PlayersInRadius(glm::vec3 point, float radius)
+{
+	std::vector<Player::pointer> players = GetPlayers();
+	std::vector<Player::pointer> close_players;
+	close_players.reserve(players.size());
+	for (auto& p : players) {
+		glm::vec3 player_pos = p->Get_Location();
+		float dist = glm::distance(point, player_pos);
+		if (dist <= radius) {
+			close_players.push_back(p);
+		}
+	}
+	return close_players;
+}
+
+void World::Run(World* world)
+{
+	world->async_init();
+	world->GameLoop();
+}
+
+void World::async_init()
+{
+	m_running = true;
+	m_last_orientation_update = Server_Main::GetEpoch();
+	m_last_frame = Server_Main::GetEpoch();
+}
+
+void World::add_player(Player::pointer player)
+{
+	uint32_t user_id = player->Get_UserID();
+	if (m_players.contains(user_id)) {
+		return;
+	}
+
+	uint16_t inst_id = 0;
+	bool contains_id = false;
+	int i = 0;
+	do {
+		inst_id = HashHelper::RandomNumber(0, UINT16_MAX - 1);
+		contains_id = m_player_short_ids.contains(inst_id);
+		i++;
+	} while (contains_id);
+
+	player->Set_Current_World(this, inst_id);
+	m_players[inst_id] = player;
+	m_player_short_ids[inst_id] = user_id;
+}
+
+void World::remove_player(Player::pointer player)
+{
+	uint32_t user_id = player->Get_UserID();
+	if (!m_players.contains(user_id)) {
+		return;
+	}
+
+	uint16_t inst_id = player->Get_WorldInstanceID();
+	player->Set_Current_World(nullptr, 0);
+	m_players.erase(user_id);
+	m_player_short_ids.erase(inst_id);
+
+}
+
+void World::create_new(WorldCreationOptions options)
 {
 	m_world_id = HashHelper::RandomNumber_u64(0, UINT64_MAX - 1);
 }
@@ -73,10 +175,50 @@ void World::load(uint64_t id)
 
 void World::GameLoop()
 {
+	while (m_running) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+		uint64_t now = Server_Main::GetEpoch();
+		float delta_time = (now - m_last_frame) / 1000.0;
+		m_last_frame = now;
+
+		AsynUpdate(delta_time);
+	}
 }
 
 void World::AsynUpdate(float dt)
 {
+	ProcessNetCommands();
+	UpdatePlayers(dt);
+	SendOrientationUpdates();
+	SendPlayerEvents();
+}
+
+void World::UpdatePlayers(float dt)
+{
+	std::vector<Player::pointer> current_players = GetPlayers();
+	for (auto& p : current_players) {
+		p->WorldUpdate(dt);
+	}
+}
+
+void World::SendOrientationUpdates()
+{
+	uint64_t now = Server_Main::GetEpoch();
+
+	if ((now - m_last_orientation_update) > ORIENTATION_SEND_RATE) {
+
+		std::vector<Player::pointer> current_players = GetPlayers();
+
+		for (const auto& p : current_players) {
+			p->SyncOrientations();
+		}
+	}
+}
+
+void World::SendPlayerEvents()
+{
+	
 }
 
 void World::ProcessNetCommands()
@@ -129,7 +271,7 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 				SubmitPlayerEvent(*player, event_cmd, data.Buffer);
 			}
 			else {
-				Logger::LogWarning("Received malformed Match Player Event from '" + player->Get_UserName() + "'!");
+				Logger::LogWarning(LOG_POS("ExecuteNetCommand"), "Received malformed Match Player Event from '" + player->Get_UserName() + "'!");
 			}
 			break;
 		}

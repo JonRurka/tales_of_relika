@@ -17,6 +17,8 @@ set(${module}_headers
 	include/Client_Server_Interface.h
 	
 	include/Editor_Camera_Control.h
+	include/LocalPlayerCharacter.h
+	include/NetPlayerCharacter.h
 	
 	include/Stitch_VBO.h
 	include/WorldGenController.h
@@ -38,6 +40,8 @@ set(${module}_sources
 	src/Client_Server_Interface.cpp
 	
 	src/Editor_Camera_Control.cpp
+	src/LocalPlayerCharacter.cpp
+	src/NetPlayerCharacter.cpp
 	
 	src/Stitch_VBO.cpp
 	src/WorldGenController.cpp
@@ -56,7 +60,7 @@ target_link_libraries(${module}
 	Vulkan::Vulkan
 	glm::glm
 	glfw
-	lua::lua
+	sol2::sol2
 	Bullet::Bullet
 	OpenAL::OpenAL
 	inih::inih
@@ -64,7 +68,7 @@ target_link_libraries(${module}
 	#GPUOpen::VulkanMemoryAllocator
 )
 
-target_link_libraries(${module} LuaCpp Compute VoxelEngine Engine Server)
+target_link_libraries(${module} Compute VoxelEngine Engine Server)
 
 
 

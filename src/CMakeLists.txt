@@ -1,13 +1,13 @@
 project("tales_of_relika")
 
-include_directories(LuaCpp)
+#include_directories(LuaCpp)
 include_directories(Compute/include)
 include_directories(VoxelEngine/include)
 include_directories(Engine/include)
 include_directories(Game/include)
 include_directories(Server/include)
 
-add_subdirectory(LuaCpp)
+#add_subdirectory(LuaCpp)
 add_subdirectory(Compute)
 add_subdirectory(VoxelEngine)
 add_subdirectory(Engine)
@@ -48,7 +48,7 @@ target_link_libraries(${PROJECT_NAME}
 	spirv-cross-glsl
 	spirv-cross-msl
 	spirv-cross-reflect
-	lua::lua
+	sol2::sol2
 	Bullet::Bullet
 	OpenAL::OpenAL
 	inih::inih
@@ -56,4 +56,4 @@ target_link_libraries(${PROJECT_NAME}
 	nvpro_core
 	#GPUOpen::VulkanMemoryAllocator
 )
-target_link_libraries(${PROJECT_NAME} LuaCpp Compute VoxelEngine Engine Game Server)
+target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Game Server)

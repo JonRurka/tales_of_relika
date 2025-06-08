@@ -6,8 +6,11 @@
 #include "HashHelper.h"
 #include "Network/OpCodes.h"
 #include "Network/PlayerAuthenticator.h"
+#include "WorldController.h"
+#include "World.h"
 #include "IUser.h"
 #include "Player.h"
+#include "LuaEngine.h"
  
 Server_Main* Server_Main::m_instance = nullptr;
 Server_Main::QueueLengths Server_Main::m_queue_lengths{};
@@ -56,6 +59,7 @@ void Server_Main::PlayerAuthenticated(std::shared_ptr<Player> player, bool autho
 		else {
 			player->Socket_User()->Set_Authenticated(true);
 			m_players[player->Get_UserID()] = player;
+			PlayerJoined(player);
 		}
 	}
 	else {
@@ -63,6 +67,26 @@ void Server_Main::PlayerAuthenticated(std::shared_ptr<Player> player, bool autho
 		player->Socket_User()->Close(true);
 		//delete player;
 	}
+}
+
+void Server_Main::PlayerJoined(std::shared_ptr<Player> player)
+{
+	bool has_data = player->LoadPlayerData();
+	if (has_data) {
+		// load existing player
+		uint64_t world_id = player->Player_Game_Data().CurrentWorldID;
+
+		if (WorldController::GetInstance()->World_Exists(world_id)) {
+			player->AssignPlayer(WorldController::GetInstance()->Get_World(world_id));
+		}
+	}
+	else {
+		// create new player profile.
+
+
+	}
+
+
 }
 
 void Server_Main::PrintQueueLengths()
@@ -163,6 +187,8 @@ void Server_Main::Init()
 
 	//Logger::Log("Server Started!");
 
+	m_lua_engine = new LuaEngine();
+
 	m_authenticator = new PlayerAuthenticator(this);
 	m_net_server = new AsyncServer(this);
 
@@ -172,6 +198,15 @@ void Server_Main::Init()
 	m_last_memory_print_time = GetEpoch();
 
 	Logger::Log(LOG_POS("Init"), "Server Initialized Successfully!");
+
+
+	
+	
+
+
+
+
+
 }
 
 void Server_Main::Loop()
@@ -260,6 +295,15 @@ uint64_t Server_Main::GetMemoryUsage()
 	uint64_t physMemUsedByMe = pmc.WorkingSetSize;*/
 
 	return 0;// physMemUsedByMe;
+}
+
+std::shared_ptr<Player> Server_Main::GetPlayer(uint32_t id)
+{
+	if (!m_instance->Has_Player(id)) {
+		throw std::exception("Requested player that does not exist!");
+	}
+
+	return m_instance->m_players[id];
 }
 
 void Server_Main::SetCurrentCommand(std::string command)

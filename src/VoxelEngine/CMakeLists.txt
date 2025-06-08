@@ -40,7 +40,7 @@ target_link_libraries(${module}
 	Vulkan::Vulkan
 	glm::glm
 	glfw
-	lua::lua
+	sol2::sol2
 	Bullet::Bullet
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator

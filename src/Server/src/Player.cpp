@@ -1,15 +1,18 @@
 #include "Player.h"
 #include "Server_Main.h"
+#include "World.h"
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 #define SEND_DEBUG_JUMP 3000
+#define PLAYER_SCAN_TIME 5000
+#define PLAYER_SCAN_RADIUS 100
 
 Player::Player()
 {
 	m_sent_last_jump = Server_Main::GetEpoch();
-	m_match_instance_id = 0;
+	m_world_instance_id = 0;
 	m_location = glm::vec3(0, 0, 0);
 	m_rotation = glm::quat();
 	m_sent_last_jump = Server_Main::GetEpoch();
@@ -78,11 +81,72 @@ void Player::WorldUpdate(float dt)
 			m_sent_last_jump = Server_Main::GetEpoch();
 		}
 
+		if ((now - m_last_player_scan) > PLAYER_SCAN_TIME) {
+			update_nearby_players();
+			m_last_player_scan = Server_Main::GetEpoch();
+		}
+
 
 		//m_location += glm::vec3(6 * dt, 0, 0);
 
 
 		//Add_Player_Event(OpCodes::Player_Events::Jump);
 	}
+
+}
+
+void Player::AssignPlayer(World* world)
+{
+	World::AssignPlayer(world, Server_Main::GetPlayer(m_identity.UserID));
+}
+
+bool Player::LoadPlayerData()
+{
+
+
+
+
+	return false;
+}
+
+void Player::SyncOrientations()
+{
+	uint8_t num_orientations = m_nearby_players.size();
+	int player_entry_size = (OrientationSize() + 1);
+	
+	int m_orientation_send_buffer_size = (player_entry_size * num_orientations) + 1;
+	uint8_t* m_orientation_send_buffer = new uint8_t[m_orientation_send_buffer_size];
+	
+	m_orientation_send_buffer[0] = num_orientations;
+
+	int p_index = 0;
+	for (const auto& p : m_nearby_players)
+	{
+		int buffer_index = (p_index * player_entry_size) + 1;
+		m_orientation_send_buffer[buffer_index] = Get_WorldInstanceID();
+		p->Serialize_Orientation(&m_orientation_send_buffer[buffer_index + 1]);
+		p_index++;
+	}
+
+	std::vector<uint8_t> send_buff(m_orientation_send_buffer, m_orientation_send_buffer + m_orientation_send_buffer_size);
+	Send(OpCodes::Client::Update_Orientations, send_buff, Protocal_Udp); 
+
+}
+
+void Player::update_nearby_players()
+{
+	if (m_current_world == nullptr) {
+		return;
+	}
+
+	m_nearby_players = m_current_world->PlayersInRadius(m_location, PLAYER_SCAN_RADIUS);
+}
+
+
+void Player::save_player_data()
+{
+	m_game_data.CurrentWorldID = m_current_world->World_ID();
+
+	// Save data
 
 }

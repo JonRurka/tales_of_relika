@@ -11,6 +11,8 @@ class World;
 class Player : public IUser {
 public:
 
+	typedef std::shared_ptr<Player> pointer;
+
 	struct PlayerIdentity {
 	public:
 		std::string UserName;
@@ -25,6 +27,13 @@ public:
 		std::vector<uint8_t> Data;
 	};
 
+	struct PlayerGameData {
+	public:
+		uint64_t CurrentWorldID;
+
+
+	};
+
 	Player();
 	~Player();
 
@@ -36,9 +45,17 @@ public:
 
 	void WorldUpdate(float dt);
 
-	void Set_Current_World(World* match) {
-		m_current_world = match;
+	void Set_Current_World(World* world, uint8_t inst_id) {
+		m_current_world = world;
+		m_world_instance_id = inst_id;
+		save_player_data();
 	}
+
+	void AssignPlayer(World* world);
+
+	bool LoadPlayerData();
+
+	PlayerGameData Player_Game_Data() const { return m_game_data; }
 
 	World* Get_Current_World() {
 		return m_current_world;
@@ -56,12 +73,12 @@ public:
 		return m_identity.UserID;
 	}
 
-	uint8_t Get_MatchInstanceID() {
-		return m_match_instance_id;
+	uint8_t Get_WorldInstanceID() {
+		return m_world_instance_id;
 	}
 
 	void Set_MatchInstanceID(uint8_t id) {
-		m_match_instance_id = id;
+		m_world_instance_id = id;
 	}
 
 	int Get_Distributor() {
@@ -70,7 +87,10 @@ public:
 
 	void Set_Location(glm::vec3 location) {
 		m_location = location;
+	}
 
+	glm::vec3 Get_Location() {
+		return m_location;
 	}
 
 	void Set_Rotation(glm::quat rotation) {
@@ -144,7 +164,7 @@ public:
 				continue;
 			}
 
-			events_buff.push_back(m_match_instance_id);
+			events_buff.push_back(m_world_instance_id);
 			events_buff.push_back((uint8_t)active_event.Command);
 			events_buff.push_back((uint8_t)active_event.Data.size());
 
@@ -158,6 +178,8 @@ public:
 		return num_events;
 	}
 
+	void SyncOrientations();
+	
 private:
 
 	//std::string m_userName;
@@ -165,16 +187,23 @@ private:
 	//uint32_t m_UserID;
 	//int m_distributor;
 	PlayerIdentity m_identity;
+	PlayerGameData m_game_data;
 
 	World* m_current_world;
 
-	uint8_t m_match_instance_id;
+	uint8_t m_world_instance_id;
 
 	std::queue<PlayerEvent> m_active_events;
 
 	glm::vec3 m_location;
 	glm::quat m_rotation;
 
+	std::vector<pointer> m_nearby_players;
 
-	uint64_t m_sent_last_jump;
+	uint64_t m_sent_last_jump{ 0 };
+	uint64_t m_last_player_scan{ 0 };
+
+	void update_nearby_players();
+
+	void save_player_data();
 };

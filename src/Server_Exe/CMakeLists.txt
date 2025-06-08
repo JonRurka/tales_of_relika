@@ -28,7 +28,7 @@ target_link_libraries(${PROJECT_NAME}
 	nlohmann_json::nlohmann_json 
 	boost::boost
 	glm::glm
-	lua::lua
+	sol2::sol2
 	Bullet::Bullet
 	inih::inih
 )

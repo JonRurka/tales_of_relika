@@ -98,6 +98,30 @@ Resources::Resources(Resources::LoadMode mode) : Resources()
 	m_mode = mode;
 }
 
+std::vector<std::string> Resources::Get_Data_Resource_List()
+{
+    std::vector<std::string> res;
+    res.reserve(m_instance->m_data_assets.size());
+    for (const auto& pair : m_instance->m_data_assets)
+    {
+        res.push_back(pair.first);
+    }
+    return res;
+}
+
+std::vector<std::string> Resources::Get_Data_Resource_List(std::string extension)
+{
+    std::vector<std::string> res;
+    res.reserve(m_instance->m_data_assets.size());
+    for (const auto& pair : m_instance->m_data_assets)
+    {
+        if (Utilities::getFileExtension(pair.first) == extension) {
+            res.push_back(pair.first);
+        }
+    }
+    return res;
+}
+
 void Resources::load_shader(std::string name)
 {
     if (!Has_Shader(name)) {

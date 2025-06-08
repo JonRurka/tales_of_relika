@@ -37,6 +37,8 @@ set(${module}_headers
 	include/WorldObject.h
 	include/GPUSort.h
 	
+	include/LuaEngine.h
+	
 	include/Light.h
 	include/Collider.h
 	include/BoxCollider.h
@@ -74,6 +76,8 @@ set(${module}_sources
 	src/WorldObject.cpp
 	src/GPUSort.cpp
 	
+	src/LuaEngine.cpp
+	
 	src/Light.cpp
 	src/Collider.cpp
 	src/BoxCollider.cpp
@@ -95,14 +99,14 @@ target_link_libraries(${module}
 	spirv-cross-glsl
 	spirv-cross-msl
 	spirv-cross-reflect
-	lua::lua
+	sol2::sol2
 	Bullet::Bullet
 	OpenAL::OpenAL
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
 )
 
-target_link_libraries(${module} LuaCpp Compute VoxelEngine)
+target_link_libraries(${module} Compute VoxelEngine)
 
 
 

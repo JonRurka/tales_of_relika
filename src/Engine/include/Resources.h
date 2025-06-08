@@ -56,6 +56,8 @@ public:
 	static std::string Get_Data_File_String(std::string name) { return m_instance->get_data_file_string(name); }
 	static std::vector<char> Get_Data_File_Bin(std::string name) { return m_instance->get_data_file_bin(name); }
 
+	static std::vector<std::string> Get_Data_Resource_List();
+	static std::vector<std::string> Get_Data_Resource_List(std::string extension);
 
 	static Asset Get_Texture_Asset(std::string name) {
 		if (!Has_Texture(name))

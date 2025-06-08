@@ -12,6 +12,8 @@ public:
 	WorldController();
 	~WorldController();
 
+	void Init();
+
 	void Update(float dt);
 
 	static WorldController* GetInstance() {
@@ -27,9 +29,18 @@ public:
 
 	void Load_Worlds();
 
+	bool World_Exists(uint64_t world_id);
+
+	World* Get_World(uint64_t world_id);
+
+	World* Default_World() { return m_default_world; }
+
 private:
 
 	static WorldController* m_instance;
+
+	std::unordered_map<uint64_t, World*> m_loaded_worlds;
+	World* m_default_world{ nullptr };
 
 
 	inline static const std::string LOG_LOC{ "WORLD_CONTROLLER" };
