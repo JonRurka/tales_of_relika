@@ -43,6 +43,7 @@ set(${module}_headers
 	include/Collider.h
 	include/BoxCollider.h
 	include/SphereCollider.h
+	include/CapsuleCollider.h
 	include/MeshCollider.h
 )
 
@@ -82,6 +83,7 @@ set(${module}_sources
 	src/Collider.cpp
 	src/BoxCollider.cpp
 	src/SphereCollider.cpp
+	src/CapsuleCollider.cpp
 	src/MeshCollider.cpp
 )
 

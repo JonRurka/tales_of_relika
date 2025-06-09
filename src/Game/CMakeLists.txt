@@ -19,6 +19,7 @@ set(${module}_headers
 	include/Editor_Camera_Control.h
 	include/LocalPlayerCharacter.h
 	include/NetPlayerCharacter.h
+	include/NetPlayerManager.h
 	
 	include/Stitch_VBO.h
 	include/WorldGenController.h
@@ -42,6 +43,7 @@ set(${module}_sources
 	src/Editor_Camera_Control.cpp
 	src/LocalPlayerCharacter.cpp
 	src/NetPlayerCharacter.cpp
+	src/NetPlayerManager.cpp
 	
 	src/Stitch_VBO.cpp
 	src/WorldGenController.cpp

@@ -4,6 +4,9 @@
 #include "IUser.h"
 
 
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
+
 #define PLAYER_ORIENTATION_SIZE (7 * sizeof(float))
 
 class World;
@@ -34,6 +37,25 @@ public:
 
 	};
 
+	class LuaBridge {
+	public:
+
+		static void AssignPlayer(int player_handle, int world_handle);
+
+		static uint64_t Get_Current_World(int player_handle);
+
+		static void Set_Location(int player_handle, float x, float y, float z);
+
+		static glm::fvec3 Get_Location(int player_handle);
+
+		static void Set_Rotation(int player_handle, glm::quat rot);
+
+		static glm::quat Get_Rotation(int player_handle);
+
+	private:
+
+	};
+
 	Player();
 	~Player();
 
@@ -48,7 +70,7 @@ public:
 	void Set_Current_World(World* world, uint8_t inst_id) {
 		m_current_world = world;
 		m_world_instance_id = inst_id;
-		save_player_data();
+		m_trigger_save = true;
 	}
 
 	void AssignPlayer(World* world);
@@ -95,6 +117,11 @@ public:
 
 	void Set_Rotation(glm::quat rotation) {
 		m_rotation = rotation;
+	}
+
+	glm::quat Get_Rotation() 
+	{
+		return m_rotation;
 	}
 
 	void Add_Player_Event(OpCodes::Player_Events event_cmd) {
@@ -179,6 +206,12 @@ public:
 	}
 
 	void SyncOrientations();
+
+	void PlayerMutexLock();
+
+	void PlayerMutexUnlock();
+
+	static void Register_Lua_Functions(sol::state lua);
 	
 private:
 
@@ -188,6 +221,8 @@ private:
 	//int m_distributor;
 	PlayerIdentity m_identity;
 	PlayerGameData m_game_data;
+
+	std::mutex m_player_mutex;
 
 	World* m_current_world;
 
@@ -203,7 +238,17 @@ private:
 	uint64_t m_sent_last_jump{ 0 };
 	uint64_t m_last_player_scan{ 0 };
 
+	std::unordered_map<std::string, sol::state> m_player_lua_base_scripts;
+	std::unordered_map<std::string, sol::state> m_player_lua_extension_scripts;
+
+	std::vector<std::function<void()>> m_init_events;
+	std::vector<std::function<void(double)>> m_update_events;
+
+	bool m_trigger_save{ false };
+
 	void update_nearby_players();
 
 	void save_player_data();
+
+	inline static const std::string LOG_LOC{ "PLAYER" };
 };

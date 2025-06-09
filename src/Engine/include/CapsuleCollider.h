@@ -2,23 +2,27 @@
 
 #include "Collider.h"
 
-#define DEFAULT_SIZE (1.0f)
+#define DEFAULT_RADIUS (0.5f)
+#define DEFAULT_HEIGHT (2.0f)
 
-class SphereCollider : public Collider {
+class CapsuleCollider : public Collider {
 public:
 
 	void Radius(float radius);
+
+	void Height(float height);
 
 private:
 
 	btCollisionShape* m_shape{ nullptr };
 
 
-	inline static const std::string LOG_LOC{ "SPHERE_COLLIDER" };
+	inline static const std::string LOG_LOC{ "CAPSULE_COLLIDER" };
 
 protected:
 
-	float m_radius{ DEFAULT_SIZE };
+	float m_radius{ DEFAULT_RADIUS };
+	float m_height{ DEFAULT_HEIGHT };
 
 	void Init() override;
 	void Update(float dt) override;

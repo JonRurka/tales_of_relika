@@ -5,15 +5,18 @@
 #include "IUser.h"
 #include "Player.h"
 #include "HashHelper.h"
+#include "LuaEngine.h"
+#include "WorldController.h"
 
 #define ORIENTATION_SEND_RATE ((1 / 20.0) * 1000) // MS
 
+					  
 void World::Init()
 {
 	m_thread = std::thread(Run, this);
 }
 
-void World::Stop()
+void World::Stop(bool trigger_events)
 {
 
 
@@ -90,11 +93,11 @@ std::vector<Player::pointer> World::GetPlayers()
 {
 	std::vector<Player::pointer> current_players;
 	current_players.reserve(m_players.size());
-	m_player_mtx.lock();
+	m_world_mtx.lock();
 	for (auto& pair : m_players) {
 		current_players.push_back(pair.second);
 	}
-	m_player_mtx.unlock();
+	m_world_mtx.unlock();
 
 	return std::vector<Player::pointer>();
 }
@@ -114,10 +117,27 @@ std::vector<Player::pointer> World::PlayersInRadius(glm::vec3 point, float radiu
 	return close_players;
 }
 
+void World::WorldMutexLock()
+{
+	m_world_mtx.lock();
+}
+
+void World::WorldMutexUnlock()
+{
+	m_world_mtx.unlock();
+}
+
 void World::Run(World* world)
 {
 	world->async_init();
 	world->GameLoop();
+}
+
+void World::Register_Lua_Functions(sol::state lua)
+{
+	
+
+
 }
 
 void World::async_init()
@@ -125,14 +145,51 @@ void World::async_init()
 	m_running = true;
 	m_last_orientation_update = Server_Main::GetEpoch();
 	m_last_frame = Server_Main::GetEpoch();
+	async_init();
 }
 
-void World::add_player(Player::pointer player)
+void World::init_lua()
+{
+	sol::state lua = Server_Main::GetLuaEngine()->NewServerState();
+	std::string match_script = Server_Main::GetLuaEngine()->Get_Script("Match");
+
+	lua.script(match_script);
+
+	init_lua_script(lua);
+
+	TRIGGER_EVENT(m_init_events);
+}
+
+void World::init_lua_script(sol::state& lua)
+{
+	// load events
+	ADD_LUA_EVENT(lua, "init", m_init_events);
+	ADD_LUA_EVENT(lua, "update", m_update_events);
+	ADD_LUA_EVENT(lua, "player_added", m_player_add_events);
+	ADD_LUA_EVENT(lua, "player_removed", m_player_remove_events);
+
+	// load variables
+	lua["World_ID"] = m_world_id;
+
+	
+}
+
+bool World::add_player(Player::pointer player, bool trigger_events)
 {
 	uint32_t user_id = player->Get_UserID();
 	if (m_players.contains(user_id)) {
 		return;
 	}
+
+	bool should_add = true;
+	if (trigger_events) {
+		for (const auto& func : m_player_add_events) {
+			should_add |= func(user_id);
+		}
+	}
+
+	if (!should_add)
+		return false;
 
 	uint16_t inst_id = 0;
 	bool contains_id = false;
@@ -146,20 +203,33 @@ void World::add_player(Player::pointer player)
 	player->Set_Current_World(this, inst_id);
 	m_players[inst_id] = player;
 	m_player_short_ids[inst_id] = user_id;
+
+	return true;
 }
 
-void World::remove_player(Player::pointer player)
+bool World::remove_player(Player::pointer player, bool trigger_events)
 {
 	uint32_t user_id = player->Get_UserID();
 	if (!m_players.contains(user_id)) {
 		return;
 	}
 
+	bool should_remove = true;
+	if (trigger_events) {
+		for (const auto& func : m_player_remove_events) {
+			should_remove |= func(user_id);
+		}
+	}
+
+	if (!should_remove)
+		return false;
+
 	uint16_t inst_id = player->Get_WorldInstanceID();
 	player->Set_Current_World(nullptr, 0);
 	m_players.erase(user_id);
 	m_player_short_ids.erase(inst_id);
 
+	return true;
 }
 
 void World::create_new(WorldCreationOptions options)
@@ -302,4 +372,72 @@ void World::UpdateOrientation_NetCmd(Player& player, Data data)
 	std::string rot_str = "(" + std::to_string(rot_x) + ", " + std::to_string(rot_y) + ", " + std::to_string(rot_z) + ", " + std::to_string(rot_w) + ")";
 
 	//Logger::Log("Received orientation update ("+std::to_string(data.Buffer.size()) + "): " + loc_str + ", " + rot_str + ", " + std::to_string(data.Type));
+}
+
+
+
+
+void World::LuaBridge::Stop(uint64_t world_id)
+{
+	World* world = WorldController::GetInstance()->Get_World(world_id);
+	if (!world) {
+		Logger::LogError(LOG_POS("LUA::Stop"), "World not found!");
+		return;
+	}
+	world->WorldMutexLock();
+	world->Stop(false);
+	world->WorldMutexUnlock();
+}
+
+bool World::LuaBridge::HasPlayer(uint64_t world_id, uint32_t player_id)
+{
+	World* world = WorldController::GetInstance()->Get_World(world_id);
+	if (!world) {
+		Logger::LogError(LOG_POS("LUA::HasPlayer"), "World not found!");
+		return;
+	}
+
+	world->WorldMutexLock();
+	bool has_player = world->HasPlayer(player_id);
+	world->WorldMutexUnlock();
+
+	return has_player;
+}
+
+std::vector<uint32_t> World::LuaBridge::GetPlayers(uint64_t world_id)
+{
+	World* world = WorldController::GetInstance()->Get_World(world_id);
+	if (!world) {
+		Logger::LogError(LOG_POS("LUA::GetPlayers"), "World not found!");
+		return;
+	}
+
+	world->WorldMutexLock();
+	std::vector<uint32_t> res;
+	std::vector<Player::pointer> players = world->GetPlayers();
+	for (const auto& p : players) {
+		res.push_back(p->Get_UserID());
+	}
+	world->WorldMutexUnlock();
+
+	return res;
+}
+
+std::vector<uint32_t> World::LuaBridge::PlayersInRadius(uint64_t world_id, float x, float y, float z, float radius)
+{
+	World* world = WorldController::GetInstance()->Get_World(world_id);
+	if (!world) {
+		Logger::LogError(LOG_POS("LUA::PlayersInRadius"), "World not found!");
+		return;
+	}
+
+	world->WorldMutexLock();
+	std::vector<uint32_t> res;
+	std::vector<Player::pointer> players = world->PlayersInRadius(glm::vec3(x, y, z), radius);
+	for (const auto& p : players) {
+		res.push_back(p->Get_UserID());
+	}
+	world->WorldMutexUnlock();
+
+	return res;
 }

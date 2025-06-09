@@ -7,6 +7,43 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
+#ifndef ADD_LUA_EVENT
+#define ADD_LUA_EVENT(lua, name, map)	\
+do {									\
+	sol::function _event = lua[name];	\
+	if (_event.valid()) {				\
+		map.push_back(_event);			\
+	}									\
+} while (false)
+#endif
+
+#ifndef TRIGGER_EVENT
+#define TRIGGER_EVENT(events)				  \
+do {									  \
+	for (const auto& func : events) {	  \
+		func();							  \
+	}									  \
+} while (false)
+#endif
+
+#ifndef TRIGGER_EVENT_1
+#define TRIGGER_EVENT_1(events, p1)		  \
+do {									  \
+	for (const auto& func : events) {	  \
+		func(p1);						  \
+	}									  \
+} while (false)
+#endif
+
+#ifndef TRIGGER_EVENT_2
+#define TRIGGER_EVENT_2(events, p1, p2)	  \
+do {									  \
+	for (const auto& func : events) {	  \
+		func(p1, p2);					  \
+	}									  \
+} while (false)
+#endif
+
 class LuaEngine {
 public:
 

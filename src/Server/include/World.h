@@ -7,6 +7,9 @@
 
 #include <thread>
 
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
+
 class SocketUser;
 class Player;
 
@@ -17,9 +20,25 @@ public:
 
 	};
 
+	class LuaBridge {
+	public:
+
+		static void Stop(uint64_t world_id);
+
+		static bool HasPlayer(uint64_t world_id, uint32_t player_id);
+
+		static std::vector<uint32_t> GetPlayers(uint64_t world_id);
+
+		static std::vector<uint32_t> PlayersInRadius(uint64_t world_id, float x, float y, float z, float radius);
+
+
+	private:
+
+	};
+
 	void Init();
 
-	void Stop();
+	void Stop(bool trigger_events = true);
 
 	void Update(float dt);
 
@@ -43,7 +62,13 @@ public:
 
 	std::vector<Player::pointer> PlayersInRadius(glm::vec3 point, float radius);
 
+	void WorldMutexLock();
+
+	void WorldMutexUnlock();
+
 	static void Run(World* world);
+
+	static void Register_Lua_Functions(sol::state lua);
 
 private:
 
@@ -54,7 +79,7 @@ private:
 	};
 
 	std::thread m_thread;
-	std::mutex m_player_mtx;
+	std::mutex m_world_mtx;
 
 	uint64_t m_world_id{ 0 };
 
@@ -71,11 +96,24 @@ private:
 	uint8_t* m_orientation_send_buffer = nullptr;
 	int m_orientation_send_buffer_size = 0;
 
+	std::unordered_map<std::string, sol::state> m_world_lua_base_scripts;
+	std::unordered_map<std::string, sol::state> m_world_lua_extension_scripts;
+
+
+	std::vector<std::function<void()>> m_init_events;
+	std::vector<std::function<void(double)>> m_update_events;
+	std::vector<std::function<bool(uint32_t)>> m_player_add_events;
+	std::vector<std::function<bool(uint32_t)>> m_player_remove_events;
+
+
 	void async_init();
 
-	void add_player(Player::pointer player);
+	void init_lua();
+	void init_lua_script(sol::state& lua);
 
-	void remove_player(Player::pointer player);
+	bool add_player(Player::pointer player, bool trigger_events = true);
+
+	bool remove_player(Player::pointer player, bool trigger_events = true);
 
 	void create_new(WorldCreationOptions options);
 

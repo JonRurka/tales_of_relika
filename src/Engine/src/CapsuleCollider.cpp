@@ -1,18 +1,19 @@
-#include "SphereCollider.h"
+#include "CapsuleCollider.h"
 
 #include "WorldObject.h"
 #include "Transform.h"
 
 #define DEFAULT_SIZE (1.0f)
 
-void SphereCollider::Init()
+void CapsuleCollider::Init()
 {
 	base_Init();
 
 	m_shape = new btSphereShape(m_radius);
+	m_shape = new btCapsuleShape(m_radius, m_height);
 }
 
-void SphereCollider::Radius(float radius)
+void CapsuleCollider::Radius(float radius)
 {
 	if (m_shape != nullptr) {
 		delete m_shape;
@@ -22,16 +23,26 @@ void SphereCollider::Radius(float radius)
 	OnRefresh();
 }
 
-void SphereCollider::Update(float dt)
+void CapsuleCollider::Height(float height)
+{
+	if (m_shape != nullptr) {
+		delete m_shape;
+	}
+	m_height = height;
+	m_shape = new btCapsuleShape(m_radius, m_height);
+	OnRefresh();
+}
+
+void CapsuleCollider::Update(float dt)
 {
 	base_Update(dt);
 }
 
-void SphereCollider::Load(json data)
+void CapsuleCollider::Load(json data)
 {
 }
 
-void SphereCollider::OnRefresh()
+void CapsuleCollider::OnRefresh()
 {
 	if (!Active())
 		return;

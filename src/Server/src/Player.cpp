@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "Server_Main.h"
 #include "World.h"
+#include "WorldController.h"
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
@@ -93,6 +94,11 @@ void Player::WorldUpdate(float dt)
 		//Add_Player_Event(OpCodes::Player_Events::Jump);
 	}
 
+	if (m_trigger_save) {
+		save_player_data();
+		m_trigger_save = false;
+	}
+
 }
 
 void Player::AssignPlayer(World* world)
@@ -133,6 +139,16 @@ void Player::SyncOrientations()
 
 }
 
+void Player::PlayerMutexLock()
+{
+	m_player_mutex.lock();
+}
+
+void Player::PlayerMutexUnlock()
+{
+	m_player_mutex.unlock();
+}
+
 void Player::update_nearby_players()
 {
 	if (m_current_world == nullptr) {
@@ -149,4 +165,77 @@ void Player::save_player_data()
 
 	// Save data
 
+}
+
+
+void Player::Register_Lua_Functions(sol::state lua)
+{
+	const std::string name = "Players";
+	lua[name] = lua.create_table();
+	lua[name].set_function("AssignPlayer", &LuaBridge::AssignPlayer);
+
+}
+
+void Player::LuaBridge::AssignPlayer(int player_handle, int world_handle)
+{
+	Player::pointer player = Server_Main::GetPlayer(player_handle);
+	World* world = WorldController::GetInstance()->Get_World(world_handle);
+
+	if (!world){
+		Logger::LogError(LOG_POS("LUA::Stop"), "World not found!");
+		return;
+	}
+
+	world->WorldMutexLock();
+	player->AssignPlayer(world);
+	world->WorldMutexUnlock();
+}
+
+uint64_t Player::LuaBridge::Get_Current_World(int player_handle)
+{
+	Player::pointer player = Server_Main::GetPlayer(player_handle);
+
+	return 0;
+}
+
+void Player::LuaBridge::Set_Location(int player_handle, float x, float y, float z)
+{
+	Player::pointer player = Server_Main::GetPlayer(player_handle);
+
+	player->PlayerMutexLock();
+	player->Set_Location(glm::vec3(x, y, z));
+	player->PlayerMutexUnlock();
+}
+
+glm::fvec3 Player::LuaBridge::Get_Location(int player_handle)
+{
+	Player::pointer player = Server_Main::GetPlayer(player_handle);
+
+	glm::fvec3 res;
+	player->PlayerMutexLock();
+	res = player->Get_Location();
+	player->PlayerMutexUnlock();
+
+	return res;
+}
+
+void Player::LuaBridge::Set_Rotation(int player_handle, glm::quat rot)
+{
+	Player::pointer player = Server_Main::GetPlayer(player_handle);
+
+	player->PlayerMutexLock();
+	player->Set_Rotation(rot);
+	player->PlayerMutexUnlock();
+}
+
+glm::quat Player::LuaBridge::Get_Rotation(int player_handle)
+{
+	Player::pointer player = Server_Main::GetPlayer(player_handle);
+
+	glm::quat res;
+	player->PlayerMutexLock();
+	res = player->Get_Rotation();
+	player->PlayerMutexUnlock();
+
+	return res;
 }
