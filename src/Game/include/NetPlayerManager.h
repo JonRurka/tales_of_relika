@@ -36,6 +36,10 @@ public:
 	}
 	void OnPlayerEvent(Data data);
 
+	void CreateOtherPlayers(std::vector<PlayerCreationRequest> other_players);
+
+	void CreatePlayer(PlayerCreationRequest player);
+
 protected:
 
 	void Init() override;
@@ -49,7 +53,8 @@ private:
 	LocalPlayerCharacter* m_local_player;
 	uint32_t m_local_player_id;
 
-	uint64_t m_last_sent_location;
+	double m_last_sent_location{ 0.0 };
+	int m_frame_counter{ 0 };
 
 	std::unordered_map<uint8_t, NetPlayerCharacter*> m_net_player_map_InstID;
 	std::unordered_map<uint32_t, NetPlayerCharacter*> m_net_player_map_ID;
@@ -59,5 +64,6 @@ private:
 
 	void add_net_commands();
 
+	inline static const std::string LOG_LOC{ "NET_PLAYER_MANAGER" };
 
 };

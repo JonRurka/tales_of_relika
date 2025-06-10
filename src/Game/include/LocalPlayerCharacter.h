@@ -44,5 +44,5 @@ private:
 
 	void Send(OpCodes::Server cmd, std::vector<uint8_t> data, Protocal type = Protocal_Tcp);
 
-
+	inline static const std::string LOG_LOC{ "LOCAL_PLAYER_CHARACTER" };
 };

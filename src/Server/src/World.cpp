@@ -178,7 +178,7 @@ bool World::add_player(Player::pointer player, bool trigger_events)
 {
 	uint32_t user_id = player->Get_UserID();
 	if (m_players.contains(user_id)) {
-		return;
+		return true;
 	}
 
 	bool should_add = true;
@@ -211,7 +211,7 @@ bool World::remove_player(Player::pointer player, bool trigger_events)
 {
 	uint32_t user_id = player->Get_UserID();
 	if (!m_players.contains(user_id)) {
-		return;
+		return true;
 	}
 
 	bool should_remove = true;
@@ -394,7 +394,7 @@ bool World::LuaBridge::HasPlayer(uint64_t world_id, uint32_t player_id)
 	World* world = WorldController::GetInstance()->Get_World(world_id);
 	if (!world) {
 		Logger::LogError(LOG_POS("LUA::HasPlayer"), "World not found!");
-		return;
+		return false;
 	}
 
 	world->WorldMutexLock();
@@ -406,14 +406,14 @@ bool World::LuaBridge::HasPlayer(uint64_t world_id, uint32_t player_id)
 
 std::vector<uint32_t> World::LuaBridge::GetPlayers(uint64_t world_id)
 {
+	std::vector<uint32_t> res;
 	World* world = WorldController::GetInstance()->Get_World(world_id);
 	if (!world) {
 		Logger::LogError(LOG_POS("LUA::GetPlayers"), "World not found!");
-		return;
+		return res;
 	}
 
 	world->WorldMutexLock();
-	std::vector<uint32_t> res;
 	std::vector<Player::pointer> players = world->GetPlayers();
 	for (const auto& p : players) {
 		res.push_back(p->Get_UserID());
@@ -425,14 +425,14 @@ std::vector<uint32_t> World::LuaBridge::GetPlayers(uint64_t world_id)
 
 std::vector<uint32_t> World::LuaBridge::PlayersInRadius(uint64_t world_id, float x, float y, float z, float radius)
 {
+	std::vector<uint32_t> res;
 	World* world = WorldController::GetInstance()->Get_World(world_id);
 	if (!world) {
 		Logger::LogError(LOG_POS("LUA::PlayersInRadius"), "World not found!");
-		return;
+		return res;
 	}
 
 	world->WorldMutexLock();
-	std::vector<uint32_t> res;
 	std::vector<Player::pointer> players = world->PlayersInRadius(glm::vec3(x, y, z), radius);
 	for (const auto& p : players) {
 		res.push_back(p->Get_UserID());

@@ -27,6 +27,7 @@ void NetPlayerCharacter::Update(float dt)
 
 	m_old_location = m_current_location;
 	m_old_rotation = m_current_rotation;
+
 }
 
 void NetPlayerCharacter::Init(std::string userName, uint32_t user_id)

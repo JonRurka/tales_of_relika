@@ -5,6 +5,8 @@
 #include "Editor_Camera_Control.h"
 #include "GameClient.h"
 #include "Client_Server_Interface.h"
+#include "NetPlayerManager.h"
+#include "LocalPlayerCharacter.h"
 
 void VoxelWorld_Scene::Init()
 {
@@ -15,6 +17,7 @@ void VoxelWorld_Scene::Init()
 	setup_chunk_gen();
 	setup_client_server();
 	setup_game_client();
+
 
 	m_start_time = Utilities::Get_Time();
 }
@@ -106,6 +109,21 @@ void VoxelWorld_Scene::setup_game_client()
 	game_client_obj = Instantiate("Game_Client");
 	game_client = game_client_obj->Add_Component<GameClient>();
 	game_client->Init("test_user", 1, m_remote_connection);
+}
+
+void VoxelWorld_Scene::setup_local_player()
+{
+	local_player_character_obj = Instantiate("Local_Character");
+	local_player_character = local_player_character_obj->Add_Component<LocalPlayerCharacter>();
+
+}
+
+void VoxelWorld_Scene::setup_net_player_manager()
+{
+	net_player_manager_obj = Instantiate("Net_Player_Manager");
+	net_player_manager = net_player_manager_obj->Add_Component<NetPlayerManager>();
+
+
 }
 
 void VoxelWorld_Scene::create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color)

@@ -5,6 +5,7 @@
 
 class SocketUser;
 class Player;
+class World;
 
 class WorldController {
 public:

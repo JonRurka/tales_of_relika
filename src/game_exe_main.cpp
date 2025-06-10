@@ -13,11 +13,11 @@
 //#include "nvvk/gl_vk_vertex_buffer.h"
 //#include "Compute/include/nvpro_core/nvvk/gl_vk_vertex_buffer.h"
 
-#include <LuaCpp.hpp>
+//#include <LuaCpp.hpp>
 
-using namespace LuaCpp;
-using namespace LuaCpp::Registry;
-using namespace LuaCpp::Engine;
+//using namespace LuaCpp;
+//using namespace LuaCpp::Registry;
+//using namespace LuaCpp::Engine;
 using namespace DynamicCompute::Compute;
 using namespace VoxelEngine;
 

@@ -172,8 +172,12 @@ void Player::Register_Lua_Functions(sol::state lua)
 {
 	const std::string name = "Players";
 	lua[name] = lua.create_table();
-	lua[name].set_function("AssignPlayer", &LuaBridge::AssignPlayer);
-
+	lua[name]["AssignPlayer"] = &Player::LuaBridge::AssignPlayer;
+	lua[name]["GetCurrentWorld"] = &Player::LuaBridge::Get_Current_World;
+	lua[name]["SetLocation"] = &Player::LuaBridge::Set_Location;
+	lua[name]["GetLocation"] = &Player::LuaBridge::Get_Location;
+	lua[name]["SetRotation"] = &Player::LuaBridge::Set_Rotation;
+	lua[name]["GetRotation"] = &Player::LuaBridge::Get_Rotation;
 }
 
 void Player::LuaBridge::AssignPlayer(int player_handle, int world_handle)

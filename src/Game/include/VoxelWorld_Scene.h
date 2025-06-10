@@ -7,6 +7,8 @@
 class WorldGenController;
 class Client_Server;
 class GameClient;
+class NetPlayerManager;
+class LocalPlayerCharacter;
 
 class VoxelWorld_Scene : public Scene {
 public:
@@ -39,6 +41,12 @@ private:
 	WorldObject* game_client_obj{ nullptr };
 	GameClient* game_client{ nullptr };
 
+	WorldObject* local_player_character_obj{ nullptr };
+	LocalPlayerCharacter* local_player_character{ nullptr };
+
+	WorldObject* net_player_manager_obj{ nullptr };
+	NetPlayerManager* net_player_manager{ nullptr };
+
 	void setup_camera();
 
 	void setup_lights();
@@ -48,6 +56,10 @@ private:
 	void setup_client_server();
 
 	void setup_game_client();
+
+	void setup_local_player();
+
+	void setup_net_player_manager();
 
 	void create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color);
 

@@ -63,4 +63,6 @@ private:
 	glm::vec3 SmoothVelocity(glm::vec3 newVelocity);
 
 	int64_t m_rand_seed;
+
+	inline static const std::string LOG_LOC{ "NET_PLAYER_CHARACTER" };
 };

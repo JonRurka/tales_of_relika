@@ -32,4 +32,4 @@ target_link_libraries(${PROJECT_NAME}
 	Bullet::Bullet
 	inih::inih
 )
-target_link_libraries(${PROJECT_NAME} LuaCpp Compute VoxelEngine )
+target_link_libraries(${PROJECT_NAME} Compute VoxelEngine )
