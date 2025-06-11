@@ -39,7 +39,11 @@ void VoxelWorld_Scene::Update(float dt)
 	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 
-
+void VoxelWorld_Scene::GameConnected()
+{
+	setup_local_player();
+	setup_net_player_manager();
+}
 
 void VoxelWorld_Scene::setup_camera()
 {
@@ -122,7 +126,7 @@ void VoxelWorld_Scene::setup_net_player_manager()
 {
 	net_player_manager_obj = Instantiate("Net_Player_Manager");
 	net_player_manager = net_player_manager_obj->Add_Component<NetPlayerManager>();
-
+	net_player_manager->RegisterLocalPlayer(local_player_character);
 
 }
 

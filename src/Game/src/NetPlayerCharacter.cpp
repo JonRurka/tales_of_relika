@@ -30,10 +30,16 @@ void NetPlayerCharacter::Update(float dt)
 
 }
 
-void NetPlayerCharacter::Init(std::string userName, uint32_t user_id)
+void NetPlayerCharacter::Init(std::string userName, uint32_t user_id, glm::vec3 pos, glm::quat rot)
 {
 	m_username = userName;
 	m_user_id = user_id;
+	m_current_location = pos;
+	m_current_rotation = rot;
+	m_old_location = pos;
+	m_old_rotation = rot;
+	Object()->Get_Transform()->Position(pos);
+	Object()->Get_Transform()->Rotation(rot);
 }
 
 void NetPlayerCharacter::Set_Orientation(glm::vec3 loc, glm::quat rot)

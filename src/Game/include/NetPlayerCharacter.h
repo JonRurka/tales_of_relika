@@ -10,7 +10,7 @@
 class NetPlayerCharacter : public Component {
 public:
 
-	void Init(std::string userName, uint32_t user_id);
+	void Init(std::string userName, uint32_t user_id, glm::vec3 pos, glm::quat rot);
 
 	void Set_Orientation(glm::vec3 loc, glm::quat rot);
 

@@ -13,7 +13,11 @@ class LocalPlayerCharacter;
 class VoxelWorld_Scene : public Scene {
 public:
 
-
+	static void OnGameConnect(void* obj) {
+		VoxelWorld_Scene* game_client = (VoxelWorld_Scene*)obj;
+		game_client->GameConnected();
+	}
+	void GameConnected();
 
 protected:
 	void Init() override;

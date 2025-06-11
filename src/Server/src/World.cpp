@@ -8,6 +8,8 @@
 #include "LuaEngine.h"
 #include "WorldController.h"
 
+#include "glaze/glaze.hpp" 
+
 #define ORIENTATION_SEND_RATE ((1 / 20.0) * 1000) // MS
 
 					  
@@ -344,6 +346,9 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 				Logger::LogWarning(LOG_POS("ExecuteNetCommand"), "Received malformed Match Player Event from '" + player->Get_UserName() + "'!");
 			}
 			break;
+		case OpCodes::Server_World::Request_Players:
+			RequestPlayers_NetCmd(*player, data);
+			break;
 		}
 	}
 }
@@ -372,6 +377,11 @@ void World::UpdateOrientation_NetCmd(Player& player, Data data)
 	std::string rot_str = "(" + std::to_string(rot_x) + ", " + std::to_string(rot_y) + ", " + std::to_string(rot_z) + ", " + std::to_string(rot_w) + ")";
 
 	//Logger::Log("Received orientation update ("+std::to_string(data.Buffer.size()) + "): " + loc_str + ", " + rot_str + ", " + std::to_string(data.Type));
+}
+
+void World::RequestPlayers_NetCmd(Player& user, Data data)
+{
+	user.Spawn_Surrounding_Players();
 }
 
 

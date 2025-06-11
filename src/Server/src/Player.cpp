@@ -2,13 +2,15 @@
 #include "Server_Main.h"
 #include "World.h"
 #include "WorldController.h"
+#include "HashHelper.h"
 
+
+#include "glaze/glaze.hpp" 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 #define SEND_DEBUG_JUMP 3000
 #define PLAYER_SCAN_TIME 5000
-#define PLAYER_SCAN_RADIUS 100
 
 Player::Player()
 {
@@ -149,6 +151,45 @@ void Player::PlayerMutexUnlock()
 	m_player_mutex.unlock();
 }
 
+void Player::Spawn_Surrounding_Players()
+{
+	std::vector<Player::pointer> players = m_current_world->PlayersInRadius(Get_Location(), PLAYER_SCAN_RADIUS - 5);
+
+	PlayerSpawnData spawn_data{};
+	spawn_data.Players.reserve(players.size());
+	for (auto& pair : players) {
+
+		PlayerSpawnEntry pd{};
+		pd.UserName = pair->Get_UserName();
+		pd.User_ID = pair->Get_UserID();
+		pd.Instance_ID = pair->Get_WorldInstanceID();
+		pd.Position = PlayerSpawnEntry::Vec3(pair->Get_Location());
+		pd.Rotation = PlayerSpawnEntry::Quat(pair->Get_Rotation());
+
+		spawn_data.Players.push_back(pd);
+	}
+
+	std::string json_str = spawn_data.To_String();//glz::write_json(spawn_data).value_or("[]");
+	std::vector<uint8_t> data_buff = HashHelper::StringToBytes(json_str); //std::vector<uint8_t>();
+	Send(OpCodes::Client::Spawn_Players, data_buff);
+}
+
+std::string Player::PlayerSpawnData::To_String()
+{
+	json res = json::array();
+	for (auto& elem : Players) {
+		json obj = json::object();
+		obj["UserName"] = elem.UserName;
+		obj["User_ID"] = elem.User_ID;
+		obj["Instance_ID"] = elem.Instance_ID;
+		obj["Position"] = {elem.Position.X, elem.Position.Y, elem.Position.Z};
+		obj["Rotation"] = {elem.Rotation.X, elem.Rotation.Y, elem.Rotation.Z, elem.Rotation.W };
+		res.push_back(obj);
+	}
+
+	return res.dump();
+}
+
 void Player::update_nearby_players()
 {
 	if (m_current_world == nullptr) {
@@ -243,3 +284,5 @@ glm::quat Player::LuaBridge::Get_Rotation(int player_handle)
 
 	return res;
 }
+
+

@@ -61,7 +61,7 @@ void GameClient::OnIdentifyResult(Data data)
 {
 	Logger::LogDebug(LOG_POS("OnIdentifyResult"), "Received an identify result.");
 
-
+	OnGameConnect_delegate(OnGameConnect_obj);
 }
 
 void GameClient::do_identify()

@@ -17,7 +17,15 @@ public:
 	public:
 		std::string UserName;
 		uint32_t User_ID;
-		uint8_t Instance_ID;
+		uint16_t Instance_ID;
+		glm::vec3 Position;
+		glm::quat Rotation;
+	};
+
+	struct PlayerSpawnData {
+		std::string UserName;
+		uint32_t User_ID;
+		int Instance_ID;
 	};
 
 	void RegisterLocalPlayer(LocalPlayerCharacter* local_player);
@@ -25,6 +33,11 @@ public:
 	void SetLocalUserID(uint32_t local_id) {
 		m_local_player_id = local_id;
 	}
+
+	static void OnSpawnPlayers_cb(void* obj, Data data) {
+		m_instance->OnUpdateOrientations(data);
+	}
+	void SpawnPlayers(Data data);
 
 	static void OnUpdateOrientations_cb(void* obj, Data data) {
 		m_instance->OnUpdateOrientations(data);
@@ -36,9 +49,11 @@ public:
 	}
 	void OnPlayerEvent(Data data);
 
-	void CreateOtherPlayers(std::vector<PlayerCreationRequest> other_players);
+	void RequestPlayers();
 
-	void CreatePlayer(PlayerCreationRequest player);
+	void create_other_players(std::vector<PlayerCreationRequest> other_players);
+
+	void create_player(PlayerCreationRequest player);
 
 protected:
 

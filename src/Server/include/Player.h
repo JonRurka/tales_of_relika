@@ -8,6 +8,7 @@
 #include <sol/sol.hpp>
 
 #define PLAYER_ORIENTATION_SIZE (7 * sizeof(float))
+#define PLAYER_SCAN_RADIUS 100
 
 class World;
 
@@ -35,6 +36,38 @@ public:
 		uint64_t CurrentWorldID;
 
 
+	};
+
+	struct PlayerSpawnEntry {
+	public:
+
+		struct Vec3 {
+		public:
+			float X{ 0 }, Y{ 0 }, Z{ 0 };
+			Vec3(){}
+			Vec3(glm::vec3 val) : X(val.x), Y(val.y), Z(val.z) {}
+			glm::vec3 glm_vec() { return glm::vec3(X, Y, Z); };
+		};
+
+		struct Quat {
+		public:
+			float X{ 0 }, Y{ 0 }, Z{ 0 }, W{ 0 };
+			Quat(){}
+			Quat(glm::quat val) : X(val.x), Y(val.y), Z(val.z), W(val.w) {}
+			glm::quat glm_quat() { return glm::quat(X, Y, Z, W); };
+		};
+
+		std::string UserName;
+		uint32_t User_ID;
+		int Instance_ID;
+		Vec3 Position;
+		Quat Rotation;
+	};
+
+	struct PlayerSpawnData {
+	public:
+		std::vector<PlayerSpawnEntry> Players;
+		std::string To_String();
 	};
 
 	class LuaBridge {
@@ -95,7 +128,7 @@ public:
 		return m_identity.UserID;
 	}
 
-	uint8_t Get_WorldInstanceID() {
+	uint16_t Get_WorldInstanceID() {
 		return m_world_instance_id;
 	}
 
@@ -211,6 +244,8 @@ public:
 
 	void PlayerMutexUnlock();
 
+	void Spawn_Surrounding_Players();
+
 	static void Register_Lua_Functions(sol::state lua);
 	
 private:
@@ -226,7 +261,7 @@ private:
 
 	World* m_current_world;
 
-	uint8_t m_world_instance_id;
+	uint16_t m_world_instance_id;
 
 	std::queue<PlayerEvent> m_active_events;
 

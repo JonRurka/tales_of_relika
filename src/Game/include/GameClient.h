@@ -6,11 +6,13 @@
 
 #include "Network/Data.h"
 
+
 class NetClient;
 
 class GameClient : public Component {
 public:
-
+	
+	typedef void(*OnGameConnectActionPtr)(void*);
 
 	static GameClient* Instance() {
 		return m_instance;
@@ -21,6 +23,11 @@ public:
 	}
 
 	void Init(std::string user_name, int32_t id, bool remote);
+
+	void SetOnConnectSuccess(OnGameConnectActionPtr cb, void* p) {
+		OnGameConnect_delegate = cb;
+		OnGameConnect_obj = p;
+	}
 
 	void Connect();
 
@@ -41,6 +48,9 @@ private:
 
 	NetClient* m_client{ nullptr };
 	static GameClient* m_instance;
+
+	OnGameConnectActionPtr OnGameConnect_delegate;
+	void* OnGameConnect_obj{ nullptr };
 
 	int32_t m_local_player_user_id;
 

@@ -137,6 +137,7 @@ private:
 
 	void UpdateOrientation_NetCmd(Player& user, Data data);
 
+	void RequestPlayers_NetCmd(Player& user, Data data);
 
 	inline static const std::string LOG_LOC{ "WORLD" };
 };

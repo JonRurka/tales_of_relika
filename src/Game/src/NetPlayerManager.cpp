@@ -5,6 +5,9 @@
 #include "GameClient.h"
 #include "Network/NetClient.h"
 #include "Network/BufferUtils.h"
+#include "Player.h"
+
+#include "glaze/glaze.hpp" 
 
 #define ORIENTATION_SEND_RATE ((1 / 20.0) * 1.0) // MS
 
@@ -69,15 +72,67 @@ void NetPlayerManager::OnPlayerEvent(Data data)
 
 }
 
-void NetPlayerManager::CreateOtherPlayers(std::vector<PlayerCreationRequest> other_players)
+void NetPlayerManager::RequestPlayers()
+{
+	std::vector<uint8_t> data;
+	data = BufferUtils::AddFirst((uint8_t)OpCodes::Server_World::Request_Players, data);
+	GameClient::Instance()->Net_Client()->Send(OpCodes::Server::World_Command, data, Protocal_Udp);
+}
+
+void NetPlayerManager::SpawnPlayers(Data data)
+{
+	std::string json_str = data.Input;
+
+	std::vector<PlayerCreationRequest> player_requests;
+	json player_data_arr = json::parse(json_str);
+	player_requests.reserve(player_data_arr.size());
+	for (int i = 0; i < player_data_arr.size(); i++) 
+	{
+		NetPlayerManager::PlayerCreationRequest req;
+		req.UserName = player_data_arr[i]["UserName"];
+		req.User_ID = player_data_arr[i]["User_ID"];
+		req.Instance_ID = player_data_arr[i]["Instance_ID"];
+
+		json pos_obj = player_data_arr[i]["Position"];
+		req.Position = glm::vec3(pos_obj["X"], pos_obj["Y"], pos_obj["Z"]);
+
+		json rot_obj = player_data_arr[i]["Rotation"];
+		req.Rotation = glm::quat(rot_obj["X"], rot_obj["Y"], rot_obj["Z"], rot_obj["W"]);
+
+		player_requests.push_back(req);
+	}
+
+	/*auto s = glz::read_json<std::vector<Player::PlayerSpawnData>>(json_str);
+	if (!s)
+	{
+		return;
+	}*/
+	/*std::vector<Player::PlayerSpawnEntry> player_arr;// = s.value();
+	std::vector<PlayerCreationRequest> player_requests;
+	player_requests.reserve(player_arr.size());
+	for (auto& player_data : player_arr)
+	{
+		NetPlayerManager::PlayerCreationRequest req;
+		req.UserName = player_data.UserName;
+		req.User_ID = player_data.User_ID;
+		req.Instance_ID = player_data.Instance_ID;
+		req.Position = player_data.Position.glm_vec();
+		req.Rotation = player_data.Rotation.glm_quat();
+		player_requests.push_back(req);
+	}*/
+
+	create_other_players(player_requests);
+}
+
+void NetPlayerManager::create_other_players(std::vector<PlayerCreationRequest> other_players)
 {
 	for (int i = 0; i < other_players.size(); i++) {
-		CreatePlayer(other_players[i]);
+		create_player(other_players[i]);
 	}
 
 }
 
-void NetPlayerManager::CreatePlayer(PlayerCreationRequest player)
+void NetPlayerManager::create_player(PlayerCreationRequest player)
 {
 	if (player.User_ID == m_local_player_id) {
 		return; // Don't create local player.
@@ -85,8 +140,7 @@ void NetPlayerManager::CreatePlayer(PlayerCreationRequest player)
 
 	WorldObject* obj = Instantiate(player.UserName);
 	NetPlayerCharacter* character = obj->Add_Component<NetPlayerCharacter>();
-	character->Init(player.UserName, player.User_ID);
-
+	character->Init(player.UserName, player.User_ID, player.Position, player.Rotation);
 
 	if (!m_net_player_map_InstID.contains(player.Instance_ID) &&
 		m_net_player_map_ID.contains(player.User_ID)) {
@@ -100,16 +154,13 @@ void NetPlayerManager::Init()
 {
 	m_instance = this;
 	m_last_sent_location = Utilities::Get_Time();
-
+	add_net_commands();
+	RequestPlayers();
 }
 
 void NetPlayerManager::Update(float dt)
 {
 	double now = Utilities::Get_Time();
-
-	if (m_frame_counter >= 1) {
-		add_net_commands();
-	}
 
 	if ((now - m_last_sent_location) > ORIENTATION_SEND_RATE) {
 		send_player_location();
