@@ -257,7 +257,7 @@ void Material_Types::set_terrain_gen_macros()
         macro_str += "int " + name + "() { return " + std::to_string(idx) + "; }\n";
     }
 
-    const std::string PROGRAM_SMOOTH_RENDER_CONSTRUCT = "4-smoothrender_construct";
+    const std::string PROGRAM_SMOOTH_RENDER_CONSTRUCT = "3-smoothrender_gen_iso_normals";
     const std::string PROGRAM_GEN_HEIGHTMAP = "heightmap_gen";
 
     //std::string heightmap_program_name = HEIGHTMAP_RESOURCE_DIR + PROGRAM_GEN_HEIGHTMAP + EXT;

@@ -182,6 +182,10 @@ namespace VoxelEngine {
 		const std::string PROGRAM_UNIFY_FIELDS = "3-unify_fields";
 		VoxelComputeProgram* m_program_unify_fields{ nullptr };
 
+		const std::string PROGRAM_SMOOTH_RENDER_GEN_ISO_NORMAL = "3-smoothrender_gen_iso_normals";
+		VoxelComputeProgram* m_program_smoothrender_normal_iso_norm{ nullptr };
+
+
 		const std::string PROGRAM_SMOOTH_RENDER_CREATE_VERTLIST = "smoothrender_createvertlist"; // DEPRICATED
 		VoxelComputeProgram* m_program_smoothrender_createvertlist{ nullptr };
 
@@ -232,6 +236,9 @@ namespace VoxelEngine {
 		IComputeBuffer* m_iso_field_buffer{ nullptr };
 		IComputeBuffer* m_material_buffer{ nullptr };
 		IComputeBuffer* m_iso_mat_buffer{ nullptr };
+
+		IComputeBuffer* m_gen_iso_type_buffer{ nullptr };
+		IComputeBuffer* m_gen_normal_buffer{ nullptr };
 
 		IComputeBuffer* m_vertList_buffer{ nullptr };
 		IComputeBuffer* m_cubeIndex_buffer{ nullptr };

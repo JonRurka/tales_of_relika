@@ -21,6 +21,12 @@ using namespace VoxelEngine;
 
 #define MAX_COLUMNS 1500
 
+#define HEIGHTMAP_PADDING 4
+#define HEIGHTMAP_OFFSET 2
+
+#define GRID_PADDING HEIGHTMAP_PADDING
+#define GRID_OFFSET HEIGHTMAP_OFFSET
+
 #define VK_EXT ".comp"
 #define CL_EXT ".cl"
 
@@ -320,7 +326,7 @@ void SmoothVoxelBuilder::CalculateVariables()
     m_static_settings.ChunkSize.y = (int)(m_static_settings.ChunkMeterSize.y * m_static_settings.VoxelsPerMeter.y);
     m_static_settings.ChunkSize.z = (int)(m_static_settings.ChunkMeterSize.z * m_static_settings.VoxelsPerMeter.z);
     m_static_settings.FullChunkSize[0] = m_static_settings.ChunkSize.x * m_static_settings.ChunkSize.y * m_static_settings.ChunkSize.z;
-    m_static_settings.FullChunkSize[1] = (m_static_settings.ChunkSize.x + 1) * (m_static_settings.ChunkSize.y + 1) * (m_static_settings.ChunkSize.z + 1);
+    m_static_settings.FullChunkSize[1] = (m_static_settings.ChunkSize.x + GRID_PADDING) * (m_static_settings.ChunkSize.y + GRID_PADDING) * (m_static_settings.ChunkSize.z + GRID_PADDING);
     m_static_settings.half_[0] = ((1.0f / (float)m_static_settings.VoxelsPerMeter.x) / 2.0f);
     m_static_settings.SideLength.x = m_static_settings.ChunkMeterSize.x / (float)m_static_settings.ChunkSize.x;
     m_static_settings.SideLength.y = m_static_settings.ChunkMeterSize.y / (float)m_static_settings.ChunkSize.y;
@@ -399,7 +405,7 @@ void SmoothVoxelBuilder::InitializeComputePrograms()
     //m_program_smoothrender_createvertlist = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_CREATE_VERTLIST, m_WorkGroups);
     //m_program_smoothrender_createmesh = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_CREATE_MESH, m_WorkGroups);
 
-
+    m_program_smoothrender_normal_iso_norm = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_GEN_ISO_NORMAL + EXT, m_WorkGroups, m_type);
     m_program_smoothrender_construct = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_CONSTRUCT + EXT, m_WorkGroups, m_type);
     m_program_smoothrender_mark = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK + EXT, m_WorkGroups, m_type);
     m_program_smoothrender_mark_offsets = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_MARK_OFFSETS + EXT, m_WorkGroups, m_type);
@@ -435,14 +441,16 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
 
     // 32768
     int expanded_chunk_size_1 = (m_static_settings.ChunkSize.x + 1) * (m_static_settings.ChunkSize.y + 1) * (m_static_settings.ChunkSize.z + 1);
-    int expanded_chunk_size_2 = (m_static_settings.ChunkSize.x + 2) * (m_static_settings.ChunkSize.y + 2) * (m_static_settings.ChunkSize.z + 2);
-    int expanded_heightmap_size = (m_static_settings.ChunkSize.x + 2) * (m_static_settings.ChunkSize.y + 2);
+    int expanded_chunk_size_2 = (m_static_settings.ChunkSize.x + GRID_OFFSET) * (m_static_settings.ChunkSize.y + GRID_OFFSET) * (m_static_settings.ChunkSize.z + GRID_OFFSET);
+    int expanded_heightmap_size = (m_static_settings.ChunkSize.x + HEIGHTMAP_PADDING) * (m_static_settings.ChunkSize.y + HEIGHTMAP_PADDING);
     m_heightmap_data_buffer = m_controller->NewReadWriteBuffer(/*expanded_heightmap_size * m_numBatchesPerGroup */ 1, sizeof(float)); // 4356 bytes / chunk
     m_iso_field_buffer = m_controller->NewReadWriteBuffer(/*expanded_chunk_size_2 * m_numBatchesPerGroup */ 1, sizeof(glm::fvec4)); // 574,992 bytes / chunk
     m_material_buffer = m_controller->NewReadWriteBuffer(/*expanded_chunk_size_2 * m_numBatchesPerGroup */ 1, sizeof(glm::fvec4) * 2); // 1,048,576 bytes / chunk
     m_iso_mat_buffer = m_controller->NewReadWriteBuffer(/*expanded_chunk_size_1 * m_numBatchesPerGroup */ 1, sizeof(ISO_Material)); // 1,572,864 bytes / chunk
     // size of above: 3,200,788 bytes / chunk
 
+    m_gen_iso_type_buffer = m_controller->NewReadWriteBuffer(expanded_chunk_size_2 * m_numBatchesPerGroup, sizeof(glm::fvec4));
+    m_gen_normal_buffer = m_controller->NewReadWriteBuffer(expanded_chunk_size_2 * m_numBatchesPerGroup, sizeof(glm::fvec4));
 
     //m_vertList_buffer = m_controller->NewReadWriteBuffer(m_static_settings.FullChunkSize[0] * 12, sizeof(glm::fvec4));
     //m_cubeIndex_buffer = m_controller->NewReadWriteBuffer(m_static_settings.FullChunkSize[0], sizeof(int));
@@ -560,6 +568,14 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     // */
     // ##############
 
+
+    m_program_smoothrender_normal_iso_norm->AddBuffer(0, m_in_static_settings_buffer);
+    m_program_smoothrender_normal_iso_norm->AddBuffer(1, m_in_run_settings_buffer);
+    m_program_smoothrender_normal_iso_norm->AddBuffer(2, m_HeightmapGenerator->Height_Data());
+    m_program_smoothrender_normal_iso_norm->AddBuffer(3, m_HeightmapGenerator->Height_Extended_Data());
+    m_program_smoothrender_normal_iso_norm->AddBuffer(4, m_gen_iso_type_buffer);
+    m_program_smoothrender_normal_iso_norm->AddBuffer(5, m_gen_normal_buffer);
+
     m_program_smoothrender_construct->AddBuffer(0, m_in_static_settings_buffer);
     m_program_smoothrender_construct->AddBuffer(1, m_in_run_settings_buffer);
     m_program_smoothrender_construct->AddBuffer(2, in_locOffset_buffer);
@@ -569,12 +585,14 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_smoothrender_construct->AddBuffer(6, in_TriTable_Buffer);
     m_program_smoothrender_construct->AddBuffer(7, m_HeightmapGenerator->Height_Data());
     m_program_smoothrender_construct->AddBuffer(8, m_HeightmapGenerator->Height_Extended_Data());
-    m_program_smoothrender_construct->AddBuffer(9, m_trans_vertex_buffer);
-    m_program_smoothrender_construct->AddBuffer(10, m_trans_normal_buffer);
-    m_program_smoothrender_construct->AddBuffer(11, m_trans_triangles_buffer);
-    m_program_smoothrender_construct->AddBuffer(12, m_trans_counts_buffer);
-    m_program_smoothrender_construct->AddBuffer(13, m_stitch_map_buffer);
-    m_program_smoothrender_construct->AddBuffer(14, m_out_debug_buffer_Construct);
+    m_program_smoothrender_construct->AddBuffer(9, m_gen_iso_type_buffer);
+    m_program_smoothrender_construct->AddBuffer(10, m_gen_normal_buffer);
+    m_program_smoothrender_construct->AddBuffer(11, m_trans_vertex_buffer);
+    m_program_smoothrender_construct->AddBuffer(12, m_trans_normal_buffer);
+    m_program_smoothrender_construct->AddBuffer(13, m_trans_triangles_buffer);
+    m_program_smoothrender_construct->AddBuffer(14, m_trans_counts_buffer);
+    m_program_smoothrender_construct->AddBuffer(15, m_stitch_map_buffer);
+    m_program_smoothrender_construct->AddBuffer(16, m_out_debug_buffer_Construct);
 
     // ##### OLD ####
     /*
@@ -646,6 +664,7 @@ void SmoothVoxelBuilder::FinalizePrograms()
     //m_program_smoothrender_createvertlist->Finalize();
     //m_program_smoothrender_createmesh->Finalize();
 
+    m_program_smoothrender_normal_iso_norm->Finalize();
     m_program_smoothrender_construct->Finalize();
     m_program_smoothrender_mark->Finalize();
     m_program_smoothrender_mark_offsets->Finalize();
@@ -855,6 +874,11 @@ double SmoothVoxelBuilder::GenerateMaterialField(int group, Run_Settings* group_
 double SmoothVoxelBuilder::AssembleUnifiedField(int group, Run_Settings* group_start)
 {
     auto start = std::chrono::high_resolution_clock::now();
+
+
+    m_program_smoothrender_normal_iso_norm->Execute(m_numBatchesPerGroup * m_static_settings.FullChunkSize[1], 0, 0);
+
+
 
     //m_program_unify_fields->Execute(m_numBatchesPerGroup * (m_static_settings.ChunkSize.x + 1) * (m_static_settings.ChunkSize.y + 1) * (m_static_settings.ChunkSize.z + 1), 0, 0);
        

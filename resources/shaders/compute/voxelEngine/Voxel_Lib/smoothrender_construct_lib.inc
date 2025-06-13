@@ -4,7 +4,7 @@
 #define USE_LIBNOISE
 #include "voxel_lib_core.inc"
 
-#include "block_types.inc"
+//#include "block_types.inc"
 
 #define USE_HEIGHTMAP 1
 #define USE_MATERIALS 0
@@ -19,6 +19,9 @@
 
 #define HEIGHTMAP_PADDING 4
 #define HEIGHTMAP_OFFSET 2
+
+#define GRID_PADDING HEIGHTMAP_PADDING
+#define GRID_OFFSET 2
 
 read_buffer_struct(Static_Settings, 0, in_static_settings)
 readwrite_buffer_struct(Run_Settings, 1, in_run_settings)
@@ -44,13 +47,17 @@ read_buffer_int(6, in_TriTable_data)
 read_buffer_float(7, in_heightmap_data)
 readwrite_buffer(fvec4, 8, in_height_neighboor_data)
 
-readwrite_buffer(fvec4, 9, out_vertex_data)
-readwrite_buffer(fvec4, 10, out_normal_data)
-readwrite_buffer_int(11, out_triangles_data)
-readwrite_buffer_int(12, out_counts_data)
-readwrite_buffer_int(13, out_stitch_map_data)
+readwrite_buffer(fvec4, 9, in_iso_type)
+readwrite_buffer(fvec4, 10, in_normal)
 
-readwrite_buffer(fvec4, 14, out_debug_data)
+
+readwrite_buffer(fvec4, 11, out_vertex_data)
+readwrite_buffer(fvec4, 12, out_normal_data)
+readwrite_buffer_int(13, out_triangles_data)
+readwrite_buffer_int(14, out_counts_data)
+readwrite_buffer_int(15, out_stitch_map_data)
+
+readwrite_buffer(fvec4, 16, out_debug_data)
 
 struct IsoSample{
 	float iso;
@@ -181,7 +188,7 @@ float iso_invert(float iso){
 
 STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, float edit_iso){
 	
-	float caveDensity = 5.0f;
+	/*float caveDensity = 5.0f;
 	
 	float iso_result = 0;
 	int type_res = grass(); //grass
@@ -206,11 +213,11 @@ STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos
 	}
 	else if (world_pos.y < (height - 2)){
 		type_res = dirt(); // dirt
-	}
+	}*/
 	
 	STRUCT IsoSample sample_res;
-	sample_res.iso = iso_result;
-	sample_res.type_id = type_res;
+	sample_res.iso = 0;// iso_result;
+	sample_res.type_id = 0;// type_res;
 	return sample_res;
 
 }
@@ -535,14 +542,22 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
 		fvec4 globalWorldPos = pos_originWorld + Get_Global_Offset(i);
 		fvec4 localWorldPos = pos_localWorld + Get_Global_Offset(i);
 		
-		uint index_exp = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX + 1, ChunkSizeZ + 1);
-
-		uint index2 = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX, ChunkSizeZ);
+		uint batch_group_idx = UINT(batch[1]);
+		uint batches_per_group = UINT(batch_settings[0]);
 		
-		uint batch_index = GetBatchIndex((UINT(batch[1]) % UINT(batch_settings[0])), index_exp, batch[3]);
+		uint size_x = ChunkSizeX + GRID_PADDING;
+		uint size_z = ChunkSizeZ + GRID_PADDING;
 		
-		STRUCT IsoSample iso_sample = iso_sample_4(s, p_index_pos.xyz, globalWorldPos.xyz, 4);
-		fvec3 normal = normal_sample(s, p_index_pos.xyz, globalWorldPos.xyz);
+		uint index_exp = C_3D_to_1D(p_index_pos.x + GRID_OFFSET, p_index_pos.y + GRID_OFFSET, p_index_pos.z + GRID_OFFSET, size_x, size_z);
+		//uint index2 = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX, ChunkSizeZ);
+		uint batch_voxel_index = GetBatchIndex((batch_group_idx % batches_per_group), index_exp, batch[3]);
+		
+		//STRUCT IsoSample iso_sample = iso_sample_4(s, p_index_pos.xyz, globalWorldPos.xyz, 4);
+		//fvec3 normal = normal_sample(s, p_index_pos.xyz, globalWorldPos.xyz);
+		
+		fvec4 iso_type = get_buffer_object(in_iso_type, batch_voxel_index);
+		fvec4 normal = get_buffer_object(in_normal, batch_voxel_index);
+		
 		
 		//if (i == 3 && p_index_pos.x == 0 && p_index_pos.z == 0){
 			//Print_2("(%i): ISO: %f\n", p_index_pos.y, iso_val);
@@ -550,12 +565,12 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
 		
 		
 		//NEW_GRIDPOINT_1(gr_point)
-		GRIDPOINT_ISO(grid, i) = iso_sample.iso;
+		GRIDPOINT_ISO(grid, i) = iso_type.x;//iso_sample.iso;
 		GRIDPOINT_LOCAL_POS(grid, i) = localWorldPos;
 		GRIDPOINT_GLOBAL_POS(grid, i) = globalWorldPos;
 		GRIDPOINT_VOXEL_ID(grid, i) = FVEC4(p_index_pos.x, p_index_pos.y, p_index_pos.z, 0);
 		GRIDPOINT_NORMAL(grid, i) = FVEC4(normal.x, normal.y, normal.z, 0);
-		GRIDPOINT_TYPE(grid, i) = FVEC4(iso_sample.type_id, 0, 0, 0);
+		GRIDPOINT_TYPE(grid, i) = FVEC4(iso_type.y, 0, 0, 0);//FVEC4(iso_sample.type_id, 0, 0, 0);
 		GRIDPOINT_TYPE_RATIO(grid, i) = FVEC4(1, 0, 0, 0);
 		
 		//STRUCT GridPoint gr_point = New_GridPoint();

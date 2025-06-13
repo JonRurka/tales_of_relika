@@ -19,6 +19,9 @@ void kernel main_cl(
 	global float* p_in_heightmap_data,
 	global fvec4* p_in_height_neighboor_data,
 	
+	global fvec4* p_in_iso_type,
+	global fvec4* p_in_normal,
+	
 	global fvec4* p_out_vertex_data,
 	global fvec4* p_out_normal_data,
 	global int* p_out_triangles_data,
@@ -37,6 +40,8 @@ void kernel main_cl(
 	in_TriTable_data = p_in_TriTable_data;
 	in_heightmap_data = p_in_heightmap_data;
 	in_height_neighboor_data = p_in_height_neighboor_data;
+	in_iso_type = p_in_iso_type;
+	in_normal = p_in_normal;
 	out_vertex_data = p_out_vertex_data;
 	out_normal_data = p_out_normal_data;
 	out_triangles_data = p_out_triangles_data;

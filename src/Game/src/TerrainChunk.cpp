@@ -4,7 +4,7 @@
 #include "WorldGenController.h"
 #include "Opaque_Chunk_Material.h"
 
-#define DRAW_DEBUG_BOX false
+#define DRAW_DEBUG_BOX true
 
 void TerrainChunk::Init()
 {

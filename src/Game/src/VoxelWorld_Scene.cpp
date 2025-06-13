@@ -15,8 +15,8 @@ void VoxelWorld_Scene::Init()
 	setup_camera();
 	setup_lights();
 	setup_chunk_gen();
-	setup_client_server();
-	setup_game_client();
+	//setup_client_server();
+	//setup_game_client();
 
 
 	m_start_time = Utilities::Get_Time();
@@ -29,7 +29,7 @@ void VoxelWorld_Scene::Update(float dt)
 		double cur_time = Utilities::Get_Time();
 		if (cur_time - m_start_time > 1.0)
 		{
-			game_client->Connect();
+			//game_client->Connect();
 			m_client_server_inited = true;
 		}
 
@@ -96,7 +96,7 @@ void VoxelWorld_Scene::setup_lights()
 void VoxelWorld_Scene::setup_chunk_gen()
 {
 	world_gen_controller_obj = Instantiate("World_Gen_Controller");
-	//world_gen_controller = world_gen_controller_obj->Add_Component<WorldGenController>();
+	world_gen_controller = world_gen_controller_obj->Add_Component<WorldGenController>();
 }
 
 void VoxelWorld_Scene::setup_client_server()

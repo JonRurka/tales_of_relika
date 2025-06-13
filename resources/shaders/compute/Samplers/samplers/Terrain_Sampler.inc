@@ -33,8 +33,8 @@ float CaveSample(STRUCT Settings s, float x, float y, float z, float scale, floa
 
 float GetHeight(STRUCT Settings s, float x, float y)
 {
-	//return x / 5.0;
-	//return 5;
+	//return x / 1.0;
+	return 5;
 	
 	x /= 100.0f;
 	y /= 100.0f;
