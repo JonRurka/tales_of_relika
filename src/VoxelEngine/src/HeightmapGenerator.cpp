@@ -130,10 +130,24 @@ int HeightmapGenerator::find_next_index()
 	return -1;
 }
 
+namespace {
+	uint32_t C_2D_to_1D(int x, int y, uint32_t width) {
+		return (y * width + x);
+	}
+}
+
 void HeightmapGenerator::evaluate_heightmap(int col_x, int col_y, int hash, int index)
 {
 	glm::ivec4 run_setting = glm::ivec4(col_x, col_y, hash, index);
 	m_in_run_settings_buffer->SetData(&run_setting);
 
 	m_program_gen_heightmap->Execute(m_total_size, 0, 0);
+
+	/*
+	int col_offset_start = index * m_total_size;
+	float* data = new float[m_total_size];
+	m_out_height_data->GetData(data, col_offset_start, m_total_size);
+	int data_index = C_2D_to_1D(35 + 0, 32 + 0, (m_size_z + HEIGHTMAP_PADDING));
+	printf("(%i) CPU height: %f\n", data_index, data[0]);
+	delete[] data;*/
 }

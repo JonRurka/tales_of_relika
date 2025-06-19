@@ -548,7 +548,11 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
 		uint size_x = ChunkSizeX + GRID_PADDING;
 		uint size_z = ChunkSizeZ + GRID_PADDING;
 		
-		uint index_exp = C_3D_to_1D(p_index_pos.x + GRID_OFFSET, p_index_pos.y + GRID_OFFSET, p_index_pos.z + GRID_OFFSET, size_x, size_z);
+		int offset_x = p_index_pos.x + GRID_OFFSET;
+		int offset_y = p_index_pos.y + GRID_OFFSET;
+		int offset_z = p_index_pos.z + GRID_OFFSET; 
+		
+		uint index_exp = C_3D_to_1D(offset_x, offset_y, offset_z, size_x, size_z);
 		//uint index2 = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX, ChunkSizeZ);
 		uint batch_voxel_index = GetBatchIndex((batch_group_idx % batches_per_group), index_exp, batch[3]);
 		
@@ -558,6 +562,9 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
 		fvec4 iso_type = get_buffer_object(in_iso_type, batch_voxel_index);
 		fvec4 normal = get_buffer_object(in_normal, batch_voxel_index);
 		
+		if (p_index_pos.x == 32 && p_index_pos.z == 32 && (p_index_pos.y > 3 && p_index_pos.y < 10)) {
+			Print_4("(%i, %i, %i): %f\n", p_index_pos.x, p_index_pos.y, p_index_pos.z, iso_type.x);
+		}
 		
 		//if (i == 3 && p_index_pos.x == 0 && p_index_pos.z == 0){
 			//Print_2("(%i): ISO: %f\n", p_index_pos.y, iso_val);

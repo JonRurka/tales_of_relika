@@ -302,9 +302,9 @@ void smoothrender_gen_iso_normal_main(uint index)
 
 	STRUCT Settings s = New_Settings();
 	s.column_index = column_idx;
-    s.ChunkSizeX = ChunkSizeX;
-    s.ChunkSizeY = ChunkSizeY;
-    s.ChunkSizeZ = ChunkSizeZ;
+    s.ChunkSizeX = ChunkSizeX - GRID_PADDING;
+    s.ChunkSizeY = ChunkSizeY - GRID_PADDING;
+    s.ChunkSizeZ = ChunkSizeZ - GRID_PADDING;
     s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
     s.seed = 0;
     s.quality = QUALITY_STD;
@@ -329,6 +329,11 @@ void smoothrender_gen_iso_normal_main(uint index)
 	
 	fvec4 iso_type_res = FVEC4(iso_sample.iso, iso_sample.type_id, 0.0, 0.0);
 	fvec4 normal_res = FVEC4(normal.x, normal.y, normal.z, 0.0);
+	
+	if(x == 5 && z == 5 && (y >= 3 && y <= 10))
+	{
+		//Print_2("%i: %f \n", y, iso_sample.iso);
+	}
 	
 	
 	// dst_voxel_index
