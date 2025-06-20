@@ -441,7 +441,7 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
 
     // 32768
     int expanded_chunk_size_1 = (m_static_settings.ChunkSize.x + 1) * (m_static_settings.ChunkSize.y + 1) * (m_static_settings.ChunkSize.z + 1);
-    int expanded_chunk_size_2 = (m_static_settings.ChunkSize.x + GRID_OFFSET) * (m_static_settings.ChunkSize.y + GRID_OFFSET) * (m_static_settings.ChunkSize.z + GRID_OFFSET);
+    int expanded_chunk_size_2 = (m_static_settings.ChunkSize.x + GRID_PADDING) * (m_static_settings.ChunkSize.y + GRID_PADDING) * (m_static_settings.ChunkSize.z + GRID_PADDING);
     int expanded_heightmap_size = (m_static_settings.ChunkSize.x + HEIGHTMAP_PADDING) * (m_static_settings.ChunkSize.y + HEIGHTMAP_PADDING);
     m_heightmap_data_buffer = m_controller->NewReadWriteBuffer(/*expanded_heightmap_size * m_numBatchesPerGroup */ 1, sizeof(float)); // 4356 bytes / chunk
     m_iso_field_buffer = m_controller->NewReadWriteBuffer(/*expanded_chunk_size_2 * m_numBatchesPerGroup */ 1, sizeof(glm::fvec4)); // 574,992 bytes / chunk
@@ -882,13 +882,15 @@ double SmoothVoxelBuilder::AssembleUnifiedField(int group, Run_Settings* group_s
 
     //m_program_unify_fields->Execute(m_numBatchesPerGroup * (m_static_settings.ChunkSize.x + 1) * (m_static_settings.ChunkSize.y + 1) * (m_static_settings.ChunkSize.z + 1), 0, 0);
        
-    //int search_i = GetBatchNumIndex(group_start, m_numBatchesPerGroup, glm::ivec3(0, 0, 0));
+    int search_i = GetBatchNumIndex(group_start, m_numBatchesPerGroup, glm::ivec3(0, 0, 0));
 
     /*if (search_i == -1) {
         return 0;
     }
 
     printf("Found chunk in batch index %i\n", search_i);*/
+
+    //glm::vec4* iso_data = new glm::vec4[m_static_settings.FullChunkSize[1]];
 
     //glm::vec4* Data_debug1 = new glm::vec4[m_static_settings.FullChunkSize[1]];
     //glm::vec4* Data_debug2 = new glm::vec4[m_static_settings.FullChunkSize[1]];

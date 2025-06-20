@@ -91,12 +91,12 @@ STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos
 	//cave_iso = iso_invert(cave_iso);
 	
 	if (raw_cave_iso > 0.0 && world_pos.y < (height - 0.0f)){
-		//iso_result = clamp(clamp(height_iso, -5.0f, 5.0f) - cave_iso, -5.0f, 5.0f);
+		iso_result = clamp(clamp(height_iso, -5.0f, 5.0f) - cave_iso, -5.0f, 5.0f);
 	}
 	else{
-		//iso_result = height_iso;
+		iso_result = height_iso;
 	}
-	iso_result = height_iso;
+	//iso_result = raw_height_iso;
 	
 	if (world_pos.y < (height - 5)){
 		type_res = stone(); // Stone
@@ -317,8 +317,8 @@ void smoothrender_gen_iso_normal_main(uint index)
 	//uint index2 = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX, ChunkSizeZ);
 	//uint batch_index = GetBatchIndex((UINT(batch[1]) % UINT(batch_settings[0])), index_exp, batch[3]);
 	
-	STRUCT IsoSample iso_sample = iso_sample_4(s, p_index_pos.xyz, localWorldPos.xyz, 4);
-	fvec3 normal = normal_sample(s, p_index_pos.xyz, localWorldPos.xyz);
+	STRUCT IsoSample iso_sample = iso_sample_4(s, p_index_pos.xyz, globalWorldPos.xyz, 4);
+	fvec3 normal = normal_sample(s, p_index_pos.xyz, globalWorldPos.xyz);
 	
 	
 	//uint batch_ind = GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, batch[3]);
@@ -333,6 +333,10 @@ void smoothrender_gen_iso_normal_main(uint index)
 	if(x == 5 && z == 5 && (y >= 3 && y <= 10))
 	{
 		//Print_2("%i: %f \n", y, iso_sample.iso);
+	}
+	
+	if (index_pos.z == 28 && FABS(iso_type_res.x) < 2.0f /*&& (p_index_pos.y > 3 && p_index_pos.y < 10)*/) {
+		//Print_4("Gen Block (%i, %i, %i): %f\n", index_pos.x, index_pos.y, index_pos.z, iso_type_res.x);
 	}
 	
 	

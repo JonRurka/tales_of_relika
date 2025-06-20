@@ -21,11 +21,11 @@ class Stitch_VBO;
 
 #define DEFAULT_METER_SIZE 32.0f
 #define DEFAULT_VOXELS_PER_METER 1.0f
-#define DEFAULT_MAX_CHUNK_RADIUS 1
+#define DEFAULT_MAX_CHUNK_RADIUS 10
 #define DEFAULT_DEPTH 4
 #define DEFAULT_BATCH_SIZE 4
 #define MAX_BATCH_SIZE 4
-#define DEFAULT_PROCESS_TIME_INIT_CREATE_MS 100.0
+#define DEFAULT_PROCESS_TIME_INIT_CREATE_MS 250.0
 #define DEFAULT_PROCESS_TIME_RUNTIME_CREATE_MS 16.0
 
 class WorldGenController : public Component
@@ -99,6 +99,12 @@ private:
 	bool m_gen_finished{ false };
 
 	bool m_world_gen_started{ false };
+	//int m_num_filled_chunks{ 0 };
+
+	double m_chunk_init_all_gen_time_ms{ 0 };
+	double m_chunk_init_filled_gen_time_ms{ 0 };
+	int m_num_filled_init_chunks{ 0 };
+	int m_num_all_init_chunks{0};
 
 	std::queue<ChunkRef> m_cached_chunks;
 	std::unordered_map<int, ChunkRef> m_chunk_map;

@@ -137,8 +137,12 @@ void WorldGenController::process_additions()
 
 			m_gen_stop = Utilities::Get_Time();
 			m_gen_finished = true;
-			Logger::LogInfo(LOG_POS("process_additions"), "Chunks generated in %f ms. Average construct time: %f ms.", 
-				(m_gen_stop - m_gen_start) * 1000.0f, avg * 1000.0f);
+			double m_total_time = (m_gen_stop - m_gen_start) * 1000.0f;
+			//Logger::LogInfo(LOG_POS("process_additions"), "%i Chunks generated in %f ms. Average construct time: %f ms.", 
+			//	m_num_filled_init_chunks, (m_gen_stop - m_gen_start) * 1000.0f, avg * 1000.0f);
+			double gen_average_ms = m_chunk_init_all_gen_time_ms / m_num_all_init_chunks;
+			Logger::LogInfo(LOG_POS("process_additions"), "%i Chunks generated in %f ms. Average chunk gen time: %f ms. (%f chunks/sec). Total time: %f ms",
+				m_num_all_init_chunks, m_chunk_init_all_gen_time_ms, gen_average_ms, 1.0 / (gen_average_ms / 1000.0), m_total_time);
 		}
 
 		// TODO: Other stuff when chunk gen has finished.
@@ -189,18 +193,33 @@ bool WorldGenController::process_batch()
 		return false;
 	}
 
+	double start_time = Utilities::Get_Time();
+
 	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
 	glm::dvec4 render_times = m_builder->Render(&render_options);
 
-	construct_times.push_back(gen_times.y);
-	if (construct_times.size() >= max_times) {
-		construct_times.erase(construct_times.begin());
-	}
-
 	std::vector<glm::ivec4> counts = m_builder->GetSize();
 
+	bool has_full_chunks = false;
 	for (int i = 0; i < num_additions; i++) {
+		int num_verts = counts[i].x;
 		batch[i].chunk_comp->Process_Mesh_Update(counts[i]);
+		if (num_verts > 0) {
+			m_num_filled_init_chunks++;
+			has_full_chunks = true;
+		}
+		m_num_all_init_chunks++;
+	}
+
+	double end_time = Utilities::Get_Time();
+	double duration_ms = (end_time - start_time) * 1000.0;
+	m_chunk_init_all_gen_time_ms += duration_ms;
+
+	if (has_full_chunks) { // chunks where nothing was generated don't count.
+		construct_times.push_back(gen_times.y);
+		if (construct_times.size() >= max_times) {
+			construct_times.erase(construct_times.begin());
+		}
 	}
 
 	return !m_create_queue.empty();

@@ -242,6 +242,9 @@ printf(str, val1, val2, val3, val4);
 #define Print_5(str, val1, val2, val3, val4, val5) \
 printf(str, val1, val2, val3, val4, val5);
 
+#define Print_6(str, val1, val2, val3, val4, val5, val6) \
+printf(str, val1, val2, val3, val4, val5, val6);
+
 #define Print_Vec_1(str, val1) \
 printf(str, val1.x, val1.y, val1.z, val1.w);
 

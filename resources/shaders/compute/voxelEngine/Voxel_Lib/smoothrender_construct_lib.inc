@@ -301,7 +301,7 @@ int SetMeshEntry(uint voxelIndex, fvec4 p1, fvec4 n1, int t1, int count){
 
 void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_index, uint v_index, uint cubeIndex, int edge_ent, ivec2 vert_map[12], fvec4 grid[GRIDPOINT_STRIDE * 8], float isoLevel)
 {
-	if(edge_ent == 0){
+	if(edge_ent == 0/* || cubeIndex == 15*/){
         return;
     }
 	
@@ -413,6 +413,9 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 			pos3.x, pos3.y, pos3.z);*/
     }
 	
+	//if (count != 6)
+		//Print_5("Construct (%i, %i, %i): %i, %i \n", index_pos.x, index_pos.y, index_pos.z, count, cubeIndex);
+	
     Set_Count(GetBatchIndex(batch[0], v_index, batch[2]), count);
 	//Set_Debug_Data(v_index, FVEC4(edge_ent, cubeIndex, count, i));
 	//Set_Debug_Data(v_index, FVEC4(count, 0, 0, 0));
@@ -451,6 +454,15 @@ void CreateVertList(STRUCT Static_Settings static_settings, ivec4 batch, uint g_
 	//Set_Debug_Data(g_index, FVEC4(g_index, FLOAT(cubeIndex), edge_ent, 0));
 
     bool invalid = (edge_ent == 0);
+	
+	float iso_orig = GRIDPOINT_ISO(grid, 3);
+	float iso_up = GRIDPOINT_ISO(grid, 7);
+	float iso_forward = GRIDPOINT_ISO(grid, 0);
+	ivec3 index_pos = C_1D_to_3D(v_index, static_settings.ChunkSize.x, static_settings.ChunkSize.y);
+	
+	if (cubeIndex != 15){
+		//Print_6("ISO (%i, %i, %i): %f, %f, %f \n", index_pos.x, index_pos.y, index_pos.z, iso_orig, iso_up, iso_forward);
+	}
 	
 	
 	VERTEX_SELECT(vert_map, 0,  edge_ent, 1,    0, 1, invalid);
@@ -562,8 +574,8 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
 		fvec4 iso_type = get_buffer_object(in_iso_type, batch_voxel_index);
 		fvec4 normal = get_buffer_object(in_normal, batch_voxel_index);
 		
-		if (p_index_pos.x == 32 && p_index_pos.z == 32 && (p_index_pos.y > 3 && p_index_pos.y < 10)) {
-			Print_4("(%i, %i, %i): %f\n", p_index_pos.x, p_index_pos.y, p_index_pos.z, iso_type.x);
+		if (i == 3 && index_pos.z == 28 &&  FABS(iso_type.x) < 2.0f /*&& (p_index_pos.y > 3 && p_index_pos.y < 10)*/) {
+			//Print_4("Render Block (%i, %i, %i): %f\n", p_index_pos.x, p_index_pos.y, p_index_pos.z, iso_type.x);
 		}
 		
 		//if (i == 3 && p_index_pos.x == 0 && p_index_pos.z == 0){
@@ -655,5 +667,6 @@ void smoothrender_construct_main(uint index)
 	//if (index == 0)
 	//	Set_Debug_Data(index, FVEC4(1, 1, 1, 1));
 }
+
 
 #endif // _SMOOTHRENDER_CONSTRUCT_INC_

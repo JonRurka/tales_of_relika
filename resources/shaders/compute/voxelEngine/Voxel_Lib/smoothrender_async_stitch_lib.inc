@@ -110,6 +110,13 @@ void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index
 	//if (v_coord.x == 0 && v_coord.y == 4 && v_coord.z == 0){
 		//Print_1("Stitch count: %i\n", this_count);
 	//}
+	
+	if ((v_coord.x == 31) && 
+		(v_coord.y > 2 && v_coord.y < 7) && 
+		(v_coord.z > 28 && v_coord.z < 32))
+	{
+		//Print_4("Stitch (%i, %i, %i): %i \n", v_coord.x, v_coord.y, v_coord.z, this_count);
+	}
 
     if (buffer_index == -1 || this_count == 0){
         //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(g_index, buffer_index, this_count, 0);
@@ -121,6 +128,8 @@ void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index
 
 	//Set_Debug_Data(v_index, FVEC4(v_index, buffer_index, this_count, 0));
 
+	//if (this_count != 6)
+	//	Print_4("Stitch (%i, %i, %i): %i \n", v_coord.x, v_coord.y, v_coord.z, this_count);
 	
 	int poly_idx = 0;
 	for (poly_idx = 0; poly_idx < (this_count / 3); poly_idx++)
