@@ -26,8 +26,8 @@ readwrite_buffer_float(2, out_height_data)
 readwrite_buffer(fvec4, 3, out_height_neighboor_data)
 readwrite_buffer_int(4, out_biome_data)
 
-#define HEIGHTMAP_PADDING 4
-#define HEIGHTMAP_OFFSET 2
+#define HEIGHTMAP_PADDING 2
+#define HEIGHTMAP_OFFSET 1
 
 #define EPSILON 0.003f
 

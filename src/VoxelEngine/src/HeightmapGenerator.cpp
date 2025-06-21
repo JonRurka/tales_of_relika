@@ -4,8 +4,8 @@
 
 #define BASE_RESOURCE_DIR "compute::heightmapEngine::"
 
-#define HEIGHTMAP_PADDING 4
-#define HEIGHTMAP_OFFSET 2
+#define HEIGHTMAP_PADDING 2
+#define HEIGHTMAP_OFFSET 1
 
 HeightmapGenerator::HeightmapGenerator(
 	IComputeController* controller, 
@@ -128,12 +128,6 @@ int HeightmapGenerator::find_next_index()
 	} while (num_traversed < m_max_columns);
 
 	return -1;
-}
-
-namespace {
-	uint32_t C_2D_to_1D(int x, int y, uint32_t width) {
-		return (y * width + x);
-	}
 }
 
 void HeightmapGenerator::evaluate_heightmap(int col_x, int col_y, int hash, int index)

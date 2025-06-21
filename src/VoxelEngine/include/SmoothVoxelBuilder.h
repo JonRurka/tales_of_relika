@@ -10,6 +10,7 @@
 
 #include "VoxelComputeProgram.h"
 #include "HeightmapGenerator.h"
+#include "TerrainModifications.h"
 
 #include <queue>
 
@@ -51,6 +52,8 @@ namespace VoxelEngine {
 		IComputeController* Get_Compute_Controller();
 
 		HeightmapGenerator* Get_Heightmap_Generator() { return m_HeightmapGenerator; }
+
+		TerrainModifications* Get_Terrain_Modifications() { return m_Terrain_Modifications; }
 
 		//void SetBlock(int x, int y, int z, Block block);
 
@@ -162,6 +165,7 @@ namespace VoxelEngine {
 		IComputeController* m_controller;
 
 		HeightmapGenerator* m_HeightmapGenerator{ nullptr };
+		TerrainModifications* m_Terrain_Modifications{ nullptr };
 
 		IComputeProgram::FileType m_type;
 

@@ -20,9 +20,10 @@ using namespace VoxelEngine;
 #define VECTOR4_SIZE (sizeof(float) * 4)
 
 #define MAX_COLUMNS 1500
+#define MAX_MODIFICATION_CHUNKS 100
 
-#define HEIGHTMAP_PADDING 4
-#define HEIGHTMAP_OFFSET 2
+#define HEIGHTMAP_PADDING 2
+#define HEIGHTMAP_OFFSET 1
 
 #define GRID_PADDING HEIGHTMAP_PADDING
 #define GRID_OFFSET HEIGHTMAP_OFFSET
@@ -418,6 +419,11 @@ void SmoothVoxelBuilder::InitializeComputePrograms()
         MAX_COLUMNS, EXT, m_type
     );
 
+    m_Terrain_Modifications = new TerrainModifications(
+        m_controller,
+        m_static_settings.ChunkSize.x, m_static_settings.ChunkSize.y, m_static_settings.ChunkSize.z,
+        MAX_MODIFICATION_CHUNKS
+    );
 }
 
 void SmoothVoxelBuilder::CreateComputeBuffers()
@@ -573,8 +579,9 @@ void SmoothVoxelBuilder::CreateComputeBuffers()
     m_program_smoothrender_normal_iso_norm->AddBuffer(1, m_in_run_settings_buffer);
     m_program_smoothrender_normal_iso_norm->AddBuffer(2, m_HeightmapGenerator->Height_Data());
     m_program_smoothrender_normal_iso_norm->AddBuffer(3, m_HeightmapGenerator->Height_Extended_Data());
-    m_program_smoothrender_normal_iso_norm->AddBuffer(4, m_gen_iso_type_buffer);
-    m_program_smoothrender_normal_iso_norm->AddBuffer(5, m_gen_normal_buffer);
+    m_program_smoothrender_normal_iso_norm->AddBuffer(4, m_Terrain_Modifications->Modification_Data());
+    m_program_smoothrender_normal_iso_norm->AddBuffer(5, m_gen_iso_type_buffer);
+    m_program_smoothrender_normal_iso_norm->AddBuffer(6, m_gen_normal_buffer);
 
     m_program_smoothrender_construct->AddBuffer(0, m_in_static_settings_buffer);
     m_program_smoothrender_construct->AddBuffer(1, m_in_run_settings_buffer);
@@ -672,6 +679,7 @@ void SmoothVoxelBuilder::FinalizePrograms()
     m_program_smoothrender_stitch_async->Finalize();
 
     m_HeightmapGenerator->Finalize(m_in_static_settings_buffer);
+    m_Terrain_Modifications->Finalize(m_in_static_settings_buffer);
 }
 
 

@@ -10,6 +10,7 @@ set(${module}_headers
     include/marchingcubes_arrays.h
     include/VoxelComputeProgram.h
     include/HeightmapGenerator.h
+	include/TerrainModifications.h
     include/ChunkProcessor_private.h
 	
 	include/std_includes.h
@@ -24,6 +25,7 @@ set(${module}_sources
     src/marchingcubes_arrays.cpp
     src/VoxelComputeProgram.cpp
     src/HeightmapGenerator.cpp
+	src/TerrainModifications.cpp
     src/ChunkProcessor_private.cpp
 	
     src/IVoxelBuilder.cpp

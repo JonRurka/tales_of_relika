@@ -19,6 +19,10 @@ public:
 
 	void Process_Mesh_Update(glm::ivec4 counts);
 
+	void Modify_Point_ISO(glm::ivec3 local_voxel, float iso);
+
+	void Modify_Point_Type(glm::ivec3 local_voxel, int type);
+
 protected:
 	void Init() override;
 

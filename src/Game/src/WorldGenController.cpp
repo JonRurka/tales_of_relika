@@ -13,6 +13,11 @@ WorldGenController* WorldGenController::m_Instance{nullptr};
 namespace {
 	std::vector<double> construct_times;
 	const int max_times = 1000;
+
+
+	int floor_to_int(float val) {
+		return static_cast<int>(std::floor(val));
+	}
 }
 
 void WorldGenController::Init()
@@ -74,6 +79,22 @@ TerrainChunk* WorldGenController::Get_Chunk(glm::ivec3 chunk_coord)
 	return get_chunk(chunk_coord).chunk_comp;
 }
 
+void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMod value)
+{
+	TerrainModEntry entry{};
+	entry.chunk = chunk;
+	entry.changes.push_back(value);
+	m_terrain_change_queue.push(entry);
+}
+
+void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, std::vector<TerrainMod> values)
+{
+	TerrainModEntry entry{};
+	entry.chunk = chunk;
+	entry.changes = values;
+	m_terrain_change_queue.push(entry);
+}
+
 glm::fvec3 WorldGenController::Target_Position()
 {
 	return mTarget->Position();
@@ -88,16 +109,22 @@ WorldGenController::ChunkRef WorldGenController::get_chunk(glm::ivec3 chunk_coor
 void WorldGenController::initialize_voxel_engine()
 {
 	settings.GetSettings()->setString("programDir", "");
-	settings.GetSettings()->setFloat("voxelsPerMeter", 1);
-	settings.GetSettings()->setInt("chunkMeterSizeX", 32);
-	settings.GetSettings()->setInt("chunkMeterSizeY", 32);
-	settings.GetSettings()->setInt("chunkMeterSizeZ", 32);
+	settings.GetSettings()->setFloat("voxelsPerMeter", m_voxelsPerMeter);
+	settings.GetSettings()->setInt("chunkMeterSizeX", m_chunkMeterSizeX);
+	settings.GetSettings()->setInt("chunkMeterSizeY", m_chunkMeterSizeX);
+	settings.GetSettings()->setInt("chunkMeterSizeZ", m_chunkMeterSizeX);
 	settings.GetSettings()->setInt("TotalBatchGroups", 1);
 	settings.GetSettings()->setInt("BatchesPerGroup", 4);
 	settings.GetSettings()->setInt("InvertTrianges", false);
 
+	m_chunk_size_x = m_chunkMeterSizeX * m_voxelsPerMeter;
+	m_chunk_size_y = m_chunkMeterSizeY * m_voxelsPerMeter;
+	m_chunk_size_z = m_chunkMeterSizeZ * m_voxelsPerMeter;
+
 	m_builder = new SmoothVoxelBuilder();
 	m_builder->Init(&settings);
+
+	m_terrain_mods = ((SmoothVoxelBuilder*)m_builder)->Get_Terrain_Modifications();
 
 	int max_vert = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
 
@@ -223,6 +250,46 @@ bool WorldGenController::process_batch()
 	}
 
 	return !m_create_queue.empty();
+}
+
+void WorldGenController::process_modifications()
+{
+
+	while (!m_terrain_change_queue.empty()) 
+	{
+		TerrainModEntry entry = m_terrain_change_queue.front();
+		m_terrain_change_queue.pop();
+
+		glm::ivec3 chunk = entry.chunk;
+		std::vector<TerrainMod> changes = entry.changes;
+
+		if (!Chunk_Exists(chunk)) {
+			continue;
+		}
+
+		for (const auto& v_change : changes)
+		{
+			glm::ivec3 voxel_coord = v_change.Voxel;
+			voxel_coord.x += m_terrain_mods->Grid_Offset();
+			voxel_coord.y += m_terrain_mods->Grid_Offset();
+			voxel_coord.z += m_terrain_mods->Grid_Offset();
+			m_terrain_mods->Set_Chunk_Data(chunk, voxel_coord, v_change.ISO, v_change.Type);
+		}
+
+
+		ChunkGenerationOptions gen_options;
+		ChunkRenderOptions render_options;
+
+		glm::ivec4 chunk_loc = glm::ivec4(chunk, 0);
+		gen_options.locations.push_back(chunk_loc);
+		render_options.locations.push_back(chunk_loc);
+
+		glm::dvec4 gen_times = m_builder->Generate(&gen_options);
+		glm::dvec4 render_times = m_builder->Render(&render_options);
+		std::vector<glm::ivec4> counts = m_builder->GetSize();
+
+		get_chunk(chunk).chunk_comp->Process_Mesh_Update(counts[0]);
+	}
 }
 
 WorldGenController::ChunkRef WorldGenController::create_chunk_object()
@@ -382,6 +449,22 @@ glm::fvec3 WorldGenController::chunkCoordToWorldPos(glm::ivec3 chunk_coord)
 		std::round((chunk_coord.y * m_chunkMeterSizeY) - m_half),
 		std::round((chunk_coord.z * m_chunkMeterSizeZ) - m_half)
 	);
+}
+
+glm::ivec3 WorldGenController::voxelToChunk(glm::ivec3 location)
+{
+	int x = floor_to_int(location.x / (float)m_chunk_size_x);
+	int y = floor_to_int(location.y / (float)m_chunk_size_y);
+	int z = floor_to_int(location.z / (float)m_chunk_size_z);
+	return glm::ivec3(x, y, z);
+}
+
+glm::ivec3 WorldGenController::chunkToVoxel(glm::ivec3 location)
+{
+	int x = ((location.x) * m_chunk_size_x);
+	int y = ((location.y) * m_chunk_size_y);
+	int z = ((location.z) * m_chunk_size_z);
+	return glm::ivec3(x, y, z);
 }
 
 

@@ -17,11 +17,11 @@
 #define SURFACE_TYPE_CEILING 3
 #define Surface_Type int
 
-#define HEIGHTMAP_PADDING 4
-#define HEIGHTMAP_OFFSET 2
+#define HEIGHTMAP_PADDING 2
+#define HEIGHTMAP_OFFSET 1
 
 #define GRID_PADDING HEIGHTMAP_PADDING
-#define GRID_OFFSET 2
+#define GRID_OFFSET 1
 
 read_buffer_struct(Static_Settings, 0, in_static_settings)
 readwrite_buffer_struct(Run_Settings, 1, in_run_settings)

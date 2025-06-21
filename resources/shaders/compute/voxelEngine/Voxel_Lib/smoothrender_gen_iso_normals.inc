@@ -17,11 +17,11 @@
 #define SURFACE_TYPE_CEILING 3
 #define Surface_Type int
 
-#define HEIGHTMAP_PADDING 4
+#define HEIGHTMAP_PADDING 2
 #define HEIGHTMAP_OFFSET 0
 
 #define GRID_PADDING HEIGHTMAP_PADDING
-#define GRID_OFFSET 2
+#define GRID_OFFSET 1
 
 
 read_buffer_struct(Static_Settings, 0, in_static_settings)
@@ -30,8 +30,10 @@ readwrite_buffer_struct(Run_Settings, 1, in_run_settings)
 read_buffer_float(2, in_heightmap_data)
 readwrite_buffer(fvec4, 3, in_height_neighboor_data)
 
-readwrite_buffer(fvec4, 4, out_iso_type)
-readwrite_buffer(fvec4, 5, out_normal)
+readwrite_buffer(fvec4, 4, in_modification_data);
+
+readwrite_buffer(fvec4, 5, out_iso_type)
+readwrite_buffer(fvec4, 6, out_normal)
 
 
 struct IsoSample{
@@ -54,6 +56,23 @@ float iso_sample_3D_4(float x, float y, float z, STRUCT Settings s){
 
 float iso_sample_3D_2(fvec3 p, STRUCT Settings s){
     return iso_sample_3D_4(p.x, p.y, p.z, s);
+}
+
+fvec4 modification_sample_5(int x, int y, int z, int mod_idx, STRUCT Settings s)
+{
+	if (mod_idx == -1){
+		return FVEC4(0, 0, 0, 0);
+	}
+	
+	int size_x = INT(s.ChunkSizeX) + GRID_PADDING;
+	int size_y = INT(s.ChunkSizeY) + GRID_PADDING;
+	int size_z = INT(s.ChunkSizeZ) + GRID_PADDING;
+	int col_size = size_x * size_y * size_z;
+	int chunk_offset_start = mod_idx;
+	int local_idx = INT(C_3D_to_1D(x + 0, y + 0, z + 0, size_x, size_y));
+	int data_index = chunk_offset_start + local_idx;
+	fvec4 val = get_buffer_scalar(in_modification_data, data_index);
+	return val;
 }
 
 float height_sample_5(int x, int y, int column_idx, STRUCT Settings s, int n_index)
@@ -116,6 +135,7 @@ STRUCT IsoSample iso_sample_4(STRUCT Settings s, ivec3 p, fvec3 world_pos, int n
     float iso = iso_sample_3D_2(world_pos, s);
     //float height = height_sample_3(world_pos.x, world_pos.z, s);
 	float height = height_sample_5(p.x, p.z, s.column_index, s, n_index);
+	fvec4 mods = modification_sample_5(p.x, p.y, p.z, s.modification_index , s);
 
     return Combine_ISO(s, p, world_pos, iso, height, 0);
 }
@@ -278,6 +298,7 @@ void smoothrender_gen_iso_normal_main(uint index)
     int cz = run_settings.Location.z;
 	
 	int column_idx = run_settings.int_data_1.x; // chunk column index
+	int modifications_idx = run_settings.int_data_1.y; // chunk column index
 
     // Global coordinate of first voxel in chunk.
     int xStart = cx * INT(ChunkSizeX - GRID_PADDING);
@@ -302,6 +323,7 @@ void smoothrender_gen_iso_normal_main(uint index)
 
 	STRUCT Settings s = New_Settings();
 	s.column_index = column_idx;
+	s.modification_index = modifications_idx;
     s.ChunkSizeX = ChunkSizeX - GRID_PADDING;
     s.ChunkSizeY = ChunkSizeY - GRID_PADDING;
     s.ChunkSizeZ = ChunkSizeZ - GRID_PADDING;

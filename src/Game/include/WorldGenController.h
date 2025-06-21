@@ -18,6 +18,7 @@ using namespace DynamicCompute::Compute;
 class Opaque_Chunk_Material;
 class TerrainChunk;
 class Stitch_VBO;
+class TerrainModifications;
 
 #define DEFAULT_METER_SIZE 32.0f
 #define DEFAULT_VOXELS_PER_METER 1.0f
@@ -31,6 +32,39 @@ class Stitch_VBO;
 class WorldGenController : public Component
 {
 public:
+
+	struct TerrainMod {
+	public:
+		float ISO;
+		int Type;
+		bool Change_ISO;
+		bool Change_Type;
+		glm::ivec3 Voxel;
+
+		TerrainMod(glm::ivec3 voxel, float iso, int type) {
+			Voxel = voxel;
+			ISO = iso;
+			Type = type;
+			Change_ISO = true;
+			Change_Type = true;
+		}
+
+		TerrainMod(glm::ivec3 voxel, float iso) {
+			Voxel = voxel;
+			ISO = iso;
+			Type = 0;
+			Change_ISO = true;
+			Change_Type = false;
+		}
+
+		TerrainMod(glm::ivec3 voxel, int type) {
+			Voxel = voxel;
+			ISO = 0;
+			Type = type;
+			Change_ISO = false;
+			Change_Type = true;
+		}
+	};
 
 	void SetTarget(Transform* target) { mTarget = target; }
 
@@ -48,6 +82,9 @@ public:
 
 	Opaque_Chunk_Material* Get_Chunk_Material() { return m_chunk_opaque_mat; }
 
+	void Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMod value);
+	void Submit_Terrain_Modification(glm::ivec3 chunk, std::vector<TerrainMod> values);
+
 	int Chunk_Radius() { return m_max_chunk_radius; }
 
 	glm::fvec3 Target_Position();
@@ -55,6 +92,9 @@ public:
 	static glm::ivec3 WorldPosToChunkCoord(glm::fvec3 pos) { return m_Instance->worldPosToChunkCoord(pos); }
 
 	static glm::fvec3 ChunkCoordToWorldPos(glm::ivec3 chunk_coord) { return m_Instance->chunkCoordToWorldPos(chunk_coord); }
+
+
+
 
 protected:
 	void Init() override;
@@ -69,11 +109,18 @@ private:
 		TerrainChunk* chunk_comp;
 	};
 
+	struct TerrainModEntry {
+	public:
+		std::vector<TerrainMod> changes;
+		glm::ivec3 chunk;		
+	};
+
 	Transform* mTarget{nullptr};
 
 	static WorldGenController* m_Instance;
 
 	IVoxelBuilder_private* m_builder{ nullptr };
+	TerrainModifications* m_terrain_mods{ nullptr };
 	ChunkSettings settings;
 	Stitch_VBO* vbo_stitch{ nullptr };
 
@@ -82,6 +129,10 @@ private:
 	double m_chunkMeterSizeY{ DEFAULT_METER_SIZE };
 	double m_chunkMeterSizeZ{ DEFAULT_METER_SIZE };
 	double m_half;
+
+	int m_chunk_size_x{ 0 };
+	int m_chunk_size_y{ 0 };
+	int m_chunk_size_z{ 0 };
 
 	int m_chunks_depth{ DEFAULT_DEPTH };
 
@@ -112,6 +163,8 @@ private:
 	std::queue<ChunkRef> m_create_queue;
 	std::queue<glm::ivec3> m_delete_queue;
 
+	std::queue<TerrainModEntry> m_terrain_change_queue;
+
 	Opaque_Chunk_Material* m_chunk_opaque_mat{ nullptr };
 
 	Texture* m_diffuse_texture_array{nullptr};
@@ -125,6 +178,8 @@ private:
 	void process_deletions();
 
 	bool process_batch();
+
+	void process_modifications();
 
 	ChunkRef create_chunk_object();
 
@@ -146,6 +201,9 @@ private:
 
 	glm::fvec3 chunkCoordToWorldPos(glm::ivec3 chunk_coord);
 
+	glm::ivec3 voxelToChunk(glm::ivec3 location);
+
+	glm::ivec3 chunkToVoxel(glm::ivec3 location);
 
 	inline static const std::string LOG_LOC{ "WORLD_GEN_CONTROLLER" };
 };

@@ -65,6 +65,18 @@ void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts)
 	m_vbo_stitch->Process(m_voxel_opaque_mesh, counts, false);
 }
 
+void TerrainChunk::Modify_Point_ISO(glm::ivec3 local_voxel, float iso)
+{
+	WorldGenController::TerrainMod mod(local_voxel, iso);
+	m_controller->Submit_Terrain_Modification(m_chunk_coords, mod);
+}
+
+void TerrainChunk::Modify_Point_Type(glm::ivec3 local_voxel, int type)
+{
+	WorldGenController::TerrainMod mod(local_voxel, type);
+	m_controller->Submit_Terrain_Modification(m_chunk_coords, mod);
+}
+
 void TerrainChunk::Update(float dt)
 {
 	test_despawn();

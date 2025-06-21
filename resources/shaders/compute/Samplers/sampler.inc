@@ -4,6 +4,7 @@
 
 struct Settings{
 	int column_index;
+	int modification_index;
 	
     uint ChunkSizeX;
     uint ChunkSizeY;
@@ -22,6 +23,7 @@ STRUCT Settings New_Settings(){
 	STRUCT Settings s;
 	
 	s.column_index = 0;
+	s.modification_index = -1;
 	s.ChunkSizeX = 0;
 	s.ChunkSizeY = 0;
 	s.ChunkSizeZ = 0;
