@@ -63,6 +63,9 @@ void TerrainChunk::Unassign()
 void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts)
 {
 	m_vbo_stitch->Process(m_voxel_opaque_mesh, counts, false);
+
+	IComputeBuffer* vert_buffer = m_vbo_stitch->Input_Vertex_Buffer();
+	update_collision_mesh(vert_buffer, m_vbo_stitch->Triangle_Data(), counts.x);
 }
 
 void TerrainChunk::Modify_Point_ISO(glm::ivec3 local_voxel, float iso)
@@ -75,6 +78,11 @@ void TerrainChunk::Modify_Point_Type(glm::ivec3 local_voxel, int type)
 {
 	WorldGenController::TerrainMod mod(local_voxel, type);
 	m_controller->Submit_Terrain_Modification(m_chunk_coords, mod);
+}
+
+bool TerrainChunk::Collision_Enabled()
+{
+	return true;
 }
 
 void TerrainChunk::Update(float dt)
@@ -135,5 +143,35 @@ void TerrainChunk::draw_debug_cube()
 	Graphics::DrawDebugLine(edge[1], edge[5], glm::vec3(0, 1, 0), 100000);
 	Graphics::DrawDebugLine(edge[2], edge[6], glm::vec3(0, 1, 0), 100000);
 	Graphics::DrawDebugLine(edge[3], edge[7], glm::vec3(0, 1, 0), 100000);
+}
+
+void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned int* tris_data, int num_vertices)
+{
+	//return;
+
+	if (!Collision_Enabled()) {
+
+		if (m_mesh_collider != nullptr) {
+			// TODO: Destroy mesh component.
+		}
+		return;
+	}
+
+	if (m_mesh_collider == nullptr) {
+		m_mesh_collider = m_opaque_chunk_obj->Add_Component<MeshCollider>();
+	}
+
+
+	glm::vec4* vert_data = new glm::vec4[num_vertices];
+	vert_buffer->GetData(vert_data, num_vertices * sizeof(float) * 4);
+
+	std::vector<unsigned int> tris(tris_data, tris_data + num_vertices);
+	std::vector<glm::vec4> vert(vert_data, vert_data + num_vertices);
+
+	m_collision_mesh = new Mesh();
+	m_collision_mesh->Indices(tris);
+	m_collision_mesh->Vertices(vert);
+	m_collision_mesh->Activate();
+	m_mesh_collider->SetMesh(m_collision_mesh);
 }
 

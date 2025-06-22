@@ -31,6 +31,8 @@ public:
 	IComputeBuffer* Input_Mat_Buffer() { return mat_buffer; }
 	IComputeBuffer* Output_VBO_Buffer() { return vbo_buffer; }
 
+	unsigned int* Triangle_Data() { return m_triangles; }
+
 	static int Stride();
 
 	static Mesh::VertexAttributeList Get_Vertex_Attributes();

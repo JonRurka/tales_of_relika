@@ -22,7 +22,7 @@ class TerrainModifications;
 
 #define DEFAULT_METER_SIZE 32.0f
 #define DEFAULT_VOXELS_PER_METER 1.0f
-#define DEFAULT_MAX_CHUNK_RADIUS 10
+#define DEFAULT_MAX_CHUNK_RADIUS 1
 #define DEFAULT_DEPTH 4
 #define DEFAULT_BATCH_SIZE 4
 #define MAX_BATCH_SIZE 4
@@ -40,6 +40,16 @@ public:
 		bool Change_ISO;
 		bool Change_Type;
 		glm::ivec3 Voxel;
+
+		glm::ivec3 chunk_coord;
+
+		TerrainMod(glm::ivec3 voxel) {
+			Voxel = voxel;
+			ISO = 0;
+			Type = 0;
+			Change_ISO = false;
+			Change_Type = false;
+		}
 
 		TerrainMod(glm::ivec3 voxel, float iso, int type) {
 			Voxel = voxel;
@@ -82,6 +92,10 @@ public:
 
 	Opaque_Chunk_Material* Get_Chunk_Material() { return m_chunk_opaque_mat; }
 
+	void Refresh_Chunk(glm::ivec3 chunk);
+	void Modify_Voxel(glm::ivec3 chunk, TerrainMod value, bool update_neighbor = true);
+	void Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> values, bool update_neighbor = true);
+
 	void Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMod value);
 	void Submit_Terrain_Modification(glm::ivec3 chunk, std::vector<TerrainMod> values);
 
@@ -93,7 +107,15 @@ public:
 
 	static glm::fvec3 ChunkCoordToWorldPos(glm::ivec3 chunk_coord) { return m_Instance->chunkCoordToWorldPos(chunk_coord); }
 
+	static glm::ivec3 VoxelToChunk(glm::ivec3 location) { return m_Instance->voxelToChunk(location); }
 
+	static glm::ivec3 ChunkToVoxel(glm::ivec3 location){ return m_Instance->chunkToVoxel(location); }
+
+	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 location){ return m_Instance->GlobalToLocalChunkCoord(location); }
+
+	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location){ return m_Instance->GlobalToLocalChunkCoord(ChunkCoord, location); }
+
+	static glm::ivec3 LocalToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location){ return m_Instance->LocalToGlobalCoord(Chunk, location); }
 
 
 protected:
@@ -204,6 +226,12 @@ private:
 	glm::ivec3 voxelToChunk(glm::ivec3 location);
 
 	glm::ivec3 chunkToVoxel(glm::ivec3 location);
+
+	glm::ivec3 globalToLocalChunkCoord(glm::ivec3 location);
+
+	glm::ivec3 globalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location);
+
+	glm::ivec3 localToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location);
 
 	inline static const std::string LOG_LOC{ "WORLD_GEN_CONTROLLER" };
 };

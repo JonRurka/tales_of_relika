@@ -15,6 +15,7 @@ private:
 
 	btCollisionShape* m_shape{ nullptr };
 	btTriangleIndexVertexArray* mTriangleIndexVertexArray{ nullptr };
+	btTriangleMesh* m_triangle_mesh{ nullptr };
 
 	inline static const std::string LOG_LOC{ "MESH_COLLIDER" };
 

@@ -20,7 +20,7 @@ public:
 
 	bool Spawn_Chunk(glm::ivec3 chunk_coord);
 
-	void Set_Chunk_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, float iso, int type);
+	void Set_Chunk_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, bool set_iso, float iso, bool set_type, int type);
 
 	void Set_Chunk_Data(glm::ivec3 chunk_coord, std::vector<glm::vec4> data);
 

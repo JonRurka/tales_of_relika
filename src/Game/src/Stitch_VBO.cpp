@@ -177,7 +177,9 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 			Logger::LogDebug(LOG_POS("Process"), "%i: (%f, %f, %f, %f)",
 				i, m_vertices[i].x, m_vertices[i].y, m_vertices[i].z, m_vertices[i].w);
 		}*/
+		
 
+		/*
 		std::vector<glm::vec4> verts(m_vertices, m_vertices + count.x);
 		std::vector<unsigned int> tris(m_triangles, m_triangles + count.x);
 		std::vector<glm::vec4> normals(m_normals, m_normals + count.x);
@@ -186,7 +188,7 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 			for (int i = 0; i < count.x; i++) {
 				Graphics::DrawDebugRay(m_vertices[i], m_normals[i], glm::vec3(0, 0, 1), 10000);
 			}
-		}
+		}*/
 
 
 		//Logger::LogDebug(LOG_POS("Process"), "Applying %i verts out of max %i", count.x, (int)Utilities::Vertex_Limit_Mode::Chunk_Max);

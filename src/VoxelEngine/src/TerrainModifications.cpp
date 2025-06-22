@@ -59,18 +59,28 @@ bool TerrainModifications::Spawn_Chunk(glm::ivec3 chunk_coord)
 	return true;
 }
 
-void TerrainModifications::Set_Chunk_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, float iso, int type)
+void TerrainModifications::Set_Chunk_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, bool set_iso, float iso, bool set_type, int type)
 {
 	int chunk_coord_hash = Utilities::Hash_Chunk_Coord(chunk_coord);
 	if (!m_chunk_map.contains(chunk_coord_hash)) {
 		return;
 	}
 
-	// TODO: set on-edge chunks
-
-	glm::vec4 data = glm::vec4(1.0, iso, type, 0);
+	glm::vec4 data;
 	int chunk_start_index = m_chunk_map[chunk_coord_hash];
 	int v_idx = C_3D_to_1D(voxel_coord.x, voxel_coord.y, voxel_coord.z, m_size_x, m_size_y);
+	m_modification_data->GetData(&data, chunk_start_index + v_idx, m_total_size);
+
+	if (set_iso) {
+		data.x = set_iso ? 1.0 : 0.0;
+		data.y = iso;
+	}
+
+	if (set_type) {
+		data.z = set_type ? 1.0 : 0.0;
+		data.w = type;
+	}
+	
 	m_modification_data->SetData(&data, chunk_start_index + v_idx, m_total_size);
 }
 

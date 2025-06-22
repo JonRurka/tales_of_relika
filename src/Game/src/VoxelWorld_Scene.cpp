@@ -35,6 +35,14 @@ void VoxelWorld_Scene::Update(float dt)
 
 	}
 
+	glm::vec3 ray_start;
+	glm::vec3 ray_dir;
+	camera->ScreenPointToRay(Input::Get_Mouse_Position(), ray_start, ray_dir);
+	Physics::RayHit hit = Physics::Raycast(ray_start, ray_dir * 100.0f);
+	if (hit.did_hit) {
+		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 1.0f, 0.0f));
+	}
+
 
 	//Logger::LogDebug(LOG_POS("Update"), "update");
 }

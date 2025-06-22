@@ -11,15 +11,16 @@ void kernel main_cl(
 	
 	global float* p_in_heightmap_data,
 	global fvec4* p_in_height_neighboor_data,
+	global fvec4* p_in_modification_data,
 	global fvec4* p_out_iso_type,
 	global fvec4* p_out_normal
 )
 {
 	in_static_settings = p_in_static_settings;
 	in_run_settings = p_in_run_settings;
-	in_run_settings = p_in_run_settings;
 	in_heightmap_data = p_in_heightmap_data;
 	in_height_neighboor_data = p_in_height_neighboor_data;
+	in_modification_data = p_in_modification_data;
 	out_iso_type = p_out_iso_type;
 	out_normal = p_out_normal;
 

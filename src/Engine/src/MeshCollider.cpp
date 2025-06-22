@@ -32,6 +32,12 @@ void MeshCollider::SetMesh(Mesh* mesh)
 	std::vector<unsigned int>& index = mesh->Indices();
 	std::vector<glm::vec4>& vert = mesh->Vertices();
 
+	if (vert.size() <= 0) {
+		return;
+	}
+
+	Logger::Log(LOG_POS("SetMesh"), "Set collision mesh with %i vertices and %i indices.", vert.size(), index.size());
+
 	std::vector<glm::vec3> vert3 = Utilities::vec4_to_vec3_arr(vert);
 
 	btIndexedMesh indexedMesh;
@@ -44,6 +50,21 @@ void MeshCollider::SetMesh(Mesh* mesh)
 
 	mTriangleIndexVertexArray = new btTriangleIndexVertexArray();
 	mTriangleIndexVertexArray->addIndexedMesh(indexedMesh);
+
+	//m_triangle_mesh = new btTriangleMesh();
+	//m_triangle_mesh->addIndexedMesh(indexedMesh);
+	/*for (int t = 0; t < mesh->Indices().size() / 3; t++) {
+
+		glm::vec4 v1 = vert[(t * 3) + 0];
+		glm::vec4 v2 = vert[(t * 3) + 1];
+		glm::vec4 v3 = vert[(t * 3) + 2];
+
+		m_triangle_mesh->addTriangle(
+			btVector3(v1.x, v1.y, v1.z),
+			btVector3(v2.x, v2.y, v2.z),
+			btVector3(v3.x, v3.y, v3.z)
+		);
+	}*/
 
 	m_shape = new btBvhTriangleMeshShape(mTriangleIndexVertexArray, true, true);
 	

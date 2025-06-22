@@ -7,6 +7,12 @@ class Opaque_Chunk_Material;
 class Stitch_VBO;
 class WorldGenController;
 
+namespace DynamicCompute { 
+	namespace Compute {
+		class IComputeBuffer;
+	}
+}
+
 class TerrainChunk : public Component
 {
 public:
@@ -23,6 +29,8 @@ public:
 
 	void Modify_Point_Type(glm::ivec3 local_voxel, int type);
 
+	bool Collision_Enabled();
+
 protected:
 	void Init() override;
 
@@ -36,12 +44,17 @@ private:
 	WorldGenController* m_controller;
 	Stitch_VBO* m_vbo_stitch;
 	bool m_assigned{ false };
+	bool m_has_collision{ false };
 
 	WorldObject* m_opaque_chunk_obj{nullptr};
 	Mesh* m_voxel_opaque_mesh{ nullptr };
+	MeshCollider* m_mesh_collider{ nullptr };
+	Mesh* m_collision_mesh{ nullptr };
 
 	void test_despawn();
 
 	void draw_debug_cube();
+
+	void update_collision_mesh(IComputeBuffer* vert_buffer, unsigned int* tris_data, int num_vertices);
 
 };
