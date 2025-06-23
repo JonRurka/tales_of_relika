@@ -42,6 +42,11 @@ void CapsuleCollider::Load(json data)
 {
 }
 
+void CapsuleCollider::OnDestroy()
+{
+	// TODO
+}
+
 void CapsuleCollider::OnRefresh()
 {
 	if (!Active())

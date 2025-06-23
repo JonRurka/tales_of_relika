@@ -41,7 +41,7 @@ btTransform Collider::create_bt_transform()
 	startTransform.setOrigin(btVector3(pos.x, pos.y, pos.z));
 	startTransform.setRotation(btQuaternion(rot.x, rot.y, rot.z, rot.w));
 
-	Logger::LogDebug(LOG_POS("get_bt_transform"), "Reported pos: (%f, %f, %f)", pos.x, pos.y, pos.z);
+	//Logger::LogDebug(LOG_POS("get_bt_transform"), "Reported pos: (%f, %f, %f)", pos.x, pos.y, pos.z);
 
 	return startTransform;
 }
@@ -80,4 +80,10 @@ void Collider::remove_rigidbody(btRigidBody* body)
 		Physics::Remove_Rigidbody(body);
 		m_rigidbody = nullptr;
 	}
+}
+
+void Collider::Destroy_Collider()
+{
+
+	
 }

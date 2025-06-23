@@ -24,6 +24,14 @@ void MeshRenderer::Update(float dt)
 	//update_model_matrix();
 }
 
+void MeshRenderer::OnDestroy()
+{
+	if (has_default_mesh) {
+		delete m_mesh;
+	}
+
+}
+
 void MeshRenderer::update_model_matrix()
 {
 

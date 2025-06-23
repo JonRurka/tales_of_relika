@@ -32,6 +32,8 @@ protected:
 
 	//void OnUpdateMass(float mass) override;
 	void OnRefresh() override;
+
+	void OnDestroy() override;
 };
 
 #undef DEFAULT_SIZE

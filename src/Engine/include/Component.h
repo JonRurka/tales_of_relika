@@ -20,18 +20,24 @@ public:
 
 	static Component* Load_Component(WorldObject* obj, json data);
 
+	void Destroy();
+
 	virtual void Load(json data) {};
 
 private:
 
 	void Object(WorldObject* value) { m_object = value; }
 
+	void Component_Index(int idx) { m_comp_idx = idx; }
+
 	WorldObject* m_object{nullptr};
+	int m_comp_idx{ 0 };
 	std::string m_type_name{"Custom_Component"};
 
 protected:
 	virtual void Init() = 0;
 	virtual void Update(float dt) = 0;
+	virtual void OnDestroy() {};
 
 	WorldObject* Instantiate();
 

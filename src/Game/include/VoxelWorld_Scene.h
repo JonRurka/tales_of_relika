@@ -65,6 +65,8 @@ private:
 
 	void setup_net_player_manager();
 
+	void create_test_items();
+
 	void create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color);
 
 	inline static const std::string LOG_LOC{ "VOXELWORLD_SCENE" };

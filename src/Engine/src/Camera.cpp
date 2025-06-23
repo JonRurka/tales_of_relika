@@ -70,6 +70,10 @@ void Camera::Load(json data)
 	update_projection_matrix();
 }
 
+void Camera::OnDestroy()
+{
+}
+
 void Camera::Set_Skybox(Cubemap* value)
 {
 	if (m_cubemap_mesh == nullptr) {

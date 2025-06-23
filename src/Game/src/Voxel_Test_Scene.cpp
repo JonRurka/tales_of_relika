@@ -237,14 +237,19 @@ void Voxel_Test_Scene::Init()
 	floor_obj->Get_MeshRenderer()->Set_Material(standard_mat);
 	floor_obj->Get_Transform()->Translate(16.0f, 0.0f, 16.0f);
 	floor_obj->Get_Transform()->Scale(glm::vec3(32.0f, 1.0f, 32.0f));
-	BoxCollider* col = floor_obj->Add_Component<BoxCollider>();
-	col->Size(glm::vec3(16.0f, 0.5f, 16.0f));
+	
+	
+	MeshCollider* col = floor_obj->Add_Component<MeshCollider>();
+	//col->Size(glm::vec3(16.0f, 0.5f, 16.0f));
+	col->SetMesh(cube_mesh);
 	col->Mass(0.0f);
 	col->Activate();
 	col->RigidBody()->forceActivationState(DISABLE_DEACTIVATION);
 	col->RigidBody()->getAabb(min, max);
 	//col->RigidBody()->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_STATIC_OBJECT);
 	//col->RigidBody()->setUserIndex(-1);
+
+
 
 	Logger::LogDebug(LOG_POS("Init"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
 		min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
@@ -288,6 +293,8 @@ void Voxel_Test_Scene::Init()
 	int num_chunks = 1;
 
 	std::vector<Mesh*> chunk_meshes;
+	std::vector<Mesh*> chunk_col_meshes;
+
 	for (int i = 0; i < num_chunks; i++) {
 		Mesh* voxel_mesh_test = new Mesh(max_vert * Stitch_VBO::Stride());
 		chunk_meshes.push_back(voxel_mesh_test);
@@ -325,12 +332,21 @@ void Voxel_Test_Scene::Init()
 	double get_counts_duration = std::chrono::duration<double>(get_counts_end - get_counts_start).count();
 	//glm::ivec4 chnk_count = counts[0];
 
-
+	glm::vec4* vert_data = new glm::vec4[(int)Utilities::Vertex_Limit_Mode::Chunk_Max];
 	auto vbo_process_start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < num_chunks; i++) {
 		Logger::LogDebug(LOG_POS("Init"), "Do VBO Process...");
 		vbo_stitch->Process(chunk_meshes[i], counts[i], false);
+
+		vbo_stitch->Input_Vertex_Buffer()->GetData(vert_data, counts[i].x * sizeof(float) * 4);
+		std::vector<glm::fvec4> vert = std::vector<glm::fvec4>(vert_data, vert_data + counts[i].x);
+
+		Mesh* col_mesh = new Mesh();
+		col_mesh->Vertices(vert);
+		col_mesh->Activate();
+		chunk_col_meshes.push_back(col_mesh);
 	}
+	delete[] vert_data;
 	auto vbo_process_end = std::chrono::high_resolution_clock::now();
 	double vbo_process_duration = std::chrono::duration<double>(vbo_process_end - vbo_process_start).count();
 
@@ -398,6 +414,9 @@ void Voxel_Test_Scene::Init()
 		obj->Get_Transform()->Translate(i * 32, 0.0f, 0.0f);
 		obj->Get_MeshRenderer()->Set_Material(chunk_opaque_mat);
 		MeshCollider* mesh_col = obj->Add_Component<MeshCollider>();
+		mesh_col->SetMesh(chunk_col_meshes[i]);
+		mesh_col->Mass(0.0f);
+		mesh_col->Activate();
 	}
 
 	//Transform* obj_trans = obj->Get_Transform();
@@ -406,8 +425,7 @@ void Voxel_Test_Scene::Init()
 
 	
 
-	//mesh_col->SetMesh(voxel_mesh_test);
-	//mesh_col->Activate();
+	
 
 
 	//BoxCollider* test_col = obj->Add_Component<BoxCollider>();

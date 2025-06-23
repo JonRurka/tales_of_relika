@@ -71,6 +71,8 @@ private:
 
 	void set_position(glm::vec3 pos);
 
+	void Destroy();
+
 	glm::mat4 scale_mat = glm::mat4(1.0f);
 	glm::mat4 trans_mat = glm::mat4(1.0f);
 	glm::mat4 rot_mat = glm::mat4(1.0f);

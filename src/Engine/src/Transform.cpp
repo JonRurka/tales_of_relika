@@ -117,6 +117,10 @@ void Transform::set_position(glm::vec3 pos)
 	//printf("set to: %f, %f, %f \n", m_position.x, m_position.y, m_position.z);
 }
 
+void Transform::Destroy()
+{
+}
+
 void Transform::set_model_mat(bool update_parent)
 {
 	rot_mat = glm::toMat4(m_rotation);

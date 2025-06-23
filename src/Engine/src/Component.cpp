@@ -34,6 +34,13 @@ Component* Component::Load_Component(WorldObject* obj, json data)
     return res;
 }
 
+void Component::Destroy()
+{
+    OnDestroy();
+
+
+}
+
 WorldObject* Component::Instantiate() {
     return Object()->scene()->Instantiate();
 }

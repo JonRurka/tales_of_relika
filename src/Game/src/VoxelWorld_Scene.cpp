@@ -8,6 +8,8 @@
 #include "NetPlayerManager.h"
 #include "LocalPlayerCharacter.h"
 
+#include "Standard_Material.h"
+
 void VoxelWorld_Scene::Init()
 {
 	m_remote_connection = false;
@@ -17,6 +19,8 @@ void VoxelWorld_Scene::Init()
 	setup_chunk_gen();
 	//setup_client_server();
 	//setup_game_client();
+
+	//create_test_items();
 
 
 	m_start_time = Utilities::Get_Time();
@@ -43,7 +47,7 @@ void VoxelWorld_Scene::Update(float dt)
 		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
-
+	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()));
 	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 
@@ -135,6 +139,182 @@ void VoxelWorld_Scene::setup_net_player_manager()
 	net_player_manager_obj = Instantiate("Net_Player_Manager");
 	net_player_manager = net_player_manager_obj->Add_Component<NetPlayerManager>();
 	net_player_manager->RegisterLocalPlayer(local_player_character);
+
+}
+
+void VoxelWorld_Scene::create_test_items()
+{
+	std::vector<glm::vec4> floor_vertices = {
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+
+		glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+
+		glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+		glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+
+		glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+		glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+		glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f)
+	};
+
+	std::vector<glm::vec2> floor_tex_coords = {
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(0.0f, 1.0f),
+
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(0.0f, 1.0f),
+	};
+
+	std::vector<glm::vec4> floor_normals = {
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f)
+	};
+
+	glm::vec4 cube_color(1.0f, 1.0f, 1.0f, 1.0f);
+	std::vector<glm::vec4> floor_cube_colors;
+	floor_cube_colors.assign(floor_vertices.size(), cube_color);
+
+	Standard_Material* standard_mat = new Standard_Material();
+	standard_mat->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
+	standard_mat->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	standard_mat->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));
+	standard_mat->setFloat("material_shininess", 32.0f);
+	standard_mat->setFloat("material_specular_intensity", 1.0f);
+	standard_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	standard_mat->setFloat("globalAmbientIntensity", 0.1f);
+	standard_mat->setTexture("material_diffuse", Game_Resources::Textures::CONTAINER_DIFFUSE);
+	standard_mat->setTexture("material_specular", Game_Resources::Textures::CONTAINER_SPECULAR);
+
+	Mesh* cube_mesh = new Mesh();
+	cube_mesh->Vertices(floor_vertices);
+	cube_mesh->Normals(floor_normals);
+	cube_mesh->Colors(floor_cube_colors);
+	cube_mesh->TexCoords(floor_tex_coords);
+
+	btVector3 min, max;
+
+	WorldObject* floor_obj = Instantiate("floor");
+	floor_obj->Get_MeshRenderer()->Set_Mesh(cube_mesh);
+	floor_obj->Get_MeshRenderer()->Set_Material(standard_mat);
+	floor_obj->Get_Transform()->Translate(16.0f, 0.0f, 16.0f);
+	floor_obj->Get_Transform()->Scale(glm::vec3(32.0f, 1.0f, 32.0f));
+	BoxCollider* col = floor_obj->Add_Component<BoxCollider>();
+	col->Size(glm::vec3(16.0f, 0.5f, 16.0f));
+	col->Mass(0.0f);
+	col->Activate();
+	col->RigidBody()->forceActivationState(DISABLE_DEACTIVATION);
+	col->RigidBody()->getAabb(min, max);
+	//col->RigidBody()->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_STATIC_OBJECT);
+	//col->RigidBody()->setUserIndex(-1);
+
+	Logger::LogDebug(LOG_POS("Init"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
+		min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
 
 }
 

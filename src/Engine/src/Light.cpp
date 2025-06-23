@@ -78,6 +78,10 @@ void Light::Update(float dt)
 
 }
 
+void Light::OnDestroy()
+{
+}
+
 void Light::Load(json jsn_data)
 {
 	Light_Data data = Default_Light_Data();

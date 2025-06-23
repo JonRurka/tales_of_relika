@@ -31,6 +31,8 @@ public:
 
 	bool Collision_Enabled();
 
+	void Refresh();
+
 protected:
 	void Init() override;
 
@@ -56,5 +58,7 @@ private:
 	void draw_debug_cube();
 
 	void update_collision_mesh(IComputeBuffer* vert_buffer, unsigned int* tris_data, int num_vertices);
+
+	inline static const std::string LOG_LOC{ "TERRAIN_CHUNK" };
 
 };

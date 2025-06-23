@@ -22,7 +22,7 @@ class TerrainModifications;
 
 #define DEFAULT_METER_SIZE 32.0f
 #define DEFAULT_VOXELS_PER_METER 1.0f
-#define DEFAULT_MAX_CHUNK_RADIUS 1
+#define DEFAULT_MAX_CHUNK_RADIUS 10
 #define DEFAULT_DEPTH 4
 #define DEFAULT_BATCH_SIZE 4
 #define MAX_BATCH_SIZE 4
@@ -102,6 +102,8 @@ public:
 	int Chunk_Radius() { return m_max_chunk_radius; }
 
 	glm::fvec3 Target_Position();
+
+	glm::ivec3 Target_Chunk();
 
 	static glm::ivec3 WorldPosToChunkCoord(glm::fvec3 pos) { return m_Instance->worldPosToChunkCoord(pos); }
 

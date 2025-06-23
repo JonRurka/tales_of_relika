@@ -59,6 +59,7 @@ protected:
 	//virtual void OnUpdateMass(float mass) = 0;
 	virtual void OnRefresh() = 0;
 
+	void Destroy_Collider();
 
 	btVector3 m_localInertia{ btVector3(0.0f, 0.0f, 0.0f) };
 };

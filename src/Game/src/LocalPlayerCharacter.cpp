@@ -24,6 +24,10 @@ void LocalPlayerCharacter::Update(float dt)
 	look_control();
 }
 
+void LocalPlayerCharacter::OnDestroy()
+{
+}
+
 void LocalPlayerCharacter::jump_control()
 {
 	

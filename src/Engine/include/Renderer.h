@@ -8,6 +8,11 @@ class Renderer
 public:
 	virtual void Draw(float dt) = 0;
 
+	void Destroy()
+	{
+		OnDestroy();
+	}
+
 	WorldObject* worldObject() { return m_object; }
 
 	bool Transparent() { return m_transparent; }
@@ -16,6 +21,8 @@ public:
 protected:
 
 	void worldObject(WorldObject* obj) { m_object = obj; }
+
+	virtual void OnDestroy() = 0;
 
 private:
 	WorldObject* m_object{ nullptr };

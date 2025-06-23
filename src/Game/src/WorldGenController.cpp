@@ -191,6 +191,13 @@ glm::fvec3 WorldGenController::Target_Position()
 	return mTarget->Position();
 }
 
+glm::ivec3 WorldGenController::Target_Chunk()
+{
+	glm::vec3 target_pos = Target_Position();
+	glm::ivec3 target_chunk = WorldGenController::WorldPosToChunkCoord(target_pos);
+	return target_chunk;
+}
+
 WorldGenController::ChunkRef WorldGenController::get_chunk(glm::ivec3 chunk_coord)
 {
 	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);

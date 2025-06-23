@@ -5,6 +5,7 @@
 #include "Mesh.h"
 #include "Logger.h"
 #include "Utilities.h"
+#include "Graphics.h"
 
 #define DEFAULT_SIZE (1.0f)
 
@@ -36,38 +37,52 @@ void MeshCollider::SetMesh(Mesh* mesh)
 		return;
 	}
 
-	Logger::Log(LOG_POS("SetMesh"), "Set collision mesh with %i vertices and %i indices.", vert.size(), index.size());
+	//Logger::Log(LOG_POS("SetMesh"), "Set collision mesh with %i vertices and %i indices.", vert.size(), index.size());
 
 	std::vector<glm::vec3> vert3 = Utilities::vec4_to_vec3_arr(vert);
 
-	btIndexedMesh indexedMesh;
-	indexedMesh.m_numTriangles = mesh->Indices().size() / 3;
-	indexedMesh.m_triangleIndexBase = (unsigned char*)index.data();
-	indexedMesh.m_triangleIndexStride = 3 * sizeof(unsigned int);
-	indexedMesh.m_numVertices = mesh->Vertices().size();
-	indexedMesh.m_vertexBase = (unsigned char*)vert3.data();
-	indexedMesh.m_vertexStride = sizeof(glm::vec3);
+	if (index.size() > 0) {
+		btIndexedMesh indexedMesh;
+		indexedMesh.m_numTriangles = mesh->Indices().size() / 3;
+		indexedMesh.m_triangleIndexBase = (unsigned char*)index.data();
+		indexedMesh.m_triangleIndexStride = 3 * sizeof(unsigned int);
+		indexedMesh.m_numVertices = mesh->Vertices().size();
+		indexedMesh.m_vertexBase = (unsigned char*)vert3.data();
+		indexedMesh.m_vertexStride = sizeof(glm::vec3);
 
-	mTriangleIndexVertexArray = new btTriangleIndexVertexArray();
-	mTriangleIndexVertexArray->addIndexedMesh(indexedMesh);
+		mTriangleIndexVertexArray = new btTriangleIndexVertexArray();
+		mTriangleIndexVertexArray->addIndexedMesh(indexedMesh);
 
-	//m_triangle_mesh = new btTriangleMesh();
-	//m_triangle_mesh->addIndexedMesh(indexedMesh);
-	/*for (int t = 0; t < mesh->Indices().size() / 3; t++) {
+		m_shape = new btBvhTriangleMeshShape(mTriangleIndexVertexArray, true, true);
+	}
+	else {
+		m_triangle_mesh = new btTriangleMesh();
+		//m_triangle_mesh->addIndexedMesh(indexedMesh);
+		glm::vec3 col = glm::vec3(0.0, 0.0, 0.0);
 
-		glm::vec4 v1 = vert[(t * 3) + 0];
-		glm::vec4 v2 = vert[(t * 3) + 1];
-		glm::vec4 v3 = vert[(t * 3) + 2];
+		for (int t = 0; t < vert.size() / 3; t++) {
 
-		m_triangle_mesh->addTriangle(
-			btVector3(v1.x, v1.y, v1.z),
-			btVector3(v2.x, v2.y, v2.z),
-			btVector3(v3.x, v3.y, v3.z)
-		);
-	}*/
+			glm::vec4 v1 = vert[(t * 3) + 0];
+			glm::vec4 v2 = vert[(t * 3) + 1];
+			glm::vec4 v3 = vert[(t * 3) + 2];
 
-	m_shape = new btBvhTriangleMeshShape(mTriangleIndexVertexArray, true, true);
-	
+			m_triangle_mesh->addTriangle(
+				btVector3(v1.x, v1.y, v1.z),
+				btVector3(v2.x, v2.y, v2.z),
+				btVector3(v3.x, v3.y, v3.z)
+			);
+
+			//Graphics::DrawDebugRay(v1, glm::vec3(0, 0.1, 0), col, 10000);
+			//Graphics::DrawDebugRay(v2, glm::vec3(0, 0.1, 0), col, 10000);
+			//Graphics::DrawDebugRay(v3, glm::vec3(0, 0.1, 0), col, 10000);
+
+			//col.z += (float)t / (float)(vert.size() / 3);
+
+		}
+		m_shape = new btBvhTriangleMeshShape(m_triangle_mesh, true, true);
+	}
+
+
 	OnRefresh();
 }
 
@@ -109,7 +124,21 @@ void MeshCollider::OnRefresh()
 
 	Transform* obj_trans = Object()->Get_Transform();
 	btTransform bt_trans = get_bt_rigid_transform();
-	Logger::LogDebug(LOG_POS("OnRefresh"), "Rigid Position:(%f, %f, %f), Obj Position:(%f, %f, %f)",
-		bt_trans.getOrigin().x(), bt_trans.getOrigin().y(), bt_trans.getOrigin().z(),
-		obj_trans->Position().x, obj_trans->Position().y, obj_trans->Position().z);
+	//Logger::LogDebug(LOG_POS("OnRefresh"), "Rigid Position:(%f, %f, %f), Obj Position:(%f, %f, %f)",
+	//	bt_trans.getOrigin().x(), bt_trans.getOrigin().y(), bt_trans.getOrigin().z(),
+	//	obj_trans->Position().x, obj_trans->Position().y, obj_trans->Position().z);
+}
+
+void MeshCollider::OnDestroy()
+{
+	if (RigidBody() != nullptr) {
+		remove_rigidbody(RigidBody());
+	}
+
+	if (m_triangle_mesh)
+		delete m_triangle_mesh;
+	if (mTriangleIndexVertexArray)
+		delete mTriangleIndexVertexArray;
+
+	Destroy_Collider();
 }

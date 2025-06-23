@@ -17,6 +17,7 @@ class Scene;
 
 class WorldObject
 {
+	friend class Component;
 public:
 
 	WorldObject(Scene* scene);
@@ -33,6 +34,9 @@ public:
 
 	void Name(std::string value) { m_name = value; }
 	std::string Name() { return m_name; }
+
+	void Enabled(bool val) { m_enabled = val; }
+	bool Enabled() { return m_enabled; }
 
 	std::vector<WorldObject*> Children() { return m_children; }
 
@@ -54,6 +58,8 @@ public:
 	// TODO: move to private and call from friend controller class
 	void DoUpdate(float dt);
 
+	void Destroy();
+
 	static WorldObject* Instantiate(Model* model, Material* mat, WorldObject* parent = nullptr);
 
 	static WorldObject* Load(json data);
@@ -66,15 +72,23 @@ private:
 	Transform* m_transform{nullptr};
 	MeshRenderer* m_renderer{ nullptr };
 	WorldObject* m_parent{ nullptr };
+	bool m_enabled{ false };
+	int m_object_idx{ 0 };
 	
-	static std::vector<WorldObject*> m_all_objects;
+	//static std::vector<WorldObject*> m_all_objects;
+	static std::unordered_map<int, WorldObject*> m_all_objects;
+	static int m_next_idx;
 
 	std::vector<Component*> m_components;
 	std::vector<WorldObject*> m_children;
 
 	void Initialize_Component(Component* comp);
 
-	static void Add_Object(WorldObject* object);
+	void Remove_Component(int comp_idx);
+
+	static int Add_Object(WorldObject* object);
+
+	static void Remove_Object(int idx);
 
 	inline static const std::string LOG_LOC{ "WORLD_OBJECT" };
 };

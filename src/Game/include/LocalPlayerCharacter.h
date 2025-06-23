@@ -28,6 +28,8 @@ protected:
 
 	void Update(float dt) override;
 
+	void OnDestroy() override;
+
 private:
 
 	static LocalPlayerCharacter* m_instance;

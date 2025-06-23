@@ -5,6 +5,8 @@
 #include "Opaque_Chunk_Material.h"
 
 #define DRAW_DEBUG_BOX false
+#define DEBUG_DRAW_VERTICES false
+#define COLLISION_DISTANCE 2
 
 void TerrainChunk::Init()
 {
@@ -82,12 +84,31 @@ void TerrainChunk::Modify_Point_Type(glm::ivec3 local_voxel, int type)
 
 bool TerrainChunk::Collision_Enabled()
 {
-	return true;
+	glm::ivec3 target = m_controller->Target_Chunk();
+	float chunk_dist = glm::distance(glm::vec3(m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z), glm::vec3(target.x, target.y, target.z));
+	if (chunk_dist <= COLLISION_DISTANCE) {
+		//Logger::LogDebug(LOG_POS("Collision_Enabled"), "(%i, %i, %i) - (%i, %i, %i): %f",
+		//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z, target.x, target.y, target.z, chunk_dist);
+		return true;
+	}
+	return false;
+}
+
+void TerrainChunk::Refresh()
+{
+	m_controller->Refresh_Chunk(m_chunk_coords);
 }
 
 void TerrainChunk::Update(float dt)
 {
 	test_despawn();
+
+	if (!m_has_collision) {
+		if (Collision_Enabled()) {
+			Refresh();
+		}
+	}
+
 }
 
 void TerrainChunk::test_despawn()
@@ -148,11 +169,17 @@ void TerrainChunk::draw_debug_cube()
 void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned int* tris_data, int num_vertices)
 {
 	//return;
+	if (num_vertices <= 0) {
+		return;
+	}
 
-	if (!Collision_Enabled()) {
+	bool collision_enabled = Collision_Enabled();
+	if (!collision_enabled) {
 
 		if (m_mesh_collider != nullptr) {
-			// TODO: Destroy mesh component.
+			m_mesh_collider->Destroy();
+			m_mesh_collider = nullptr;
+			m_has_collision = false;
 		}
 		return;
 	}
@@ -161,6 +188,10 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 		m_mesh_collider = m_opaque_chunk_obj->Add_Component<MeshCollider>();
 	}
 
+	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Set Collider (%i): (%i, %i, %i)",
+	//	(collision_enabled ? 1:0),m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
+
+	draw_debug_cube();
 
 	glm::vec4* vert_data = new glm::vec4[num_vertices];
 	vert_buffer->GetData(vert_data, num_vertices * sizeof(float) * 4);
@@ -168,10 +199,27 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 	std::vector<unsigned int> tris(tris_data, tris_data + num_vertices);
 	std::vector<glm::vec4> vert(vert_data, vert_data + num_vertices);
 
+	if (DEBUG_DRAW_VERTICES) {
+		for (int i = 0; i < num_vertices; i++) {
+			Graphics::DrawDebugRay(vert[i], glm::vec3(0, 1, 0), glm::vec3(0, 0, 1), 10000);
+		}
+	}
+
+	btVector3 min, max;
+
 	m_collision_mesh = new Mesh();
-	m_collision_mesh->Indices(tris);
+	//m_collision_mesh->Indices(tris);
 	m_collision_mesh->Vertices(vert);
 	m_collision_mesh->Activate();
 	m_mesh_collider->SetMesh(m_collision_mesh);
+	m_mesh_collider->Mass(0.0f);
+	m_mesh_collider->Activate();
+	//m_mesh_collider->RigidBody()->forceActivationState(DISABLE_DEACTIVATION);
+	m_mesh_collider->RigidBody()->getAabb(min, max);
+
+	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
+	//	min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
+
+	m_has_collision = true;
 }
 

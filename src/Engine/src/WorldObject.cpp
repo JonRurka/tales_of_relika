@@ -10,7 +10,8 @@
 
 #define DEFAULT_NAME "new_worldobject"
 
-std::vector<WorldObject*> WorldObject::m_all_objects;
+std::unordered_map<int, WorldObject*> WorldObject::m_all_objects;
+int WorldObject::m_next_idx{ 0 };
 
 WorldObject::WorldObject(Scene* scene)
 {
@@ -18,7 +19,8 @@ WorldObject::WorldObject(Scene* scene)
 	m_scene = scene;
 	m_transform = new Transform(this);
 	m_renderer = new MeshRenderer(this);
-	Add_Object(this);
+	m_object_idx = Add_Object(this);
+	m_enabled = true;
 }
 
 WorldObject::WorldObject(Scene* scene, std::string name)
@@ -27,7 +29,8 @@ WorldObject::WorldObject(Scene* scene, std::string name)
 	m_scene = scene;
 	m_transform = new Transform(this);
 	m_renderer = new MeshRenderer(this);
-	Add_Object(this);
+	m_object_idx = Add_Object(this);
+	m_enabled = true;
 }
 
 void WorldObject::Parent(WorldObject* value)
@@ -53,6 +56,12 @@ void WorldObject::Scale(float x, float y, float z)
 
 void WorldObject::DoUpdate(float dt)
 {
+	//Logger::LogDebug(LOG_POS("DoUpdate"), "%s updated.", Name().c_str());
+
+	if (!Enabled()) {
+		return;
+	}
+
 	m_transform->Update(dt);
 	m_renderer->Update(dt);
 	for (const auto& comp : m_components) {
@@ -60,11 +69,37 @@ void WorldObject::DoUpdate(float dt)
 	}
 }
 
+void WorldObject::Destroy()
+{
+	Enabled(false);
+
+	for (const auto& comp : m_components) {
+		comp->Destroy();
+	}
+	m_components.clear();
+
+	m_transform->Destroy();
+	delete m_transform;
+
+	m_renderer->Destroy();
+	delete m_renderer;
+
+	Remove_Object(m_object_idx);
+}
+
 void WorldObject::Initialize_Component(Component* comp)
 {
 	comp->Object(this);
 	m_components.push_back(comp);
+	comp->Component_Index(m_components.size() - 1);
 	comp->Init();
+}
+
+void WorldObject::Remove_Component(int comp_idx)
+{
+	// TODO: This should probably be a map instead of an ever-growing list.
+	Component* comp = m_components[comp_idx];
+	delete comp;
 }
 
 WorldObject* WorldObject::Instantiate(Model* model, Material* mat, WorldObject* parent)
@@ -104,16 +139,28 @@ WorldObject* WorldObject::Load(json data)
 	return obj;
 }
 
-/*void WorldObject::Update_Objects(float dt)
-{
+/*void WorldObject::Update_Objects(float dt) {
 	for (const auto& obj : m_all_objects)
 	{
 		obj->DoUpdate(dt);
 	}
 }*/
 
-void WorldObject::Add_Object(WorldObject* object)
+int WorldObject::Add_Object(WorldObject* object)
 {
 	//printf("Add world object: %s\n", object->Name().c_str());
-	m_all_objects.push_back(object);
+	//m_all_objects.push_back(object);
+	int cur_idx = m_next_idx;
+	m_all_objects[cur_idx] = object;
+	m_next_idx++;
+	return cur_idx;
+}
+
+void WorldObject::Remove_Object(int idx)
+{
+	if (!m_all_objects.contains(idx)) {
+		return;
+	}
+	delete m_all_objects[idx];
+	m_all_objects.erase(idx);
 }

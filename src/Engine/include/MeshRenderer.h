@@ -38,6 +38,10 @@ private:
 
 	void Update(float dt);
 
+	void OnDestroy() override;
+
+	//void Destroy();
+
 	WorldObject* m_object{ nullptr };
 	Mesh* m_mesh{ nullptr };
 	Shader* m_shader{ nullptr };
