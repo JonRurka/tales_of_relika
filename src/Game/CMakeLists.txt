@@ -20,6 +20,7 @@ set(${module}_headers
 	include/LocalPlayerCharacter.h
 	include/NetPlayerCharacter.h
 	include/NetPlayerManager.h
+	include/Character_HUD.h
 	
 	include/Stitch_VBO.h
 	include/WorldGenController.h
@@ -44,6 +45,7 @@ set(${module}_sources
 	src/LocalPlayerCharacter.cpp
 	src/NetPlayerCharacter.cpp
 	src/NetPlayerManager.cpp
+	src/Character_HUD.cpp
 	
 	src/Stitch_VBO.cpp
 	src/WorldGenController.cpp

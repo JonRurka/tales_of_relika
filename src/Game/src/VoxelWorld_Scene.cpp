@@ -7,6 +7,7 @@
 #include "Client_Server_Interface.h"
 #include "NetPlayerManager.h"
 #include "LocalPlayerCharacter.h"
+#include "Character_HUD.h"
 
 #include "Standard_Material.h"
 
@@ -39,13 +40,7 @@ void VoxelWorld_Scene::Update(float dt)
 
 	}
 
-	glm::vec3 ray_start;
-	glm::vec3 ray_dir;
-	camera->ScreenPointToRay(Input::Get_Mouse_Position(), ray_start, ray_dir);
-	Physics::RayHit hit = Physics::Raycast(ray_start, ray_dir * 100.0f);
-	if (hit.did_hit) {
-		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 1.0f, 0.0f));
-	}
+	
 
 	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()));
 	//Logger::LogDebug(LOG_POS("Update"), "update");
@@ -80,6 +75,10 @@ void VoxelWorld_Scene::setup_camera()
 	//camera->Clear_Color(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	//camera->FOV(90.0f);
 	camera->Set_Skybox(skybox_cubmap);
+
+	Character_HUD* hud = Camera_obj->Add_Component<Character_HUD>();
+	hud->Init(camera);
+
 
 	/*
 	Light* l_comp = Camera_obj->Add_Component<Light>();

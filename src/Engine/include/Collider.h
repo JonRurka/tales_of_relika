@@ -3,7 +3,8 @@
 #include "Physics.h"
 #include "Component.h"
 
-class Collider : public Component {
+class Collider : public Component 
+{
 public:
 
 	void Mass(float val) 

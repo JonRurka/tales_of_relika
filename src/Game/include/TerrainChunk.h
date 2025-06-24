@@ -15,6 +15,7 @@ namespace DynamicCompute {
 
 class TerrainChunk : public Component
 {
+	friend class WorldGenController;
 public:
 
 	void Init(WorldGenController* controller, Stitch_VBO* vbo_stitch);
@@ -52,6 +53,8 @@ private:
 	Mesh* m_voxel_opaque_mesh{ nullptr };
 	MeshCollider* m_mesh_collider{ nullptr };
 	Mesh* m_collision_mesh{ nullptr };
+
+	void VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float iso, bool Type_changed, int type);
 
 	void test_despawn();
 

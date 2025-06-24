@@ -46,6 +46,8 @@ private:
 
 	int m_total_size{ 0 };
 
+	glm::ivec4* clear_data{ nullptr };
+
 	glm::ivec4* m_chunk_offsets{ nullptr };
 	std::unordered_map<int, int> m_chunk_map;
 

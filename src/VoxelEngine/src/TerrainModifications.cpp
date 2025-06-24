@@ -53,6 +53,9 @@ bool TerrainModifications::Spawn_Chunk(glm::ivec3 chunk_coord)
 	}
 
 	m_chunk_map[chunk_coord_hash] = index * m_total_size;
+
+
+
 	//Logger::LogDebug(LOG_POS("Spawn_Column"), "(%i, %i, %i) given index %i.",
 	//	chunk_coord.x, chunk_coord.y, chunk_coord_hash, index);
 

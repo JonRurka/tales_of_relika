@@ -94,7 +94,13 @@ float height_sample_5(int x, int y, int column_idx, STRUCT Settings s, int n_ind
 	return val;
 }
 
-STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, float edit_iso){
+STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, fvec4 edit){
+	
+	bool change_iso = RountToInt(round(edit.x)) == 1;
+	float edited_iso = edit.y;
+	bool change_type = RountToInt(round(edit.z)) == 1;
+	int edited_type = RountToInt(round(edit.w));
+	
 	
 	float caveDensity = 5.0f;
 	
@@ -117,11 +123,21 @@ STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos
 	}
 	//iso_result = raw_height_iso;
 	
+	
+	if (change_iso){
+		iso_result = iso_result + edited_iso;
+	}
+	
+	
 	if (world_pos.y < (height - 5)){
 		type_res = stone(); // Stone
 	}
 	else if (world_pos.y < (height - 2)){
 		type_res = dirt(); // dirt
+	}
+	
+	if (edited_type){
+		//iso_result = iso_result + edited_iso;
 	}
 	
 	STRUCT IsoSample sample_res;
@@ -137,7 +153,7 @@ STRUCT IsoSample iso_sample_4(STRUCT Settings s, ivec3 p, fvec3 world_pos, int n
 	float height = height_sample_5(p.x, p.z, s.column_index, s, n_index);
 	fvec4 mods = modification_sample_5(p.x, p.y, p.z, s.modification_index , s);
 
-    return Combine_ISO(s, p, world_pos, iso, height, 0);
+    return Combine_ISO(s, p, world_pos, iso, height, mods);
 }
 
 fvec3 normal_sample(STRUCT Settings s, ivec3 p, fvec3 world_pos)
