@@ -62,6 +62,7 @@ void WorldGenController::Init()
 
 void WorldGenController::Update(float dt)
 {
+	process_modifications();
 	process_deletions();
 	process_additions();
 }
@@ -81,18 +82,25 @@ TerrainChunk* WorldGenController::Get_Chunk(glm::ivec3 chunk_coord)
 
 void WorldGenController::Refresh_Chunk(glm::ivec3 chunk)
 {
+	Logger::LogDebug(LOG_POS("Refresh_Chunk"), "Refresh chunk (%i, %i, %i)",
+		chunk.x, chunk.y, chunk.z);
 	TerrainMod val(glm::vec3(0, 0, 0));
 	Modify_Voxel(chunk, val, false);
 }
 
 void WorldGenController::Modify_Voxel_ISO(glm::ivec3 voxel, float iso)
 {
+	//Logger::LogDebug(LOG_POS("Modify_Voxel_ISO"), "Modify voxel");
 	glm::ivec3 chunk = voxelToChunk(voxel);
 	glm::ivec3 voxel_local = globalToLocalChunkCoord(chunk, voxel);
 
 	if (!Chunk_Exists(chunk)) {
+		//int tmp = Utilities::Hash_Chunk_Coord(chunk.x, chunk.y, chunk.z);
+		//Logger::LogDebug(LOG_POS("Modify_Voxel_ISO"), "We can NOT modify the voxel for chunk (%i, %i, %i): %i",
+		//	chunk.x, chunk.y, chunk.z);
 		return;
 	}
+	//Logger::LogDebug(LOG_POS("Modify_Voxel_ISO"), "We can modify the voxel");
 
 	get_chunk(chunk).chunk_comp->VoxelChanged(voxel_local, true, iso, false, 0);
 
@@ -149,7 +157,8 @@ void WorldGenController::Modify_Voxel(std::vector<TerrainMod> values)
 
 void WorldGenController::Modify_Voxel(glm::ivec3 chunk, TerrainMod value, bool update_neighbor)
 {
-	std::vector<TerrainMod> values{ value };
+	std::vector<TerrainMod> values;
+	values.push_back(value);
 	Modify_Voxel(chunk, values, update_neighbor);
 }
 
@@ -238,6 +247,8 @@ void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMo
 	entry.chunk = chunk;
 	entry.changes.push_back(value);
 	m_terrain_change_queue.push(entry);
+	//Logger::LogDebug(LOG_POS("Submit_Terrain_Modification"), "Submitted terrain change for chunk (%i, %i, %i).",
+	//	chunk.x, chunk.y, chunk.z);
 }
 
 void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, std::vector<TerrainMod> values)
@@ -246,6 +257,8 @@ void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, std::vect
 	entry.chunk = chunk;
 	entry.changes = values;
 	m_terrain_change_queue.push(entry);
+	//Logger::LogDebug(LOG_POS("Submit_Terrain_Modification_arr"), "Submitted terrain %i changes for chunk (%i, %i, %i).",
+	//	values.size(), chunk.x, chunk.y, chunk.z);
 }
 
 glm::fvec3 WorldGenController::Target_Position()
@@ -330,6 +343,8 @@ void WorldGenController::process_additions()
 			double gen_average_ms = m_chunk_init_all_gen_time_ms / m_num_all_init_chunks;
 			Logger::LogInfo(LOG_POS("process_additions"), "%i Chunks generated in %f ms. Average chunk gen time: %f ms. (%f chunks/sec). Total time: %f ms",
 				m_num_all_init_chunks, m_chunk_init_all_gen_time_ms, gen_average_ms, 1.0 / (gen_average_ms / 1000.0), m_total_time);
+
+			//Logger::LogDebug(LOG_POS("process_additions"), "Num chunks in map: %i", m_chunk_map.size());
 		}
 
 		// TODO: Other stuff when chunk gen has finished.
@@ -417,6 +432,8 @@ void WorldGenController::process_modifications()
 
 	while (!m_terrain_change_queue.empty()) 
 	{
+		Logger::LogDebug(LOG_POS("process_modifications"), "Items in mod queue: %i", m_terrain_change_queue.size());
+
 		TerrainModEntry entry = m_terrain_change_queue.front();
 		m_terrain_change_queue.pop();
 
@@ -450,7 +467,7 @@ void WorldGenController::process_modifications()
 		glm::dvec4 render_times = m_builder->Render(&render_options);
 		std::vector<glm::ivec4> counts = m_builder->GetSize();
 
-		get_chunk(chunk).chunk_comp->Process_Mesh_Update(counts[0]);
+		//get_chunk(chunk).chunk_comp->Process_Mesh_Update(counts[0]);
 	}
 }
 
@@ -536,6 +553,8 @@ bool WorldGenController::queue_chunk_create(glm::ivec3 chunk_coord)
 
 	chunk.chunk_comp->Assign(chunk_coord);
 	chunk.chunk_coord = chunk_coord;
+
+	m_chunk_map[hash] = chunk;
 
 	m_create_queue.push(chunk);
 

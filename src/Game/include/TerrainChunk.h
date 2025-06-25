@@ -48,6 +48,7 @@ private:
 	Stitch_VBO* m_vbo_stitch;
 	bool m_assigned{ false };
 	bool m_has_collision{ false };
+	bool m_should_despawn{ false };
 
 	WorldObject* m_opaque_chunk_obj{nullptr};
 	Mesh* m_voxel_opaque_mesh{ nullptr };
@@ -56,7 +57,7 @@ private:
 
 	void VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float iso, bool Type_changed, int type);
 
-	void test_despawn();
+	bool test_despawn();
 
 	void draw_debug_cube();
 

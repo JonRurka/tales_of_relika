@@ -19,4 +19,6 @@ private:
 
 	void draw_voxel_box(glm::ivec3 voxel_coord);
 
+	inline static const std::string LOG_LOC{ "CHARACTER_HUD" };
+
 };

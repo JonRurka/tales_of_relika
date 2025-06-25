@@ -156,6 +156,9 @@ namespace VoxelEngine {
 
 		int m_active_batches{ 0 };
 
+		int m_num_locations{ 0 };
+		int m_num_batch_group_runs{ 0 };
+
 		const int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
 		const int m_voxel_runtime{ VOXEL_RUNTIME };
 

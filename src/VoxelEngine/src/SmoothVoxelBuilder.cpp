@@ -8,6 +8,7 @@
 #include "Utilities.h"
 
 #include <chrono>
+#include <algorithm>
 
 using namespace VoxelEngine;
 
@@ -146,6 +147,7 @@ void SmoothVoxelBuilder::SetRunSettings(std::vector<glm::ivec3> locations) {
     for (int i = 0; i < m_active_batches; i++) {
         m_run_settings[i + 1].Location = glm::ivec4(locations[i].x, locations[i].y, locations[i].z, i);
         m_run_settings[i + 1].int_data_1.x = m_HeightmapGenerator->Get_Column_Data_Offset(glm::ivec2(locations[i].x, locations[i].z));
+        m_run_settings[i + 1].int_data_1.y = m_Terrain_Modifications->Get_Chunk_Data_Offset(locations[i]);
     }
 }
 
@@ -162,9 +164,9 @@ void SmoothVoxelBuilder::Generate_Heightmaps(std::vector<glm::ivec3> chunk_locat
     for (const auto& pair : columns) {
         //Logger::LogDebug(LOG_POS("Generate_Heightmaps"), "(%i, %i)", pair.second.x, pair.second.y);
         bool res = m_HeightmapGenerator->Spawn_Column(pair.second);
-        if (!res) {
-            Logger::LogError(LOG_POS("Generate_Heightmaps"), "Failed to generate heightmap for column (%i, %i)", pair.second.x, pair.second.y);
-        }
+        //if (!res) {
+        //    Logger::LogError(LOG_POS("Generate_Heightmaps"), "Failed to generate heightmap for column (%i, %i)", pair.second.x, pair.second.y);
+        //}
     }
 
 }
@@ -227,7 +229,8 @@ glm::dvec4 SmoothVoxelBuilder::Generate(ChunkGenerationOptions* options)
 
     SetRunSettings(options->locations);
 
-
+    m_num_locations = options->locations.size();
+    //Logger::LogDebug(LOG_POS("Generate"), "How many run locations: %i", m_num_locations);
 
     glm::dvec4 result = glm::dvec4(0,0,0,0);
     double buffer_writes_time = 0;
@@ -235,14 +238,18 @@ glm::dvec4 SmoothVoxelBuilder::Generate(ChunkGenerationOptions* options)
     auto start_buffer_writes = std::chrono::high_resolution_clock::now();
     int start_index = 0;//(i * m_numBatchesPerGroup);
     Run_Settings* start = m_run_settings + start_index;
-    m_in_run_settings_buffer->SetData(start, (m_totalBatches + 1) * sizeof(Run_Settings));
+
+    //m_in_run_settings_buffer->SetData(start, (m_totalBatches + 1) * sizeof(Run_Settings));
+    m_in_run_settings_buffer->SetData(start, (m_num_locations + 1) * sizeof(Run_Settings));
+
     auto end_buffer_writes = std::chrono::high_resolution_clock::now();
     buffer_writes_time += std::chrono::duration<double>(end_buffer_writes - start_buffer_writes).count();
 
-
+    
+    m_num_batch_group_runs = std::max((int)(m_num_locations / m_numBatchesPerGroup), 1);
     
 
-    for (int i = 0; i < m_numBatchGroups; i++) {
+    for (int i = 0; i < m_num_batch_group_runs; i++) {
 
         //auto start_buffer_writes = std::chrono::high_resolution_clock::now();
         //int start_index = (i * m_numBatchesPerGroup);
@@ -883,14 +890,24 @@ double SmoothVoxelBuilder::AssembleUnifiedField(int group, Run_Settings* group_s
 {
     auto start = std::chrono::high_resolution_clock::now();
 
+    int num_batches = m_numBatchesPerGroup;
+    if (group == (m_num_batch_group_runs - 1)) 
+    {
+        num_batches = m_num_locations % m_numBatchesPerGroup;
+        if (num_batches == 0) {
+            num_batches = m_numBatchesPerGroup;
+        }
+    }
 
-    m_program_smoothrender_normal_iso_norm->Execute(m_numBatchesPerGroup * m_static_settings.FullChunkSize[1], 0, 0);
+    int num_run_elem = num_batches * m_static_settings.FullChunkSize[0];
+    //Logger::LogDebug(LOG_POS("AssembleUnifiedField"), "%i: executing %i batches. %i elements", group, num_batches, num_run_elem);
+    m_program_smoothrender_normal_iso_norm->Execute(num_batches * m_static_settings.FullChunkSize[1], 0, 0);
 
 
 
     //m_program_unify_fields->Execute(m_numBatchesPerGroup * (m_static_settings.ChunkSize.x + 1) * (m_static_settings.ChunkSize.y + 1) * (m_static_settings.ChunkSize.z + 1), 0, 0);
        
-    int search_i = GetBatchNumIndex(group_start, m_numBatchesPerGroup, glm::ivec3(0, 0, 0));
+    //int search_i = GetBatchNumIndex(group_start, m_numBatchesPerGroup, glm::ivec3(0, 0, 0));
 
     /*if (search_i == -1) {
         return 0;
@@ -948,7 +965,18 @@ double SmoothVoxelBuilder::Construct(int group, Run_Settings* group_start)
         m_in_run_settings_buffer->SetData(&m_run_settings[i * m_numBatchesPerGroup], m_numBatchesPerGroup * sizeof(Run_Settings));
         m_program_smoothrender_construct->Execute(m_numBatchesPerGroup * m_static_settings.FullChunkSize[0], 0, 0);
     }*/
-    m_program_smoothrender_construct->Execute(m_numBatchesPerGroup * m_static_settings.FullChunkSize[0], 0, 0);
+    int num_batches = m_numBatchesPerGroup;
+    if (group == (m_num_batch_group_runs - 1))
+    {
+        num_batches = m_num_locations % m_numBatchesPerGroup;
+        if (num_batches == 0) {
+            num_batches = m_numBatchesPerGroup;
+        }
+    }
+    
+    int num_run_elem = num_batches * m_static_settings.FullChunkSize[0];
+    //Logger::LogDebug(LOG_POS("Construct"), "%i: executing %i batches. %i elements", group, num_batches, num_run_elem);
+    m_program_smoothrender_construct->Execute(num_run_elem, 0, 0);
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration<double>(end - start).count();
     double construct_t = duration;
@@ -1010,8 +1038,8 @@ glm::dvec4 SmoothVoxelBuilder::DoRender()
     buffer_writes_time += std::chrono::duration<double>(end_buffer_writes - start_buffer_writes).count();
 
     auto start = std::chrono::high_resolution_clock::now();
-
-    m_program_smoothrender_mark->Execute((m_static_settings.ChunkSize.x * m_static_settings.ChunkSize.y) * m_totalBatches, 0, 0);
+    //Logger::LogDebug(LOG_POS("DoRender-mark"), "executing %i batches...", m_num_locations);
+    m_program_smoothrender_mark->Execute((m_static_settings.ChunkSize.x * m_static_settings.ChunkSize.y) * m_num_locations, 0, 0);
 
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration<double>(end - start).count();
@@ -1023,7 +1051,8 @@ glm::dvec4 SmoothVoxelBuilder::DoRender()
     start = std::chrono::high_resolution_clock::now();
 
     //printf("CPU Execute Mark Offsets: %i\n", m_totalBatches);
-    m_program_smoothrender_mark_offsets->Execute(m_totalBatches, 0, 0);
+    //Logger::LogDebug(LOG_POS("DoRender-mark_offsets"), "executing %i batches...", m_num_locations);
+    m_program_smoothrender_mark_offsets->Execute(m_num_locations, 0, 0);
 
     end = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration<double>(end - start).count();
@@ -1061,9 +1090,11 @@ glm::dvec4 SmoothVoxelBuilder::DoRender()
         printf("res '%i': %i, %i, %i\n", i, Data_count1[i].x, Data_count1[i].y, Data_count1[i].z);
     }*/
 
+    
+
 
     duration = 0;
-    for (int i = 0; i < m_numBatchGroups; i++) {
+    for (int i = 0; i < m_num_batch_group_runs; i++) {
 
         //auto start_buffer_writes = std::chrono::high_resolution_clock::now();
         //int start_index = (i * m_numBatchesPerGroup);
@@ -1072,7 +1103,13 @@ glm::dvec4 SmoothVoxelBuilder::DoRender()
         //auto end_buffer_writes = std::chrono::high_resolution_clock::now();
         //buffer_writes_time += std::chrono::duration<double>(end_buffer_writes - start_buffer_writes).count();
         
-
+        int num_batches = m_numBatchesPerGroup;
+        if (i == (m_num_batch_group_runs - 1))
+        {
+            num_batches = m_num_locations % m_numBatchesPerGroup;
+            if (num_batches == 0)
+                num_batches = m_numBatchesPerGroup;
+        }
 
 
         //m_in_run_settings_buffer->SetData(&m_run_settings[i * m_numBatchesPerGroup], m_numBatchesPerGroup * sizeof(Run_Settings));
@@ -1083,7 +1120,8 @@ glm::dvec4 SmoothVoxelBuilder::DoRender()
         }*/
 
         auto start_time = std::chrono::high_resolution_clock::now();
-        m_program_smoothrender_stitch_async->Execute(m_numBatchesPerGroup * m_static_settings.FullChunkSize[0], 0, 0);
+        //Logger::LogDebug(LOG_POS("DoRender-stitch"), "%i: executing %i batches...", i, num_batches);
+        m_program_smoothrender_stitch_async->Execute(num_batches * m_static_settings.FullChunkSize[0], 0, 0);
         auto end_time = std::chrono::high_resolution_clock::now();
         duration += std::chrono::duration<double>(end_time - start_time).count();
         //glm::vec4* debug_data = new glm::vec4[UINT16_MAX * m_totalBatches];

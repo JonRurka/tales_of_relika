@@ -278,7 +278,7 @@ void Voxel_Test_Scene::Init()
 	settings.GetSettings()->setInt("chunkMeterSizeY", 32);
 	settings.GetSettings()->setInt("chunkMeterSizeZ", 32);
 	settings.GetSettings()->setInt("TotalBatchGroups", 1);
-	settings.GetSettings()->setInt("BatchesPerGroup", 1);
+	settings.GetSettings()->setInt("BatchesPerGroup", 4);
 	settings.GetSettings()->setInt("InvertTrianges", false);
 
 	m_builder = new SmoothVoxelBuilder();
@@ -328,6 +328,7 @@ void Voxel_Test_Scene::Init()
 
 	auto get_counts_start = std::chrono::high_resolution_clock::now();
 	std::vector<glm::ivec4> counts = m_builder->GetSize();
+	Logger::LogDebug(LOG_POS("Init"), "First batch: %i vertices.", counts[0].x);
 	auto get_counts_end = std::chrono::high_resolution_clock::now();
 	double get_counts_duration = std::chrono::duration<double>(get_counts_end - get_counts_start).count();
 	//glm::ivec4 chnk_count = counts[0];
@@ -335,11 +336,12 @@ void Voxel_Test_Scene::Init()
 	glm::vec4* vert_data = new glm::vec4[(int)Utilities::Vertex_Limit_Mode::Chunk_Max];
 	auto vbo_process_start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < num_chunks; i++) {
-		Logger::LogDebug(LOG_POS("Init"), "Do VBO Process...");
 		vbo_stitch->Process(chunk_meshes[i], counts[i], false);
 
 		vbo_stitch->Input_Vertex_Buffer()->GetData(vert_data, counts[i].x * sizeof(float) * 4);
 		std::vector<glm::fvec4> vert = std::vector<glm::fvec4>(vert_data, vert_data + counts[i].x);
+
+		Logger::LogDebug(LOG_POS("Init"), "%i: VBO Extract %i vertices.", i, counts[i].x);
 
 		Mesh* col_mesh = new Mesh();
 		col_mesh->Vertices(vert);
@@ -377,6 +379,7 @@ void Voxel_Test_Scene::Init()
 	Logger::LogDebug(LOG_POS("Init"), "Extract - Get Counts : %f ms", get_counts_duration * 1000);
 	Logger::LogDebug(LOG_POS("Init"), "Extract - VBO Process : %f ms", vbo_process_duration * 1000);
 	Logger::LogDebug(LOG_POS("Init"), "Total: %f ms", (duration + extract_duration) * 1000);
+	
 
 	double s_per_chunk = ((duration + extract_duration) / num_chunks);
 	double chunks_per_second = 1.0 / s_per_chunk;

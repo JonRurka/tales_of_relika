@@ -71,7 +71,15 @@ fvec4 modification_sample_5(int x, int y, int z, int mod_idx, STRUCT Settings s)
 	int chunk_offset_start = mod_idx;
 	int local_idx = INT(C_3D_to_1D(x + 0, y + 0, z + 0, size_x, size_y));
 	int data_index = chunk_offset_start + local_idx;
-	fvec4 val = get_buffer_scalar(in_modification_data, data_index);
+	fvec4 val = get_buffer_vector(in_modification_data, data_index);
+	
+	if (val.x > 0.1){
+		//Print_5("mod_sample: (%i, %i, %i) (%i): %f \n", x, y, z, local_idx, val.y);
+		/*printf("voxel:(%i, %i, %i), size:(%i, %i), v_idx:%i, iso:%f \n",
+		x, y, z,
+		size_x, size_y,
+		local_idx, val.y);*/
+	}
 	return val;
 }
 
@@ -95,6 +103,10 @@ float height_sample_5(int x, int y, int column_idx, STRUCT Settings s, int n_ind
 }
 
 STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, fvec4 edit){
+	
+	if (edit.x > 0.1){
+		//Print_4("changed ISO 1 (%i, %i, %i): %f \n", voxel_pos.x, voxel_pos.y, voxel_pos.z, edit.y);
+	}
 	
 	bool change_iso = RountToInt(round(edit.x)) == 1;
 	float edited_iso = edit.y;
@@ -121,11 +133,13 @@ STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos
 	else{
 		iso_result = height_iso;
 	}
-	//iso_result = raw_height_iso;
+	iso_result = height_iso;
 	
 	
 	if (change_iso){
+		float old_iso = iso_result;
 		iso_result = iso_result + edited_iso;
+		printf("changed ISO (%i, %i, %i): %f - %f \n", voxel_pos.x, voxel_pos.y, voxel_pos.z, old_iso, iso_result);
 	}
 	
 	
@@ -265,8 +279,7 @@ STRUCT IsoNormalSample Gen_Grid_Point(ivec4 batch, uint g_index, uint v_index, S
 }
 
 void smoothrender_gen_iso_normal_main(uint index)
-{
-	
+{	
 	STRUCT Static_Settings static_settings = GET_STATIC_SETTINGS();
 	
 	uint numBatchesPerGroup = static_settings.batches[0];
@@ -278,6 +291,7 @@ void smoothrender_gen_iso_normal_main(uint index)
 	
 	uint inst_index = start_index + (INT(index) / static_settings.FullChunkSize[1]);
 	STRUCT Run_Settings run_settings = GET_RUN_SETTINGS(inst_index);
+	
 	
 	if (run_settings.Location.w == -1){
 		return;
@@ -368,9 +382,12 @@ void smoothrender_gen_iso_normal_main(uint index)
 	fvec4 iso_type_res = FVEC4(iso_sample.iso, iso_sample.type_id, 0.0, 0.0);
 	fvec4 normal_res = FVEC4(normal.x, normal.y, normal.z, 0.0);
 	
+	
+	
 	if(x == 5 && z == 5 && (y >= 3 && y <= 10))
 	{
 		//Print_2("%i: %f \n", y, iso_sample.iso);
+		//Print_2("%i: %f \n", y, 0);
 	}
 	
 	if (index_pos.z == 28 && FABS(iso_type_res.x) < 2.0f /*&& (p_index_pos.y > 3 && p_index_pos.y < 10)*/) {

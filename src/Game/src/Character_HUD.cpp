@@ -20,11 +20,16 @@ void Character_HUD::Update(float dt)
 	Physics::RayHit hit = Physics::Raycast(ray_start, ray_dir * 100.0f);
 	if (hit.did_hit) {
 		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit.hit_point + (hit.normal * 0.01f));
+		glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit.hit_point - (hit.normal * 0.01f));
 		draw_voxel_box(voxel_coord);
 
+		if (Input::GetMouseKeyDown(input::MouseButton::Left)) {
+			//Logger::LogDebug(LOG_POS("Update"), "Mouse Clicked.");
+			WorldGenController::Instance()->Modify_Voxel_ISO(voxel_coord, 1.34);
+		}
 		if (Input::GetMouseKeyDown(input::MouseButton::Right)) {
-			WorldGenController::Instance()->Modify_Voxel_ISO(voxel_coord, -2.0);
+			//Logger::LogDebug(LOG_POS("Update"), "Mouse Clicked.");
+			WorldGenController::Instance()->Modify_Voxel_ISO(voxel_coord, -1.34);
 		}
 
 	}

@@ -29,6 +29,9 @@ void TerrainChunk::Init(WorldGenController* controller, Stitch_VBO* vbo_stitch)
 	m_opaque_chunk_obj->Get_MeshRenderer()->Set_Material(controller->Get_Chunk_Material());
 	m_opaque_chunk_obj->Get_MeshRenderer()->Set_Mesh(m_voxel_opaque_mesh);
 	m_opaque_chunk_obj->Add_Component<MeshCollider>();
+
+	//Logger::LogDebug(LOG_POS("Init"), "New chunk initialied. (%i, %i, %i)", 
+	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 }
 
 void TerrainChunk::Assign(glm::ivec3 chunk_coord)
@@ -46,6 +49,9 @@ void TerrainChunk::Assign(glm::ivec3 chunk_coord)
 
 	if (DRAW_DEBUG_BOX)
 		draw_debug_cube();
+
+	//Logger::LogDebug(LOG_POS("Assign"), "New chunk assigned. (%i, %i, %i)",
+	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 }
 
 void TerrainChunk::Unassign()
@@ -64,6 +70,12 @@ void TerrainChunk::Unassign()
 
 void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts)
 {
+	if (!m_assigned) {
+		return;
+	}
+
+	Logger::LogDebug(LOG_POS("Process_Mesh_Update"), "Process update.");
+
 	m_vbo_stitch->Process(m_voxel_opaque_mesh, counts, false);
 
 	IComputeBuffer* vert_buffer = m_vbo_stitch->Input_Vertex_Buffer();
@@ -72,18 +84,28 @@ void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts)
 
 void TerrainChunk::Modify_Point_ISO(glm::ivec3 local_voxel, float iso)
 {
+	if (!m_assigned) {
+		return;
+	}
 	WorldGenController::TerrainMod mod(local_voxel, iso);
 	m_controller->Submit_Terrain_Modification(m_chunk_coords, mod);
 }
 
 void TerrainChunk::Modify_Point_Type(glm::ivec3 local_voxel, int type)
 {
+	if (!m_assigned) {
+		return;
+	}
 	WorldGenController::TerrainMod mod(local_voxel, type);
 	m_controller->Submit_Terrain_Modification(m_chunk_coords, mod);
 }
 
 bool TerrainChunk::Collision_Enabled()
 {
+	if (!m_assigned) {
+		return false;
+	}
+
 	glm::ivec3 target = m_controller->Target_Chunk();
 	float chunk_dist = glm::distance(glm::vec3(m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z), glm::vec3(target.x, target.y, target.z));
 	if (chunk_dist <= COLLISION_DISTANCE) {
@@ -96,28 +118,44 @@ bool TerrainChunk::Collision_Enabled()
 
 void TerrainChunk::Refresh()
 {
+	if (!m_assigned) {
+		return;
+	}
 	m_controller->Refresh_Chunk(m_chunk_coords);
 }
 
 void TerrainChunk::Update(float dt)
 {
-	test_despawn();
+	if (!m_assigned) {
+		return;
+	}
+
+	if (m_should_despawn) {
+		return;
+	}
 
 	if (!m_has_collision) {
 		if (Collision_Enabled()) {
+			Logger::LogInfo(LOG_POS("Update"), "Enabling collision for (%i, %i, %i)...",
+				m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 			Refresh();
+			m_has_collision = true;
+			
 		}
 	}
+
+
+	m_should_despawn = test_despawn();
 
 }
 
 void TerrainChunk::VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float iso, bool Type_changed, int type)
 {
-
+	Logger::LogDebug(LOG_POS("VoxelChanged"), "Changed voxel.");
 
 }
 
-void TerrainChunk::test_despawn()
+bool TerrainChunk::test_despawn()
 {
 	glm::vec3 target_pos = m_controller->Target_Position();
 	glm::ivec3 target_chunk = WorldGenController::WorldPosToChunkCoord(target_pos);
@@ -129,7 +167,10 @@ void TerrainChunk::test_despawn()
 	if (dist > m_controller->Chunk_Radius()) 
 	{
 		m_controller->Despawn_Chunk(m_chunk_coords);
+		return true;
 	}
+
+	return false;
 }
 
 void TerrainChunk::draw_debug_cube()
@@ -186,6 +227,8 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 			m_mesh_collider->Destroy();
 			m_mesh_collider = nullptr;
 			m_has_collision = false;
+			Logger::LogInfo(LOG_POS("update_collision_mesh"), "Collision removed for chunk (%i, %i, %i)",
+				m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 		}
 		return;
 	}
@@ -226,6 +269,9 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
 	//	min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
 
+	Logger::LogInfo(LOG_POS("Update"), "Collision for (%i, %i, %i) enabled successfully.",
+		m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 	m_has_collision = true;
+
 }
 
