@@ -11,6 +11,7 @@ set(${module}_headers
     include/VoxelComputeProgram.h
     include/HeightmapGenerator.h
 	include/TerrainModifications.h
+	include/ISO_Sampler.h
     include/ChunkProcessor_private.h
 	
 	include/std_includes.h
@@ -26,6 +27,7 @@ set(${module}_sources
     src/VoxelComputeProgram.cpp
     src/HeightmapGenerator.cpp
 	src/TerrainModifications.cpp
+	src/ISO_Sampler.cpp
     src/ChunkProcessor_private.cpp
 	
     src/IVoxelBuilder.cpp

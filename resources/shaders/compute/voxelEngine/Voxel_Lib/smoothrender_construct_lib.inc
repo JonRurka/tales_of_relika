@@ -10,7 +10,7 @@
 #define USE_MATERIALS 0
 #define GEN_CRATER_MAP 0
 
-#include "../../Samplers/sampler.inc"
+//#include "../../Samplers/sampler.inc"
 
 #define SURFACE_TYPE_FLOOR 1
 #define SURFACE_TYPE_WALL 2
@@ -136,126 +136,6 @@ do{                                                                             
 }*/
 
 
-float iso_sample_3D_4(float x, float y, float z, STRUCT Settings s){
-
-    return Sample_3D(s, x, y, z);
-
-    //float radius = 10;
-    //return sphere_sample_4(radius, x, y, z);
-}
-
-float iso_sample_3D_2(fvec3 p, STRUCT Settings s){
-    return iso_sample_3D_4(p.x, p.y, p.z, s);
-}
-
-float height_sample_5(int x, int y, int column_idx, STRUCT Settings s, int n_index)
-{
-	int size_x = INT(s.ChunkSizeX) + HEIGHTMAP_PADDING;
-	int size_z = INT(s.ChunkSizeZ) + HEIGHTMAP_PADDING;
-	int col_size = size_x * size_z;
-	int col_offset_start = column_idx * col_size;
-	int local_idx = INT(C_2D_to_1D(x + HEIGHTMAP_OFFSET, y + HEIGHTMAP_OFFSET, size_z));
-	int data_index = col_offset_start + local_idx;
-	float val = 0;
-	if (n_index > 3){
-		val = get_buffer_scalar(in_heightmap_data, data_index);
-	}
-	else{
-		val = get_buffer_vector(in_height_neighboor_data, data_index)[n_index];
-	}
-	
-	return val;
-}
-
-float height_sample_3(float x, float y, STRUCT Settings s){
-
-    return Sample_2D(s, x, y);
-}
-
-float height_sample_2(fvec2 p, STRUCT Settings s){
-    return height_sample_3(p.x, p.y, s);
-}
-
-float iso_invert(float iso){
-	if (iso > 0)
-	{
-		return 1 - iso;
-	}
-	else{
-		return -(1 - FABS(iso));
-	}
-}
-
-STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, float edit_iso){
-	
-	/*float caveDensity = 5.0f;
-	
-	float iso_result = 0;
-	int type_res = grass(); //grass
-	
-	float raw_height_iso = height - world_pos.y;
-	float height_iso = clamp(raw_height_iso, -2.0f, 2.0f);
-	//height_iso = iso_invert(height_iso);
-	
-	float raw_cave_iso = iso_3D;//;sphere_sample_5(10, FVEC3(5, 17, 0), world_pos.x, world_pos.y, world_pos.z);
-	float cave_iso = clamp(raw_cave_iso, -5.0f, 5.0f);
-	//cave_iso = iso_invert(cave_iso);
-	
-	if (raw_cave_iso > 0.0 && world_pos.y < (height - 0.0f)){
-		iso_result = clamp(clamp(height_iso, -5.0f, 5.0f) - cave_iso, -5.0f, 5.0f);
-	}
-	else{
-		iso_result = height_iso;
-	}
-	
-	if (world_pos.y < (height - 5)){
-		type_res = stone(); // Stone
-	}
-	else if (world_pos.y < (height - 2)){
-		type_res = dirt(); // dirt
-	}*/
-	
-	STRUCT IsoSample sample_res;
-	sample_res.iso = 0;// iso_result;
-	sample_res.type_id = 0;// type_res;
-	return sample_res;
-
-}
-
-STRUCT IsoSample iso_sample_4(STRUCT Settings s, ivec3 p, fvec3 world_pos, int n_index){
-    float iso = iso_sample_3D_2(world_pos, s);
-    //float height = height_sample_3(world_pos.x, world_pos.z, s);
-	float height = height_sample_5(p.x, p.z, s.column_index, s, n_index);
-
-    return Combine_ISO(s, p, world_pos, iso, height, 0);
-}
-
-fvec3 normal_sample(STRUCT Settings s, ivec3 p, fvec3 world_pos)
-{
-	float epsilon = 0.01;
-	
-	// sample from extended heightmap data
-	float x1 = iso_sample_4(s, p, world_pos - FVEC3(epsilon, 0, 0), 0).iso;
-	float x2 = iso_sample_4(s, p, world_pos + FVEC3(epsilon, 0, 0), 1).iso;
-	
-	float z1 = iso_sample_4(s, p, world_pos - FVEC3(0, 0, epsilon), 2).iso;
-	float z2 = iso_sample_4(s, p, world_pos + FVEC3(0, 0, epsilon), 3).iso;
-
-	// sample using the epsilon above and below
-	float y1 = iso_sample_4(s, p, world_pos - FVEC3(0, epsilon, 0), 4).iso;
-	float y2 = iso_sample_4(s, p, world_pos + FVEC3(0, epsilon, 0), 4).iso;
-
-	//Set_Debug_Data(g_index, FVEC4(y1, y2, y1 - y2, 1));
-
-	fvec4 res = FVEC4((x2 - x1), (y2 - y1), (z2 - z1), 0);
-	//Set_Debug_Data(g_index, res);
-	
-	res = normalize(res);
-	//Set_Debug_Data(g_index, res);
-	
-	return -res.xyz;
-}
-
 
 ivec4 Get_Direction_Offset(uint i){
 	return get_buffer_vector(in_directionOffsets, i);
@@ -307,14 +187,6 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 	
 	ivec3 index_pos = C_1D_to_3D(v_index, static_settings.ChunkSize.x, static_settings.ChunkSize.y);
 	
-	STRUCT Settings s = New_Settings();
-    s.ChunkSizeX = static_settings.ChunkSize.x + 2;
-    s.ChunkSizeY = static_settings.ChunkSize.y + 2;
-    s.ChunkSizeZ = static_settings.ChunkSize.z + 2;
-    s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
-    s.seed = 0;
-    s.quality = QUALITY_STD;
-
     int count = 0;
 	
 	uint tritble_start = cubeIndex * 16;
@@ -538,14 +410,7 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
     //STRUCT GridPoint grid[8];
 	NEW_GRIDPOINT_ARRAY(grid, 8)
 
-	STRUCT Settings s = New_Settings();
-	s.column_index = column_idx;
-    s.ChunkSizeX = ChunkSizeX;
-    s.ChunkSizeY = ChunkSizeY;
-    s.ChunkSizeZ = ChunkSizeZ;
-    s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
-    s.seed = 0;
-    s.quality = QUALITY_STD;
+
 
     for (int i = 0; i < 8; ++i){
 		

@@ -92,6 +92,8 @@ public:
 
 	Opaque_Chunk_Material* Get_Chunk_Material() { return m_chunk_opaque_mat; }
 
+	bool Finished_Initial_Generation() { return m_gen_finished; }
+
 	void Refresh_Chunk(glm::ivec3 chunk);
 	void Modify_Voxel_ISO(glm::ivec3 voxel, float iso);
 	void Modify_Voxel_Type(glm::ivec3 voxel, int type);

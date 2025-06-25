@@ -62,9 +62,12 @@ void WorldGenController::Init()
 
 void WorldGenController::Update(float dt)
 {
-	process_modifications();
 	process_deletions();
 	process_additions();
+
+	if (m_gen_finished) {
+		process_modifications();
+	}
 }
 
 void WorldGenController::Start()
@@ -243,6 +246,9 @@ void WorldGenController::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> 
 
 void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMod value)
 {
+	if (!m_gen_finished)
+		return;
+
 	TerrainModEntry entry{};
 	entry.chunk = chunk;
 	entry.changes.push_back(value);
@@ -253,6 +259,9 @@ void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMo
 
 void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, std::vector<TerrainMod> values)
 {
+	if (!m_gen_finished)
+		return;
+
 	TerrainModEntry entry{};
 	entry.chunk = chunk;
 	entry.changes = values;
@@ -467,7 +476,7 @@ void WorldGenController::process_modifications()
 		glm::dvec4 render_times = m_builder->Render(&render_options);
 		std::vector<glm::ivec4> counts = m_builder->GetSize();
 
-		//get_chunk(chunk).chunk_comp->Process_Mesh_Update(counts[0]);
+		get_chunk(chunk).chunk_comp->Process_Mesh_Update(counts[0]);
 	}
 }
 

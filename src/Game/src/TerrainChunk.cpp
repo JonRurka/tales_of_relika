@@ -74,6 +74,10 @@ void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts)
 		return;
 	}
 
+	if (counts.x == 0) {
+		return;
+	}
+
 	Logger::LogDebug(LOG_POS("Process_Mesh_Update"), "Process update.");
 
 	m_vbo_stitch->Process(m_voxel_opaque_mesh, counts, false);
@@ -127,6 +131,10 @@ void TerrainChunk::Refresh()
 void TerrainChunk::Update(float dt)
 {
 	if (!m_assigned) {
+		return;
+	}
+
+	if (!m_controller->Finished_Initial_Generation()) {
 		return;
 	}
 

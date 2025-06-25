@@ -431,6 +431,13 @@ void SmoothVoxelBuilder::InitializeComputePrograms()
         m_static_settings.ChunkSize.x, m_static_settings.ChunkSize.y, m_static_settings.ChunkSize.z,
         MAX_MODIFICATION_CHUNKS
     );
+
+    m_ISO_Sampler = new ISO_Sampler(
+        m_controller,
+        m_static_settings.ChunkSize.x, m_static_settings.ChunkSize.y, m_static_settings.ChunkSize.z,
+        EXT, m_type,
+        m_HeightmapGenerator, m_Terrain_Modifications
+    );
 }
 
 void SmoothVoxelBuilder::CreateComputeBuffers()
@@ -687,6 +694,7 @@ void SmoothVoxelBuilder::FinalizePrograms()
 
     m_HeightmapGenerator->Finalize(m_in_static_settings_buffer);
     m_Terrain_Modifications->Finalize(m_in_static_settings_buffer);
+    m_ISO_Sampler->Finalize(m_in_static_settings_buffer);
 }
 
 

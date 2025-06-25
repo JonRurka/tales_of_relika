@@ -11,6 +11,7 @@
 #include "VoxelComputeProgram.h"
 #include "HeightmapGenerator.h"
 #include "TerrainModifications.h"
+#include "ISO_Sampler.h"
 
 #include <queue>
 
@@ -54,6 +55,8 @@ namespace VoxelEngine {
 		HeightmapGenerator* Get_Heightmap_Generator() { return m_HeightmapGenerator; }
 
 		TerrainModifications* Get_Terrain_Modifications() { return m_Terrain_Modifications; }
+
+		ISO_Sampler* Get_ISO_Sampler() { return m_ISO_Sampler; }
 
 		//void SetBlock(int x, int y, int z, Block block);
 
@@ -169,6 +172,7 @@ namespace VoxelEngine {
 
 		HeightmapGenerator* m_HeightmapGenerator{ nullptr };
 		TerrainModifications* m_Terrain_Modifications{ nullptr };
+		ISO_Sampler* m_ISO_Sampler{ nullptr };
 
 		IComputeProgram::FileType m_type;
 

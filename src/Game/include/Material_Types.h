@@ -68,4 +68,6 @@ private:
 
 	void set_terrain_gen_macros();
 
+	void set_shader_macros(std::string program_name, std::string macro_str);
+
 };

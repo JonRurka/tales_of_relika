@@ -135,9 +135,10 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size)
 
 }
 
-void Mesh::Set_Raw_Vertex_Data(float* data, size_t size)
+void Mesh::Set_Raw_Vertex_Data(float* data, size_t size, bool delete_old)
 {
-	delete[] raw_vert_data;
+	if (delete_old)
+		delete[] raw_vert_data;
 	raw_vert_data = data;
 	m_num_vertices = size / stride;
 	m_virtual_mesh = true;

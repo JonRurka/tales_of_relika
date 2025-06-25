@@ -212,7 +212,7 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 				m_raw_vert_data[(j + 8)], m_raw_vert_data[j + 9], m_raw_vert_data[j + 10], m_raw_vert_data[j + 11]);
 		}*/
 
-		mesh->Set_Raw_Vertex_Data(m_raw_vert_data, vbo_size);
+		mesh->Set_Raw_Vertex_Data(m_raw_vert_data, vbo_size, false);
 		mesh->Activate();
 		end = std::chrono::high_resolution_clock::now();
 		auto load_mesh_duration = std::chrono::duration<double>(end - start).count() * 1000;

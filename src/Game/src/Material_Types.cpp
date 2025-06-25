@@ -12,6 +12,7 @@
 #define VOXEL_RESOURCE_DIR "compute::voxelEngine::"
 #define HEIGHTMAP_RESOURCE_DIR "compute::heightmapEngine::"
 
+#define MACRO_NAME "%block_types%"
 
 // TODO: Remove annoying duplication
 #define VOXEL_RUNTIME_VULKAN 1
@@ -257,18 +258,27 @@ void Material_Types::set_terrain_gen_macros()
         macro_str += "int " + name + "() { return " + std::to_string(idx) + "; }\n";
     }
 
-    const std::string PROGRAM_SMOOTH_RENDER_CONSTRUCT = "3-smoothrender_gen_iso_normals";
-    const std::string PROGRAM_GEN_HEIGHTMAP = "heightmap_gen";
+    const std::string PROGRAM_SMOOTH_RENDER_GEN_ISO = "3-smoothrender_gen_iso_normals";
+    const std::string ISO_SAMPLE = "iso_sampler";
 
+    set_shader_macros(PROGRAM_SMOOTH_RENDER_GEN_ISO, macro_str);
+    set_shader_macros(ISO_SAMPLE, macro_str);
+}
+
+void Material_Types::set_shader_macros(std::string program_name, std::string macro_str)
+{
     //std::string heightmap_program_name = HEIGHTMAP_RESOURCE_DIR + PROGRAM_GEN_HEIGHTMAP + EXT;
-    std::string construct_program_name = VOXEL_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_CONSTRUCT + EXT;
+    std::string program_path = VOXEL_RESOURCE_DIR + program_name + EXT;
 
-    std::vector<char> shader_char = Resources::Get_Shader_bin(construct_program_name);
+    std::vector<char> shader_char = Resources::Get_Shader_bin(program_path);
     std::string shader_str(shader_char.begin(), shader_char.end());
 
-    boost::replace_all(shader_str, "%block_types%", macro_str);
+    boost::replace_all(shader_str, MACRO_NAME, macro_str);
 
     shader_char = std::vector<char>(shader_str.begin(), shader_str.end());
-    Resources::Modify_Shader_Bin(construct_program_name, shader_char);
+    Resources::Modify_Shader_Bin(program_path, shader_char);
+
+
+
 }
 

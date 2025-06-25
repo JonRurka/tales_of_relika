@@ -122,7 +122,7 @@ public:
 
 	GLuint Get_VAO() { return VAO; }
 
-	void Set_Raw_Vertex_Data(float* data, size_t size);
+	void Set_Raw_Vertex_Data(float* data, size_t size, bool delete_old = true);
 
 	float* Get_Raw_Vertex_Data() { return raw_vert_data; }
 
