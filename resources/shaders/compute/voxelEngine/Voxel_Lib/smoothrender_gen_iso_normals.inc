@@ -252,10 +252,11 @@ void smoothrender_gen_iso_normal_main(uint index)
 	
 	
 	
-	if(x == 5 && z == 5 && (y >= 3 && y <= 10))
+	if(x == 31 && y == 3 && z == 2)
 	{
 		//Print_2("%i: %f \n", y, iso_sample.iso);
 		//Print_2("%i: %f \n", y, 0);
+		//Print_4("Gen ISO: (%i, %i, %i) %f \n", x, y, z, iso_sample.iso);
 	}
 	
 	if (index_pos.z == 28 && FABS(iso_type_res.x) < 2.0f /*&& (p_index_pos.y > 3 && p_index_pos.y < 10)*/) {

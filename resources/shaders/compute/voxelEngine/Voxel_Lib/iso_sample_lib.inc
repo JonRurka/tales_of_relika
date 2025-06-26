@@ -103,6 +103,8 @@ void iso_sample_main(uint index)
 	
 	fvec4 iso_type_res = FVEC4(iso_sample.iso, iso_sample.type_id, 0.0, 0.0);
 	
+	//printf("Sample ISO: (%i, %i, %i): %f \n", x, y, z, iso_sample.iso);
+	
 	set_buffer_object(out_iso_data, index, iso_type_res);
 }
 

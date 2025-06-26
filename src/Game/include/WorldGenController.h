@@ -19,6 +19,7 @@ class Opaque_Chunk_Material;
 class TerrainChunk;
 class Stitch_VBO;
 class TerrainModifications;
+class ISO_Sampler;
 
 #define DEFAULT_METER_SIZE 32.0f
 #define DEFAULT_VOXELS_PER_METER 1.0f
@@ -92,6 +93,8 @@ public:
 
 	Opaque_Chunk_Material* Get_Chunk_Material() { return m_chunk_opaque_mat; }
 
+	ISO_Sampler* Get_ISO_Sampler();
+
 	bool Finished_Initial_Generation() { return m_gen_finished; }
 
 	void Refresh_Chunk(glm::ivec3 chunk);
@@ -118,15 +121,17 @@ public:
 
 	static glm::ivec3 ChunkToVoxel(glm::ivec3 location){ return m_Instance->chunkToVoxel(location); }
 
-	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 location){ return m_Instance->GlobalToLocalChunkCoord(location); }
+	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 location){ return m_Instance->globalToLocalChunkCoord(location); }
 
-	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location){ return m_Instance->GlobalToLocalChunkCoord(ChunkCoord, location); }
+	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location){ return m_Instance->globalToLocalChunkCoord(ChunkCoord, location); }
 
-	static glm::ivec3 LocalToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location){ return m_Instance->LocalToGlobalCoord(Chunk, location); }
+	static glm::ivec3 LocalToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location){ return m_Instance->localToGlobalCoord(Chunk, location); }
 
 	static glm::fvec3 VoxelToWorld(glm::ivec3 loc) { return m_Instance->voxelToWorld(loc); }
 
 	static glm::ivec3 WorldToVoxel(glm::fvec3 worldPos) { return m_Instance->worldToVoxel(worldPos); }
+
+	static int Hash_Chunk(glm::ivec3 chunk);
 
 protected:
 	void Init() override;

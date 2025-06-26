@@ -35,7 +35,7 @@ float GetHeight(STRUCT Settings s, float x, float y)
 {
 	//return x / 1.0;
 	//return 5 + x / 10.0;
-	//return 5.0;
+	return 4.5;
 	
 	x /= 100.0f;
 	y /= 100.0f;

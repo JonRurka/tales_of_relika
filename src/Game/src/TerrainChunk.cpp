@@ -78,7 +78,7 @@ void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts)
 		return;
 	}
 
-	Logger::LogDebug(LOG_POS("Process_Mesh_Update"), "Process update.");
+	//Logger::LogDebug(LOG_POS("Process_Mesh_Update"), "Process update.");
 
 	m_vbo_stitch->Process(m_voxel_opaque_mesh, counts, false);
 
@@ -277,8 +277,8 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
 	//	min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
 
-	Logger::LogInfo(LOG_POS("Update"), "Collision for (%i, %i, %i) enabled successfully.",
-		m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
+	//Logger::LogInfo(LOG_POS("Update"), "Collision for (%i, %i, %i) enabled successfully.",
+	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 	m_has_collision = true;
 
 }

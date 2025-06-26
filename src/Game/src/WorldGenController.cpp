@@ -20,6 +20,11 @@ namespace {
 	}
 }
 
+int WorldGenController::Hash_Chunk(glm::ivec3 chunk)
+{
+	return Utilities::Hash_Chunk_Coord(chunk);
+}
+
 void WorldGenController::Init()
 {
 	m_Instance = this;
@@ -83,10 +88,15 @@ TerrainChunk* WorldGenController::Get_Chunk(glm::ivec3 chunk_coord)
 	return get_chunk(chunk_coord).chunk_comp;
 }
 
+ISO_Sampler* WorldGenController::Get_ISO_Sampler()
+{
+	return ((SmoothVoxelBuilder*)m_builder)->Get_ISO_Sampler();
+}
+
 void WorldGenController::Refresh_Chunk(glm::ivec3 chunk)
 {
-	Logger::LogDebug(LOG_POS("Refresh_Chunk"), "Refresh chunk (%i, %i, %i)",
-		chunk.x, chunk.y, chunk.z);
+	//Logger::LogDebug(LOG_POS("Refresh_Chunk"), "Refresh chunk (%i, %i, %i)",
+	//	chunk.x, chunk.y, chunk.z);
 	TerrainMod val(glm::vec3(0, 0, 0));
 	Modify_Voxel(chunk, val, false);
 }
@@ -141,6 +151,8 @@ void WorldGenController::Modify_Voxel(std::vector<TerrainMod> values)
 		{
 			mods[chunk_hash] = std::vector<TerrainMod>();
 		}
+
+		// TODO: call terrain chunk event
 
 		TerrainMod mod(voxel_local);
 		mod.Change_ISO = elem.Change_ISO;
@@ -441,7 +453,7 @@ void WorldGenController::process_modifications()
 
 	while (!m_terrain_change_queue.empty()) 
 	{
-		Logger::LogDebug(LOG_POS("process_modifications"), "Items in mod queue: %i", m_terrain_change_queue.size());
+		//Logger::LogDebug(LOG_POS("process_modifications"), "Items in mod queue: %i", m_terrain_change_queue.size());
 
 		TerrainModEntry entry = m_terrain_change_queue.front();
 		m_terrain_change_queue.pop();

@@ -28,6 +28,8 @@ public:
 
 	void Finalize(IComputeBuffer* static_settings);
 
+	float Get_ISO(glm::ivec3 chunk, glm::ivec3 voxel);
+
 	std::vector<float> Get_ISO(glm::ivec3 chunk, std::vector<glm::ivec3> voxels);
 
 	std::vector<float> Get_ISO(glm::ivec3 chunk, std::vector<Voxel_Location> voxels);
@@ -54,4 +56,6 @@ private:
 	void set_locations(std::vector<Voxel_Location> voxels);
 	void execute(int elements);
 	std::vector<glm::fvec4> get_iso_data(int elements);
+
+	inline static const std::string LOG_LOC{ "ISO_SAMPLER" };
 };

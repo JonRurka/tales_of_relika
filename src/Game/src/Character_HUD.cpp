@@ -2,45 +2,10 @@
 
 #include "WorldGenController.h"
 
-void Character_HUD::Init(Camera* camera)
-{
-	m_camera = camera;
-}
 
-void Character_HUD::Init()
-{
-}
-
-void Character_HUD::Update(float dt)
-{
-
-	glm::vec3 ray_start;
-	glm::vec3 ray_dir;
-	m_camera->ScreenPointToRay(Input::Get_Mouse_Position(), ray_start, ray_dir);
-	Physics::RayHit hit = Physics::Raycast(ray_start, ray_dir * 100.0f);
-	if (hit.did_hit) {
-		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit.hit_point - (hit.normal * 0.01f));
-		draw_voxel_box(voxel_coord);
-
-		if (Input::GetMouseKeyDown(input::MouseButton::Left)) {
-			//Logger::LogDebug(LOG_POS("Update"), "Mouse Clicked.");
-			WorldGenController::Instance()->Modify_Voxel_ISO(voxel_coord, 1.34);
-		}
-		if (Input::GetMouseKeyDown(input::MouseButton::Right)) {
-			//Logger::LogDebug(LOG_POS("Update"), "Mouse Clicked.");
-			WorldGenController::Instance()->Modify_Voxel_ISO(voxel_coord, -1.34);
-		}
-
-	}
-
-
-}
-
-void Character_HUD::draw_voxel_box(glm::ivec3 voxel_coord)
-{
-
-	glm::ivec4 directionOffsets[8] =
+#define GRID_SIZE 8
+namespace {
+	glm::ivec4 g_directionOffsets[GRID_SIZE] =
 	{
 		glm::ivec4(0, 0, 1, 0),
 		glm::ivec4(1, 0, 1, 0),
@@ -51,7 +16,207 @@ void Character_HUD::draw_voxel_box(glm::ivec3 voxel_coord)
 		glm::ivec4(1, 1, 0, 0),
 		glm::ivec4(0, 1, 0, 0),
 	};
+}
 
+void Character_HUD::Init(Camera* camera)
+{
+	m_camera = camera;
+}
+
+void Character_HUD::Init()
+{
+	m_edit_timer = Utilities::Get_Time();
+}
+
+void Character_HUD::Update(float dt)
+{
+	bool can_place = false;
+	if (Utilities::Get_Time() - m_edit_timer > 0.1f) {
+		can_place = true;
+	}
+
+	glm::vec3 ray_start;
+	glm::vec3 ray_dir;
+	m_camera->ScreenPointToRay(Input::Get_Mouse_Position(), ray_start, ray_dir);
+	Physics::RayHit hit = Physics::Raycast(ray_start, ray_dir * 100.0f);
+	if (hit.did_hit) {
+		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::ivec3 voxel_coord_box = WorldGenController::WorldToVoxel(hit.hit_point - (hit.normal * 0.00f));
+
+		//glm::ivec3 chunk = WorldGenController::
+		//glm::ivec3 chunk = WorldGenController::VoxelToChunk(voxel_coord);
+		//glm::ivec3 voxel_local = WorldGenController::GlobalToLocalChunkCoord(chunk, voxel_coord);
+
+		draw_voxel_box(voxel_coord_box);
+
+		if (Input::GetMouseKeyDown(input::MouseButton::Left) && can_place) {
+			glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit.hit_point - (hit.normal * 0.01f));
+			Logger::LogDebug(LOG_POS("Update"), "Voxel Clicked....");
+			glm::ivec3 selected_src_voxel = get_closest_voxel(voxel_coord, hit.hit_point, true);
+			std::vector<glm::ivec4> near_voxels = get_surrounding_voxels(selected_src_voxel, true);
+
+			std::vector<WorldGenController::TerrainMod> changes;
+			changes.reserve(near_voxels.size());
+			for (const auto& nv : near_voxels) {
+				WorldGenController::TerrainMod mod(glm::ivec3(nv.x, nv.y, nv.z), (0.5f / (float)nv.w));
+				changes.push_back(mod);
+			}
+			WorldGenController::Instance()->Modify_Voxel(changes);
+			//WorldGenController::Instance()->Modify_Voxel_ISO(selected_voxel, 1.0);
+		}
+		if (Input::GetMouseKeyDown(input::MouseButton::Right) && can_place) {
+			glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit.hit_point + (hit.normal * 0.01f));
+			Logger::LogDebug(LOG_POS("Update"), "Voxel Clicked....");
+			glm::ivec3 selected_src_voxel = get_closest_voxel(voxel_coord, hit.hit_point, false);
+			//WorldGenController::Instance()->Modify_Voxel_ISO(selected_voxel, -1.0);
+		}
+
+	}
+
+
+}
+
+glm::ivec3 Character_HUD::get_closest_voxel(glm::ivec3 src_voxel, glm::fvec3 world_pos, bool inside)
+{
+	ISO_Sampler* iso_sampler = WorldGenController::Instance()->Get_ISO_Sampler();
+
+	glm::ivec3 chunk = WorldGenController::VoxelToChunk(src_voxel);
+	glm::ivec3 src_local = WorldGenController::GlobalToLocalChunkCoord(chunk, src_voxel);
+
+	std::vector<glm::ivec3> grid_global;
+	std::vector<glm::ivec3> grid_local;
+	std::vector<glm::fvec3> grid_world;
+	grid_global.reserve(GRID_SIZE);
+	grid_local.reserve(GRID_SIZE);
+	grid_world.reserve(GRID_SIZE);
+	for (int i = 0; i < GRID_SIZE; ++i) {
+		glm::ivec3 v = src_voxel + glm::ivec3(g_directionOffsets[i].x, g_directionOffsets[i].y, g_directionOffsets[i].z);
+		grid_global.push_back(v);
+		grid_local.push_back(src_local + glm::ivec3(g_directionOffsets[i].x, g_directionOffsets[i].y, g_directionOffsets[i].z));
+		grid_world.push_back(WorldGenController::VoxelToWorld(v));
+	}
+
+	std::vector<float> iso_vals = iso_sampler->Get_ISO(chunk, grid_local);
+
+	int closest_voxel_idx = -1;
+	float shortest_dist = 1000.0; 
+	for (int i = 0; i < GRID_SIZE; ++i)
+	{
+		bool include = false;
+		if (inside) { // inside terrain
+			if (iso_vals[i] >= 0.0 && iso_vals[i] < 2.0) {
+				include = true;
+			}
+		}
+		else { // outside terrain
+			if (iso_vals[i] < 0.0 && iso_vals[i] > -2.0) {
+				include = true;
+			}
+		}
+
+		if (include) {
+			float dist = glm::distance(world_pos, grid_world[i]);
+			if (dist < shortest_dist) {
+				shortest_dist = dist;
+				closest_voxel_idx = i;
+			}
+
+		}
+	}
+
+	if (closest_voxel_idx < 0) {
+		// shouldn't happen. error
+		Logger::LogError(LOG_POS("get_closest_voxel"), "Invalid selection.");
+		return src_voxel;
+	}
+
+	return grid_global[closest_voxel_idx];
+}
+
+std::vector<glm::ivec4> Character_HUD::get_surrounding_voxels(glm::ivec3 src_voxel, bool inside)
+{
+	const int SIZE = 3 * 3 * 3;
+
+	ISO_Sampler* iso_sampler = WorldGenController::Instance()->Get_ISO_Sampler();
+
+	glm::ivec3 chunk = WorldGenController::VoxelToChunk(src_voxel);
+	glm::ivec3 src_local = WorldGenController::GlobalToLocalChunkCoord(chunk, src_voxel);
+
+	std::unordered_map<int, std::vector<glm::ivec3>> voxels_map;
+	std::unordered_map<int, glm::ivec3> chunk_map;
+
+	for (int x = -1; x <= 1; x++) {
+		for (int y = -1; y <= 1; y++) {
+			for (int z = -1; z <= 1; z++) {
+				glm::ivec3 v = glm::ivec3(src_voxel.x + x, src_voxel.y + y, src_voxel.z + z);
+
+				glm::ivec3 v_chunk = WorldGenController::VoxelToChunk(src_voxel);
+				glm::ivec3 v_local = WorldGenController::GlobalToLocalChunkCoord(chunk, src_voxel);
+				int ch_hash = WorldGenController::Hash_Chunk(v_chunk);
+				
+				if (!chunk_map.contains(ch_hash)) {
+					chunk_map[ch_hash] = v_chunk;
+					voxels_map[ch_hash] = std::vector<glm::ivec3>();
+				}
+
+				voxels_map[ch_hash].push_back(v_local);
+			}
+		}
+	}
+
+	std::vector<glm::ivec4> res;
+	res.reserve(SIZE);
+
+	for (const auto& pair : chunk_map) {
+		int ch_hash = pair.first;
+		glm::ivec3 ch_coord = pair.second;
+
+		auto v_list = voxels_map[ch_hash];
+		std::vector<float> iso_vals = iso_sampler->Get_ISO(chunk, v_list);
+		for (int i = 0; i < iso_vals.size(); ++i) {
+
+			bool include = false;
+			if (inside) { // inside terrain
+				if (iso_vals[i] >= 0.0 && iso_vals[i] < 2.0) {
+					include = true;
+				}
+			}
+			else { // outside terrain
+				if (iso_vals[i] < 0.0 && iso_vals[i] > -2.0) {
+					include = true;
+				}
+			}
+
+			if (include) {
+				float dist = glm::distance(
+					glm::vec3(src_local.x, src_local.y, src_local.z),
+					glm::vec3(v_list[i].x, v_list[i].y, v_list[i].z)
+				);
+
+				int div = 1;
+				if (dist < 0.1) {
+					div = 1;
+				}
+				else if (dist < 1.0) {
+					div = 2;
+				}
+				else {
+					div = 8;
+				}
+
+				glm::ivec3 wv = WorldGenController::LocalToGlobalCoord(ch_coord, v_list[i]);
+				res.push_back(glm::ivec4(wv, div));
+			}
+
+
+		}
+	}
+
+	return res;
+}
+
+void Character_HUD::draw_voxel_box(glm::ivec3 voxel_coord)
+{
 	glm::vec3 edge[8];
 
 	int size = 1;
@@ -60,7 +225,7 @@ void Character_HUD::draw_voxel_box(glm::ivec3 voxel_coord)
 
 	//Graphics::DrawDebugLine()
 	for (int i = 0; i < 8; i++) {
-		edge[i] = voxel_world_pos + glm::fvec3(directionOffsets[i].x * size, directionOffsets[i].y * size, directionOffsets[i].z * size);
+		edge[i] = voxel_world_pos + glm::fvec3(g_directionOffsets[i].x * size, g_directionOffsets[i].y * size, g_directionOffsets[i].z * size);
 	}
 
 

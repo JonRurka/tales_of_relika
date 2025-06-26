@@ -1,5 +1,7 @@
 #include "ISO_Sampler.h"
 
+#include "Logger.h"
+
 #include "HeightmapGenerator.h"
 #include "TerrainModifications.h"
 
@@ -25,10 +27,10 @@ ISO_Sampler::ISO_Sampler(
 	m_program_iso_sample = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_ISO_SAMPLE + extension, m_WorkGroups, type);
 
 	in_voxel_locations_data = m_controller->NewReadBuffer(max_elements, sizeof(Voxel_Location));
-	out_iso_data = m_controller->NewReadBuffer(max_elements, sizeof(Voxel_Location));
+	out_iso_data = m_controller->NewReadWriteBuffer(max_elements, sizeof(Voxel_Location));
 
-
-
+	
+	Logger::LogInfo(LOG_POS("ISO_Sampler"), "ISO Sampler initialized.");
 }
 
 void ISO_Sampler::Finalize(IComputeBuffer* static_settings)
@@ -44,6 +46,18 @@ void ISO_Sampler::Finalize(IComputeBuffer* static_settings)
 	m_program_iso_sample->AddBuffer(5, out_iso_data);
 
 	m_program_iso_sample->Finalize();
+}
+
+float ISO_Sampler::Get_ISO(glm::ivec3 chunk, glm::ivec3 voxel)
+{
+	float res = 0.0;
+	std::vector<glm::ivec3> voxels;
+	voxels.push_back(voxel);
+	std::vector<float> res_arr = Get_ISO(chunk, voxels);
+	if (res_arr.size() > 0) {
+		res = res_arr[0];
+	}
+	return res;
 }
 
 std::vector<float> ISO_Sampler::Get_ISO(glm::ivec3 chunk, std::vector<glm::ivec3> voxels)
