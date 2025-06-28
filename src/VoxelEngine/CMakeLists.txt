@@ -7,10 +7,12 @@ set(${module}_headers
     include/IVoxelBuilder_private.h
     include/shared_structures.h
     include/SmoothVoxelBuilder.h
+	include/CubeVoxelBuilder.h
     include/marchingcubes_arrays.h
     include/VoxelComputeProgram.h
     include/HeightmapGenerator.h
 	include/TerrainModifications.h
+	include/StructureDataStorage.h
 	include/ISO_Sampler.h
     include/ChunkProcessor_private.h
 	
@@ -23,10 +25,12 @@ set(${module}_headers
 set(${module}_sources
     src/IVoxelBuilder_private.cpp
     src/SmoothVoxelBuilder.cpp
+	src/CubeVoxelBuilder.cpp
     src/marchingcubes_arrays.cpp
     src/VoxelComputeProgram.cpp
     src/HeightmapGenerator.cpp
 	src/TerrainModifications.cpp
+	src/StructureDataStorage.cpp
 	src/ISO_Sampler.cpp
     src/ChunkProcessor_private.cpp
 	

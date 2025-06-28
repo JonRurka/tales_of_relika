@@ -49,7 +49,7 @@ void Character_HUD::Update(float dt)
 
 		draw_voxel_box(voxel_coord_box);
 
-		if (Input::GetMouseKeyDown(input::MouseButton::Left) && can_place) {
+		if (Input::GetMouseKey(input::MouseButton::Left) && can_place) {
 			glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit.hit_point - (hit.normal * 0.01f));
 			Logger::LogDebug(LOG_POS("Update"), "Voxel Clicked....");
 			glm::ivec3 selected_src_voxel = get_closest_voxel(voxel_coord, hit.hit_point, true);
