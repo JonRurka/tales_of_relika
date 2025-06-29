@@ -36,6 +36,7 @@ namespace VoxelEngine {
 			glm::vec4* out_normal;
 			glm::vec2* out_uv;
 			unsigned int* out_trianges;
+			glm::ivec4 out_counts;
 		};
 
 		Static_Settings m_static_settings{};

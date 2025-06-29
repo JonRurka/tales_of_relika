@@ -9,6 +9,20 @@
 
 using namespace VoxelEngine;
 
+#define PUSH_VERTS(v_list, counts, v)  \
+do {                                   \
+    v_list[counts.x] = v;              \
+    counts.x++;                        \
+}while(true)
+
+
+#define PUSH_TRIS(t_list, counts, t)   \
+do {                                   \
+    t_list[counts.y] = t;              \
+    counts.y++;                        \
+}while(true)
+
+
 namespace {
     glm::ivec3 C_1D_to_3D(uint32_t i, uint32_t width, uint32_t height) {
         int z = int(i / (width * height));
@@ -55,11 +69,12 @@ glm::dvec4 CubeVoxelBuilder::Render(
     out_data.out_normal = out_normal;
     out_data.out_uv = out_uv;
     out_data.out_trianges = out_trianges;
+    out_data.out_counts = counts;
 
     glm::ivec3 chunk = options->locations[0];
 
     if (!m_structure_data->Has_Chunk(chunk)) {
-        return;
+        return glm::dvec4();
     }
 
     uint32_t* data = m_structure_data->Get_Data_ptr(chunk);
@@ -74,6 +89,8 @@ glm::dvec4 CubeVoxelBuilder::Render(
             }
         }
     }
+
+    counts = out_data.out_counts;
 
 	return glm::dvec4();
 }
@@ -110,28 +127,112 @@ void CubeVoxelBuilder::process_block(uint32_t* data, glm::ivec3 chunk_coord, glm
 
 void CubeVoxelBuilder::process_tile(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, int tile_index, Out_Data& out_data)
 {
+    int x = voxel_coord.x;
+    int y = voxel_coord.y;
+    int z = voxel_coord.z;
+    float _sideLength = m_static_settings.SideLength[0];
+    int vert_index = out_data.out_counts.x;
+
     // 0, 1: x-dir
-    if (tile_index == 0) {
+    if (tile_index == 0) { // +x
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
 
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
     }
-    else if (tile_index == 1) {
+    else if (tile_index == 1) { // -x
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
 
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
     }
 
     // 2, 3: y-dir
-    else if (tile_index == 2) {
+    else if (tile_index == 2) { // +y
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, 0));
 
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength, 0));
+
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
     }
-    else if (tile_index == 3) {
+    else if (tile_index == 3) { // -y
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
 
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
     }
 
     // 4, 5: z-dir
-    else if (tile_index == 4) {
+    else if (tile_index == 4) { // +z
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
 
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
     }
-    else if (tile_index == 5) {
+    else if (tile_index == 5) { // -z
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
 
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
     }
 
 
