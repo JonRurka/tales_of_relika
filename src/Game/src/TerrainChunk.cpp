@@ -248,7 +248,7 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Set Collider (%i): (%i, %i, %i)",
 	//	(collision_enabled ? 1:0),m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 
-	draw_debug_cube();
+	//draw_debug_cube();
 
 	glm::vec4* vert_data = new glm::vec4[num_vertices];
 	vert_buffer->GetData(vert_data, num_vertices * sizeof(float) * 4);
