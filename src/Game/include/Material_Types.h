@@ -47,8 +47,8 @@ public:
 	std::vector<Terrain_Material> Get_Terrain_Materials();
 	std::vector<Structure_Material> Get_Structure_Materials();
 
-	Texture* Diffuse_Texture_Array() { return m_diffuse_texture_array; }
-	Texture* Normal_Texture_Array() { return m_normal_texture_array; }
+	Texture* Terrain_Diffuse_Texture_Array() { return m_terrain_diffuse_texture_array; }
+	Texture* Terrain_Normal_Texture_Array() { return m_terrain_normal_texture_array; }
 
 	static Material_Types* Instance() { return m_instance; }
 
@@ -61,8 +61,8 @@ private:
 	std::unordered_map<int, Structure_Material> m_structure_materials;
 	std::unordered_map<std::string, int> m_structure_mat_to_id;
 
-	Texture* m_diffuse_texture_array{ nullptr };
-	Texture* m_normal_texture_array{ nullptr };
+	Texture* m_terrain_diffuse_texture_array{ nullptr };
+	Texture* m_terrain_normal_texture_array{ nullptr };
 
 	void load_terrain_textures();
 

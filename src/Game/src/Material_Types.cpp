@@ -244,8 +244,8 @@ void Material_Types::load_terrain_textures()
         normal_tex_resources.push_back(elem.second.Normals_Texture_Name);
     }
 
-    m_diffuse_texture_array = Texture::Create_Texture2D_Array(diffuse_tex_resources);
-    m_normal_texture_array = Texture::Create_Texture2D_Array(normal_tex_resources);
+    m_terrain_diffuse_texture_array = Texture::Create_Texture2D_Array(diffuse_tex_resources);
+    m_terrain_normal_texture_array = Texture::Create_Texture2D_Array(normal_tex_resources);
 }
 
 void Material_Types::set_terrain_gen_macros()

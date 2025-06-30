@@ -17,7 +17,9 @@ namespace VoxelEngine {
 			glm::vec4* out_normal, 
 			glm::vec2* out_uv, 
 			unsigned int* out_trianges, 
-			glm::ivec4 counts);
+			glm::ivec4& counts);
+
+		StructureDataStorage* Get_Data_Storage() { return m_structure_data; }
 
 		static uint16_t Get_Block_Type(uint32_t block_value);
 		static uint8_t Get_Block_Orientation(uint32_t block_value);

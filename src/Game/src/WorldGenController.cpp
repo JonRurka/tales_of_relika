@@ -48,8 +48,8 @@ void WorldGenController::Init()
 
 	m_chunk_opaque_mat = new Opaque_Chunk_Material(); 
 	//m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
-	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance()->Diffuse_Texture_Array());
-	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance()->Normal_Texture_Array());
+	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance()->Terrain_Diffuse_Texture_Array());
+	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance()->Terrain_Normal_Texture_Array());
 	m_chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));

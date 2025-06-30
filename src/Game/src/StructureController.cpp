@@ -1,6 +1,17 @@
 #include "StructureController.h"
 
 #include "CubeVoxelBuilder.h"
+#include "StructureChunk.h"
+#include "Opaque_Structure_Chunk_Material.h"
+#include "Material_Types.h"
+
+#include <thread>
+
+namespace {
+	int floor_to_int(float val) {
+		return static_cast<int>(std::floor(val));
+	}
+}
 
 StructureController* StructureController::m_Instance{nullptr};
 
@@ -14,9 +25,27 @@ StructureController::StructureMod::StructureMod(glm::ivec3 voxel, uint32_t type)
 
 void StructureController::Init()
 {
-	
+	m_Instance = this;
 
+	Logger::LogInfo(LOG_POS("Init"), "Initialized");
 
+	m_half = 0;// ((1 / m_voxelsPerMeter) / 2.0);
+
+	m_chunk_opaque_mat = new Opaque_Structure_Chunk_Material();
+	//m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
+	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance()->Terrain_Diffuse_Texture_Array());
+	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance()->Terrain_Normal_Texture_Array());
+	m_chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	m_chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	m_chunk_opaque_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
+	m_chunk_opaque_mat->setFloat("material.shininess", 8.0f);
+	m_chunk_opaque_mat->setFloat("material.specular_intensity", 1.0f);
+	m_chunk_opaque_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	m_chunk_opaque_mat->setFloat("globalAmbientIntensity", 0.01f);
+
+	initialize_voxel_engine();
+
+	start();
 }
 
 void StructureController::Update(float dt)
@@ -26,32 +55,232 @@ void StructureController::Update(float dt)
 
 }
 
+void StructureController::start()
+{
+	create_chunk_cache();
+	m_process_thread = std::thread(Run, this);
+}
+
+void StructureController::Run(StructureController* inst)
+{
+	inst->run_loop();
+}
+
+void StructureController::run_loop()
+{
+	m_async_run = true;
+	while (m_async_run) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		async_update();
+	}
+}
+
+void StructureController::async_update()
+{
+	process_additions();
+	process_deletions();
+
+
+}
+
 void StructureController::initialize_voxel_engine()
 {
+	settings.GetSettings()->setFloat("voxelsPerMeter", m_voxelsPerMeter);
+	settings.GetSettings()->setInt("chunkMeterSizeX", m_chunkMeterSizeX);
+	settings.GetSettings()->setInt("chunkMeterSizeY", m_chunkMeterSizeY);
+	settings.GetSettings()->setInt("chunkMeterSizeZ", m_chunkMeterSizeZ);
+
+	m_chunk_size_x = m_chunkMeterSizeX * m_voxelsPerMeter;
+	m_chunk_size_y = m_chunkMeterSizeY * m_voxelsPerMeter;
+	m_chunk_size_z = m_chunkMeterSizeZ * m_voxelsPerMeter;
+
+	m_builder = new CubeVoxelBuilder();
+	m_builder->Init(&settings);
+
+	m_data_storage = m_builder->Get_Data_Storage();
+
 }
 
 void StructureController::process_additions()
 {
+	bool has_items = !m_create_queue.empty();
+
+	if (!has_items)
+		return;
+
+	double start = Utilities::Get_Time();
+	double end = start;
+	double timer = (end - start);
+
+	while (has_items && timer < m_process_time_ms) {
+		//has_items = process_batch();
+		ChunkRef chunk = m_create_queue.front();
+		m_create_queue.pop();
+
+		process_chunk(chunk);
+
+		has_items = !m_create_queue.empty();
+		end = Utilities::Get_Time();
+		timer = (end - start) * 1000.0;
+	}
+
 }
 
 void StructureController::process_deletions()
 {
+
+	
+
+}
+
+void StructureController::process_chunk(ChunkRef chunk)
+{
+	double start_time = Utilities::Get_Time();
+
+	//glm::dvec4 render_times = m_builder->Render(&render_options,);
+	chunk.chunk_comp->Process_Mesh_Update(m_builder);
+
+	double end_time = Utilities::Get_Time();
+	double duration_ms = (end_time - start_time) * 1000.0;
+
 }
 
 bool StructureController::queue_chunk_create(glm::ivec3 chunk_coord)
 {
-	return false;
+	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
+
+	if (m_chunk_map.contains(hash)) {
+		return false;
+	}
+
+	ChunkRef chunk = m_cached_chunks.front();
+	m_cached_chunks.pop();
+
+	chunk.chunk_comp->Assign(chunk_coord);
+	chunk.chunk_coord = chunk_coord;
+
+	m_chunk_map[hash] = chunk;
+
+	m_create_queue.push(chunk);
+
+	return true;
 }
 
 void StructureController::queue_chunk_delete(glm::ivec3 chunk_coord)
 {
+	m_delete_queue.push(chunk_coord);
 }
 
 bool StructureController::chunk_exists(glm::ivec3 chunk_coord)
 {
-	return false;
+	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
+	return m_chunk_map.contains(hash);
 }
 
 void StructureController::remove_chunk(glm::ivec3 chunk_coord)
 {
+	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
+	m_chunk_map.erase(hash);
 }
+
+void StructureController::create_chunk_cache()
+{
+	double start = Utilities::Get_Time();
+
+	for (int i = 0; i < m_max_cached_chunks; ++i) {
+		ChunkRef chk = create_chunk_object();
+		m_cached_chunks.push(chk);
+	}
+
+	double end = Utilities::Get_Time();
+	Logger::LogDebug(LOG_POS("create_chunk_cache"), "Created %i cached chunks in %f ms.", m_max_cached_chunks, (end - start) * 1000);
+}
+
+StructureController::ChunkRef StructureController::create_chunk_object()
+{
+	WorldObject* obj = Instantiate("Cached Structure Chunk");
+	obj->Get_Transform()->Set_Verbos(false);
+	obj->Get_Transform()->Position(glm::vec3(0.0, 1000.0, 0.0));
+	StructureChunk* comp = obj->Add_Component<StructureChunk>();
+	comp->Init(this);
+
+	ChunkRef chk{};
+	chk.chunk_obj = obj;
+	chk.chunk_comp = comp;
+	//m_chunk_map[hash] = chk;
+
+	return chk;
+}
+
+
+glm::ivec3 StructureController::worldPosToChunkCoord(glm::fvec3 pos)
+{
+	return glm::ivec3(
+		std::round(pos.x / (m_chunkMeterSizeX + m_half)),
+		std::round(pos.y / (m_chunkMeterSizeY + m_half)),
+		std::round(pos.z / (m_chunkMeterSizeZ + m_half))
+	);
+}
+
+glm::fvec3 StructureController::chunkCoordToWorldPos(glm::ivec3 chunk_coord)
+{
+	return glm::fvec3(
+		std::round((chunk_coord.x * m_chunkMeterSizeX) - m_half),
+		std::round((chunk_coord.y * m_chunkMeterSizeY) - m_half),
+		std::round((chunk_coord.z * m_chunkMeterSizeZ) - m_half)
+	);
+}
+
+glm::ivec3 StructureController::voxelToChunk(glm::ivec3 location)
+{
+	int x = floor_to_int(location.x / (float)m_chunk_size_x);
+	int y = floor_to_int(location.y / (float)m_chunk_size_y);
+	int z = floor_to_int(location.z / (float)m_chunk_size_z);
+	return glm::ivec3(x, y, z);
+}
+
+glm::ivec3 StructureController::chunkToVoxel(glm::ivec3 location)
+{
+	int x = ((location.x) * m_chunk_size_x);
+	int y = ((location.y) * m_chunk_size_y);
+	int z = ((location.z) * m_chunk_size_z);
+	return glm::ivec3(x, y, z);
+}
+
+glm::ivec3 StructureController::globalToLocalChunkCoord(glm::ivec3 location) {
+	glm::ivec3 ChunkCoord = voxelToChunk(location);
+	return GlobalToLocalChunkCoord(ChunkCoord, location);
+}
+
+glm::ivec3 StructureController::globalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location) {
+	int x = location.x - (ChunkCoord.x * m_chunk_size_x);
+	int y = location.y - (ChunkCoord.y * m_chunk_size_y);
+	int z = location.z - (ChunkCoord.z * m_chunk_size_z);
+	return glm::ivec3(x, y, z);
+}
+
+glm::ivec3 StructureController::localToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location) {
+	int x = location.x + (Chunk.x * m_chunk_size_x);
+	int y = location.y + (Chunk.y * m_chunk_size_y);
+	int z = location.z + (Chunk.z * m_chunk_size_z);
+	return glm::ivec3(x, y, z);
+}
+
+glm::fvec3 StructureController::voxelToWorld(glm::ivec3 loc)
+{
+	float newX = (((loc.x / (float)m_voxelsPerMeter) - m_half));
+	float newY = (((loc.y / (float)m_voxelsPerMeter) - m_half));
+	float newZ = (((loc.z / (float)m_voxelsPerMeter) - m_half));
+	return glm::fvec3(newX, newY, newZ);
+}
+
+glm::ivec3 StructureController::worldToVoxel(glm::fvec3 worldPos)
+{
+	int x = floor_to_int(((worldPos.x) + m_half) * (float)m_voxelsPerMeter);
+	int y = floor_to_int(((worldPos.y) + m_half) * (float)m_voxelsPerMeter);
+	int z = floor_to_int(((worldPos.z) + m_half) * (float)m_voxelsPerMeter);
+	return glm::ivec3(x, y, z);
+}
+
+
+

@@ -62,7 +62,7 @@ glm::dvec4 CubeVoxelBuilder::Render(
 	glm::vec4* out_normal,
 	glm::vec2* out_uv,
 	unsigned int* out_trianges,
-	glm::ivec4 counts)
+	glm::ivec4& counts)
 {
     Out_Data out_data{};
     out_data.out_vertex = out_vertex;
