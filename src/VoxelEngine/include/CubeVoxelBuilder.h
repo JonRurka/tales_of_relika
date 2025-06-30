@@ -19,6 +19,9 @@ namespace VoxelEngine {
 			unsigned int* out_trianges, 
 			glm::ivec4 counts);
 
+		static uint16_t Get_Block_Type(uint32_t block_value);
+		static uint8_t Get_Block_Orientation(uint32_t block_value);
+
 	private:
 
 		struct Static_Settings {
@@ -50,8 +53,20 @@ namespace VoxelEngine {
 
 		void process_tile(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, int tile_index, Out_Data& out_data);
 
-		uint16_t get_block_type(uint32_t block_value);
-		uint8_t get_block_orientation(uint32_t block_value);
+		void process_tile_x_plus(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data);
+		void process_tile_x_neg(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data);
+
+		void process_tile_y_plus(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data);
+		void process_tile_y_neg(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data);
+
+		void process_tile_z_plus(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data);
+		void process_tile_z_neg(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data);
+
+		bool neighboor_filed(uint32_t* data, glm::ivec3 this_voxel, glm::ivec3 neightboor_offset);
+
+		
+		int get_block_image_id(glm::ivec2 info, int tile_id);
+		bool render_enabled(glm::ivec2 info);
 	};
 
 

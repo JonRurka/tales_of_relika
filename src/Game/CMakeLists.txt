@@ -24,7 +24,9 @@ set(${module}_headers
 	
 	include/Stitch_VBO.h
 	include/WorldGenController.h
+	include/StructureController.h
 	include/TerrainChunk.h
+	include/StructureChunk.h
 	include/Material_Types.h
 )
 
@@ -49,7 +51,9 @@ set(${module}_sources
 	
 	src/Stitch_VBO.cpp
 	src/WorldGenController.cpp
+	src/StructureController.cpp
 	src/TerrainChunk.cpp
+	src/StructureChunk.cpp
 	src/Material_Types.cpp
 )
 

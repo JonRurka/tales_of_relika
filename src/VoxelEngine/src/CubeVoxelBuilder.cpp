@@ -112,17 +112,23 @@ void CubeVoxelBuilder::CalculateVariables()
 
 void CubeVoxelBuilder::process_block(uint32_t* data, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
 {
-    int v_idx = C_3D_to_1D(voxel_coord.x, voxel_coord.y, voxel_coord.z, m_static_settings.ChunkSize.x + GRID_PADDING, m_static_settings.ChunkSize.y + GRID_PADDING);
+    int v_idx = C_3D_to_1D(voxel_coord.x + GRID_OFFSET, voxel_coord.y + GRID_OFFSET, voxel_coord.z + GRID_OFFSET, m_static_settings.ChunkSize.x + GRID_PADDING, m_static_settings.ChunkSize.y + GRID_PADDING);
     uint32_t raw_block_data = data[v_idx];
-    glm::uvec2 block_info = glm::uvec2(get_block_type(raw_block_data), get_block_orientation(raw_block_data));
+    glm::uvec2 block_info = glm::uvec2(Get_Block_Type(raw_block_data), Get_Block_Orientation(raw_block_data));
     
-    if (block_info.x == 0) {
+    if (!render_enabled(block_info)) {
         return;
     }
 
-    for (int i = 0; i < 6; i++) {
-        process_tile(data, block_info, chunk_coord, voxel_coord, i, out_data);
-    }
+    process_tile_x_plus(data, block_info, chunk_coord, voxel_coord, out_data);
+    process_tile_x_neg(data, block_info, chunk_coord, voxel_coord, out_data);
+
+    process_tile_y_plus(data, block_info, chunk_coord, voxel_coord, out_data);
+    process_tile_y_neg(data, block_info, chunk_coord, voxel_coord, out_data);
+
+    process_tile_z_plus(data, block_info, chunk_coord, voxel_coord, out_data);
+    process_tile_z_neg(data, block_info, chunk_coord, voxel_coord, out_data);
+
 }
 
 void CubeVoxelBuilder::process_tile(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, int tile_index, Out_Data& out_data)
@@ -135,36 +141,36 @@ void CubeVoxelBuilder::process_tile(uint32_t* data, glm::ivec2 block_info, glm::
 
     // 0, 1: x-dir
     if (tile_index == 0) { // +x
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength, 0));
 
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength + _sideLength, 0));
 
 
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
 
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
     }
     else if (tile_index == 1) { // -x
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength, 0));
 
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength + _sideLength, 0));
 
 
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
 
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
     }
 
     // 2, 3: y-dir
@@ -185,65 +191,269 @@ void CubeVoxelBuilder::process_tile(uint32_t* data, glm::ivec2 block_info, glm::
         PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
     }
     else if (tile_index == 3) { // -y
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength + _sideLength, 0));
 
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength + _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength, 0));
 
 
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
 
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
     }
 
     // 4, 5: z-dir
     else if (tile_index == 4) { // +z
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength + _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength + _sideLength, 0));
 
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, 0));
 
 
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
 
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
     }
     else if (tile_index == 5) { // -z
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength, 0));
 
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
-        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4());
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength, 0));
+        PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength, 0));
 
 
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
 
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
-        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+        PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
     }
-
 
 }
 
-uint16_t CubeVoxelBuilder::get_block_type(uint32_t block_value)
+void CubeVoxelBuilder::process_tile_x_plus(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+{
+    int x = voxel_coord.x;
+    int y = voxel_coord.y;
+    int z = voxel_coord.z;
+    float _sideLength = m_static_settings.SideLength[0];
+    int vert_index = out_data.out_counts.x;
+
+    if (!neighboor_filed(data, voxel_coord, glm::ivec3(1, 0, 0))) {
+        return;
+    }
+
+    int img_id = get_block_image_id(block_info, 0);
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id));
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id));
+
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+
+}
+
+void CubeVoxelBuilder::process_tile_x_neg(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+{
+    int x = voxel_coord.x;
+    int y = voxel_coord.y;
+    int z = voxel_coord.z;
+    float _sideLength = m_static_settings.SideLength[0];
+    int vert_index = out_data.out_counts.x;
+
+    if (!neighboor_filed(data, voxel_coord, glm::ivec3(-1, 0, 0))) {
+        return;
+    }
+
+    int img_id = get_block_image_id(block_info, 0);
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id));
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id));
+
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+}
+
+void CubeVoxelBuilder::process_tile_y_plus(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+{
+    int x = voxel_coord.x;
+    int y = voxel_coord.y;
+    int z = voxel_coord.z;
+    float _sideLength = m_static_settings.SideLength[0];
+    int vert_index = out_data.out_counts.x;
+
+    if (!neighboor_filed(data, voxel_coord, glm::ivec3(0, 1, 0))) {
+        return;
+    }
+
+    int img_id = get_block_image_id(block_info, 0);
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id));
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id));
+
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+}
+
+void CubeVoxelBuilder::process_tile_y_neg(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+{
+    int x = voxel_coord.x;
+    int y = voxel_coord.y;
+    int z = voxel_coord.z;
+    float _sideLength = m_static_settings.SideLength[0];
+    int vert_index = out_data.out_counts.x;
+
+    if (!neighboor_filed(data, voxel_coord, glm::ivec3(0, -1, 0))) {
+        return;
+    }
+
+    int img_id = get_block_image_id(block_info, 0);
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id));
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength, img_id));
+
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+}
+
+void CubeVoxelBuilder::process_tile_z_plus(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+{
+    int x = voxel_coord.x;
+    int y = voxel_coord.y;
+    int z = voxel_coord.z;
+    float _sideLength = m_static_settings.SideLength[0];
+    int vert_index = out_data.out_counts.x;
+
+    if (!neighboor_filed(data, voxel_coord, glm::ivec3(0, 0, 1))) {
+        return;
+    }
+
+    int img_id = get_block_image_id(block_info, 0);
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id));
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id));
+
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+}
+
+void CubeVoxelBuilder::process_tile_z_neg(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+{
+    int x = voxel_coord.x;
+    int y = voxel_coord.y;
+    int z = voxel_coord.z;
+    float _sideLength = m_static_settings.SideLength[0];
+    int vert_index = out_data.out_counts.x;
+
+    if (!neighboor_filed(data, voxel_coord, glm::ivec3(0, 0, -1))) {
+        return;
+    }
+
+    int img_id = get_block_image_id(block_info, 0);
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength, img_id));
+
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id));
+    PUSH_VERTS(out_data.out_vertex, out_data.out_counts, glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id));
+
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 1);
+
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 3);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 2);
+    PUSH_TRIS(out_data.out_trianges, out_data.out_counts, vert_index + 0);
+}
+
+bool CubeVoxelBuilder::neighboor_filed(uint32_t* data, glm::ivec3 this_voxel, glm::ivec3 neightboor_offset)
+{
+    glm::ivec3 other_voxel = this_voxel + neightboor_offset;
+    int v_idx = C_3D_to_1D(other_voxel.x + GRID_OFFSET, other_voxel.y + GRID_OFFSET, other_voxel.z + GRID_OFFSET, m_static_settings.ChunkSize.x + GRID_PADDING, m_static_settings.ChunkSize.y + GRID_PADDING);
+    uint32_t raw_block_data = data[v_idx];
+    glm::uvec2 block_info = glm::uvec2(Get_Block_Type(raw_block_data), Get_Block_Orientation(raw_block_data));
+    return render_enabled(block_info);
+}
+
+uint16_t CubeVoxelBuilder::Get_Block_Type(uint32_t block_value)
 {
     return block_value;
 }
 
-uint8_t VoxelEngine::CubeVoxelBuilder::get_block_orientation(uint32_t block_value)
+uint8_t CubeVoxelBuilder::Get_Block_Orientation(uint32_t block_value)
 {
     return 1;
+}
+
+int CubeVoxelBuilder::get_block_image_id(glm::ivec2 info, int tile_id)
+{
+    return 1;
+}
+
+bool CubeVoxelBuilder::render_enabled(glm::ivec2 info)
+{
+    if (info.x == 0)
+    {
+        return false;
+    }
+
+    return true;
 }

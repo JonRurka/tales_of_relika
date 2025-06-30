@@ -138,8 +138,13 @@ namespace VoxelEngine {
 		int m_numTriangles{ 0 };
 	};
 
-	struct Block {
+	struct Block_Type_Info {
+		uint32_t Type_ID;
+	};
 
+	struct Block_Info {
+		Block_Type_Info Block_Type;
+		uint8_t Orientation;
 	};
 
 	struct MeshData {
