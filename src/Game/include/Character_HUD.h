@@ -21,6 +21,17 @@ private:
 	ISO_Sampler* m_iso_sampler{ nullptr };
 	double m_edit_timer{0};
 
+	
+
+	void left_click_block(glm::vec3 hit_point, glm::vec3 normal);
+	void right_click_block(glm::vec3 hit_point, glm::vec3 normal);
+
+	void left_click_terrain(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord);
+	void right_click_terrain(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord);
+
+	void left_click_structure(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord);
+	void right_click_structure(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord);
+
 	glm::ivec3 get_closest_voxel(glm::ivec3 src_voxel, glm::fvec3 world_pos, bool inside);
 
 	std::vector<glm::ivec4> get_surrounding_voxels(glm::ivec3 src_voxel, bool inside);

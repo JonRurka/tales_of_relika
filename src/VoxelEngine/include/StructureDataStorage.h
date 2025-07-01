@@ -25,6 +25,8 @@ public:
 
 	void Set_Data(glm::ivec3 chunk_coord, std::vector<uint32_t> data);
 
+	void Set_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, uint32_t data);
+
 	uint32_t* Get_Data_ptr(glm::ivec3 chunk_coord);
 
 	std::vector<uint32_t> Get_Data(glm::ivec3 chunk_coord);
@@ -32,6 +34,9 @@ public:
 	bool Has_Chunk(glm::ivec3 chunk_coord);
 
 	size_t Data_Size();
+
+	int Grid_Padding();
+	int Grid_Offset();
 
 private:
 

@@ -87,6 +87,10 @@ void StructureChunk::Update(float dt)
 	update_collision_mesh();
 }
 
+void StructureChunk::VoxelChanged(glm::ivec3 local_voxel, bool Type_changed, uint32_t type)
+{
+}
+
 void StructureChunk::apply_mesh_update()
 {
 

@@ -1,7 +1,7 @@
 #include "Character_HUD.h"
 
 #include "WorldGenController.h"
-
+#include "StructureController.h"
 
 #define GRID_SIZE 8
 namespace {
@@ -50,28 +50,81 @@ void Character_HUD::Update(float dt)
 		draw_voxel_box(voxel_coord_box);
 
 		if (Input::GetMouseKey(input::MouseButton::Left) && can_place) {
-			glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit.hit_point - (hit.normal * 0.01f));
-			Logger::LogDebug(LOG_POS("Update"), "Voxel Clicked....");
-			glm::ivec3 selected_src_voxel = get_closest_voxel(voxel_coord, hit.hit_point, true);
-			std::vector<glm::ivec4> near_voxels = get_surrounding_voxels(selected_src_voxel, true);
-
-			std::vector<WorldGenController::TerrainMod> changes;
-			changes.reserve(near_voxels.size());
-			for (const auto& nv : near_voxels) {
-				WorldGenController::TerrainMod mod(glm::ivec3(nv.x, nv.y, nv.z), (0.5f / (float)nv.w));
-				changes.push_back(mod);
-			}
-			WorldGenController::Instance()->Modify_Voxel(changes);
+			left_click_block(hit.hit_point, hit.normal);
 			//WorldGenController::Instance()->Modify_Voxel_ISO(selected_voxel, 1.0);
 		}
 		if (Input::GetMouseKeyDown(input::MouseButton::Right) && can_place) {
-			glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit.hit_point + (hit.normal * 0.01f));
-			Logger::LogDebug(LOG_POS("Update"), "Voxel Clicked....");
-			glm::ivec3 selected_src_voxel = get_closest_voxel(voxel_coord, hit.hit_point, false);
+			right_click_block(hit.hit_point, hit.normal);
 			//WorldGenController::Instance()->Modify_Voxel_ISO(selected_voxel, -1.0);
 		}
 
 	}
+
+
+}
+
+
+
+void Character_HUD::left_click_block(glm::vec3 hit_point, glm::vec3 normal)
+{
+	glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit_point - (normal * 0.01f));
+	//left_click_terrain(hit_point, normal, voxel_coord);
+	left_click_structure(hit_point, normal, voxel_coord);
+}
+
+void Character_HUD::right_click_block(glm::vec3 hit_point, glm::vec3 normal)
+{
+	glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit_point + (normal * 0.01f));
+	//right_click_terrain(hit_point, normal, voxel_coord);
+	right_click_structure(hit_point, normal, voxel_coord);
+}
+
+void Character_HUD::left_click_terrain(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord)
+{
+	Logger::LogDebug(LOG_POS("Update"), "Voxel Clicked....");
+	glm::ivec3 selected_src_voxel = get_closest_voxel(voxel_coord, hit_point, true);
+	std::vector<glm::ivec4> near_voxels = get_surrounding_voxels(selected_src_voxel, true);
+
+	std::vector<WorldGenController::TerrainMod> changes;
+	changes.reserve(near_voxels.size());
+	for (const auto& nv : near_voxels) {
+		WorldGenController::TerrainMod mod(glm::ivec3(nv.x, nv.y, nv.z), (0.5f / (float)nv.w));
+		changes.push_back(mod);
+	}
+	WorldGenController::Instance()->Modify_Voxel(changes);
+}
+
+void Character_HUD::right_click_terrain(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord)
+{
+	
+	Logger::LogDebug(LOG_POS("Update"), "Voxel Clicked....");
+	glm::ivec3 selected_src_voxel = get_closest_voxel(voxel_coord, hit_point, false);
+}
+
+void Character_HUD::left_click_structure(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord)
+{
+	glm::ivec3 chunk = StructureController::VoxelToChunk(voxel_coord);
+	glm::ivec3 voxel_local = WorldGenController::GlobalToLocalChunkCoord(chunk, voxel_coord);
+
+	uint32_t block_type = 1;
+
+	if (!StructureController::Instance()->Chunk_Exists(chunk)) {
+		StructureController::StructureMod new_block(voxel_local, block_type);
+		std::vector<StructureController::StructureMod> mod;
+		mod.push_back(new_block);
+		StructureController::Instance()->Spawn_Chunk(chunk, mod);
+	}
+	else {
+		StructureController::StructureMod new_block(voxel_coord, block_type);
+		StructureController::Instance()->Modify_Voxel_Type(voxel_coord, block_type);
+	}
+
+	
+}
+
+void Character_HUD::right_click_structure(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord)
+{
+
 
 
 }

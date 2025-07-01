@@ -65,6 +65,8 @@ private:
 	MeshCollider* m_mesh_collider{ nullptr };
 	Mesh* m_collision_mesh{ nullptr };
 
+	void VoxelChanged(glm::ivec3 local_voxel, bool Type_changed, uint32_t type);
+
 	void apply_mesh_update();
 
 	void update_collision_mesh();
