@@ -229,6 +229,7 @@ void Voxel_Test_Scene::Init()
 	cube_mesh->Normals(floor_normals);
 	cube_mesh->Colors(floor_cube_colors);
 	cube_mesh->TexCoords(floor_tex_coords);
+	cube_mesh->Activate();
 
 	btVector3 min, max;
 

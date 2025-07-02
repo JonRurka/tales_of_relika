@@ -152,10 +152,10 @@ void main()
 	//vec3 ambient = 1.0 * globalAmbientLightColor * vec3(1.0f) * vec3(texture(material.diffuse, TexCoords));
 	resColor += ambient;
 	
-	vec3 diffuse_sample = vec3(0.0f, 0.0f, 0.0f);
+	vec3 diffuse_sample = vec3(1.0f, 1.0f, 1.0f);
 	vec3 spec_sample = vec3(0.0f, 0.0f, 0.0f);
 	
-	vec3 frag_normal = TranslateNormal(Normal, Tangent, Bitangent, sample_res.normal);
+	vec3 frag_normal = Normal;//TranslateNormal(Normal, Tangent, Bitangent, sample_res.normal);
 	
 	resColor += Calculate_Lighting(frag_normal, viewPos, FragPos, diffuse_sample, material.shininess, material.specular_intensity, spec_sample);
 	

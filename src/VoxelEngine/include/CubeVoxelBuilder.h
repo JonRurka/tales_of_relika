@@ -13,15 +13,18 @@ namespace VoxelEngine {
 
 		glm::dvec4 Render(
 			ChunkRenderOptions* options,
-			glm::vec4* out_vertex, 
-			glm::vec4* out_normal, 
-			glm::vec2* out_uv, 
-			unsigned int* out_trianges, 
+			std::vector<glm::vec4>& out_vertex,
+			std::vector<glm::vec4>& out_normal,
+			std::vector<glm::vec2>& out_uv,
+			std::vector<unsigned int>& out_trianges,
 			glm::ivec4& counts);
 
 		StructureDataStorage* Get_Data_Storage() { return m_structure_data; }
 
-		static uint16_t Get_Block_Type(uint32_t block_value);
+		static uint32_t Set_Block_Orientation(uint32_t& init_value, uint8_t val);
+		static uint32_t Set_Block_Type(uint32_t& init_value, uint32_t val);
+
+		static uint32_t Get_Block_Type(uint32_t block_value);
 		static uint8_t Get_Block_Orientation(uint32_t block_value);
 
 	private:
@@ -37,11 +40,30 @@ namespace VoxelEngine {
 		};
 
 		struct Out_Data {
-			glm::vec4* out_vertex;
-			glm::vec4* out_normal;
-			glm::vec2* out_uv;
-			unsigned int* out_trianges;
-			glm::ivec4 out_counts;
+			//glm::vec4* out_vertex;
+			//glm::vec4* out_normal;
+			//glm::vec2* out_uv;
+			//unsigned int* out_trianges;
+			glm::ivec4& out_counts;
+
+			std::vector<glm::vec4>& out_vertex;
+			std::vector<glm::vec4>& out_normal;
+			std::vector<glm::vec2>& out_uv;
+			std::vector<unsigned int>& out_trianges;
+
+			Out_Data(
+				glm::ivec4& counts,
+				std::vector<glm::vec4>& vertex,
+				std::vector<glm::vec4>& normal,
+				std::vector<glm::vec2>& uv,
+				std::vector<unsigned int>& trianges
+			) :
+				out_counts{ counts },
+				out_vertex{ vertex },
+				out_normal{ normal },
+				out_uv {uv},
+				out_trianges{ trianges }
+			{ }
 		};
 
 		Static_Settings m_static_settings{};
@@ -69,6 +91,9 @@ namespace VoxelEngine {
 		
 		int get_block_image_id(glm::ivec2 info, int tile_id);
 		bool render_enabled(glm::ivec2 info);
+
+
+		inline static const std::string LOG_LOC{ "CUBE_VOXEL_BUILDER" };
 	};
 
 

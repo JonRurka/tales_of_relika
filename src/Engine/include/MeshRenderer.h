@@ -27,7 +27,7 @@ public:
 
 	Mesh* Get_Mesh() { return m_mesh; };
 
-	void Set_Mesh(Mesh* value);
+	void Set_Mesh(Mesh* value, bool activate_mesh = true);
 
 	void Use();
 

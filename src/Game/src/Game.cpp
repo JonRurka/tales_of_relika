@@ -32,6 +32,7 @@ void Game::Init()
 
 void Game::init_shaders()
 {
+	// Load Standard Shader.
 	Shader* std_shader = Shader::Create(
 		"standard", 
 		Game_Resources::Shaders::Graphics::STANDARD_VERT, 
@@ -42,9 +43,9 @@ void Game::init_shaders()
 		Logger::LogFatal(LOG_POS("init_shaders"), "Failed to load standard shader.");
 		return;
 	}
-
 	std_shader->Init_Lights();
 
+	// Load Terrain Chunk Shader.
 	Shader* opaque_chunk_shader = Shader::Create(
 		"opaque_chunk_material", 
 		Game_Resources::Shaders::Graphics::Voxel::CHUNK_OPAQUE_VERT,
@@ -56,6 +57,19 @@ void Game::init_shaders()
 		return;
 	}
 	opaque_chunk_shader->Init_Lights();
+
+	// Load Structure Chunk Shader.
+	Shader* opaque_structure_chunk_shader = Shader::Create(
+		"opaque_structure_chunk_material",
+		Game_Resources::Shaders::Graphics::Voxel::CHUNK_STRUCTURE_OPAQUE_VERT,
+		Game_Resources::Shaders::Graphics::Voxel::CHUNK_STRUCTURE_OPAQUE_FRAG
+	);
+	if (opaque_structure_chunk_shader == nullptr || !opaque_structure_chunk_shader->Initialized())
+	{
+		Logger::LogFatal(LOG_POS("init_shaders"), "Failed to load opaque chunk shader.");
+		return;
+	}
+	opaque_structure_chunk_shader->Init_Lights();
 
 	/*std_shader->Set_Textures({
 		{"material.diffuse",Resources::Get_Texture(Game_Resources::Textures::CONTAINER_DIFFUSE)},

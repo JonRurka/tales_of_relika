@@ -68,39 +68,40 @@ public:
 
 	void Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size = -1);
 
-	void Vertices(std::vector<glm::vec4> value)
+	void Vertices(std::vector<glm::vec4> value, bool sync = true)
 	{
 		m_vertices = value;
-		if (m_active)
+		if (m_active && sync)
 			sync_vertices(Vert_Update_Mode::VERTICES);
 	}
 
 	std::vector<glm::vec4>& Vertices() { return m_vertices; }
 
-	void Normals(std::vector<glm::vec4> value)
+	void Normals(std::vector<glm::vec4> value, bool sync = true)
 	{
 		m_normals = value;
-		if (m_active)
+		if (m_active && sync)
 			sync_vertices(Vert_Update_Mode::NORMALS);
 	}
 
 	std::vector<glm::vec4>& Normals() { return m_normals; }
 
 
-	void Colors(std::vector<glm::vec4> value)
+	void Colors(std::vector<glm::vec4> value, bool sync = true)
 	{
 		m_colors = value;
-		if (m_active)
+		if (m_active && sync)
 			sync_vertices(Vert_Update_Mode::COLORS);
 	}
 
 	std::vector<glm::vec4>& Colors() { return m_colors; }
 
 
-	void TexCoords(std::vector<glm::vec2> val)
+	void TexCoords(std::vector<glm::vec2> val, bool sync = true)
 	{
 		m_texcoords = val;
-		sync_vertices(Vert_Update_Mode::TEXCORDS);
+		if (m_active && sync)
+			sync_vertices(Vert_Update_Mode::TEXCORDS);
 	}
 
 	std::vector<glm::vec2>& TexCoords() { return m_texcoords; }
@@ -128,8 +129,8 @@ public:
 
 	void Recenter();
 
-	void Activate() {
-		if (!m_active)
+	void Activate(bool force_flush = false) {
+		if (!m_active || force_flush)
 			sync_vertices(Vert_Update_Mode::ALL);
 		m_active = true;
 	}

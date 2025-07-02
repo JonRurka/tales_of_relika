@@ -79,7 +79,7 @@ void MeshRenderer::Set_Material(Material* material)
 	}
 }
 
-void MeshRenderer::Set_Mesh(Mesh* value)
+void MeshRenderer::Set_Mesh(Mesh* value, bool activate_mesh)
 {
 	if (value == nullptr) {
 		return;
@@ -88,7 +88,8 @@ void MeshRenderer::Set_Mesh(Mesh* value)
 		delete m_mesh;
 	}
 	m_mesh = value;
-	m_mesh->Activate();
+	if (activate_mesh)
+		m_mesh->Activate();
 	has_default_mesh = false;
 }
 

@@ -3,6 +3,7 @@
 #include "CubeVoxelBuilder.h"
 #include "StructureController.h"
 #include "Opaque_Structure_Chunk_Material.h"
+#include "Mesh.h"
 
 #define VBO_ELEMENTS 3
 #define STRIDE (VBO_ELEMENTS * sizeof(float) * 4)
@@ -21,16 +22,31 @@ void StructureChunk::Init(StructureController* controller)
 	//obj->Get_MeshRenderer()->Transparent(true);
 	m_opaque_chunk_obj->Get_Transform()->Position(glm::vec3(0.0, 1000.0, 0.0));
 	m_opaque_chunk_obj->Get_MeshRenderer()->Set_Material(controller->Get_Opaque_Chunk_Material());
-	m_opaque_chunk_obj->Get_MeshRenderer()->Set_Mesh(m_voxel_opaque_mesh);
+	m_opaque_chunk_obj->Get_MeshRenderer()->Set_Mesh(m_voxel_opaque_mesh, false);
 	m_opaque_chunk_obj->Add_Component<MeshCollider>();
 }
 
 void StructureChunk::Assign(glm::ivec3 chunk_coord)
 {
-	m_vertex = new glm::vec4[(int)Utilities::Vertex_Limit_Mode::Chunk_Max];
-	m_normal = new glm::vec4[(int)Utilities::Vertex_Limit_Mode::Chunk_Max];
-	m_uv = new glm::vec2[(int)Utilities::Vertex_Limit_Mode::Chunk_Max];
-	m_trianges = new unsigned int[(int)(Utilities::Vertex_Limit_Mode::Chunk_Max) * 3];
+	//m_vertex = new glm::vec4[(int)Utilities::Vertex_Limit_Mode::Chunk_Max];
+	//m_normal = new glm::vec4[(int)Utilities::Vertex_Limit_Mode::Chunk_Max];
+	//m_uv = new glm::vec2[(int)Utilities::Vertex_Limit_Mode::Chunk_Max];
+	//m_trianges = new unsigned int[(int)(Utilities::Vertex_Limit_Mode::Chunk_Max) * 3];
+
+	//m_vertex = std::vector<glm::vec4>((int)Utilities::Vertex_Limit_Mode::Chunk_Max, glm::vec4());
+	//m_normal = std::vector<glm::vec4>((int)Utilities::Vertex_Limit_Mode::Chunk_Max, glm::vec4());
+	//m_uv = std::vector<glm::vec2>((int)Utilities::Vertex_Limit_Mode::Chunk_Max, glm::vec2());
+	//m_trianges = std::vector<unsigned int>((int)Utilities::Vertex_Limit_Mode::Chunk_Max, 0);
+
+	m_vertex = std::vector<glm::vec4>();
+	m_normal = std::vector<glm::vec4>();
+	m_uv = std::vector<glm::vec2>();
+	m_trianges = std::vector<unsigned int>();
+
+	m_vertex.reserve((int)Utilities::Vertex_Limit_Mode::Chunk_Max);
+	m_normal.reserve((int)Utilities::Vertex_Limit_Mode::Chunk_Max);
+	m_uv.reserve((int)Utilities::Vertex_Limit_Mode::Chunk_Max);
+	m_trianges.reserve((int)Utilities::Vertex_Limit_Mode::Chunk_Max);
 
 	m_assigned = true;
 
@@ -57,9 +73,9 @@ void StructureChunk::Process_Mesh_Update(CubeVoxelBuilder* builder)
 	glm::dvec4 render_times = builder->Render(&render_options, m_vertex, m_normal, m_uv, m_trianges, m_counts);
 
 	Chunk_Mesh_Data data{};
-	data.vertices = std::vector<glm::vec4>(m_vertex, m_vertex + m_counts.x);
-	data.normals = std::vector<glm::vec4>(m_normal, m_normal + m_counts.x);
-	data.indices = std::vector<unsigned int>(m_trianges, m_trianges + m_counts.y);
+	data.vertices = m_vertex;
+	data.normals = m_normal;
+	data.indices = m_trianges;
 	data.counts = m_counts;
 
 	m_data_lock.lock();
@@ -69,7 +85,7 @@ void StructureChunk::Process_Mesh_Update(CubeVoxelBuilder* builder)
 
 bool StructureChunk::Collision_Enabled()
 {
-	return false;
+	return true;
 }
 
 void StructureChunk::Init()
@@ -115,14 +131,17 @@ void StructureChunk::apply_mesh_update()
 		return;
 	}
 
+	Logger::LogDebug(LOG_POS("apply_mesh_update"), "verts:(%i), norms:(%i)", data.vertices.size(), data.normals.size());
 	
-	m_voxel_opaque_mesh->Vertices(data.vertices);
-	m_voxel_opaque_mesh->Normals(data.normals);
+	m_voxel_opaque_mesh->Vertices(data.vertices, false);
+	m_voxel_opaque_mesh->Normals(data.normals, false);
 	//m_voxel_opaque_mesh->TexCoords(data.);
-	m_voxel_opaque_mesh->Indices(data.indices);
-	m_voxel_opaque_mesh->Activate();
+	//m_voxel_opaque_mesh->Indices(data.indices);
+	m_voxel_opaque_mesh->Activate(true);
 
 	m_update_collision_mesh = true;
+
+	draw_debug_cube();
 }
 
 void StructureChunk::update_collision_mesh()
@@ -146,14 +165,15 @@ void StructureChunk::update_collision_mesh()
 
 	btVector3 min, max;
 
-	//m_collision_mesh = new Mesh();
+	m_collision_mesh = new Mesh();
 	//m_collision_mesh->Indices(tris);
-	//m_collision_mesh->Vertices(m_voxel_opaque_mesh->Vertices());
-	//m_collision_mesh->Activate();
-	//m_mesh_collider->SetMesh(m_collision_mesh);
-	//m_mesh_collider->Mass(0.0f);
-	//m_mesh_collider->Activate();
-	//m_mesh_collider->RigidBody()->getAabb(min, max);
+	m_collision_mesh->Vertices(m_voxel_opaque_mesh->Vertices());
+	m_collision_mesh->Activate();
+	m_mesh_collider->SetMesh(m_collision_mesh);
+	m_mesh_collider->Mass(0.0f);
+	m_mesh_collider->Activate();
+	m_mesh_collider->RigidBody()->getAabb(min, max);
+	Logger::LogDebug(LOG_POS("update_collision_mesh"), "Collision mesh added.");
 
 }
 

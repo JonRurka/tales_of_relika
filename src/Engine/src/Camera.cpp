@@ -122,8 +122,8 @@ void Camera::Set_Skybox(Cubemap* value)
 			glm::vec4( 1.0f, -1.0f,  1.0f, 0.0f)
 		};
 		m_cubemap_mesh = new Mesh();
-		m_cubemap_mesh->Activate();
 		m_cubemap_mesh->Vertices(skyboxVertices);
+		m_cubemap_mesh->Activate();
 		m_cubemap_shader = Shader::Create("skybox", SKYBOX_VERT_SHADER, SKYBOX_FRAG_SHADER);
 		if (m_cubemap_shader == nullptr || !m_cubemap_shader->Initialized()) {
 			Logger::LogError(LOG_POS("Set_Skybox"), "Failed to create skybox shader.");

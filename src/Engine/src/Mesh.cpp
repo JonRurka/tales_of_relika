@@ -287,6 +287,7 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 		raw_vert_data = new float[num_elements * stride];
 		mode = Vert_Update_Mode::ALL;
 		m_has_verts = true;
+		Logger::LogDebug(LOG_POS("sync_vertices"), "Resize Raw Data: %i -> %i", m_num_vertices, num_elements);
 		//printf("Refresh mesh buffer \n");
 	}
 
@@ -308,7 +309,8 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 			//printf("Set empty color.\n");
 		}
 		else if (m_colors.size() < num_elements) {
-			Logger::LogError(LOG_POS("sync_vertices"), "colors size must match vertices.");
+			//Logger::LogError(LOG_POS("sync_vertices"), "colors size must match vertices.");
+			colors_empty = true;
 			return;
 		}
 	}
@@ -320,7 +322,8 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 			//printf("Set empty color.\n");
 		}
 		else if (m_normals.size() < num_elements) {
-			Logger::LogError(LOG_POS("sync_vertices"), "normals size must match vertices.");
+			//Logger::LogError(LOG_POS("sync_vertices"), "normals size must match vertices: %i < %i", m_normals.size(), num_elements);
+			normals_empty = true;
 			return;
 		}
 	}
@@ -332,7 +335,8 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 			//printf("Set empty tex coord.\n");
 		}
 		else if (m_texcoords.size() < num_elements) {
-			Logger::LogError(LOG_POS("sync_vertices"), "text coords size must match vertices.");
+			//Logger::LogError(LOG_POS("sync_vertices"), "text coords size must match vertices.");
+			texcoord_empty = true;
 			return;
 		}
 	}

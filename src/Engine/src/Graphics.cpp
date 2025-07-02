@@ -97,6 +97,7 @@ void Graphics::Initialize()
 	m_screen_mesh = new Mesh();
 	m_screen_mesh->Vertices(quad_verts);
 	m_screen_mesh->TexCoords(quad_tex_coord);
+	m_screen_mesh->Activate();
 
 	m_screen_shader = Shader::Create("screen_shader", SCREEN_VERT_SHADER, SCREEN_FRAG_SHADER);
 	if (m_screen_shader == nullptr || !m_screen_shader->Initialized()) {
@@ -107,6 +108,7 @@ void Graphics::Initialize()
 
 	m_line_mesh = new Mesh();
 	m_line_mesh->Vertices(line_verts);
+	m_line_mesh->Activate();
 
 	m_line_shader = Shader::Create("line_shader", LINE_VERT_SHADER, LINE_FRAG_SHADER);
 	if (m_line_shader == nullptr || !m_line_shader->Initialized()) {

@@ -33,7 +33,6 @@ public:
 	struct StructureMod {
 	public:
 		uint32_t Type;
-		uint16_t Orientation;
 		bool Change_Type;
 		glm::ivec3 Voxel;
 
@@ -41,7 +40,6 @@ public:
 
 		StructureMod(glm::ivec3 voxel) {
 			Voxel = voxel;
-			Orientation = 0;
 			Type = 0;
 			Change_Type = false;
 		}

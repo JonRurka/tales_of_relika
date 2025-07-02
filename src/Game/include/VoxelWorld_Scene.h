@@ -5,6 +5,7 @@
 
 
 class WorldGenController;
+class StructureController;
 class Client_Server;
 class GameClient;
 class NetPlayerManager;
@@ -39,6 +40,9 @@ private:
 	WorldObject* world_gen_controller_obj{ nullptr };
 	WorldGenController* world_gen_controller{ nullptr };
 
+	WorldObject* structure_controller_obj{ nullptr };
+	StructureController* structure_controller{ nullptr };
+
 	WorldObject* client_server_obj{ nullptr };
 	Client_Server* client_server{ nullptr };
 
@@ -56,6 +60,8 @@ private:
 	void setup_lights();
 
 	void setup_chunk_gen();
+
+	void setup_structure_controller();
 
 	void setup_client_server();
 

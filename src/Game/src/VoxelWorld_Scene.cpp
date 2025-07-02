@@ -2,6 +2,7 @@
 
 #include "Game_Resources.h"
 #include "WorldGenController.h"
+#include "StructureController.h"
 #include "Editor_Camera_Control.h"
 #include "GameClient.h"
 #include "Client_Server_Interface.h"
@@ -18,6 +19,7 @@ void VoxelWorld_Scene::Init()
 	setup_camera();
 	setup_lights();
 	setup_chunk_gen();
+	setup_structure_controller();
 	//setup_client_server();
 	//setup_game_client();
 
@@ -108,6 +110,12 @@ void VoxelWorld_Scene::setup_chunk_gen()
 {
 	world_gen_controller_obj = Instantiate("World_Gen_Controller");
 	world_gen_controller = world_gen_controller_obj->Add_Component<WorldGenController>();
+}
+
+void VoxelWorld_Scene::setup_structure_controller()
+{
+	structure_controller_obj = Instantiate("Structure_Controller");
+	structure_controller = structure_controller_obj->Add_Component<StructureController>();
 }
 
 void VoxelWorld_Scene::setup_client_server()
@@ -295,6 +303,7 @@ void VoxelWorld_Scene::create_test_items()
 	cube_mesh->Normals(floor_normals);
 	cube_mesh->Colors(floor_cube_colors);
 	cube_mesh->TexCoords(floor_tex_coords);
+	cube_mesh->Activate();
 
 	btVector3 min, max;
 

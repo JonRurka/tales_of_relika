@@ -2,6 +2,9 @@
 
 #include "WorldGenController.h"
 #include "StructureController.h"
+#include "CubeVoxelBuilder.h"
+
+using namespace VoxelEngine;
 
 #define GRID_SIZE 8
 namespace {
@@ -49,11 +52,12 @@ void Character_HUD::Update(float dt)
 
 		draw_voxel_box(voxel_coord_box);
 
-		if (Input::GetMouseKey(input::MouseButton::Left) && can_place) {
+		if (Input::GetMouseKeyDown(input::MouseButton::Left)) {
+			Logger::LogDebug(LOG_POS("Update"), "Left Click.");
 			left_click_block(hit.hit_point, hit.normal);
 			//WorldGenController::Instance()->Modify_Voxel_ISO(selected_voxel, 1.0);
 		}
-		if (Input::GetMouseKeyDown(input::MouseButton::Right) && can_place) {
+		if (Input::GetMouseKeyDown(input::MouseButton::Right)) {
 			right_click_block(hit.hit_point, hit.normal);
 			//WorldGenController::Instance()->Modify_Voxel_ISO(selected_voxel, -1.0);
 		}
@@ -67,7 +71,8 @@ void Character_HUD::Update(float dt)
 
 void Character_HUD::left_click_block(glm::vec3 hit_point, glm::vec3 normal)
 {
-	glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit_point - (normal * 0.01f));
+	Logger::LogDebug(LOG_POS("left_click_block"), "Block Click.");
+	glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit_point + (normal * 0.01f));
 	//left_click_terrain(hit_point, normal, voxel_coord);
 	left_click_structure(hit_point, normal, voxel_coord);
 }
@@ -103,20 +108,26 @@ void Character_HUD::right_click_terrain(glm::vec3 hit_point, glm::vec3 normal, g
 
 void Character_HUD::left_click_structure(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord)
 {
+	Logger::LogDebug(LOG_POS("left_click_structure"), "Structure Click.");
 	glm::ivec3 chunk = StructureController::VoxelToChunk(voxel_coord);
 	glm::ivec3 voxel_local = WorldGenController::GlobalToLocalChunkCoord(chunk, voxel_coord);
 
-	uint32_t block_type = 1;
+	uint32_t block_type_raw = 0;
+	CubeVoxelBuilder::Set_Block_Type(block_type_raw, 1);
+	CubeVoxelBuilder::Set_Block_Orientation(block_type_raw, 0);
 
 	if (!StructureController::Instance()->Chunk_Exists(chunk)) {
-		StructureController::StructureMod new_block(voxel_local, block_type);
+		StructureController::StructureMod new_block(voxel_local, block_type_raw);
 		std::vector<StructureController::StructureMod> mod;
 		mod.push_back(new_block);
 		StructureController::Instance()->Spawn_Chunk(chunk, mod);
+		Logger::LogDebug(LOG_POS("left_click_structure"), "Spawning new chunk...");
 	}
 	else {
-		StructureController::StructureMod new_block(voxel_coord, block_type);
-		StructureController::Instance()->Modify_Voxel_Type(voxel_coord, block_type);
+		//StructureController::StructureMod new_block(voxel_coord, block_type_raw);
+		StructureController::Instance()->Modify_Voxel_Type(voxel_coord, block_type_raw);
+			Logger::LogDebug(LOG_POS("left_click_structure"), "Placing Block");
+		
 	}
 
 	

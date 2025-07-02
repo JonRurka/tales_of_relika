@@ -51,10 +51,10 @@ private:
 		glm::ivec4 counts;
 	};
 
-	glm::vec4* m_vertex{ nullptr };
-	glm::vec4* m_normal{ nullptr };
-	glm::vec2* m_uv{ nullptr };
-	unsigned int* m_trianges{ nullptr };
+	std::vector<glm::vec4> m_vertex;
+	std::vector<glm::vec4> m_normal;
+	std::vector<glm::vec2> m_uv;
+	std::vector<unsigned int> m_trianges;
 	glm::ivec4 m_counts;
 	std::mutex m_data_lock;
 
@@ -75,4 +75,5 @@ private:
 
 	static Mesh::VertexAttributeList get_vertex_attributes();
 
+	inline static const std::string LOG_LOC{ "STRUCTURE_CHUNK" };
 };
