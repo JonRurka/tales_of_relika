@@ -13,15 +13,27 @@ public:
 	struct Terrain_Material {
 		int ID;
 		int Texture_IDX;
+		bool IsTransparent;
 		std::string Material_Name;
 		std::string Diffuse_Texture_Name;
 		std::string Normals_Texture_Name;
 		glm::fvec3 Blend_Color;
 	};
 
+	struct Structure_Material_Texture {
+		int Texture_IDX;
+		std::string Diffuse_Texture_Name;
+		std::string Normals_Texture_Name;
+	};
+
 	struct Structure_Material {
 		int ID;
+		int Internal_ID;
 		std::string Material_Name;
+		bool IsTransparent;
+
+		std::vector<Structure_Material_Texture> Textures;
+		std::string Material_Processor_Name;
 	};
 
 	Material_Types();
@@ -50,6 +62,8 @@ public:
 	Texture* Terrain_Diffuse_Texture_Array() { return m_terrain_diffuse_texture_array; }
 	Texture* Terrain_Normal_Texture_Array() { return m_terrain_normal_texture_array; }
 
+	int Max_ID() { return m_max_id; }
+
 	static Material_Types* Instance() { return m_instance; }
 
 private:
@@ -64,7 +78,14 @@ private:
 	Texture* m_terrain_diffuse_texture_array{ nullptr };
 	Texture* m_terrain_normal_texture_array{ nullptr };
 
+	Texture* m_structure_diffuse_texture_array{ nullptr };
+	Texture* m_structure_normal_texture_array{ nullptr };
+
+	int m_max_id{ 0 };
+
 	void load_terrain_textures();
+
+	void load_structure_textures();
 
 	void set_terrain_gen_macros();
 

@@ -47,6 +47,7 @@ private:
 	struct Chunk_Mesh_Data {
 		std::vector<glm::vec4> vertices;
 		std::vector<glm::vec4> normals;
+		std::vector<glm::vec2> uv;
 		std::vector<unsigned int> indices;
 		glm::ivec4 counts;
 	};

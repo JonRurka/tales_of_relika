@@ -70,6 +70,7 @@ void Collider::set_rigidbody(btRigidBody* body)
 	if (m_active) {
 		m_rigidbody = body;
 		Physics::Add_Rigidbody(m_rigidbody);
+		m_rigidbody->setUserPointer(this);
 		//Logger::LogDebug(LOG_POS("set_rigidbody"), "Added regidbody.");
 	}
 }

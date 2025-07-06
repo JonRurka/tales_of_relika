@@ -119,8 +119,9 @@ Physics::RayHit Physics::Raycast(glm::vec3 start, glm::vec3 dir)
 	if (closestResults.hasHit())
 	{
 		btVector3 hit_point = from.lerp(to, closestResults.m_closestHitFraction);
-
+		
 		res.did_hit = true;
+		res.collider = (Collider*)closestResults.m_collisionObject->getUserPointer();
 		res.start = start;
 		res.hit_point = to_glm_vector(hit_point);
 		res.normal = to_glm_vector(closestResults.m_hitNormalWorld);

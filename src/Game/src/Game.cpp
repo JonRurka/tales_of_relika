@@ -6,6 +6,7 @@
 #include "VoxelWorld_Scene.h"
 #include "Game_Resources.h"
 #include "Material_Types.h"
+#include "Block_Type.h"
 
 void Game::Init()
 {
@@ -79,9 +80,12 @@ void Game::init_shaders()
 
 void Game::init_block_types()
 {
+	// TODO: This should be loaded from VoxelWorld_Scene after server connect and before terrain gen.
 	m_material_types = new Material_Types();
 	m_material_types->Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
 	m_material_types->Initialize_Materials();
+
+	Block_Type::Init();
 }
 
 void Game::Update(float dt)

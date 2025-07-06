@@ -4,7 +4,7 @@
 
 #include "game_engine.h"
 
-class Game_Resources {
+class Game_Resources : public Resources {
 public:
 
 	class Data_Files {
@@ -53,7 +53,7 @@ public:
 		inline static const std::string CONTAINER_DIFFUSE = "container::container2_diffuse.png";
 		inline static const std::string CONTAINER_SPECULAR = "container::container2_specular.png";
 
-		inline static const std::string WHITE = "Engine::white.png";
+		inline static const std::string WHITE = Engine_Textures::WHITE;
 
 		inline static const std::string SKYBOX_BACK = "skybox::back.jpg";
 		inline static const std::string SKYBOX_BOTTOM = "skybox::bottom.jpg";

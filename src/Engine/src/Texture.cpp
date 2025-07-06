@@ -262,7 +262,7 @@ Texture* Texture::Create_Texture2D_Array(std::vector<std::string> resource_names
 	for (const auto& res_name : resource_names) {
 		if (!Resources::Has_Texture(res_name)) {
 			Logger::LogError(LOG_POS("Create_Texture2D_Array"), "Failed to load texture %s into texture array.", res_name.c_str());
-			continue;
+			//continue;
 		}
 
 		Texture* tex = Resources::Get_Texture(res_name);

@@ -75,6 +75,7 @@ void StructureChunk::Process_Mesh_Update(CubeVoxelBuilder* builder)
 	Chunk_Mesh_Data data{};
 	data.vertices = m_vertex;
 	data.normals = m_normal;
+	data.uv = m_uv;
 	data.indices = m_trianges;
 	data.counts = m_counts;
 
@@ -135,7 +136,7 @@ void StructureChunk::apply_mesh_update()
 	
 	m_voxel_opaque_mesh->Vertices(data.vertices, false);
 	m_voxel_opaque_mesh->Normals(data.normals, false);
-	//m_voxel_opaque_mesh->TexCoords(data.);
+	m_voxel_opaque_mesh->TexCoords(data.uv, false);
 	//m_voxel_opaque_mesh->Indices(data.indices);
 	m_voxel_opaque_mesh->Activate(true);
 

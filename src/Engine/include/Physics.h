@@ -20,6 +20,7 @@ public:
 
 	struct RayHit {
 		bool did_hit;
+		Collider* collider;
 		glm::vec3 start;
 		glm::vec3 hit_point;
 		glm::vec3 normal;

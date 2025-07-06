@@ -4,6 +4,7 @@
 #include "StructureChunk.h"
 #include "Opaque_Structure_Chunk_Material.h"
 #include "Material_Types.h"
+#include "Block_Type.h"
 #include "StructureDataStorage.h"
 
 #include <thread>
@@ -104,6 +105,8 @@ void StructureController::initialize_voxel_engine()
 
 	m_builder = new CubeVoxelBuilder();
 	m_builder->Init(&settings);
+	m_builder->SetRequestTileTextureCallback(Block_Type::GetTileTexture_Callback);
+	m_builder->SetCanRenderCallback(Block_Type::CanRender_Callback);
 
 	m_data_storage = m_builder->Get_Data_Storage();
 

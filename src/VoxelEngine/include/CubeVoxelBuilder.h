@@ -9,7 +9,18 @@ namespace VoxelEngine {
 	class CubeVoxelBuilder {
 	public:
 
+		typedef int(*RequestTileTexturePtr)(int block_id, int tile_id, uint8_t block_orientation);
+		typedef bool(*RequestCanRenderPtr)(int block_id);
+
 		void Init(ChunkSettings* settings);
+
+		void SetRequestTileTextureCallback(RequestTileTexturePtr cb) {
+			m_request_tile_tex_delegate = cb;
+		}
+
+		void SetCanRenderCallback(RequestCanRenderPtr cb) {
+			m_can_render_delegate = cb;
+		}
 
 		glm::dvec4 Render(
 			ChunkRenderOptions* options,
@@ -68,6 +79,8 @@ namespace VoxelEngine {
 
 		Static_Settings m_static_settings{};
 		
+		RequestTileTexturePtr m_request_tile_tex_delegate;
+		RequestCanRenderPtr m_can_render_delegate;
 
 		StructureDataStorage* m_structure_data{ nullptr };
 

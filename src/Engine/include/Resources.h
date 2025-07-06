@@ -11,6 +11,13 @@ class Model;
 class Resources {
 public:
 
+	class Engine_Textures {
+	public:
+		inline static const std::string MISSING_TEXTURE = "Engine::missing_tex.png";
+		inline static const std::string WHITE = "Engine::white.png";
+	};
+
+
 	enum class LoadMode {
 		Binary,
 		Filesystem

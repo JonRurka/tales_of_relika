@@ -95,6 +95,8 @@ void Material_Types::Load_Materials(std::string resource_file_name)
         return;
     }
 
+    int internal_block_id = 1;
+
     std::vector<std::string> sections = reader.Sections();
     for (const auto& elem : sections) {
         Type type = Get_Type(elem);
@@ -108,6 +110,7 @@ void Material_Types::Load_Materials(std::string resource_file_name)
             Terrain_Material mat{};
             mat.Material_Name = mat_name;
             mat.ID = reader.GetInteger(elem, "ID", -1);
+            mat.IsTransparent = reader.GetBoolean(elem, "is_transparent", false);
             mat.Diffuse_Texture_Name = reader.GetString(elem, "texture_diffuse", "");
             mat.Normals_Texture_Name = reader.GetString(elem, "texture_normal", "");
             mat.Blend_Color = Parse_Color(reader.GetString(elem, "blend_color", "0, 0, 0"));
@@ -115,6 +118,11 @@ void Material_Types::Load_Materials(std::string resource_file_name)
             if (mat.ID == -1) {
                 continue;
             }
+
+            if (mat.ID > m_max_id) {
+                m_max_id = mat.ID;
+            }
+
             m_terrain_materials[mat.ID] = mat;
             m_terrain_mat_to_id[mat_name] = mat.ID;
         }
@@ -126,15 +134,38 @@ void Material_Types::Load_Materials(std::string resource_file_name)
             Structure_Material mat{};
             mat.Material_Name = mat_name;
             mat.ID = reader.GetInteger(elem, "ID", -1);
+            mat.IsTransparent = reader.GetBoolean(elem, "is_transparent", false);
+            mat.Material_Processor_Name = reader.GetString(elem, "material_processor", "uniform");
 
-
+            int num_keys = reader.Keys(elem).size();
+            for (int i = 0; i < num_keys; i++) {
+                std::string key_name_diffuse = "texture_" + std::to_string(i + 1) + "_diffuse";
+                std::string key_name_normal = "texture_" + std::to_string(i + 1) + "_normal";
+                if (!reader.HasValue(elem, key_name_diffuse)) {
+                    continue;
+                }
+                if (!reader.HasValue(elem, key_name_normal)) {
+                    continue;
+                }
+                Structure_Material_Texture tex{};
+                tex.Diffuse_Texture_Name = reader.GetString(elem, key_name_diffuse, Game_Resources::Engine_Textures::MISSING_TEXTURE);
+                tex.Normals_Texture_Name = reader.GetString(elem, key_name_normal, Game_Resources::Engine_Textures::MISSING_TEXTURE);
+                mat.Textures.push_back(tex);
+            }
 
 
             if (mat.ID == -1) {
                 continue;
             }
+
+            if (mat.ID > m_max_id) {
+                m_max_id = mat.ID;
+            }
+
+            //mat.Internal_ID = internal_block_id;
             m_structure_materials[mat.ID] = mat;
             m_structure_mat_to_id[mat_name] = mat.ID;
+            internal_block_id++;
         }
     }
 
@@ -144,6 +175,8 @@ void Material_Types::Load_Materials(std::string resource_file_name)
 void Material_Types::Initialize_Materials()
 {
     load_terrain_textures();
+    load_structure_textures();
+
     set_terrain_gen_macros();
 }
 
@@ -246,6 +279,33 @@ void Material_Types::load_terrain_textures()
 
     m_terrain_diffuse_texture_array = Texture::Create_Texture2D_Array(diffuse_tex_resources);
     m_terrain_normal_texture_array = Texture::Create_Texture2D_Array(normal_tex_resources);
+}
+
+void Material_Types::load_structure_textures()
+{
+    std::vector<std::string> diffuse_tex_resources;
+    diffuse_tex_resources.reserve(m_structure_materials.size());
+
+    std::vector<std::string> normal_tex_resources;
+    normal_tex_resources.reserve(m_structure_materials.size());
+
+    int texture_idx = 0;
+    for (auto& elem : m_structure_materials) 
+    {
+        Material_Types::Structure_Material mat = elem.second;
+        int t_i = 0;
+        for (auto& tex_elem : mat.Textures)
+        {
+            diffuse_tex_resources.push_back(tex_elem.Diffuse_Texture_Name);
+            normal_tex_resources.push_back(tex_elem.Normals_Texture_Name);
+            m_structure_materials[elem.first].Textures[t_i].Texture_IDX = texture_idx;
+            ++texture_idx;
+            ++t_i;
+        }
+    }
+
+    m_structure_diffuse_texture_array = Texture::Create_Texture2D_Array(diffuse_tex_resources);
+    m_structure_normal_texture_array = Texture::Create_Texture2D_Array(normal_tex_resources);
 }
 
 void Material_Types::set_terrain_gen_macros()

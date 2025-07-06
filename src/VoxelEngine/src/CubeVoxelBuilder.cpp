@@ -278,6 +278,7 @@ void CubeVoxelBuilder::process_tile_x_plus(uint32_t* data, glm::ivec2 block_info
     int img_id = get_block_image_id(block_info, 0);
 
     glm::vec4 normal = glm::vec4(1, 0, 0, 0);
+    glm::vec2 uv = glm::vec2(img_id, 0);
     glm::vec4 v1 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength, img_id);
     glm::vec4 v2 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id);
     glm::vec4 v3 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id);
@@ -315,6 +316,13 @@ void CubeVoxelBuilder::process_tile_x_plus(uint32_t* data, glm::ivec2 block_info
     out_data.out_normal.push_back(normal); 
     out_data.out_normal.push_back(normal);
 
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+
     out_data.out_counts.x = out_data.out_vertex.size();
 
 
@@ -338,6 +346,7 @@ void CubeVoxelBuilder::process_tile_x_neg(uint32_t* data, glm::ivec2 block_info,
     int img_id = get_block_image_id(block_info, 0);
 
     glm::vec4 normal = glm::vec4(-1, 0, 0, 0);
+    glm::vec2 uv = glm::vec2(img_id, 0);
     glm::vec4 v1 = glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, img_id);
     glm::vec4 v2 = glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id);
     glm::vec4 v3 = glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id);
@@ -375,6 +384,13 @@ void CubeVoxelBuilder::process_tile_x_neg(uint32_t* data, glm::ivec2 block_info,
     out_data.out_normal.push_back(normal);
     out_data.out_normal.push_back(normal);
 
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+
     out_data.out_counts.x = out_data.out_vertex.size();
 
 #endif
@@ -397,6 +413,7 @@ void CubeVoxelBuilder::process_tile_y_plus(uint32_t* data, glm::ivec2 block_info
     int img_id = get_block_image_id(block_info, 0);
 
     glm::vec4 normal = glm::vec4(0, 1, 0, 0);
+    glm::vec2 uv = glm::vec2(img_id, 0);
     glm::vec4 v1 = glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id);
     glm::vec4 v2 = glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id);
     glm::vec4 v3 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id);
@@ -434,6 +451,13 @@ void CubeVoxelBuilder::process_tile_y_plus(uint32_t* data, glm::ivec2 block_info
     out_data.out_normal.push_back(normal);
     out_data.out_normal.push_back(normal);
 
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+
     out_data.out_counts.x = out_data.out_vertex.size();
 
 #endif
@@ -456,6 +480,7 @@ void CubeVoxelBuilder::process_tile_y_neg(uint32_t* data, glm::ivec2 block_info,
     int img_id = get_block_image_id(block_info, 0);
 
     glm::vec4 normal = glm::vec4(0, -1, 0, 0);
+    glm::vec2 uv = glm::vec2(img_id, 0);
     glm::vec4 v1 = glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, img_id);
     glm::vec4 v2 = glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id);
     glm::vec4 v3 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id);
@@ -493,6 +518,13 @@ void CubeVoxelBuilder::process_tile_y_neg(uint32_t* data, glm::ivec2 block_info,
     out_data.out_normal.push_back(normal);
     out_data.out_normal.push_back(normal);
 
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+
     out_data.out_counts.x = out_data.out_vertex.size();
 
 #endif
@@ -515,6 +547,7 @@ void CubeVoxelBuilder::process_tile_z_plus(uint32_t* data, glm::ivec2 block_info
     int img_id = get_block_image_id(block_info, 0);
 
     glm::vec4 normal = glm::vec4(0, 0, 1, 0);
+    glm::vec2 uv = glm::vec2(img_id, 0);
     glm::vec4 v1 = glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id);
     glm::vec4 v2 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id);
     glm::vec4 v3 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id);
@@ -552,6 +585,13 @@ void CubeVoxelBuilder::process_tile_z_plus(uint32_t* data, glm::ivec2 block_info
     out_data.out_normal.push_back(normal);
     out_data.out_normal.push_back(normal);
 
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+
     out_data.out_counts.x = out_data.out_vertex.size();
 
 #endif
@@ -574,6 +614,7 @@ void CubeVoxelBuilder::process_tile_z_neg(uint32_t* data, glm::ivec2 block_info,
     int img_id = get_block_image_id(block_info, 0);
 
     glm::vec4 normal = glm::vec4(0, 0, -1, 0);
+    glm::vec2 uv = glm::vec2(img_id, 0);
     glm::vec4 v1 = glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, img_id);
     glm::vec4 v2 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength, img_id);
     glm::vec4 v3 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id);
@@ -610,6 +651,13 @@ void CubeVoxelBuilder::process_tile_z_neg(uint32_t* data, glm::ivec2 block_info,
     out_data.out_normal.push_back(normal);
     out_data.out_normal.push_back(normal);
     out_data.out_normal.push_back(normal);
+
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
+    out_data.out_uv.push_back(uv);
 
     out_data.out_counts.x = out_data.out_vertex.size();
 
@@ -661,7 +709,7 @@ uint8_t CubeVoxelBuilder::Get_Block_Orientation(uint32_t block_value)
 
 int CubeVoxelBuilder::get_block_image_id(glm::ivec2 info, int tile_id)
 {
-    return 1;
+    return m_request_tile_tex_delegate(info.x, tile_id, info.y);
 }
 
 bool CubeVoxelBuilder::render_enabled(glm::ivec2 info)
@@ -671,5 +719,5 @@ bool CubeVoxelBuilder::render_enabled(glm::ivec2 info)
         return false;
     }
 
-    return true;
+    return m_can_render_delegate(info.x);
 }
