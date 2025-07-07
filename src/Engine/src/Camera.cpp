@@ -177,11 +177,17 @@ void Camera::Activate(bool active)
 			m_active_camera->Activate(false);
 		}
 		m_active_camera = this;
+		m_active_camera->Resize_Refresh();
 		Graphics::Instance()->Set_Screen_FrameTexture(m_framebuffer->Active_Texture());
 	}
 	else if (!active && m_isActive) {
 		m_isActive = false;
 	}
+}
+
+void Camera::Resize_Refresh()
+{
+	update_projection_matrix();
 }
 
 void Camera::create_framebuffer()
@@ -203,7 +209,7 @@ void Camera::update_view_matrix()
 
 void Camera::update_projection_matrix()
 {
-	m_projection = glm::perspective(glm::radians(m_FOV), Screen_Width() / (float)Screen_Height(), m_near, m_far);
+	m_projection = glm::perspective(glm::radians(m_FOV), Graphics::Width() / (float)Graphics::Height(), m_near, m_far);
 }
 
 void Camera::render_skybox(float dt)

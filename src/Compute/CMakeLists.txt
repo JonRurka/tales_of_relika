@@ -85,6 +85,7 @@ target_link_libraries(${module}
 	#GPUOpen::VulkanMemoryAllocator
 	nvpro_core
 	fmt::fmt
+	imgui::imgui
 )
 
 

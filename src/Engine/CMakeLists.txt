@@ -4,6 +4,13 @@ set(module "Engine")
 include_directories(include)
 
 set(${module}_headers
+	include/glad.h
+	include/khrplatform.h
+	include/imgui_impl_glfw.h
+	include/imgui_impl_opengl3.h
+	include/imgui_impl_opengl3_loader.h
+	include/stb_image.h
+
 	include/game_engine.h
 	include/Logger.h
 	include/Framebuffer.h
@@ -11,7 +18,6 @@ set(${module}_headers
 	include/Component.h
 	include/Resources.h
 	include/Cube_Material.h
-	include/glad.h
 	include/Graphics.h
 	include/Engine.h
 	include/input_events.h
@@ -19,7 +25,6 @@ set(${module}_headers
 	#include/Raycast.h
 	include/Physics.h
 	include/Scene.h
-	include/khrplatform.h
 	include/Light_Material.h
 	include/Material.h
 	include/Mesh.h
@@ -28,7 +33,6 @@ set(${module}_headers
 	include/opengl.h
 	include/Renderer.h
 	include/Shader.h
-	include/stb_image.h
 	include/Texture.h
 	include/Cubemap.h
 	include/Transform.h
@@ -48,14 +52,17 @@ set(${module}_headers
 )
 
 set(${module}_sources
+	src/glad.c
+	src/imgui_impl_glfw.cpp
+	src/imgui_impl_opengl3.cpp
+	src/def_stb_image.cpp
+
 	src/Logger.cpp
 	src/Framebuffer.cpp
 	src/Camera.cpp
 	src/Component.cpp
 	src/Resources.cpp
 	src/Cube_Material.cpp
-	src/def_stb_image.cpp
-	src/glad.c
 	src/Graphics.cpp
 	src/Input.cpp
 	#src/Raycast.cpp
@@ -104,6 +111,7 @@ target_link_libraries(${module}
 	sol2::sol2
 	Bullet::Bullet
 	OpenAL::OpenAL
+	imgui::imgui
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
 )

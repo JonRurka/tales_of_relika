@@ -13,6 +13,10 @@ public:
 
 	GLFWwindow* Create_Window(const char* title, int width, int height, void* user_obj = nullptr);
 
+	void refresh_ui_scale();
+
+	float window_scale() { return m_main_scale; }
+
 	void set_title(std::string title);
 
 	bool Should_Close();
@@ -24,6 +28,7 @@ public:
 
 private:
 	GLFWwindow* m_window;
+	float m_main_scale{ 0 };
 	static window* m_instance;
 
 	inline static const std::string LOG_LOC{ "WINDOW" };

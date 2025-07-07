@@ -43,8 +43,8 @@ void StructureController::Init()
 
 	m_chunk_opaque_mat = new Opaque_Structure_Chunk_Material();
 	//m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
-	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance()->Terrain_Diffuse_Texture_Array());
-	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance()->Terrain_Normal_Texture_Array());
+	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance()->Structure_Diffuse_Texture_Array());
+	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance()->Structure_Normal_Texture_Array());
 	m_chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
@@ -130,7 +130,7 @@ void StructureController::process_additions()
 
 		ChunkRef chunk = req.Chunk;
 
-		m_data_storage->Spawn_Chunk(chunk.chunk_coord);
+		bool chunk_spawned = m_data_storage->Spawn_Chunk(chunk.chunk_coord);
 		m_data_storage->Set_Data(chunk.chunk_coord, req.Initial_Data);
 
 		process_chunk(chunk);

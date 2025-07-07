@@ -7,6 +7,8 @@
 #include "Game_Resources.h"
 #include "Material_Types.h"
 #include "Block_Type.h"
+#include "Material_Processor.h"
+#include "Uniform_Material_Processor.h"
 
 void Game::Init()
 {
@@ -84,6 +86,8 @@ void Game::init_block_types()
 	m_material_types = new Material_Types();
 	m_material_types->Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
 	m_material_types->Initialize_Materials();
+
+	Material_Processor::Add<Uniform_Material_Processor>();
 
 	Block_Type::Init();
 }

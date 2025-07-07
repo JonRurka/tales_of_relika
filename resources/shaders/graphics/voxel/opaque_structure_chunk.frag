@@ -135,6 +135,14 @@ layout (location = 11) uniform float globalAmbientIntensity;
 layout (location = 12) uniform vec3 viewPos;
 layout (location = 13) uniform Material material;
 
+uniform sampler2DArray diffuse;
+uniform sampler2DArray normal_maps;
+
+struct SampleResult{
+	vec4 color;
+	vec3 normal;
+};
+
 vec3 UnpackNormal(vec3 normalTex){
 	return -normalize(normalTex.xyz * 2.0 - 1.0);
 }
@@ -142,6 +150,61 @@ vec3 UnpackNormal(vec3 normalTex){
 vec3 TranslateNormal(vec3 vertex_normal, vec3 vertex_tangent, vec3 vertex_bitangent, vec3 tangent_normal){
 	mat3 TBN = mat3(vertex_tangent, vertex_bitangent, vertex_normal);
 	return normalize(TBN * tangent_normal);
+}
+
+SampleResult PlainSample(vec2 pos, float bf, vec3 tint_color, int layer)
+{	
+	vec4 sample_col = vec4(texture(diffuse, vec3(pos.xy, layer)));
+	vec4 sample_norm = vec4(texture(normal_maps, vec3(pos.xy, layer)));
+	
+	vec4 col = sample_col * vec4(tint_color.xyz, 1.0) * vec4(bf);
+	vec4 norm = sample_norm * vec4(bf);
+	
+	SampleResult res;
+	res.color = col;
+	res.normal = norm.xyz;
+	return res;
+}
+
+SampleResult TriSample(vec3 pos, vec3 normal, float scale, vec3 tint_color, int axis, int layer)
+{
+	const float bf = 1.0;
+	
+	// Triplanar mapping
+    vec2 tx = pos.zy * scale;
+    vec2 ty = pos.zx * scale;
+    vec2 tz = pos.xy * scale;
+	
+	vec2 t_axis;
+	if (axis == 0){
+		t_axis = tx;
+	}
+	else if (axis == 1){
+		t_axis = ty;
+	}
+	else{
+		t_axis = tz;
+	}
+	
+	SampleResult rx = PlainSample(t_axis, bf, tint_color, layer);
+	
+	vec4 res_color = rx.color * vec4(tint_color, 1);
+	vec3 res_normal = UnpackNormal(rx.normal);
+	
+	SampleResult res;
+	res.color = res_color;
+	res.normal = res_normal;
+	return res;
+}
+
+SampleResult MatSample(vec3 pos, vec3 normal, vec2 tex_coords)
+{
+	int mat_idx = int(round(tex_coords.x));
+	int axis_idx = int(round(tex_coords.y));
+	
+	SampleResult s1 = TriSample(pos, normal, 1.0f, vec3(1.0, 1.0, 1.0), axis_idx, mat_idx);
+	
+	return s1;
 }
 
 void main()
@@ -152,7 +215,9 @@ void main()
 	//vec3 ambient = 1.0 * globalAmbientLightColor * vec3(1.0f) * vec3(texture(material.diffuse, TexCoords));
 	resColor += ambient;
 	
-	vec3 diffuse_sample = vec3(1.0f, 1.0f, 1.0f);
+	SampleResult sample_res = MatSample(FragPos.xyz, Normal, TexCoords);
+	
+	vec3 diffuse_sample = sample_res.color.xyz;
 	vec3 spec_sample = vec3(0.0f, 0.0f, 0.0f);
 	
 	vec3 frag_normal = Normal;//TranslateNormal(Normal, Tangent, Bitangent, sample_res.normal);

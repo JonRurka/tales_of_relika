@@ -31,5 +31,6 @@ target_link_libraries(${PROJECT_NAME}
 	sol2::sol2
 	Bullet::Bullet
 	inih::inih
+	imgui::imgui
 )
 target_link_libraries(${PROJECT_NAME} Compute VoxelEngine )

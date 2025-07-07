@@ -11,6 +11,10 @@
 
 #include <queue>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 Engine* Engine::m_instance{nullptr};
 
 void Engine::Activate_Scene(Scene* value)
@@ -94,6 +98,10 @@ void Engine::game_loop()
 		
 		process_input();
 		m_physics->update_internal(m_deltaTime);
+
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		if (Active_Scene() != nullptr)
 		{

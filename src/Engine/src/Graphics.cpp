@@ -21,6 +21,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+
+
 #define DEFAULT_SCREEN_WIDTH 800
 #define DEFAULT_SCREEN_HEIGHT 600
 
@@ -50,10 +56,30 @@ void Graphics::Initialize()
 	m_width = DEFAULT_SCREEN_WIDTH;
 	m_height = DEFAULT_SCREEN_HEIGHT;
 
+	m_window = w.Create_Window("Game", m_width, m_height, this);
 
-	m_window = w.Create_Window("Learn OpenGL", m_width, m_height, this);
+	m_width *= w.window_scale();
+	m_height *= w.window_scale();
 
-	
+	Viewport(0, 0, m_width, m_height);
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	m_io = ImGui::GetIO();
+	m_io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	m_io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+	// Setup scaling
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.ScaleAllSizes(w.window_scale());        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+	style.FontScaleDpi = w.window_scale();        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
+
+	// Setup Platform/Renderer backends
+	const char* glsl_version = "#version 450";
+	ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+
+
 
 	glEnable(GL_DEPTH_TEST);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -146,11 +172,20 @@ void Graphics::Update(float dt)
 	}*/
 
 	glfwSwapBuffers(m_window);
+
+
 }
 
 bool Graphics::Window_Should_Close()
 {
 	return w.Should_Close();
+}
+
+void Graphics::Viewport(int x, int y, int width, int height)
+{
+	glViewport(x, y, width, height);
+	//Logger::LogDebug(LOG_POS("Viewport"), "Viewport: (%i, %i, %i, %i)",
+	//	x, y, width, height);
 }
 
 void Graphics::Set_Screen_FrameTexture(Texture* tex)
@@ -167,12 +202,25 @@ void Graphics::OnWindowResize(int width, int height)
 {
 	if (!m_initialized)
 		return;
+	//Logger::LogDebug(LOG_POS("OnWindowResize"), "");
+	//Logger::LogDebug(LOG_POS("OnWindowResize"), "##### WINDOW RESIZE START #####");
+
+	w.refresh_ui_scale();
 	m_width = width;
 	m_height = height;
 
+	//Logger::LogDebug(LOG_POS("OnWindowResize"), "New Window Size (%i): (%i, %i)",
+	//	m_resize_textures.size(), m_width, m_height);
+
+	Viewport(0, 0, m_width, m_height);
+
 	for (const auto& tex : m_resize_textures) {
-		tex->Resize(width, height);
+		tex->Resize(m_width, m_height);
 	}
+
+	Camera::Get_Active()->Resize_Refresh();
+
+	//Logger::LogDebug(LOG_POS("OnWindowResize"), "##### WINDOW RESIZE STOP #####\n");
 }
 
 void Graphics::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -188,6 +236,16 @@ void Graphics::cursor_position_callback(GLFWwindow* window, double xpos, double 
 void Graphics::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
 	Input::Instance()->mouse_button_callback(window, button, action, mods);
+}
+
+void Graphics::Register_Resize_Tex(Texture* tex)
+{
+	m_resize_textures.push_back(tex);
+}
+
+void Graphics::Remove_Resize_Tex(Texture* tex)
+{
+	Remove_If_Found(m_resize_textures, tex);
 }
 
 
@@ -208,12 +266,16 @@ void Graphics::render(float dt)
 	if (!m_initialized)
 		return;
 
+	
+
+	//ImGui::ShowDemoWindow();
+
 	Camera* active_cam = Camera::Get_Active();
 	if (active_cam == nullptr)
 		return;
 
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 
@@ -268,6 +330,9 @@ void Graphics::render(float dt)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void Graphics::update_window_title(std::string title)

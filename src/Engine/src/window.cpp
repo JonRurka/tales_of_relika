@@ -4,6 +4,8 @@
 #include <iostream>
 
 #include "opengl.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
 
 #include <Graphics.h>
 #include <Engine.h>
@@ -33,7 +35,6 @@ namespace {
 
     void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     {
-        glViewport(0, 0, width, height);
         Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
         if (user_ptr == nullptr)
             return;
@@ -126,7 +127,12 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 
-	m_window = glfwCreateWindow(width, height, title, NULL, NULL);
+    refresh_ui_scale();
+
+    int scaled_width = (width * m_main_scale);
+    int scaled_height = (height * m_main_scale);
+
+	m_window = glfwCreateWindow(scaled_width, scaled_height, title, NULL, NULL);
 	glfwSetWindowUserPointer(m_window, user_obj);
 	if (m_window == NULL)
 	{
@@ -140,8 +146,6 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
 	}
-
-	glViewport(0, 0, width, height);
 
 	glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
     glfwSetKeyCallback(m_window, static_key_callback);
@@ -166,6 +170,11 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
     load_module();
 
     return m_window;
+}
+
+void window::refresh_ui_scale()
+{
+    m_main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
 }
 
 void window::set_title(std::string title)

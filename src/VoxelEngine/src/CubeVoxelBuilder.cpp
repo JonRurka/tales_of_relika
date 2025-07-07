@@ -277,6 +277,11 @@ void CubeVoxelBuilder::process_tile_x_plus(uint32_t* data, glm::ivec2 block_info
 
     int img_id = get_block_image_id(block_info, 0);
 
+    if (img_id == -1) {
+        // TODO: Shouldn't happen.
+        return;
+    }
+
     glm::vec4 normal = glm::vec4(1, 0, 0, 0);
     glm::vec2 uv = glm::vec2(img_id, 0);
     glm::vec4 v1 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength, img_id);
@@ -413,7 +418,7 @@ void CubeVoxelBuilder::process_tile_y_plus(uint32_t* data, glm::ivec2 block_info
     int img_id = get_block_image_id(block_info, 0);
 
     glm::vec4 normal = glm::vec4(0, 1, 0, 0);
-    glm::vec2 uv = glm::vec2(img_id, 0);
+    glm::vec2 uv = glm::vec2(img_id, 1);
     glm::vec4 v1 = glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id);
     glm::vec4 v2 = glm::vec4(x * _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id);
     glm::vec4 v3 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id);
@@ -480,7 +485,7 @@ void CubeVoxelBuilder::process_tile_y_neg(uint32_t* data, glm::ivec2 block_info,
     int img_id = get_block_image_id(block_info, 0);
 
     glm::vec4 normal = glm::vec4(0, -1, 0, 0);
-    glm::vec2 uv = glm::vec2(img_id, 0);
+    glm::vec2 uv = glm::vec2(img_id, 1);
     glm::vec4 v1 = glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, img_id);
     glm::vec4 v2 = glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id);
     glm::vec4 v3 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id);
@@ -547,7 +552,7 @@ void CubeVoxelBuilder::process_tile_z_plus(uint32_t* data, glm::ivec2 block_info
     int img_id = get_block_image_id(block_info, 0);
 
     glm::vec4 normal = glm::vec4(0, 0, 1, 0);
-    glm::vec2 uv = glm::vec2(img_id, 0);
+    glm::vec2 uv = glm::vec2(img_id, 2);
     glm::vec4 v1 = glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id);
     glm::vec4 v2 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength + _sideLength, img_id);
     glm::vec4 v3 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength + _sideLength, img_id);
@@ -614,7 +619,7 @@ void CubeVoxelBuilder::process_tile_z_neg(uint32_t* data, glm::ivec2 block_info,
     int img_id = get_block_image_id(block_info, 0);
 
     glm::vec4 normal = glm::vec4(0, 0, -1, 0);
-    glm::vec2 uv = glm::vec2(img_id, 0);
+    glm::vec2 uv = glm::vec2(img_id, 2);
     glm::vec4 v1 = glm::vec4(x * _sideLength, y * _sideLength, z * _sideLength, img_id);
     glm::vec4 v2 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength, z * _sideLength, img_id);
     glm::vec4 v3 = glm::vec4(x * _sideLength + _sideLength, y * _sideLength + _sideLength, z * _sideLength, img_id);
@@ -675,6 +680,14 @@ bool CubeVoxelBuilder::neighboor_filed(uint32_t* data, glm::ivec3 this_voxel, gl
     return render_enabled(block_info);
 }
 
+
+uint32_t VoxelEngine::CubeVoxelBuilder::New_Block_Data(uint32_t type, uint8_t orientation)
+{
+    uint32_t data = 0;
+    Set_Block_Type(data, type);
+    Set_Block_Orientation(data, orientation);
+    return data;
+}
 
 uint32_t CubeVoxelBuilder::Set_Block_Orientation(uint32_t& init_value, uint8_t val)
 {

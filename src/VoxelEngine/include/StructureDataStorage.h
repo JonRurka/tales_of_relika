@@ -31,6 +31,8 @@ public:
 
 	std::vector<uint32_t> Get_Data(glm::ivec3 chunk_coord);
 
+	uint32_t Get_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord);
+
 	bool Has_Chunk(glm::ivec3 chunk_coord);
 
 	size_t Data_Size();

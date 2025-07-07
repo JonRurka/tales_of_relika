@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include "Framebuffer.h"
 #include "Resources.h"
+#include "Graphics.h"
 
 
 Texture::Texture(const std::string path, bool flip)
@@ -193,7 +194,7 @@ Texture::Texture(const std::vector<Texture*> textures)
 	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }
 
-Texture::Texture(const int width, const int height)
+Texture::Texture(const int width, const int height, bool auto_resize)
 {
 	m_dim = Dimensions::RENDER_TEXTURE_2D;
 	m_width = width;
@@ -210,6 +211,10 @@ Texture::Texture(const int width, const int height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	if (auto_resize) {
+		Graphics::Instance()->Register_Resize_Tex(this);
+	}
 }
 
 GLenum Texture::Target_Type()
@@ -254,6 +259,15 @@ void Texture::Wrap(Wrap_Mode value)
 	glBindTexture(Target_Type(), 0);
 }
 
+void Texture::Dispose()
+{
+	if (m_resizable) {
+		Graphics::Instance()->Remove_Resize_Tex(this);
+	}
+
+	glDeleteTextures(1, &m_texture);
+}
+
 Texture* Texture::Create_Texture2D_Array(std::vector<std::string> resource_names, bool flip)
 {
 	std::vector<Texture*> textures;
@@ -274,6 +288,8 @@ Texture* Texture::Create_Texture2D_Array(std::vector<std::string> resource_names
 
 void Texture::Resize(int width, int height)
 {
+	//Logger::LogDebug(LOG_POS("Resize"), "Attempting resize: %i",
+	//	m_resizable ? 1 : 0);
 	if (m_resizable) {
 
 		glDeleteTextures(1, &m_texture);
@@ -287,6 +303,9 @@ void Texture::Resize(int width, int height)
 		glTexParameteri(Target_Type(), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		glBindTexture(Target_Type(), 0);
+
+		//Logger::LogDebug(LOG_POS("Resize"), "New Render Texture Width: (%i, %i)",
+		//	width, height);
 
 		for (const auto& elem : m_linked_framebuffers)
 		{

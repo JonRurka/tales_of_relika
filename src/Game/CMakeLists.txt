@@ -82,6 +82,7 @@ target_link_libraries(${module}
 	Bullet::Bullet
 	OpenAL::OpenAL
 	inih::inih
+	imgui::imgui
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
 )

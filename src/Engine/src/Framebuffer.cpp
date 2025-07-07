@@ -3,6 +3,7 @@
 #include "Texture.h"
 #include "Graphics.h"
 #include "Utilities.h"
+#include "Logger.h"
 
 #include <algorithm>
 
@@ -16,13 +17,20 @@ void Framebuffer::Refresh(bool gen_image)
 	if (m_framebuffer_obj != 0) {
 		glDeleteFramebuffers(1, &m_framebuffer_obj);
 	}
+	//Logger::LogDebug(LOG_POS("Refresh"), "Refresh Framebuffer.");
+
 
 	glGenFramebuffers(1, &m_framebuffer_obj);
 	//glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_obj);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	if (gen_image) {
-		m_default_texture = new Texture(Graphics::Width(), Graphics::Height());
+		if (m_active_texture != nullptr) {
+			m_active_texture->Dispose();
+			m_active_texture = nullptr;
+		}
+
+		m_default_texture = new Texture(Graphics::Width(), Graphics::Height(), true);
 		m_active_texture = m_default_texture;
 	}
 
@@ -42,6 +50,7 @@ void Framebuffer::Bind_Texture(Texture* texture)
 
 	m_active_texture = texture;
 	m_active_texture->m_linked_framebuffers.push_back(this);
+	//Logger::LogDebug(LOG_POS("Bind_Texture"), "Bind Texture: %i", m_active_texture->m_linked_framebuffers.size());
 }
 
 void Framebuffer::Init_Depth_Stencil()
@@ -79,4 +88,12 @@ void Framebuffer::Use(bool active)
 	else {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
+}
+
+void Framebuffer::Dispose()
+{
+	m_active_texture->Dispose();
+	m_active_texture = nullptr;
+
+	glDeleteRenderbuffers(1, &m_renderbuffer_obj);
 }

@@ -2,6 +2,8 @@
 
 #include "Logger.h"
 
+std::unordered_map<std::string, Material_Processor*> Material_Processor::m_processors;
+
 void Material_Processor::initialize_material_processor(Material_Processor* mat_processor)
 {
 	mat_processor->Init();

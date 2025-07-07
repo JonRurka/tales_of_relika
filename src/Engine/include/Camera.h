@@ -61,6 +61,8 @@ public:
 	
 	void Activate(bool active);
 
+	void Resize_Refresh();
+
 private:
 	glm::mat4 m_projection;
 	glm::mat4 m_view;
@@ -69,8 +71,6 @@ private:
 	glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	unsigned int m_screen_width = 800;
-	unsigned int m_screen_height = 600;
 	float m_FOV = 45.0f;
 	float m_near = 0.1f;
 	float m_far = 1000.0f;
@@ -84,10 +84,6 @@ private:
 	Framebuffer* m_framebuffer{nullptr};
 
 	GPUSort* m_sort{ nullptr };
-
-
-	unsigned int Screen_Width() { return m_screen_width; }
-	unsigned int Screen_Height() { return m_screen_height; }
 
 	Transform* m_transform;
 

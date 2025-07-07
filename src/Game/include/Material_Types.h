@@ -62,6 +62,9 @@ public:
 	Texture* Terrain_Diffuse_Texture_Array() { return m_terrain_diffuse_texture_array; }
 	Texture* Terrain_Normal_Texture_Array() { return m_terrain_normal_texture_array; }
 
+	Texture* Structure_Diffuse_Texture_Array() { return m_structure_diffuse_texture_array; }
+	Texture* Structure_Normal_Texture_Array() { return m_structure_normal_texture_array; }
+
 	int Max_ID() { return m_max_id; }
 
 	static Material_Types* Instance() { return m_instance; }

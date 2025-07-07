@@ -21,7 +21,11 @@ private:
 	ISO_Sampler* m_iso_sampler{ nullptr };
 	double m_edit_timer{0};
 
-	
+	bool show_demo_window = true;
+	bool show_another_window = false;
+	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+	void draw_ui();
 
 	void left_click_block(glm::vec3 hit_point, glm::vec3 normal);
 	void right_click_block(glm::vec3 hit_point, glm::vec3 normal);

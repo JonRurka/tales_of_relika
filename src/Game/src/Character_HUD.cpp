@@ -3,6 +3,10 @@
 #include "WorldGenController.h"
 #include "StructureController.h"
 #include "CubeVoxelBuilder.h"
+#include "Block_Type.h"
+#include "Block.h"
+
+#include "imgui.h"
 
 using namespace VoxelEngine;
 
@@ -38,6 +42,8 @@ void Character_HUD::Update(float dt)
 		can_place = true;
 	}
 
+	draw_ui();
+
 	glm::vec3 ray_start;
 	glm::vec3 ray_dir;
 	m_camera->ScreenPointToRay(Input::Get_Mouse_Position(), ray_start, ray_dir);
@@ -68,6 +74,47 @@ void Character_HUD::Update(float dt)
 }
 
 
+
+void Character_HUD::draw_ui()
+{
+	//ImGuiWindowFlags flags;
+	//flags
+	//ImGui::Begin(".");
+	//ImGui::Text("This is a text box.");
+	//ImGui::End();
+
+
+	/*{
+		static float f = 0.0f;
+		static int counter = 0;
+
+		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+
+		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+		ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+		ImGui::Checkbox("Another Window", &show_another_window);
+
+		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+		if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+			counter++;
+		ImGui::SameLine();
+		ImGui::Text("counter = %d", counter);
+
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / Graphics::GUI_IO().Framerate, Graphics::GUI_IO().Framerate);
+		ImGui::End();
+	}
+
+	if (show_another_window)
+	{
+		ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+		ImGui::Text("Hello from another window!");
+		if (ImGui::Button("Close Me"))
+			show_another_window = false;
+		ImGui::End();
+	}*/
+}
 
 void Character_HUD::left_click_block(glm::vec3 hit_point, glm::vec3 normal)
 {
@@ -109,11 +156,15 @@ void Character_HUD::right_click_terrain(glm::vec3 hit_point, glm::vec3 normal, g
 void Character_HUD::left_click_structure(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord)
 {
 	Logger::LogDebug(LOG_POS("left_click_structure"), "Structure Click.");
-	glm::ivec3 chunk = StructureController::VoxelToChunk(voxel_coord);
-	glm::ivec3 voxel_local = WorldGenController::GlobalToLocalChunkCoord(chunk, voxel_coord);
 
-	uint32_t block_type_raw = 0;
-	CubeVoxelBuilder::Set_Block_Type(block_type_raw, 1);
+	Block target_block = Block::Get_Block(voxel_coord);
+	target_block.Set_Type(Block_Type::Brick);
+
+	//glm::ivec3 chunk = StructureController::VoxelToChunk(voxel_coord);
+	//glm::ivec3 voxel_local = WorldGenController::GlobalToLocalChunkCoord(chunk, voxel_coord);
+
+	/*uint32_t block_type_raw = 0;
+	CubeVoxelBuilder::Set_Block_Type(block_type_raw, 4);
 	CubeVoxelBuilder::Set_Block_Orientation(block_type_raw, 0);
 
 	if (!StructureController::Instance()->Chunk_Exists(chunk)) {
@@ -128,7 +179,7 @@ void Character_HUD::left_click_structure(glm::vec3 hit_point, glm::vec3 normal, 
 		StructureController::Instance()->Modify_Voxel_Type(voxel_coord, block_type_raw);
 			Logger::LogDebug(LOG_POS("left_click_structure"), "Placing Block");
 		
-	}
+	}*/
 
 	
 }

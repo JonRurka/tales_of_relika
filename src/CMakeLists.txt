@@ -52,6 +52,7 @@ target_link_libraries(${PROJECT_NAME}
 	Bullet::Bullet
 	OpenAL::OpenAL
 	inih::inih
+	imgui::imgui
 	#vulkan-headers::vulkan-headers
 	nvpro_core
 	#GPUOpen::VulkanMemoryAllocator

@@ -39,7 +39,7 @@ public:
 
 	Texture(const std::vector<Texture*> textures);
 
-	Texture(const int width, const int height);
+	Texture(const int width, const int height, bool auto_resize = false);
 
 	GLuint Tex() { return m_texture; }
 
@@ -69,6 +69,8 @@ public:
 	void Bind(GLenum texture_unit);
 
 	void Wrap(Wrap_Mode value);
+
+	void Dispose();
 
 	static Texture* Create_Texture2D_Array(std::vector<std::string> resource_names, bool flip = true);
 

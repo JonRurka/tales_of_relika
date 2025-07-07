@@ -2,11 +2,15 @@
 
 #include "window.h"
 
+#include "imgui.h"
+
 #include <string>
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+
 
 struct GLFWwindow;
 class Texture;
@@ -48,7 +52,11 @@ public:
 
 	void Clear_Color(glm::vec4 value) { m_clear_color = value; }
 
+	void Viewport(int x, int y, int width, int height);
+
 	GLFWwindow* Get_GLFW_Window() { return m_window; }
+
+	static ImGuiIO& GUI_IO() { return m_instance->m_io; }
 
 	const Render_Options Active_Options() { return m_active_options; }
 
@@ -62,6 +70,10 @@ public:
 	void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/);
+
+	void Register_Resize_Tex(Texture* tex);
+
+	void Remove_Resize_Tex(Texture* tex);
 
 private:
 
@@ -80,6 +92,8 @@ private:
 	int m_width{ 0 };
 	int m_height{ 0 };
 	static Graphics* m_instance;
+
+	ImGuiIO m_io;
 
 	bool m_initialized{ false };
 

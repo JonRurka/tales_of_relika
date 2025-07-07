@@ -70,7 +70,7 @@ public:
 	void Submit_Structure_Modification(glm::ivec3 chunk, StructureMod value);
 	void Submit_Structure_Modification(glm::ivec3 chunk, std::vector<StructureMod> values);
 	
-
+	StructureDataStorage* Get_Data_Storage() { return m_data_storage; }
 
 	static glm::ivec3 WorldPosToChunkCoord(glm::fvec3 pos) { return m_Instance->worldPosToChunkCoord(pos); }
 

@@ -32,6 +32,8 @@ namespace VoxelEngine {
 
 		StructureDataStorage* Get_Data_Storage() { return m_structure_data; }
 
+		static uint32_t New_Block_Data(uint32_t type, uint8_t orientation);
+
 		static uint32_t Set_Block_Orientation(uint32_t& init_value, uint8_t val);
 		static uint32_t Set_Block_Type(uint32_t& init_value, uint32_t val);
 
