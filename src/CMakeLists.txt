@@ -6,6 +6,21 @@ include_directories(VoxelEngine/include)
 include_directories(Engine/include)
 include_directories(Game/include)
 include_directories(Server/include)
+include_directories(UI/include)
+
+
+## Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
+#add_library(rmlui_bin SHARED IMPORTED )
+#set_target_properties(rmlui_bin PROPERTIES 
+#	IMPORTED_LOCATION ${RmlUi_BINARY}/rmlui.dll
+#	IMPORTED_IMPLIB ${RmlUi_LIBRARY}/rmlui.lib
+#)
+#
+#add_library(rmlui_debugger_bin SHARED IMPORTED)
+#set_target_properties(rmlui_debugger_bin PROPERTIES 
+#	IMPORTED_LOCATION ${RmlUi_BINARY}/rmlui_debugger.dll 
+#	IMPORTED_IMPLIB ${RmlUi_LIBRARY}/rmlui_debugger.lib
+#)
 
 #add_subdirectory(LuaCpp)
 add_subdirectory(Compute)
@@ -13,6 +28,7 @@ add_subdirectory(VoxelEngine)
 add_subdirectory(Engine)
 add_subdirectory(Server)
 add_subdirectory(Game)
+add_subdirectory(UI)
 add_subdirectory(Server_Exe)
 
 # Add X11 for screenshot support on linux
@@ -56,5 +72,10 @@ target_link_libraries(${PROJECT_NAME}
 	#vulkan-headers::vulkan-headers
 	nvpro_core
 	#GPUOpen::VulkanMemoryAllocator
+	rmlui
+	rmlui_debugger
+	rmlui_shell
 )
-target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Game Server)
+
+
+target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Game Server UI)

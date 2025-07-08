@@ -50,8 +50,17 @@ if (NDEBUG)
 else()
 	set(nvpro_core_LIBRARY ${PROJECT_SOURCE_DIR}/lib/nvpro_core/Debug)
 endif()
-
 link_directories(${nvpro_core_LIBRARY})
+
+if (NDEBUG)
+	set(RmlUi_LIBRARY ${PROJECT_SOURCE_DIR}/lib/RmlUi/Release)
+	set(RmlUi_BINARY ${PROJECT_SOURCE_DIR}/bin/RmlUi/Release)
+else()
+	set(RmlUi_LIBRARY ${PROJECT_SOURCE_DIR}/lib/RmlUi/Debug)
+	set(RmlUi_BINARY ${PROJECT_SOURCE_DIR}/bin/RmlUi/Debug)
+endif()
+link_directories(${RmlUi_LIBRARY})
+
 
 add_subdirectory(src)
 

@@ -25,6 +25,10 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include <RmlUi/Core.h>
+#include <RmlUi/Debugger.h>
+#include "RmlUi_Platform_GLFW.h"
+#include "RmlUi_Renderer_GL3.h"
 
 
 #define DEFAULT_SCREEN_WIDTH 800

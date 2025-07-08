@@ -1,0 +1,395 @@
+set(module "UI")
+
+set(${module}_files
+	BaseXMLParser.cpp
+	Box.cpp
+	CallbackTexture.cpp
+	Clock.cpp
+	Clock.h
+	CompiledFilterShader.cpp
+	ComputedValues.cpp
+	ComputeProperty.cpp
+	ComputeProperty.h
+	Context.cpp
+	ContextInstancer.cpp
+	ContextInstancerDefault.cpp
+	ContextInstancerDefault.h
+	ControlledLifetimeResource.h
+	ConvolutionFilter.cpp
+	Core.cpp
+	DataController.cpp
+	DataController.h
+	DataControllerDefault.cpp
+	DataControllerDefault.h
+	DataExpression.cpp
+	DataExpression.h
+	DataModel.cpp
+	DataModel.h
+	DataModelHandle.cpp
+	DataTypeRegister.cpp
+	DataVariable.cpp
+	DataView.cpp
+	DataView.h
+	DataViewDefault.cpp
+	DataViewDefault.h
+	Decorator.cpp
+	DecoratorGradient.cpp
+	DecoratorGradient.h
+	DecoratorNinePatch.cpp
+	DecoratorNinePatch.h
+	DecoratorShader.cpp
+	DecoratorShader.h
+	DecoratorText.cpp
+	DecoratorText.h
+	DecoratorTiled.cpp
+	DecoratorTiled.h
+	DecoratorTiledBox.cpp
+	DecoratorTiledBox.h
+	DecoratorTiledHorizontal.cpp
+	DecoratorTiledHorizontal.h
+	DecoratorTiledImage.cpp
+	DecoratorTiledImage.h
+	DecoratorTiledVertical.cpp
+	DecoratorTiledVertical.h
+	DecoratorUtilities.cpp
+	DecoratorUtilities.h
+	DocumentHeader.cpp
+	DocumentHeader.h
+	EffectSpecification.cpp
+	Element.cpp
+	ElementAnimation.cpp
+	ElementAnimation.h
+	ElementBackgroundBorder.cpp
+	ElementBackgroundBorder.h
+	ElementDefinition.cpp
+	ElementDefinition.h
+	ElementDocument.cpp
+	ElementEffects.cpp
+	ElementEffects.h
+	ElementHandle.cpp
+	ElementHandle.h
+	ElementInstancer.cpp
+	ElementMeta.cpp
+	ElementMeta.h
+	ElementScroll.cpp
+	ElementStyle.cpp
+	ElementStyle.h
+	ElementText.cpp
+	ElementUtilities.cpp
+	Event.cpp
+	EventDispatcher.cpp
+	EventDispatcher.h
+	EventInstancer.cpp
+	EventInstancerDefault.cpp
+	EventInstancerDefault.h
+	EventListenerInstancer.cpp
+	EventSpecification.cpp
+	EventSpecification.h
+	Factory.cpp
+	FileInterface.cpp
+	FileInterfaceDefault.cpp
+	FileInterfaceDefault.h
+	Filter.cpp
+	FilterBasic.cpp
+	FilterBasic.h
+	FilterBlur.cpp
+	FilterBlur.h
+	FilterDropShadow.cpp
+	FilterDropShadow.h
+	FontEffect.cpp
+	FontEffectBlur.cpp
+	FontEffectBlur.h
+	FontEffectGlow.cpp
+	FontEffectGlow.h
+	FontEffectInstancer.cpp
+	FontEffectOutline.cpp
+	FontEffectOutline.h
+	FontEffectShadow.cpp
+	FontEffectShadow.h
+	FontEngineInterface.cpp
+	Geometry.cpp
+	GeometryBackgroundBorder.cpp
+	GeometryBackgroundBorder.h
+	GeometryBoxShadow.cpp
+	GeometryBoxShadow.h
+	IdNameMap.h
+	Log.cpp
+	LogDefault.cpp
+	LogDefault.h
+	Math.cpp
+	Memory.cpp
+	Memory.h
+	MeshUtilities.cpp
+	ObserverPtr.cpp
+	Plugin.cpp
+	PluginRegistry.cpp
+	PluginRegistry.h
+	Pool.h
+	precompiled.h
+	Profiling.cpp
+	PropertiesIterator.h
+	PropertiesIteratorView.cpp
+	Property.cpp
+	PropertyDefinition.cpp
+	PropertyDictionary.cpp
+	PropertyParserAnimation.cpp
+	PropertyParserAnimation.h
+	PropertyParserBoxShadow.cpp
+	PropertyParserBoxShadow.h
+	PropertyParserColorStopList.cpp
+	PropertyParserColorStopList.h
+	PropertyParserColour.cpp
+	PropertyParserColour.h
+	PropertyParserDecorator.cpp
+	PropertyParserDecorator.h
+	PropertyParserFilter.cpp
+	PropertyParserFilter.h
+	PropertyParserFontEffect.cpp
+	PropertyParserFontEffect.h
+	PropertyParserKeyword.cpp
+	PropertyParserKeyword.h
+	PropertyParserNumber.cpp
+	PropertyParserNumber.h
+	PropertyParserRatio.cpp
+	PropertyParserRatio.h
+	PropertyParserString.cpp
+	PropertyParserString.h
+	PropertyParserTransform.cpp
+	PropertyParserTransform.h
+	PropertyShorthandDefinition.h
+	PropertySpecification.cpp
+	RenderInterface.cpp
+	RenderInterfaceCompatibility.cpp
+	RenderManager.cpp
+	RenderManagerAccess.cpp
+	RenderManagerAccess.h
+	ScrollController.cpp
+	ScrollController.h
+	Spritesheet.cpp
+	Stream.cpp
+	StreamFile.cpp
+	StreamFile.h
+	StreamMemory.cpp
+	StringUtilities.cpp
+	StyleSheet.cpp
+	StyleSheetContainer.cpp
+	StyleSheetFactory.cpp
+	StyleSheetFactory.h
+	StyleSheetNode.cpp
+	StyleSheetNode.h
+	StyleSheetParser.cpp
+	StyleSheetParser.h
+	StyleSheetSelector.cpp
+	StyleSheetSelector.h
+	StyleSheetSpecification.cpp
+	SystemInterface.cpp
+	Template.cpp
+	Template.h
+	TemplateCache.cpp
+	TemplateCache.h
+	Texture.cpp
+	TextureDatabase.cpp
+	TextureDatabase.h
+	TextureLayout.cpp
+	TextureLayout.h
+	TextureLayoutRectangle.cpp
+	TextureLayoutRectangle.h
+	TextureLayoutRow.cpp
+	TextureLayoutRow.h
+	TextureLayoutTexture.cpp
+	TextureLayoutTexture.h
+	Traits.cpp
+	Transform.cpp
+	TransformPrimitive.cpp
+	TransformState.cpp
+	TransformState.h
+	TransformUtilities.cpp
+	TransformUtilities.h
+	Tween.cpp
+	TypeConverter.cpp
+	URL.cpp
+	Variant.cpp
+	WidgetScroll.cpp
+	WidgetScroll.h
+	XMLNodeHandler.cpp
+	XMLNodeHandlerBody.cpp
+	XMLNodeHandlerBody.h
+	XMLNodeHandlerDefault.cpp
+	XMLNodeHandlerDefault.h
+	XMLNodeHandlerHead.cpp
+	XMLNodeHandlerHead.h
+	XMLNodeHandlerTemplate.cpp
+	XMLNodeHandlerTemplate.h
+	XMLParser.cpp
+	XMLParseTools.cpp
+	XMLParseTools.h
+)
+
+add_library(${module} STATIC ${${module}_files})
+
+# Add public headers as files in the project (it's not necessary but convenient for IDE integration)
+# Setting them as PRIVATE so that it's addition doesn't propagate, it won't affect availability since
+# the entire include directory has already been declared as public
+target_sources(${module} PRIVATE
+	"../../include/RmlUi/Config/Config.h"
+	"../../include/RmlUi/Core.h"
+	"../../include/RmlUi/Core/BaseXMLParser.h"
+	"../../include/RmlUi/Core/Box.h"
+	"../../include/RmlUi/Core/CallbackTexture.h"
+	"../../include/RmlUi/Core/Colour.h"
+	"../../include/RmlUi/Core/Colour.inl"
+	"../../include/RmlUi/Core/CompiledFilterShader.h"
+	"../../include/RmlUi/Core/ComputedValues.h"
+	"../../include/RmlUi/Core/Containers/itlib/flat_map.hpp"
+	"../../include/RmlUi/Core/Containers/itlib/flat_set.hpp"
+	"../../include/RmlUi/Core/Containers/robin_hood.h"
+	"../../include/RmlUi/Core/Context.h"
+	"../../include/RmlUi/Core/ContextInstancer.h"
+	"../../include/RmlUi/Core/ConvolutionFilter.h"
+	"../../include/RmlUi/Core/Core.h"
+	"../../include/RmlUi/Core/DataModelHandle.h"
+	"../../include/RmlUi/Core/DataStructHandle.h"
+	"../../include/RmlUi/Core/DataTypeRegister.h"
+	"../../include/RmlUi/Core/DataTypes.h"
+	"../../include/RmlUi/Core/DataVariable.h"
+	"../../include/RmlUi/Core/Debug.h"
+	"../../include/RmlUi/Core/DecorationTypes.h"
+	"../../include/RmlUi/Core/Decorator.h"
+	"../../include/RmlUi/Core/Dictionary.h"
+	"../../include/RmlUi/Core/EffectSpecification.h"
+	"../../include/RmlUi/Core/Element.h"
+	"../../include/RmlUi/Core/Element.inl"
+	"../../include/RmlUi/Core/ElementDocument.h"
+	"../../include/RmlUi/Core/ElementInstancer.h"
+	"../../include/RmlUi/Core/ElementScroll.h"
+	"../../include/RmlUi/Core/Elements/ElementForm.h"
+	"../../include/RmlUi/Core/Elements/ElementFormControl.h"
+	"../../include/RmlUi/Core/Elements/ElementFormControlInput.h"
+	"../../include/RmlUi/Core/Elements/ElementFormControlSelect.h"
+	"../../include/RmlUi/Core/Elements/ElementFormControlTextArea.h"
+	"../../include/RmlUi/Core/Elements/ElementProgress.h"
+	"../../include/RmlUi/Core/Elements/ElementTabSet.h"
+	"../../include/RmlUi/Core/ElementText.h"
+	"../../include/RmlUi/Core/ElementUtilities.h"
+	"../../include/RmlUi/Core/Event.h"
+	"../../include/RmlUi/Core/EventInstancer.h"
+	"../../include/RmlUi/Core/EventListener.h"
+	"../../include/RmlUi/Core/EventListenerInstancer.h"
+	"../../include/RmlUi/Core/Factory.h"
+	"../../include/RmlUi/Core/FileInterface.h"
+	"../../include/RmlUi/Core/Filter.h"
+	"../../include/RmlUi/Core/FontEffect.h"
+	"../../include/RmlUi/Core/FontEffectInstancer.h"
+	"../../include/RmlUi/Core/FontEngineInterface.h"
+	"../../include/RmlUi/Core/FontGlyph.h"
+	"../../include/RmlUi/Core/FontMetrics.h"
+	"../../include/RmlUi/Core/Geometry.h"
+	"../../include/RmlUi/Core/Header.h"
+	"../../include/RmlUi/Core/ID.h"
+	"../../include/RmlUi/Core/Input.h"
+	"../../include/RmlUi/Core/Log.h"
+	"../../include/RmlUi/Core/Math.h"
+	"../../include/RmlUi/Core/Matrix4.h"
+	"../../include/RmlUi/Core/Matrix4.inl"
+	"../../include/RmlUi/Core/Mesh.h"
+	"../../include/RmlUi/Core/MeshUtilities.h"
+	"../../include/RmlUi/Core/NumericValue.h"
+	"../../include/RmlUi/Core/ObserverPtr.h"
+	"../../include/RmlUi/Core/Platform.h"
+	"../../include/RmlUi/Core/Plugin.h"
+	"../../include/RmlUi/Core/Profiling.h"
+	"../../include/RmlUi/Core/PropertiesIteratorView.h"
+	"../../include/RmlUi/Core/Property.h"
+	"../../include/RmlUi/Core/PropertyDefinition.h"
+	"../../include/RmlUi/Core/PropertyDictionary.h"
+	"../../include/RmlUi/Core/PropertyIdSet.h"
+	"../../include/RmlUi/Core/PropertyParser.h"
+	"../../include/RmlUi/Core/PropertySpecification.h"
+	"../../include/RmlUi/Core/Rectangle.h"
+	"../../include/RmlUi/Core/RenderBox.h"
+	"../../include/RmlUi/Core/RenderInterface.h"
+	"../../include/RmlUi/Core/RenderInterfaceCompatibility.h"
+	"../../include/RmlUi/Core/RenderManager.h"
+	"../../include/RmlUi/Core/ScriptInterface.h"
+	"../../include/RmlUi/Core/ScrollTypes.h"
+	"../../include/RmlUi/Core/Span.h"
+	"../../include/RmlUi/Core/Spritesheet.h"
+	"../../include/RmlUi/Core/StableVector.h"
+	"../../include/RmlUi/Core/Stream.h"
+	"../../include/RmlUi/Core/StreamMemory.h"
+	"../../include/RmlUi/Core/StringUtilities.h"
+	"../../include/RmlUi/Core/StyleSheet.h"
+	"../../include/RmlUi/Core/StyleSheetContainer.h"
+	"../../include/RmlUi/Core/StyleSheetSpecification.h"
+	"../../include/RmlUi/Core/StyleSheetTypes.h"
+	"../../include/RmlUi/Core/StyleTypes.h"
+	"../../include/RmlUi/Core/SystemInterface.h"
+	"../../include/RmlUi/Core/TextInputContext.h"
+	"../../include/RmlUi/Core/TextInputHandler.h"
+	"../../include/RmlUi/Core/TextShapingContext.h"
+	"../../include/RmlUi/Core/Texture.h"
+	"../../include/RmlUi/Core/Traits.h"
+	"../../include/RmlUi/Core/Transform.h"
+	"../../include/RmlUi/Core/TransformPrimitive.h"
+	"../../include/RmlUi/Core/Tween.h"
+	"../../include/RmlUi/Core/TypeConverter.h"
+	"../../include/RmlUi/Core/TypeConverter.inl"
+	"../../include/RmlUi/Core/Types.h"
+	"../../include/RmlUi/Core/UniqueRenderResource.h"
+	"../../include/RmlUi/Core/Unit.h"
+	"../../include/RmlUi/Core/URL.h"
+	"../../include/RmlUi/Core/Utilities.h"
+	"../../include/RmlUi/Core/Variant.h"
+	"../../include/RmlUi/Core/Variant.inl"
+	"../../include/RmlUi/Core/Vector2.h"
+	"../../include/RmlUi/Core/Vector2.inl"
+	"../../include/RmlUi/Core/Vector3.h"
+	"../../include/RmlUi/Core/Vector3.inl"
+	"../../include/RmlUi/Core/Vector4.h"
+	"../../include/RmlUi/Core/Vector4.inl"
+	"../../include/RmlUi/Core/Vertex.h"
+	"../../include/RmlUi/Core/XMLNodeHandler.h"
+	"../../include/RmlUi/Core/XMLParser.h"
+	
+	"../../include/PlatformExtensions.h"
+	"../../include/RendererExtensions.h"
+	"../../include/RmlUi_Include_GL3.h"
+	"../../include/RmlUi_Platform_GLFW.h"
+	"../../include/RmlUi_Renderer_GL3.h"
+)
+
+
+add_subdirectory("Elements")
+add_subdirectory("Layout")
+add_subdirectory("Backend")
+
+if(RMLUI_FONT_ENGINE STREQUAL "freetype")
+	# Include the source files for the default font engine.
+	add_subdirectory("FontEngineDefault")
+
+	# RMLUI_CMAKE_MINIMUM_VERSION_RAISE_NOTICE:
+	# From CMake 3.13 the next line can be moved into `FontEngineDefault/CMakeLists.txt`, see CMP0079.
+	#target_link_libraries(${module} PRIVATE Freetype::Freetype)
+endif()
+
+if(NOT RMLUI_THIRDPARTY_CONTAINERS)
+	target_compile_definitions(${module} PUBLIC "RMLUI_NO_THIRDPARTY_CONTAINERS")
+	message(STATUS "Disabling third-party containers for RmlUi.")
+endif()
+
+if(RMLUI_CUSTOM_RTTI)
+	target_compile_definitions(${module} PUBLIC "RMLUI_CUSTOM_RTTI")
+	message(STATUS "Enabling custom RTTI for RmlUi.")
+endif()
+
+if(RMLUI_MATRIX_ROW_MAJOR)
+	target_compile_definitions(${module} PUBLIC "RMLUI_MATRIX_ROW_MAJOR")
+	message(STATUS "Configuring RmlUi to use row-major matrix types.")
+endif()
+
+
+
+
+
+
+

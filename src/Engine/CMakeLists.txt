@@ -2,6 +2,7 @@ set(module "Engine")
 
 
 include_directories(include)
+include_directories(include/RmlUi)
 
 set(${module}_headers
 	include/glad.h
@@ -42,6 +43,7 @@ set(${module}_headers
 	include/GPUSort.h
 	
 	include/LuaEngine.h
+	include/UI_Engine.h
 	
 	include/Light.h
 	include/Collider.h
@@ -85,6 +87,7 @@ set(${module}_sources
 	src/GPUSort.cpp
 	
 	src/LuaEngine.cpp
+	src/UI_Engine.cpp
 	
 	src/Light.cpp
 	src/Collider.cpp
@@ -114,9 +117,13 @@ target_link_libraries(${module}
 	imgui::imgui
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
+	rmlui
+	rmlui_debugger
+	rmlui_shell
+	rmlui_bin rmlui_debugger_bin
 )
 
-target_link_libraries(${module} Compute VoxelEngine)
+target_link_libraries(${module} Compute VoxelEngine UI)
 
 
 

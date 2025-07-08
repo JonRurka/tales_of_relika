@@ -32,5 +32,8 @@ target_link_libraries(${PROJECT_NAME}
 	Bullet::Bullet
 	inih::inih
 	imgui::imgui
+	rmlui
+	rmlui_debugger
+	rmlui_shell
 )
 target_link_libraries(${PROJECT_NAME} Compute VoxelEngine )
