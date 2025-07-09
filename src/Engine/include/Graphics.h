@@ -63,7 +63,7 @@ public:
 	void Set_Screen_FrameTexture(Texture* tex);
 	
 
-	void OnWindowResize(int width, int height);
+	void OnWindowResize(GLFWwindow* window, int width, int height);
 
 	void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/);
 

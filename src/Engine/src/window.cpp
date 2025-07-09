@@ -33,14 +33,6 @@ window* window::m_instance{NULL};
 namespace {
     static HMODULE s_module = NULL;
 
-    void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-    {
-        Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
-        if (user_ptr == nullptr)
-            return;
-        user_ptr->OnWindowResize(width, height);
-    }
-
     void APIENTRY glDebugOutput(GLenum source,
         GLenum type,
         unsigned int id,
@@ -97,6 +89,14 @@ namespace {
         if (user_ptr == nullptr)
             return;
         user_ptr->key_callback(window, key, scancode, action, mods);
+    }
+
+    void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+    {
+        Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
+        if (user_ptr == nullptr)
+            return;
+        user_ptr->OnWindowResize(window, width, height);
     }
 
     void static_cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {

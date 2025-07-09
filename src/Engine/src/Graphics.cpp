@@ -15,6 +15,7 @@
 #include "Logger.h"
 #include "Engine.h"
 #include "Input.h"
+#include "UI_Engine.h"
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -25,10 +26,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#include <RmlUi/Core.h>
-#include <RmlUi/Debugger.h>
-#include "RmlUi_Platform_GLFW.h"
-#include "RmlUi_Renderer_GL3.h"
+
 
 
 #define DEFAULT_SCREEN_WIDTH 800
@@ -202,7 +200,16 @@ void Graphics::Set_Screen_FrameTexture(Texture* tex)
 	});
 }
 
-void Graphics::OnWindowResize(int width, int height)
+// events from glfw start
+
+void Graphics::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	bool propogated = UI_Engine::Instance()->KeyCallback(window, key, scancode, action, mods);
+	if (!propogated)
+		Input::Instance()->key_callback(window, key, scancode, action, mods);
+}
+
+void Graphics::OnWindowResize(GLFWwindow* window, int width, int height)
 {
 	if (!m_initialized)
 		return;
@@ -224,23 +231,27 @@ void Graphics::OnWindowResize(int width, int height)
 
 	Camera::Get_Active()->Resize_Refresh();
 
+	UI_Engine::Instance()->FramebufferSizeCallback(window, width, height);
+
 	//Logger::LogDebug(LOG_POS("OnWindowResize"), "##### WINDOW RESIZE STOP #####\n");
 }
 
-void Graphics::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	Input::Instance()->key_callback(window, key, scancode, action, mods);	
-}
+
 
 void Graphics::cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
+	UI_Engine::Instance()->CursorPosCallback(window, xpos, ypos);
 	Input::Instance()->cursor_position_callback(window, xpos, ypos);
 }
 
 void Graphics::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-	Input::Instance()->mouse_button_callback(window, button, action, mods);
+	bool propogated = UI_Engine::Instance()->MouseButtonCallback(window, button, action, mods);
+	if (!propogated)
+		Input::Instance()->mouse_button_callback(window, button, action, mods);
 }
+
+// events from glfw end
 
 void Graphics::Register_Resize_Tex(Texture* tex)
 {

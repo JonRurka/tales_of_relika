@@ -38,6 +38,8 @@
 #include <algorithm>
 #include <string.h>
 
+#define RMLUI_GL3_CUSTOM_LOADER "opengl.h"
+
 #if defined RMLUI_PLATFORM_WIN32_NATIVE
 	// function call missing argument list
 	#pragma warning(disable : 4551)

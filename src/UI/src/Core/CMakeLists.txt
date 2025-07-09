@@ -353,15 +353,21 @@ target_sources(${module} PRIVATE
 	
 	"../../include/PlatformExtensions.h"
 	"../../include/RendererExtensions.h"
+	"../../include/RmlUi_Include_Windows.h"
+	"../../include/RmlUi_Backend.h"
 	"../../include/RmlUi_Include_GL3.h"
 	"../../include/RmlUi_Platform_GLFW.h"
 	"../../include/RmlUi_Renderer_GL3.h"
+	"../../include/FontEngineBitmap.h"
+	"../../include/FontEngineInterfaceBitmap.h"
 )
 
 
 add_subdirectory("Elements")
 add_subdirectory("Layout")
 add_subdirectory("Backend")
+
+target_compile_definitions(${module} PUBLIC "RMLUI_STATIC_LIB")
 
 if(RMLUI_FONT_ENGINE STREQUAL "freetype")
 	# Include the source files for the default font engine.

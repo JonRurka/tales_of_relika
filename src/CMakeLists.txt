@@ -72,10 +72,10 @@ target_link_libraries(${PROJECT_NAME}
 	#vulkan-headers::vulkan-headers
 	nvpro_core
 	#GPUOpen::VulkanMemoryAllocator
-	rmlui
-	rmlui_debugger
-	rmlui_shell
+	#rmlui
+	#rmlui_debugger
+	#rmlui_shell
 )
 
 
-target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Game Server UI)
+target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Game Server UI UI_debugger)

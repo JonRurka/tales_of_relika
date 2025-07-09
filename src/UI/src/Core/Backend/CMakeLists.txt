@@ -12,4 +12,8 @@ target_sources(${module} PRIVATE
 	"${CMAKE_CURRENT_SOURCE_DIR}/RmlUi_Platform_GLFW.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/RmlUi_Renderer_GL3.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/RmlUi_Renderer_GL3.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/FontEngineBitmap.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/FontEngineBitmap.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/FontEngineInterfaceBitmap.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/FontEngineInterfaceBitmap.cpp"
 )

@@ -85,12 +85,12 @@ target_link_libraries(${module}
 	imgui::imgui
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
-	rmlui
-	rmlui_debugger
-	rmlui_shell
+	#rmlui
+	#rmlui_debugger
+	#rmlui_shell
 )
 
-target_link_libraries(${module} Compute VoxelEngine Engine Server UI)
+target_link_libraries(${module} Compute VoxelEngine Engine Server UI UI_debugger)
 
 
 

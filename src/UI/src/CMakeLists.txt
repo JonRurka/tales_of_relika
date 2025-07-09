@@ -1,3 +1,5 @@
+option(BUILD_SHARED_LIBS "CMake standard option. Choose whether to build shared RmlUi libraries." OFF)
+
 add_subdirectory("Core")
 
 if(RMLUI_LOTTIE_PLUGIN)
