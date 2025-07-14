@@ -42,6 +42,7 @@ using Rml::ColourbPremultiplied;
 using Rml::Span;
 using Rml::String;
 using Rml::StringView;
+//using Rml::Texture;
 using Rml::Vector2f;
 using Rml::Vector2i;
 using Rml::Style::FontStyle;

@@ -18,6 +18,7 @@ class Mesh;
 class Shader;
 class Engine;
 class Input;
+class UI_Engine;
 
 class Graphics
 {
@@ -56,7 +57,9 @@ public:
 
 	GLFWwindow* Get_GLFW_Window() { return m_window; }
 
-	static ImGuiIO& GUI_IO() { return m_instance->m_io; }
+	static ImGuiIO& ImGUI_IO() { return m_instance->m_io; }
+
+	static UI_Engine* UI() { return m_instance->m_UI; }
 
 	const Render_Options Active_Options() { return m_active_options; }
 
@@ -74,6 +77,8 @@ public:
 	void Register_Resize_Tex(Texture* tex);
 
 	void Remove_Resize_Tex(Texture* tex);
+
+	bool Render_ImgUI();
 
 private:
 
@@ -94,6 +99,7 @@ private:
 	static Graphics* m_instance;
 
 	ImGuiIO m_io;
+	UI_Engine* m_UI{ nullptr };
 
 	bool m_initialized{ false };
 

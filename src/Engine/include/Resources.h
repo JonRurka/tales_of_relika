@@ -17,6 +17,11 @@ public:
 		inline static const std::string WHITE = "Engine::white.png";
 	};
 
+	class Engine_UI_Assets {
+	public:
+		inline static const std::string DEFAULT_FONT = "UI::Engine::Fonts::Comfortaa_Regular_22.fnt";
+	};
+
 
 	enum class LoadMode {
 		Binary,
@@ -36,6 +41,9 @@ public:
 
 		// shader specific
 		bool use_spirv;
+
+		// data specific
+		std::string relative_path;
 	};
 	
 	Resources();
@@ -87,12 +95,7 @@ public:
 		return m_instance->m_models_assets[name];
 	}
 
-	static Asset Get_Data_Asset(std::string name) {
-		if (!Has_Model(name))
-			return Asset();
-		Load_Data_File(name);
-		return m_instance->m_data_assets[name];
-	}
+	static Asset Get_Data_Asset(std::string name, bool load = true);
 	
 	static bool Has_Texture(std::string name) { return m_instance->has_texture(name); }
 
@@ -104,11 +107,15 @@ public:
 
 	static std::string Get_Resources_Director();
 
-	static std::string Get_Data_Director();
+	static std::string Get_Data_Directory();
 
 private:
 
 	LoadMode m_mode;
+
+	const std::vector<std::string> m_external_sections = {
+		"ui"
+	};
 
 	enum PackType {
 		Shader_Type,
@@ -138,6 +145,8 @@ private:
 	void load_models_fs();
 	void load_data_fs(){}
 
+	void process_external_data_file(Asset a);
+
 
 	void load_shader(std::string name);
 	void load_shader(std::vector<std::string> names);
@@ -164,20 +173,18 @@ private:
 	std::vector<char> get_data_file_bin(std::string name);
 
 	bool has_texture(std::string name) {
-		return m_texture_assets.find(name) != m_texture_assets.end();
+		return m_texture_assets.contains(name);
 	}
 
 	bool has_shader(std::string name) {
-		return m_shader_assets.find(name) != m_shader_assets.end();
+		return m_shader_assets.contains(name);
 	}
 
 	bool has_model(std::string name) {
-		return m_models_assets.find(name) != m_models_assets.end();
+		return m_models_assets.contains(name);
 	}
 
-	bool has_data_file(std::string name) {
-		return m_data_assets.find(name) != m_data_assets.end();
-	}
+	bool has_data_file(std::string name);
 
 	inline static const std::string LOG_LOC{ "RESOURCES" };
 };

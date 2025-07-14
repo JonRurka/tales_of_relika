@@ -135,7 +135,7 @@ void StructureController::process_additions()
 
 		process_chunk(chunk);
 
-		Logger::LogDebug(LOG_POS("process_additions"), "created chunk.");
+		//Logger::LogDebug(LOG_POS("process_additions"), "created chunk.");
 
 		has_items = !m_create_queue.empty();
 		end = Utilities::Get_Time();
@@ -184,12 +184,12 @@ void StructureController::process_modifications()
 				voxel_coord.x += m_data_storage->Grid_Offset();
 				voxel_coord.y += m_data_storage->Grid_Offset();
 				voxel_coord.z += m_data_storage->Grid_Offset();
-				Logger::LogDebug(LOG_POS("process_modifications"), "Shifted voxel: (%i, %i, %i)",
-					voxel_coord.x, voxel_coord.y, voxel_coord.z);
+				//Logger::LogDebug(LOG_POS("process_modifications"), "Shifted voxel: (%i, %i, %i)",
+				//	voxel_coord.x, voxel_coord.y, voxel_coord.z);
 				m_data_storage->Set_Data(chunk, voxel_coord, v_change.Type);
 			}
 			else {
-				Logger::LogDebug(LOG_POS("process_modifications"), "Change not accepted.");
+				//Logger::LogDebug(LOG_POS("process_modifications"), "Change not accepted.");
 			}
 		}
 
@@ -221,8 +221,8 @@ bool StructureController::queue_chunk_create(glm::ivec3 chunk_coord, std::vector
 	//std::fill(data.begin(), data.end(), 0);
 
 	for (const auto& val : values) {
-		Logger::LogDebug(LOG_POS("queue_chunk_create"), "Initial Voxel: (%i, %i, %i) (%i, %i, %i)",
-			chunk_coord.x, chunk_coord.y, chunk_coord.z, val.Voxel.x, val.Voxel.y, val.Voxel.z);
+		//Logger::LogDebug(LOG_POS("queue_chunk_create"), "Initial Voxel: (%i, %i, %i) (%i, %i, %i)",
+		//	chunk_coord.x, chunk_coord.y, chunk_coord.z, val.Voxel.x, val.Voxel.y, val.Voxel.z);
 		int v_idx = C_3D_to_1D(
 			val.Voxel.x + m_data_storage->Grid_Offset(),
 			val.Voxel.y + m_data_storage->Grid_Offset(),
@@ -257,7 +257,7 @@ bool StructureController::queue_chunk_create(glm::ivec3 chunk_coord, std::vector
 	req.Initial_Data = data;
 
 	m_create_queue.push(req);
-	Logger::LogDebug(LOG_POS("queue_chunk_create"), "Chunk creation queued.");
+	//Logger::LogDebug(LOG_POS("queue_chunk_create"), "Chunk creation queued.");
 
 	return true;
 }
@@ -289,7 +289,7 @@ void StructureController::create_chunk_cache()
 	}
 
 	double end = Utilities::Get_Time();
-	Logger::LogDebug(LOG_POS("create_chunk_cache"), "Created %i cached chunks in %f ms.", m_max_cached_chunks, (end - start) * 1000);
+	//Logger::LogDebug(LOG_POS("create_chunk_cache"), "Created %i cached chunks in %f ms.", m_max_cached_chunks, (end - start) * 1000);
 }
 
 StructureController::ChunkRef StructureController::create_chunk_object()
@@ -326,13 +326,13 @@ void StructureController::Modify_Voxel_Type(glm::ivec3 voxel, uint32_t type)
 	glm::ivec3 voxel_local = globalToLocalChunkCoord(chunk, voxel);
 
 	if (!Chunk_Exists(chunk)) {
-		Logger::LogDebug(LOG_POS("Modify_Voxel_Type"), "chunk no exist: (%i, %i, %i)",
-			chunk.x, chunk.y, chunk.z);
+		//Logger::LogDebug(LOG_POS("Modify_Voxel_Type"), "chunk no exist: (%i, %i, %i)",
+		//	chunk.x, chunk.y, chunk.z);
 		return;
 	}
 
-	Logger::LogDebug(LOG_POS("Modify_Voxel_Type"), "modify voxel: (%i, %i, %i) (%i, %i, %i)",
-		chunk.x, chunk.y, chunk.z, voxel_local.x, voxel_local.y, voxel_local.z);
+	//Logger::LogDebug(LOG_POS("Modify_Voxel_Type"), "modify voxel: (%i, %i, %i) (%i, %i, %i)",
+	//	chunk.x, chunk.y, chunk.z, voxel_local.x, voxel_local.y, voxel_local.z);
 
 	get_chunk(chunk).chunk_comp->VoxelChanged(voxel_local, true, type);
 
@@ -464,8 +464,8 @@ void StructureController::Submit_Structure_Modification(glm::ivec3 chunk, Struct
 
 void StructureController::Submit_Structure_Modification(glm::ivec3 chunk, std::vector<StructureMod> values)
 {
-	Logger::LogDebug(LOG_POS("Submit_Structure_Modification"), "Change: (%i, %i, %i)", 
-		values[0].Voxel.x, values[0].Voxel.y, values[0].Voxel.z);
+	//Logger::LogDebug(LOG_POS("Submit_Structure_Modification"), "Change: (%i, %i, %i)", 
+	//	values[0].Voxel.x, values[0].Voxel.y, values[0].Voxel.z);
 	StructureModEntry entry{};
 	entry.chunk = chunk;
 	entry.changes = values;

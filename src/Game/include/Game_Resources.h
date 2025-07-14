@@ -75,6 +75,21 @@ public:
 		};
 	};
 
+	class UI {
+	public:
+
+		class Fonts {
+		public:
+
+		};
+
+		class Documents {
+		public:
+			inline static const std::string DEMO = "UI::bitmap_font.rml";
+		};
+
+	};
+
 private:
 
 };

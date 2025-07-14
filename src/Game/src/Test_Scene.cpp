@@ -193,7 +193,7 @@ void Test_Scene::Init()
 	for (int i = 0; i < duplicate; i++) {
 		cubePositions.insert(cubePositions.end(), cubePositions_orig.begin(), cubePositions_orig.end());
 	}
-	Logger::LogDebug(LOG_POS("Init"), "Num Cubes: %i", (int)cubePositions.size());
+	//Logger::LogDebug(LOG_POS("Init"), "Num Cubes: %i", (int)cubePositions.size());
 
 	glm::vec4 cube_color(1.0f, 1.0f, 1.0f, 1.0f);
 	std::vector<glm::vec4> cube_colors;

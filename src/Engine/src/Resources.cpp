@@ -10,8 +10,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
+namespace fs = std::filesystem;
 
 #include <nlohmann/json.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -61,11 +67,30 @@ namespace {
     std::string sep() {
         return Utilities::File_Seperator();
     }
+
+    bool CreateDirectoryRecursive(fs::path const& dirName, std::error_code& err)
+    {
+        // https://stackoverflow.com/questions/71658440/c17-create-directories-automatically-given-a-file-path
+        err.clear();
+        if (!std::filesystem::create_directories(dirName, err))
+        {
+            if (std::filesystem::exists(dirName))
+            {
+                // The folder already exists:
+                err.clear();
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
 }
 
 
 Resources::Resources()
 {
+    m_instance = this;
+
     if (LOAD_MODE == LOAD_MODE_FS) {
         m_mode = LoadMode::Filesystem;
     }
@@ -89,7 +114,7 @@ Resources::Resources()
         break;
     }
 
-    m_instance = this;
+    
     Logger::LogInfo(LOG_POS("NEW"), "Resources Initialized.");
 }
 
@@ -244,6 +269,7 @@ void Resources::load_data_file(std::string name)
         return;
     }
 
+    name = Utilities::toLowerCase(name);
     Asset* asset = &m_data_assets[name];
     if (asset->loaded) {
         return;
@@ -286,7 +312,7 @@ void Resources::load_pack_data(Asset* asset, Resources::PackType type)
         break;
     }
 
-    std::string data_dir = Get_Data_Director();
+    std::string data_dir = Get_Data_Directory();
     std::string file_name = prefix + pad_int(asset->pack_index, 3) + ".pack";
     std::string file_path = data_dir + file_name;
 
@@ -376,6 +402,8 @@ std::string Resources::get_data_file_string(std::string name)
         return "";
     }
 
+
+    name = Utilities::toLowerCase(name);
     Load_Data_File(name);
 
     std::string res;
@@ -385,16 +413,32 @@ std::string Resources::get_data_file_string(std::string name)
 
 std::vector<char> Resources::get_data_file_bin(std::string name)
 {
-    if (!Has_Model(name)) {
+    if (!Has_Data_File(name)) {
         Logger::LogError(LOG_POS("get_data_file_string"), "Data File not found: %s \n", name.c_str());
         return std::vector<char>();
     }
 
+    name = Utilities::toLowerCase(name);
     Load_Data_File(name);
 
     char* dta_ptr = (char*)m_data_assets[name].data;
     size_t dta_size = m_data_assets[name].data_size;
     return std::vector<char>(dta_ptr, dta_ptr + dta_size);
+}
+
+bool Resources::has_data_file(std::string name)
+{
+    return m_data_assets.contains(Utilities::toLowerCase(name));
+}
+
+Resources::Asset Resources::Get_Data_Asset(std::string name, bool load)
+{
+    if (!Has_Data_File(name)) {
+        return Asset();
+    }
+    if (load)
+        Load_Data_File(name);
+    return m_instance->m_data_assets[Utilities::toLowerCase(name)];
 }
 
 std::string Resources::Get_Resources_Director()
@@ -409,7 +453,7 @@ std::string Resources::Get_Resources_Director()
 
 }
 
-std::string Resources::Get_Data_Director()
+std::string Resources::Get_Data_Directory()
 {
     return Utilities::Get_Root_Directory() + "data\\";
 }
@@ -618,11 +662,59 @@ void Resources::load_models_fs()
     }
 }
 
+void Resources::process_external_data_file(Asset a)
+{
+    std::string name = a.name;
+    std::vector res_path_parts = Utilities::Split(name, "::");
+    std::string section = res_path_parts[0];
+
+    if (!List_Contains(m_external_sections, Utilities::toLowerCase(section))) {
+        return;
+    }
+
+    std::string data_dir = Get_Data_Directory();
+    std::string section_dir = data_dir + section;
+
+    if (!fs::exists(section_dir)) {
+        fs::create_directory(section_dir);
+    }
+
+    std::string relative_path_str = a.name;
+    boost::replace_all(relative_path_str, "::", "/");
+    
+    std::string full_res_path = data_dir + relative_path_str;
+    boost::replace_all(full_res_path, "/", "\\");
+    
+    boost::filesystem::path p(full_res_path);
+    boost::filesystem::path dir = p.parent_path();
+    if (!boost::filesystem::exists(dir)) {
+        std::error_code err;
+        CreateDirectoryRecursive(dir.string(), err);
+    }
+
+    auto data = get_data_file_bin(a.name);
+
+    int data_num = Utilities::Write_File_Bytes(full_res_path, data);
+    if (data_num <= 0) {
+        Logger::LogWarning(LOG_POS("process_external_data_file"), "No data written to data %s file: %s",
+            section.c_str(), relative_path_str.c_str());
+    }
+
+    boost::replace_all(relative_path_str, section + "/", ""); // remove section from path
+    //Logger::LogDebug(LOG_POS("process_external_data_file"), "( %s )", relative_path_str.c_str());
+    m_data_assets[Utilities::toLowerCase(a.name)].relative_path = relative_path_str;
+    //Logger::LogDebug(LOG_POS("process_external_data_file"), "relative path set to: %s", 
+    //    m_data_assets[Utilities::toLowerCase(a.name)].relative_path.c_str());
+
+    Logger::LogDebug(LOG_POS("process_external_data_file"), "created external data file (%i): %s", 
+        data_num, full_res_path.c_str());
+}
+
 
 
 void Resources::load_shaders_binary()
 {
-    std::string data_dir = Get_Data_Director();
+    std::string data_dir = Get_Data_Directory();
     std::string shader_data_file = data_dir + "s000.dat";
     std::string shader_pack_file = data_dir + "s001.pack";
 
@@ -655,7 +747,7 @@ void Resources::load_shaders_binary()
 
 void Resources::load_textures_binary()
 {
-    std::string data_dir = Get_Data_Director();
+    std::string data_dir = Get_Data_Directory();
     std::string texture_data_file = data_dir + "t000.dat";
 
     std::vector<Asset> assets;
@@ -672,7 +764,7 @@ void Resources::load_textures_binary()
 
 void Resources::load_models_binary()
 {
-    std::string data_dir = Get_Data_Director();
+    std::string data_dir = Get_Data_Directory();
     std::string model_data_file = data_dir + "m000.dat";
 
     std::vector<Asset> assets;
@@ -689,7 +781,7 @@ void Resources::load_models_binary()
 
 void Resources::load_data_binary()
 {
-    std::string data_dir = Get_Data_Director();
+    std::string data_dir = Get_Data_Directory();
     std::string data_data_file = data_dir + "d000.dat";
 
     std::vector<Asset> assets;
@@ -699,8 +791,9 @@ void Resources::load_data_binary()
     Logger::LogDebug(LOG_POS("load_data_binary"), "Loaded Data Files:");
     for (auto& a : assets)
     {
-        m_data_assets[a.name] = a;
+        m_data_assets[Utilities::toLowerCase(a.name)] = a;
         Logger::LogDebug(LOG_POS("load_data_binary"), "\t - %s", a.name.c_str());
+        process_external_data_file(a);
     }
 
 }

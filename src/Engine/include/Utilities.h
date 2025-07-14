@@ -23,6 +23,8 @@ do {														\
 	}														\
 }while(false)
 
+#define List_Contains(vec, target)	(std::find(vec.begin(), vec.end(), target) != vec.end())
+
 class Utilities
 {
 public:
@@ -42,6 +44,8 @@ public:
 	static std::string Get_Resource_Filename(const std::string& path);
 	
 	static std::string Decode_Base64(std::string base64_input);
+
+	static int Write_File_Bytes(const std::string& path, static std::vector<char> data);
 
 	static std::vector<char> Read_File_Bytes(const std::string& path);
 

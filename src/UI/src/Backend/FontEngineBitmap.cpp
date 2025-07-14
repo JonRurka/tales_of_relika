@@ -91,6 +91,31 @@ bool LoadFontFace(const String& file_name)
 	return true;
 }
 
+bool LoadFontFace(Span<const byte> data)
+{
+	// Parse the xml font description
+	FontParserBitmap parser;
+	{
+		auto stream = Rml::MakeUnique<Rml::StreamMemory>(data.data(), data.size());
+		stream->SetSourceURL("memory");
+
+		parser.Parse(stream.get());
+
+		if (parser.family.empty() || parser.glyphs.empty() || parser.texture_name.empty() || parser.metrics.size == 0)
+			return false;
+
+		// Fill the remaining metrics
+		parser.metrics.underline_position = 3.f;
+		parser.metrics.underline_thickness = 1.f;
+	}
+
+	// Construct and add the font face
+	fonts.push_back(Rml::MakeUnique<FontFaceBitmap>(parser.family, parser.style, parser.weight, parser.metrics, parser.texture_name, "memory",
+		parser.texture_dimensions, std::move(parser.glyphs), std::move(parser.kerning)));
+
+	return false;
+}
+
 FontFaceBitmap* GetFontFaceHandle(const String& family, FontStyle style, FontWeight weight, int size)
 {
 	FontFaceBitmap* best_match = nullptr;

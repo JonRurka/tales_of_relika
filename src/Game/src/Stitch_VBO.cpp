@@ -39,7 +39,7 @@ void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 
 	m_program = m_controller->AddProgram(program_info);
 	m_program->Build();
-	Logger::LogDebug(LOG_POS("Init"), "Build program");
+	//Logger::LogDebug(LOG_POS("Init"), "Build program");
 
 
 	vertex_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
@@ -223,8 +223,8 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 
 void Stitch_VBO::Reset()
 {
-	Logger::LogDebug(LOG_POS("Process"), "Builder Extract: %f ms, Stitch: %f ms, Flush: %f ms, Load Mesh: %f ms, Total: %f\n",
-		times.x, times.y, times.z, times.w, (times.x + times.y + times.z + times.w));
+	//Logger::LogDebug(LOG_POS("Process"), "Builder Extract: %f ms, Stitch: %f ms, Flush: %f ms, Load Mesh: %f ms, Total: %f\n",
+	//	times.x, times.y, times.z, times.w, (times.x + times.y + times.z + times.w));
 
 	times = glm::dvec4(0.0);
 }
@@ -248,7 +248,7 @@ IComputeController* Stitch_VBO::create_controller()
 	IComputeProgram::FileType type = IComputeProgram::FileType::Text_Data;
 
 	m_device_cl = Utilities::Get_Recommended_Device();
-	Logger::LogDebug(LOG_POS("InitializeComputePrograms"), "Using OpenCL Compute Device: %s", m_device_cl.name);
+	//Logger::LogDebug(LOG_POS("InitializeComputePrograms"), "Using OpenCL Compute Device: %s", m_device_cl.name);
 
 	ComputeInterface::ControllerInfo controllerInfo{};
 	controllerInfo.device = &m_device_cl;

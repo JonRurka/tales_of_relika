@@ -52,5 +52,5 @@ void BoxCollider::OnRefresh()
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(create_bt_transform());
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), myMotionState, m_shape, m_localInertia);
 	set_rigidbody(new btRigidBody(rbInfo));
-	Logger::LogDebug(LOG_POS("OnRefresh"), "Created rigidbody.");
+	//Logger::LogDebug(LOG_POS("OnRefresh"), "Created rigidbody.");
 }

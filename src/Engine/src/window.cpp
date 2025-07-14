@@ -126,6 +126,9 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+    //glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
     refresh_ui_scale();
 
@@ -160,7 +163,7 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 	if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
 	{
 		// initialize debug output 
-		Logger::LogDebug(LOG_POS("Create_Window"), "Debug context enabled.");
+		//Logger::LogDebug(LOG_POS("Create_Window"), "Debug context enabled.");
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         glDebugMessageCallback(glDebugOutput, nullptr);

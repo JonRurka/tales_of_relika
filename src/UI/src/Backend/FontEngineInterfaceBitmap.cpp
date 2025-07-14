@@ -45,15 +45,15 @@ bool FontEngineInterfaceBitmap::LoadFontFace(const String& file_name, int /*face
 	return FontProviderBitmap::LoadFontFace(file_name);
 }
 
-bool FontEngineInterfaceBitmap::LoadFontFace(Span<const byte> /*data*/, int /*face_index*/, const String& font_family, FontStyle /*style*/, FontWeight /*weight*/,
+bool FontEngineInterfaceBitmap::LoadFontFace(Span<const byte> data, int /*face_index*/, const String& font_family, FontStyle /*style*/, FontWeight /*weight*/,
 	bool /*fallback_face*/)
 {
 	// We return 'true' here to allow the debugger to continue loading, but we will use our own fonts when it asks for a handle.
 	// The debugger might look a bit off with our own fonts, but hey it works.
-	if (font_family == "rmlui-debugger-font")
-		return true;
+	//if (font_family == "rmlui-debugger-font")
+	//	return true;
 
-	return false;
+	return FontProviderBitmap::LoadFontFace(data);;
 }
 
 FontFaceHandle FontEngineInterfaceBitmap::GetFontFaceHandle(const String& family, FontStyle style, FontWeight weight, int size)

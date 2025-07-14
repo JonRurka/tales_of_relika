@@ -41,6 +41,7 @@ namespace FontProviderBitmap {
 void Initialise();
 void Shutdown();
 bool LoadFontFace(const String& file_name);
+bool LoadFontFace(Span<const byte> data);
 FontFaceBitmap* GetFontFaceHandle(const String& family, FontStyle style, FontWeight weight, int size);
 } // namespace FontProviderBitmap
 

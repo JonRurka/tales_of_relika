@@ -1,6 +1,6 @@
-option(BUILD_SHARED_LIBS "CMake standard option. Choose whether to build shared RmlUi libraries." OFF)
 
-add_subdirectory("Core")
+
+#add_subdirectory("Core")
 
 if(RMLUI_LOTTIE_PLUGIN)
 	add_subdirectory("Lottie")
@@ -10,6 +10,7 @@ if(RMLUI_SVG_PLUGIN)
 endif()
 
 add_subdirectory("Debugger")
+add_subdirectory("Backend")
 
 if(RMLUI_LUA_BINDINGS)
 	add_subdirectory("Lua")

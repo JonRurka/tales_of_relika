@@ -132,7 +132,7 @@ void StructureChunk::apply_mesh_update()
 		return;
 	}
 
-	Logger::LogDebug(LOG_POS("apply_mesh_update"), "verts:(%i), norms:(%i)", data.vertices.size(), data.normals.size());
+	//Logger::LogDebug(LOG_POS("apply_mesh_update"), "verts:(%i), norms:(%i)", data.vertices.size(), data.normals.size());
 	
 	m_voxel_opaque_mesh->Vertices(data.vertices, false);
 	m_voxel_opaque_mesh->Normals(data.normals, false);
@@ -174,7 +174,7 @@ void StructureChunk::update_collision_mesh()
 	m_mesh_collider->Mass(0.0f);
 	m_mesh_collider->Activate();
 	m_mesh_collider->RigidBody()->getAabb(min, max);
-	Logger::LogDebug(LOG_POS("update_collision_mesh"), "Collision mesh added.");
+	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Collision mesh added.");
 
 }
 

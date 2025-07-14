@@ -51,6 +51,8 @@ public:
 	void SetClipboardText(const Rml::String& text) override;
 	void GetClipboardText(Rml::String& text) override;
 
+	bool LogMessage(Rml::Log::Type type, const Rml::String& message) override;
+
 private:
 	GLFWwindow* window = nullptr;
 
@@ -60,6 +62,8 @@ private:
 	GLFWcursor* cursor_move = nullptr;
 	GLFWcursor* cursor_resize = nullptr;
 	GLFWcursor* cursor_unavailable = nullptr;
+
+	inline static const std::string LOG_LOC{ "SystemInterface_GLFW" };
 };
 
 /**

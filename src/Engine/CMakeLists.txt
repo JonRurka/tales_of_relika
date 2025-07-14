@@ -117,13 +117,13 @@ target_link_libraries(${module}
 	imgui::imgui
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
-	#rmlui
+	rmlui
 	#rmlui_debugger
 	#rmlui_shell
 	#rmlui_bin rmlui_debugger_bin
 )
 
-target_link_libraries(${module} Compute VoxelEngine UI UI_debugger)
+target_link_libraries(${module} Compute VoxelEngine UI_debugger UI_Backend)
 
 
 

@@ -1,5 +1,9 @@
 project("tales_of_relika")
 
+option(BUILD_SHARED_LIBS "CMake standard option. Choose whether to build shared RmlUi libraries." OFF)
+add_compile_definitions(RMLUI_STATIC_LIB)
+add_compile_definitions(RMLUI_GL3_CUSTOM_LOADER="glad.h")
+
 #include_directories(LuaCpp)
 include_directories(Compute/include)
 include_directories(VoxelEngine/include)
@@ -72,10 +76,10 @@ target_link_libraries(${PROJECT_NAME}
 	#vulkan-headers::vulkan-headers
 	nvpro_core
 	#GPUOpen::VulkanMemoryAllocator
-	#rmlui
+	rmlui
 	#rmlui_debugger
 	#rmlui_shell
 )
 
 
-target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Game Server UI UI_debugger)
+target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Game Server UI_debugger UI_Backend)

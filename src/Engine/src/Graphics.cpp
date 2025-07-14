@@ -16,6 +16,7 @@
 #include "Engine.h"
 #include "Input.h"
 #include "UI_Engine.h"
+#include "Resources.h"
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -26,7 +27,11 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-
+#define RENDER_IMGUI true
+#define RENDER_DEBUG_LINES true
+#define RENDER_GAME_UI true
+#define RENDER_GAME_SCREEN true
+#define RENDER_AXIS_GIZMO true
 
 
 #define DEFAULT_SCREEN_WIDTH 800
@@ -81,7 +86,11 @@ void Graphics::Initialize()
 	ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-
+	m_UI = new UI_Engine();
+	bool ui_init_success = m_UI->Init();
+	if (!ui_init_success) {
+		Logger::LogError(LOG_POS("Initialize"), "Failed to initialize Rml UI Engine!");
+	}
 
 	glEnable(GL_DEPTH_TEST);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -263,6 +272,11 @@ void Graphics::Remove_Resize_Tex(Texture* tex)
 	Remove_If_Found(m_resize_textures, tex);
 }
 
+bool Graphics::Render_ImgUI()
+{
+	return RENDER_IMGUI;
+}
+
 
 void Graphics::draw_debug_ray(glm::vec3 start, glm::vec3 dir, glm::vec3 color, float duration)
 {
@@ -285,10 +299,6 @@ void Graphics::render(float dt)
 
 	//ImGui::ShowDemoWindow();
 
-	Camera* active_cam = Camera::Get_Active();
-	if (active_cam == nullptr)
-		return;
-
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -296,58 +306,74 @@ void Graphics::render(float dt)
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	m_screen_shader->use(false);
-	m_screen_shader->Bind_Textures();
-	m_screen_mesh->Draw();
-
-
-	DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 0, 0));
-	DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 1, 0));
-	DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(0, 0, 1));
-
-	// Debug Lines
-	unsigned int vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	m_line_shader->use(true);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	std::vector<DebugLines> tmp_debug_lines;
-	tmp_debug_lines.reserve(m_debug_lines.size());
-
-	glm::vec3 line_verts[2];
-	for (const auto& line : m_debug_lines) {
-
-		m_line_shader->SetVec3("color", line.color);
-
-		line_verts[0] = line.start;
-		line_verts[1] = line.stop;
-
-		glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(float) * 3, line_verts, GL_DYNAMIC_DRAW);
-		glDrawArrays(GL_LINES, 0, 2);
-
-		float cur_time = (float)Utilities::Get_Time();
-		if (cur_time < (line.time + line.duration)) {
-			tmp_debug_lines.push_back(line);
-		}
-
+	if (RENDER_GAME_SCREEN) 
+	{
+		m_screen_shader->use(false);
+		m_screen_shader->Bind_Textures();
+		m_screen_mesh->Draw();
 	}
 
-	m_debug_lines = tmp_debug_lines;
+	if (RENDER_AXIS_GIZMO){
+		DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(1, 0, 0));
+		DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 1, 0));
+		DrawDebugRay(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), glm::vec3(0, 0, 1));
+	}
+	
+	// Debug Lines
+	if (RENDER_DEBUG_LINES)
+	{
+		unsigned int vao;
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
+		GLuint vbo;
+		glGenBuffers(1, &vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		m_line_shader->use(true);
 
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		std::vector<DebugLines> tmp_debug_lines;
+		tmp_debug_lines.reserve(m_debug_lines.size());
+
+		glm::vec3 line_verts[2];
+		for (const auto& line : m_debug_lines) {
+
+			m_line_shader->SetVec3("color", line.color);
+
+			line_verts[0] = line.start;
+			line_verts[1] = line.stop;
+
+			glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(float) * 3, line_verts, GL_DYNAMIC_DRAW);
+			glDrawArrays(GL_LINES, 0, 2);
+
+			float cur_time = (float)Utilities::Get_Time();
+			if (cur_time < (line.time + line.duration)) {
+				tmp_debug_lines.push_back(line);
+			}
+
+		}
+
+		m_debug_lines = tmp_debug_lines;
+
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glDeleteBuffers(1, &vbo);
+		glDeleteVertexArrays(1, &vao);
+
+		glUseProgram(0);
+	}
+
+	if (RENDER_GAME_UI)
+	{
+		m_UI->Update();
+	}
+
+	if (RENDER_IMGUI) {
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	}
 }
 
 void Graphics::update_window_title(std::string title)

@@ -252,8 +252,8 @@ void Voxel_Test_Scene::Init()
 
 
 
-	Logger::LogDebug(LOG_POS("Init"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
-		min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
+	//Logger::LogDebug(LOG_POS("Init"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
+	//	min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
 
 	WorldObject* box_obj = Instantiate("box");
 	box_obj->Get_MeshRenderer()->Set_Mesh(cube_mesh);
@@ -266,8 +266,8 @@ void Voxel_Test_Scene::Init()
 	col_box->Activate();
 	col_box->RigidBody()->getAabb(min, max);
 	
-	Logger::LogDebug(LOG_POS("Init"), "Cube Min:(%f, %f, %f), max:(%f, %f, %f)",
-		min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
+	//Logger::LogDebug(LOG_POS("Init"), "Cube Min:(%f, %f, %f), max:(%f, %f, %f)",
+	//	min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
 
 	ChunkSettings settings;
 	ChunkGenerationOptions gen_options;
@@ -308,11 +308,11 @@ void Voxel_Test_Scene::Init()
 	//double start = Utilities::Get_Time();
 	auto start = std::chrono::high_resolution_clock::now();
 
-	Logger::LogDebug(LOG_POS("Init"), "Do Generate...");
+	//Logger::LogDebug(LOG_POS("Init"), "Do Generate...");
 	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
-	Logger::LogDebug(LOG_POS("Init"), "Do Render...");
+	//Logger::LogDebug(LOG_POS("Init"), "Do Render...");
 	glm::dvec4 render_times = m_builder->Render(&render_options);
-	Logger::LogDebug(LOG_POS("Init"), "Render Finished");
+	//Logger::LogDebug(LOG_POS("Init"), "Render Finished");
 
 	//double stop = Utilities::Get_Time();
 

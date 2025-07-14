@@ -1,7 +1,9 @@
+set(module "UI_Backend")
+
 # RMLUI_CMAKE_MINIMUM_VERSION_RAISE_NOTICE:
 # Using absolute paths to prevent improper interpretation of relative paths. Relative paths can be used once the minimum
 # CMake version is greater or equal than CMake 3.13
-target_sources(${module} PRIVATE
+add_library(${module} STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/PlatformExtensions.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/PlatformExtensions.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/RendererExtensions.cpp"
@@ -16,4 +18,11 @@ target_sources(${module} PRIVATE
 	"${CMAKE_CURRENT_SOURCE_DIR}/FontEngineBitmap.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/FontEngineInterfaceBitmap.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/FontEngineInterfaceBitmap.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/ShellFileInterface.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/ShellFileInterface.cpp"
 )
+
+
+
+#target_link_libraries(${module} PUBLIC UI)
+target_link_libraries(${module} Engine boost::boost rmlui)

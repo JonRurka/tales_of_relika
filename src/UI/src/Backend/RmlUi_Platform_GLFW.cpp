@@ -33,6 +33,8 @@
 #include <RmlUi/Core/StringUtilities.h>
 #include <GLFW/glfw3.h>
 
+#include "Logger.h"
+
 #define GLFW_HAS_EXTRA_CURSORS (GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 4)
 
 SystemInterface_GLFW::SystemInterface_GLFW()
@@ -108,6 +110,15 @@ void SystemInterface_GLFW::GetClipboardText(Rml::String& text)
 {
 	if (window)
 		text = Rml::String(glfwGetClipboardString(window));
+}
+
+bool SystemInterface_GLFW::LogMessage(Rml::Log::Type type, const Rml::String& message)
+{
+	//switch (type) {
+		
+	//}
+	Logger::LogInfo(LOG_POS("LogMessage"), "%s", message.c_str());
+	return true;
 }
 
 bool RmlGLFW::ProcessKeyCallback(Rml::Context* context, int key, int action, int mods)

@@ -54,7 +54,7 @@ void Test_OpenCL_Scene::Init()
 
 	IComputeProgram* m_program = m_controller->AddProgram(program_info);
 	m_program->Build();
-	Logger::LogDebug(LOG_POS("Init"), "Build program");
+	//Logger::LogDebug(LOG_POS("Init"), "Build program");
 
 	IComputeBuffer* in_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
 	IComputeBuffer* out_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
@@ -71,7 +71,7 @@ void Test_OpenCL_Scene::Init()
 
 
 	m_program->FinishBuild();
-	Logger::LogDebug(LOG_POS("Init"), "Finish Build program");
+	//Logger::LogDebug(LOG_POS("Init"), "Finish Build program");
 
 	float* in_data = new float[elements];
 	for (int i = 0; i < elements; i++) {

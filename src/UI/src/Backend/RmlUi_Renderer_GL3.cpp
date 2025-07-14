@@ -38,7 +38,7 @@
 #include <algorithm>
 #include <string.h>
 
-#define RMLUI_GL3_CUSTOM_LOADER "opengl.h"
+
 
 #if defined RMLUI_PLATFORM_WIN32_NATIVE
 	// function call missing argument list
@@ -515,6 +515,7 @@ static bool CreateShader(GLuint& out_shader_id, GLenum shader_type, const char* 
 {
 	RMLUI_ASSERT(shader_type == GL_VERTEX_SHADER || shader_type == GL_FRAGMENT_SHADER);
 
+
 	GLuint id = glCreateShader(shader_type);
 	glShaderSource(id, 1, (const GLchar**)&code_string, NULL);
 	glCompileShader(id);
@@ -761,10 +762,12 @@ static bool CreateShaders(ProgramData& data)
 		return false;
 	};
 
+	int i = 0;
 	for (const VertShaderDefinition& def : vert_shader_definitions)
 	{
 		if (!CreateShader(data.vert_shaders[def.id], GL_VERTEX_SHADER, def.code_str))
 			return ReportError("vertex shader", def.name_str);
+		i++;
 	}
 
 	for (const FragShaderDefinition& def : frag_shader_definitions)
@@ -2184,6 +2187,8 @@ bool RmlGL3::Initialize(Rml::String* out_message)
 
 	if (out_message)
 		*out_message = Rml::CreateString("Loaded OpenGL %d.%d.", GLAD_VERSION_MAJOR(gl_version), GLAD_VERSION_MINOR(gl_version));
+#else
+	*out_message = "custom GL loader";
 #endif
 
 	return true;

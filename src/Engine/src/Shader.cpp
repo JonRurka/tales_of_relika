@@ -173,7 +173,7 @@ Shader::Shader(std::string name, const char* vertex_source, const char* fragment
         //std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
         Logger::LogError(LOG_POS("NEW::PROGRAM"), "LINKING_FAILED: %s", infoLog);
         std::string str(fragment_src);
-        Logger::LogDebug(LOG_POS("NEW::PROGRAM"), "%i", (int)str.size());
+        //Logger::LogDebug(LOG_POS("NEW::PROGRAM"), "%i", (int)str.size());
         return;
     }
 
@@ -548,7 +548,7 @@ void Shader::load_uniforms(const std::vector<char> spirv_bin)
 
         m_uniform_map[uniform_name] = uniform_index;
 
-        Logger::LogDebug(LOG_POS("NEW::SPIRV"), "%s: Uniform: %s (%i)", m_name.c_str(), uniform_name.c_str(), uniform_index);
+        //Logger::LogDebug(LOG_POS("NEW::SPIRV"), "%s: Uniform: %s (%i)", m_name.c_str(), uniform_name.c_str(), uniform_index);
     }
 
     for (const auto& uniform : resources.sampled_images)
@@ -559,7 +559,7 @@ void Shader::load_uniforms(const std::vector<char> spirv_bin)
 
         m_uniform_map[uniform_name] = uniform_index;
 
-        Logger::LogDebug(LOG_POS("NEW::SPIRV"), "%s: Sampler: %s (%i)", m_name.c_str(), uniform_name.c_str(), uniform_index);
+        //Logger::LogDebug(LOG_POS("NEW::SPIRV"), "%s: Sampler: %s (%i)", m_name.c_str(), uniform_name.c_str(), uniform_index);
     }
 }
 

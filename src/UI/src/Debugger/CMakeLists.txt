@@ -35,6 +35,6 @@ target_sources(${module} PRIVATE
 	"../../include/RmlUi/Debugger.h"
 )
 
-target_link_libraries(${module} PUBLIC UI)
-
+#target_link_libraries(${module} PUBLIC UI)
+target_link_libraries(${module} PUBLIC rmlui)
 

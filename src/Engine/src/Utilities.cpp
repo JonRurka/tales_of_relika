@@ -207,6 +207,25 @@ std::string Utilities::Decode_Base64(std::string base64_input)
 	}
 }
 
+int Utilities::Write_File_Bytes(const std::string& path, std::vector<char> data) 
+{
+	std::ofstream file(path, std::ios::binary);
+	if (!file.is_open()) {
+		Logger::LogError(LOG_POS("Read_File"), "Failed to open file '%s'.", path.c_str());
+		return 0;
+	}
+
+	// Move back to the beginning of the file
+	file.seekp(0, std::ios::beg);
+
+	file.write(data.data(), data.size());
+
+	// Close the file
+	file.close();
+
+	return data.size();
+}
+
 std::vector<char> Utilities::Read_File_Bytes(const std::string& path)
 {
 	std::vector<char> res;

@@ -207,7 +207,7 @@ void Mesh::Generate_Normals()
 
 	if (m_indices.size() <= 0)
 	{
-		Logger::LogDebug(LOG_POS("Generate_Normals"), "Generate normals without indices.");
+		//Logger::LogDebug(LOG_POS("Generate_Normals"), "Generate normals without indices.");
 		m_normals.clear();
 		m_normals.reserve(m_num_vertices);
 		int num_poly = m_num_vertices / 3;
@@ -222,7 +222,7 @@ void Mesh::Generate_Normals()
 		}
 	}
 	else {
-		Logger::LogDebug(LOG_POS("Generate_Normals"), "Generate normals with indices (%i).", (int)m_indices.size());
+		//Logger::LogDebug(LOG_POS("Generate_Normals"), "Generate normals with indices (%i).", (int)m_indices.size());
 		m_normals.clear();
 		m_normals.reserve(m_num_vertices);
 		for (int i = 0; i < m_indices.size(); i += 3) {
@@ -287,7 +287,7 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 		raw_vert_data = new float[num_elements * stride];
 		mode = Vert_Update_Mode::ALL;
 		m_has_verts = true;
-		Logger::LogDebug(LOG_POS("sync_vertices"), "Resize Raw Data: %i -> %i", m_num_vertices, num_elements);
+		//Logger::LogDebug(LOG_POS("sync_vertices"), "Resize Raw Data: %i -> %i", m_num_vertices, num_elements);
 		//printf("Refresh mesh buffer \n");
 	}
 

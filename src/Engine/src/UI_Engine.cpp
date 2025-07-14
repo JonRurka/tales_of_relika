@@ -5,6 +5,7 @@
 #include "Resources.h"
 
 #include "FontEngineInterfaceBitmap.h"
+#include "ShellFileInterface.h"
 #include <RmlUi/Core.h>
 #include <RmlUi/Core/Input.h>
 #include <RmlUi/Core/RenderInterface.h>
@@ -30,8 +31,10 @@ bool UI_Engine::Init()
 {
 	// Load the OpenGL functions.
 	Rml::String renderer_message;
-	if (!RmlGL3::Initialize(&renderer_message))
+	if (!RmlGL3::Initialize(&renderer_message)) {
+		Logger::LogError(LOG_POS("Init"), "Failed to initialize RmlGL3");
 		return false;
+	}
 
 	m_system_interface = new SystemInterface_GLFW();
 	m_render_interface = new RenderInterface_GL3();
@@ -41,7 +44,7 @@ bool UI_Engine::Init()
 	m_system_interface->SetWindow(window);
 	//m_system_interface->LogMessage(Rml::Log::LT_INFO, renderer_message);
 	Logger::LogInfo(LOG_POS("Init"), "%s", renderer_message.c_str());
-
+	m_system_interface->LogMessage(Rml::Log::LT_INFO, renderer_message);
 
 	glfwSetCharCallback(window, [](GLFWwindow* p_window, unsigned int codepoint) {
 		m_instance->CharCallback(p_window, codepoint);
@@ -71,14 +74,32 @@ bool UI_Engine::Init()
 	// Receive num lock and caps lock modifiers for proper handling of numpad inputs in text fields.
 	glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 
-
 	// Install the custom interfaces constructed by the backend before initializing RmlUi.
 	Rml::SetSystemInterface(m_system_interface);
 	Rml::SetRenderInterface(m_render_interface);
 
+	// The shell overrides the default file interface so that absolute paths in RML/RCSS-documents are relative to the 'Samples' directory.
+	//file_interface = Rml::MakeUnique<ShellFileInterface>(root);
+	m_ui_data_root = Resources::Get_Data_Directory() + "UI\\";
+	Rml::SetFileInterface(new ShellFileInterface(m_ui_data_root));
+
 	// Construct and load the font interface.
-	auto font_interface = Rml::MakeUnique<FontEngineInterfaceBitmap>();
-	Rml::SetFontEngineInterface(font_interface.get());
+	//auto font_interface = Rml::MakeUnique<FontEngineInterfaceBitmap>();
+	Rml::SetFontEngineInterface(new FontEngineInterfaceBitmap());
+
+	struct FontFace {
+		const char* filename;
+		bool fallback_face;
+	};
+	FontFace font_faces[] = {
+		{"LatoLatin-Regular.ttf", false},
+		{"LatoLatin-Italic.ttf", false},
+		{"LatoLatin-Bold.ttf", false},
+		{"LatoLatin-BoldItalic.ttf", false},
+		{"NotoEmoji-Regular.ttf", true},
+	};
+	//for (const FontFace& face : font_faces)
+	//	Rml::LoadFontFace(face.filename, face.fallback_face);
 
 	// RmlUi initialisation.
 	Rml::Initialise();
@@ -94,34 +115,72 @@ bool UI_Engine::Init()
 
 	//Rml::Debugger::Initialise(m_context);
 
+	Logger::LogInfo(LOG_POS("Init"), "Rml UI initialized successfully.");
 	m_initialized = true;
 }
 
 void UI_Engine::Load_Font(std::string resource_name)
 {
+	if (!m_context)
+		return;
+	if (!m_initialized)
+		return;
+
 	if (!Resources::Has_Data_File(resource_name)) {
 		Logger::LogError(LOG_POS("Load_Font"), "Font asset '%s' not found!", resource_name.c_str());
 		return;
 	}
 
+	Resources::Asset asset = Resources::Get_Data_Asset(resource_name, false);
+	Logger::LogDebug(LOG_POS("Load_Font"), "Font relative: %s", asset.relative_path.c_str());
+
+	if (!Rml::LoadFontFace(asset.relative_path))
+	{
+		Logger::LogError(LOG_POS("Load_Font"), "Failed to load font asset %s at %s", 
+			resource_name.c_str(), asset.relative_path.c_str());
+	}
+
+	/*
 	std::vector<char> font_bin_vec = Resources::Get_Data_File_Bin(resource_name);
+
+	if (font_bin_vec.size() == 0) {
+		Logger::LogError(LOG_POS("Load_Font"), "Font asset '%s' was empty!", resource_name.c_str());
+		return;
+	}
+
 	Rml::Span<const byte> font_bin_span((Rml::byte*)font_bin_vec.data(), font_bin_vec.size());
 
 	// Load bitmap font
 	std::string family = "Comfortaa_Regular_22";
 	Rml::Style::FontStyle style = Rml::Style::FontStyle::Normal;
-	if (!Rml::LoadFontFace(font_bin_span, family, style))
+	//if (!Rml::LoadFontFace(font_bin_span, family, style))
+	if (!Rml::LoadFontFace("Engine/Fonts/Comfortaa_Regular_22.fnt"))
 	{
 		Logger::LogError(LOG_POS("Load_Font"), "Failed to load font asset: %s", resource_name.c_str());
 	}
 	//!Rml::LoadFontFace("basic/bitmap_font/data/Comfortaa_Regular_22.fnt")
-
+	//Comfortaa_Regular_22.fnt
+	*/
 }
 
-Rml::ElementDocument* UI_Engine::Load_Document(std::string name, std::string resource_name)
+bool UI_Engine::Document_Exists(std::string name)
 {
+	if (!m_context)
+		return false;
+	if (!m_initialized)
+		return false;
+	return m_documents.contains(name);
+}
+
+Rml::ElementDocument* UI_Engine::Load_Document_Resource(std::string name, std::string resource_name)
+{
+	if (!m_context)
+		return nullptr;
+	if (!m_initialized)
+		return nullptr;
+
 	if (!Resources::Has_Data_File(resource_name)) {
-		Logger::LogError(LOG_POS("Load_Document"), "Document asset '%s' not found!", resource_name.c_str());
+		Logger::LogError(LOG_POS("Load_Document_Resource"), "Document asset '%s' not found!", resource_name.c_str());
 		return nullptr;
 	}
 
@@ -132,12 +191,48 @@ Rml::ElementDocument* UI_Engine::Load_Document(std::string name, std::string res
 	
 	Rml::ElementDocument* document = m_context->LoadDocument(stream.get());
 	if (!document) {
-		Logger::LogError(LOG_POS("Load_Document"), "Failed to load document asset: %s", resource_name.c_str());
+		Logger::LogError(LOG_POS("Load_Document_Resource"), "Failed to load document asset: %s", resource_name.c_str());
 		return nullptr;
 	}
 	
 	m_documents[name] = document;
+	Logger::LogInfo(LOG_POS("Load_Document_Resource"), "Document asset %s loaded: %s", name.c_str(), file_content.c_str());
 	return document;
+}
+
+Rml::ElementDocument* UI_Engine::Load_Document_File(std::string name, std::string file_path)
+{
+	if (!m_context)
+		return nullptr;
+	if (!m_initialized)
+		return nullptr;
+	Rml::ElementDocument* document = m_context->LoadDocument(file_path);
+	if (!document) {
+		Logger::LogError(LOG_POS("Load_Document_File"), "Failed to load document file: %s", name.c_str());
+		return nullptr;
+	}
+
+	m_documents[name] = document;
+	Logger::LogInfo(LOG_POS("Load_Document_File"), "Document file %s loaded", name.c_str());
+	return document;
+}
+
+void UI_Engine::Display(std::string doc_name)
+{
+	if (!m_context)
+		return;
+	if (!m_initialized)
+		return;
+	if (!Document_Exists(doc_name)) {
+		Logger::LogWarning(LOG_POS("Display"), "Unable to display document '%s'.", doc_name.c_str());
+		return;
+	}
+
+	if (auto el = m_documents[doc_name]->GetElementById("title"))
+		el->SetInnerRML("Bitmap font");
+
+	m_documents[doc_name]->Show();
+	Logger::LogDebug(LOG_POS("Display"), "Display document: %s", doc_name.c_str());
 }
 
 void UI_Engine::Update()
@@ -145,6 +240,8 @@ void UI_Engine::Update()
 	if (!m_initialized) {
 		return;
 	}
+	if (!m_context)
+		return;
 
 	// The initial window size may have been affected by system DPI settings, apply the actual pixel size and dp-ratio to the context.
 	if (m_context_dimensions_dirty)
@@ -171,6 +268,8 @@ void UI_Engine::Update()
 
 	// Optional, used to mark frames during performance profiling.
 	RMLUI_FrameMark;
+
+	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 
 void UI_Engine::Shutdown()

@@ -23,7 +23,13 @@ public:
 
 	void Load_Font(std::string resource_name);
 
-	Rml::ElementDocument* Load_Document(std::string name, std::string resource_name);
+	bool Document_Exists(std::string name);
+
+	Rml::ElementDocument* Load_Document_Resource(std::string name, std::string resource_name);
+
+	Rml::ElementDocument* Load_Document_File(std::string name, std::string file_path);
+
+	void Display(std::string doc_name);
 
 	void Update();
 
@@ -43,6 +49,8 @@ private:
 
 	bool m_initialized{ false };
 	int m_glfw_active_modifiers{ 0 };
+
+	std::string m_ui_data_root;
 
 	std::unordered_map<std::string, Rml::ElementDocument*> m_documents;
 

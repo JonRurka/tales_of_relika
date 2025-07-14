@@ -159,7 +159,7 @@ void TerrainChunk::Update(float dt)
 
 void TerrainChunk::VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float iso, bool Type_changed, int type)
 {
-	Logger::LogDebug(LOG_POS("VoxelChanged"), "Changed voxel.");
+	//Logger::LogDebug(LOG_POS("VoxelChanged"), "Changed voxel.");
 
 }
 

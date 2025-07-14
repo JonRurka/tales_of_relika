@@ -114,7 +114,7 @@ void GPUSort::Sort(glm::vec4* values, int num_elements, bool on_gpu)
 		}
 
 		m_in_settings_buffer->SetData(m_run_settings_entries.data(), m_run_settings_entries.size());
-		Logger::LogDebug(LOG_POS("Sort"), "Number of executions: %i, Number of elements: %i", m_run_settings_entries.size(), num_elements);
+		//Logger::LogDebug(LOG_POS("Sort"), "Number of executions: %i, Number of elements: %i", m_run_settings_entries.size(), num_elements);
 	
 		glm::uvec4 exec_val(0.0f, m_run_settings_entries.size(), 0.0f, 0.0f);
 
@@ -152,7 +152,7 @@ void GPUSort::Sort(glm::vec4* values, int num_elements, bool on_gpu)
 
 		m_in_exec_settings_buffer->GetData(&exec_val);
 		m_entries_buffer->GetData(values, num_elements);
-		Logger::LogDebug(LOG_POS("Sort"), "Executed %u times.", exec_val.x);
+		//Logger::LogDebug(LOG_POS("Sort"), "Executed %u times.", exec_val.x);
 
 
 		//values.clear();
@@ -161,7 +161,7 @@ void GPUSort::Sort(glm::vec4* values, int num_elements, bool on_gpu)
 	}
 
 	float stop = Utilities::Get_Time();
-	Logger::LogDebug(LOG_POS("Sort"), "Sort time: %f ms", (stop - start) * 1000);
+	//Logger::LogDebug(LOG_POS("Sort"), "Sort time: %f ms", (stop - start) * 1000);
 	
 }
 
@@ -175,5 +175,5 @@ void GPUSort::Sort(std::vector<glm::vec4>& values, bool on_gpu)
 	}
 
 	float stop = Utilities::Get_Time();
-	Logger::LogDebug(LOG_POS("Sort"), "Sort time: %f ms", (stop - start) * 1000);
+	//Logger::LogDebug(LOG_POS("Sort"), "Sort time: %f ms", (stop - start) * 1000);
 }

@@ -233,7 +233,7 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
 {
    
     platform_id = (cl_platform_id)pltform.platform;
-    Logger::LogDebug(LOG_POS("Init"), "Init Platform ID: %X", platform_id);
+    //Logger::LogDebug(LOG_POS("Init"), "Init Platform ID: %X", platform_id);
     
 #if USE_GL_CONTEXT == 1
 
@@ -241,7 +241,7 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
 
     pclGetGLContextInfoKHR = (clGetGLContextInfoKHR_fn)clGetExtensionFunctionAddressForPlatform(platform_id, "clGetGLContextInfoKHR");
     //wglGetCurrentContext
-    Logger::LogDebug(LOG_POS("Init"), "Creating context with WIN32 OpenGL context");
+    //Logger::LogDebug(LOG_POS("Init"), "Creating context with WIN32 OpenGL context");
     properties[0] = CL_GL_CONTEXT_KHR;
     properties[1] = (cl_context_properties)wglGetCurrentContext();
     //properties[1] = (cl_context_properties)glfwGetWGLContext(window::glfw_window());
@@ -401,7 +401,7 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
     cl_bool manual_sync;
     //CL_DEVICE_PREFERRED_INTEROP_USER_SYNC
     clGetDeviceInfo(deviceID, CL_DEVICE_PREFERRED_INTEROP_USER_SYNC, sizeof(cl_bool), &manual_sync, 0);
-    Logger::LogDebug(LOG_POS("ComputeContext"), "Requires manual sync: %i\n", (int)manual_sync);
+    //Logger::LogDebug(LOG_POS("ComputeContext"), "Requires manual sync: %i\n", (int)manual_sync);
     g_manual_sync = manual_sync | FORCE_MANUAL_SYNC;
 
     cl_ulong local_size;
@@ -802,10 +802,10 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
                Logger::LogError(LOG_POS("ComputeBuffer"), "Failed to acquire for CL GL buffer: %i", res_acq);
            }
            clWaitForEvents(1, &finished_event);
-           Logger::LogDebug(LOG_POS("ComputeBuffer"), "Pre-acquired GL object.");
+           //Logger::LogDebug(LOG_POS("ComputeBuffer"), "Pre-acquired GL object.");
        }
        else {
-           Logger::LogDebug(LOG_POS("ComputeBuffer"), "Pre-acquire GL object disabled.");
+           //Logger::LogDebug(LOG_POS("ComputeBuffer"), "Pre-acquire GL object disabled.");
        }
        //delete[] tmp_buff;
 
