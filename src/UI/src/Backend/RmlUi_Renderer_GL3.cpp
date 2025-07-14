@@ -38,7 +38,7 @@
 #include <algorithm>
 #include <string.h>
 
-
+#include "Logger.h"
 
 #if defined RMLUI_PLATFORM_WIN32_NATIVE
 	// function call missing argument list
@@ -515,10 +515,13 @@ static bool CreateShader(GLuint& out_shader_id, GLenum shader_type, const char* 
 {
 	RMLUI_ASSERT(shader_type == GL_VERTEX_SHADER || shader_type == GL_FRAGMENT_SHADER);
 
-
+	Logger::LogDebug("", "1");
 	GLuint id = glCreateShader(shader_type);
+	Logger::LogDebug("", "2");
 	glShaderSource(id, 1, (const GLchar**)&code_string, NULL);
+	Logger::LogDebug("", "3");
 	glCompileShader(id);
+	Logger::LogDebug("", "4");
 
 	GLint status = 0;
 	glGetShaderiv(id, GL_COMPILE_STATUS, &status);
@@ -2189,6 +2192,13 @@ bool RmlGL3::Initialize(Rml::String* out_message)
 		*out_message = Rml::CreateString("Loaded OpenGL %d.%d.", GLAD_VERSION_MAJOR(gl_version), GLAD_VERSION_MINOR(gl_version));
 #else
 	*out_message = "custom GL loader";
+	if (!Init_Glad())
+	{
+		*out_message = "Failed to initialize GLAD";
+	}
+	else {
+		*out_message = "custom GL loaded";
+	}
 #endif
 
 	return true;

@@ -358,7 +358,6 @@ add_subdirectory("Elements")
 add_subdirectory("Layout")
 #add_subdirectory("Backend")
 
-target_compile_definitions(${module} PUBLIC "RMLUI_STATIC_LIB")
 
 if(RMLUI_FONT_ENGINE STREQUAL "freetype")
 	# Include the source files for the default font engine.

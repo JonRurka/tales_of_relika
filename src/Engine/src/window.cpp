@@ -139,15 +139,18 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 	glfwSetWindowUserPointer(m_window, user_obj);
 	if (m_window == NULL)
 	{
-		std::cout << "Failed to create GLFW window" << std::endl;
+        Logger::LogError(LOG_POS("Create_Window"), "Failed to create GLFW window");
 		glfwTerminate();
+        return m_window;
 	}
 	glfwMakeContextCurrent(m_window);
     glfwSwapInterval(1);  // Enable vsync
 
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	if (!Init_Glad())
 	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
+		Logger::LogError(LOG_POS("Create_Window"), "Failed to initialize GLAD");
+        glfwTerminate();
+        return m_window;
 	}
 
 	glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);

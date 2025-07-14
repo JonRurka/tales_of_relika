@@ -1,4 +1,4 @@
-/*#include <iostream>
+#include <iostream>
 
 #include "game_imp.h"
 
@@ -8,8 +8,10 @@ int main()
 
 	Game game;
 	return game.Run();
-}*/
+}
 
+
+/*
 #include "FontEngineInterfaceBitmap.h"
 #include <RmlUi/Core.h>
 #include <RmlUi/Debugger.h>
@@ -18,6 +20,7 @@ int main()
 #include "PlatformExtensions.h"
 #include "ShellFileInterface.h"
 
+#include "Engine/include/Logger.h"
 #include "Engine/include/Resources.h"
 
 namespace {
@@ -94,6 +97,10 @@ namespace {
 
 int main()
 {
+	Logger::Set_Direct(true);
+
+	Resources* resources = new Resources();
+
 	int window_width = 1024;
 	int window_height = 768;
 
@@ -171,3 +178,4 @@ int main()
 	Backend::Shutdown();
 	file_interface.reset();
 }
+*/

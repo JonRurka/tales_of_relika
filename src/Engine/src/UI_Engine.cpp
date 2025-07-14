@@ -261,7 +261,7 @@ void UI_Engine::Update()
 
 	m_context->Update();
 
-	m_render_interface->Clear();
+	//m_render_interface->Clear();
 	m_render_interface->BeginFrame();
 	m_context->Render();
 	m_render_interface->EndFrame();

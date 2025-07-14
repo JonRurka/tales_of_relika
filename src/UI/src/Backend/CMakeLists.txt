@@ -25,4 +25,8 @@ add_library(${module} STATIC
 
 
 #target_link_libraries(${module} PUBLIC UI)
-target_link_libraries(${module} Engine boost::boost rmlui)
+target_link_libraries(${module} 
+	${RMLUI_LIBS}
+	Engine 
+	boost::boost 
+)

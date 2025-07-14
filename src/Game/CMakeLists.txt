@@ -70,6 +70,7 @@ set(${module}_sources
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
 
 target_link_libraries(${module} 
+	${RMLUI_LIBS}
 	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
@@ -85,12 +86,12 @@ target_link_libraries(${module}
 	imgui::imgui
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
-	rmlui
+	#rmlui
 	#rmlui_debugger
 	#rmlui_shell
 )
 
-target_link_libraries(${module} Compute VoxelEngine Engine Server UI_debugger UI_Backend)
+target_link_libraries(${module} Compute VoxelEngine Engine Server UI_Backend)
 
 
 

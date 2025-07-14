@@ -31,6 +31,11 @@ using nlohmann::json;
 #define LOAD_MODE_FS 1
 #define LOAD_MODE_BIN 2
 
+#define LOAD_SHADERS true
+#define LOAD_TEXTURES true
+#define LOAD_MODELS true
+#define LOAD_DATA_FILES true
+
 #define LOAD_MODE LOAD_MODE_BIN
 
 Resources* Resources::m_instance{nullptr};
@@ -714,6 +719,9 @@ void Resources::process_external_data_file(Asset a)
 
 void Resources::load_shaders_binary()
 {
+    if (!LOAD_SHADERS)
+        return;
+
     std::string data_dir = Get_Data_Directory();
     std::string shader_data_file = data_dir + "s000.dat";
     std::string shader_pack_file = data_dir + "s001.pack";
@@ -747,6 +755,9 @@ void Resources::load_shaders_binary()
 
 void Resources::load_textures_binary()
 {
+    if (!LOAD_TEXTURES)
+        return;
+
     std::string data_dir = Get_Data_Directory();
     std::string texture_data_file = data_dir + "t000.dat";
 
@@ -764,6 +775,9 @@ void Resources::load_textures_binary()
 
 void Resources::load_models_binary()
 {
+    if (!LOAD_MODELS)
+        return;
+
     std::string data_dir = Get_Data_Directory();
     std::string model_data_file = data_dir + "m000.dat";
 
@@ -781,6 +795,9 @@ void Resources::load_models_binary()
 
 void Resources::load_data_binary()
 {
+    if (!LOAD_DATA_FILES)
+        return;
+
     std::string data_dir = Get_Data_Directory();
     std::string data_data_file = data_dir + "d000.dat";
 

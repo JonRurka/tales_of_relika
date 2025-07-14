@@ -76,6 +76,7 @@ set(${module}_sources
 	src/Mesh.cpp
 	src/MeshRenderer.cpp
 	src/Model.cpp
+	src/opengl.cpp
 	src/Renderer.cpp
 	src/Shader.cpp
 	src/Texture.cpp
@@ -100,6 +101,7 @@ set(${module}_sources
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
 
 target_link_libraries(${module} 
+	${RMLUI_LIBS}
 	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
@@ -117,13 +119,13 @@ target_link_libraries(${module}
 	imgui::imgui
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
-	rmlui
+	#rmlui
 	#rmlui_debugger
 	#rmlui_shell
 	#rmlui_bin rmlui_debugger_bin
 )
 
-target_link_libraries(${module} Compute VoxelEngine UI_debugger UI_Backend)
+target_link_libraries(${module} Compute VoxelEngine UI_Backend)
 
 
 

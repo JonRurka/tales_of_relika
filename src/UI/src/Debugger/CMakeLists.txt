@@ -1,6 +1,6 @@
 set(module "UI_debugger")
 
-add_library(${module}
+add_library(${module} STATIC
 	BeaconSource.h
 	CommonSource.h
 	Debugger.cpp
@@ -35,6 +35,8 @@ target_sources(${module} PRIVATE
 	"../../include/RmlUi/Debugger.h"
 )
 
-#target_link_libraries(${module} PUBLIC UI)
-target_link_libraries(${module} PUBLIC rmlui)
-
+if(SOURCE_RMLUI)
+	target_link_libraries(${module} PUBLIC UI)
+else()
+	target_link_libraries(${module} PUBLIC rmlui)
+endif()

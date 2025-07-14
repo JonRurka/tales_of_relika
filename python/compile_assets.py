@@ -307,5 +307,5 @@ print('\n')
 
 print('Processing Data.')
 reset()
-process_assets('resources/data', ['.ini', '.txt', '.json', '.fnt', '.rml', '.rcss'], general_process_asset);
+process_assets('resources/data', ['.ini', '.txt', '.json', '.fnt', '.rml', '.rcss', '.tga'], general_process_asset);
 serialize_resources('d', data_resources, data_resource_bytes)

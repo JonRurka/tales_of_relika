@@ -27,8 +27,8 @@ void Game::Init()
 	
 	
 	UI_Engine::Instance()->Load_Font(Resources::Engine_UI_Assets::DEFAULT_FONT);
-	UI_Engine::Instance()->Load_Document_Resource("demo", Game_Resources::UI::Documents::DEMO);
-	//UI_Engine::Instance()->Load_Document_File("demo", "test.rml");
+	//UI_Engine::Instance()->Load_Document_Resource("demo", Game_Resources::UI::Documents::DEMO);
+	UI_Engine::Instance()->Load_Document_File("demo", "test.rml");
 	UI_Engine::Instance()->Display("demo");
 
 	Logger::LogInfo(LOG_POS("Init"), "Game Initialized.");
