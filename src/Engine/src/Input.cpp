@@ -187,6 +187,12 @@ void Input::update(float dt)
 	update_keys(dt);
 	update_mouse_move(dt);
 	update_mouse_press(dt);
+
+	m_scroll_frames = std::max(m_scroll_frames - 1, 0);
+	if (m_scroll_frames == 0) {
+		m_scroll_dx = 0;
+		m_scroll_dy = 0;
+	}
 }
 
 void Input::update_keys(float dt)
@@ -345,6 +351,24 @@ void Input::mouse_button_callback(GLFWwindow* window, int button, int action, in
 	/*OnMouseButtonInput_delegate.Call();*/
 }
 
+void Input::scroll_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	m_scroll_dx = xpos;
+	m_scroll_dy = ypos;
+	m_scroll_frames = 2;
+
+	/*MouseAction mouse_action = MouseAction::Scroll;
+	MouseButton mouse_button = MouseButton::Unknown;
+
+	MouseButtonInputEvent input_event = MouseButtonInputEvent{
+			mouse_button,
+			mouse_action,
+			static_cast<float>(xpos),
+			static_cast<float>(ypos)};*/
+
+
+}
+
 bool Input::get_key_down(KeyCode key)
 {
 	return m_input_down_keys.contains(key);
@@ -388,12 +412,22 @@ void Input::set_mouse_visibility(bool visible)
 
 double Input::get_input_x(std::string device)
 {
-	return m_mouse_dx * m_mouse_sensitivity;
+	if (device == "") {
+		return m_mouse_dx * m_mouse_sensitivity;
+	}
+	else if (device == "scroll") {
+		return m_scroll_dx;
+	}
 }
 
 double Input::get_input_y(std::string device)
 {
-	return m_mouse_dy * m_mouse_sensitivity;
+	if (device == "") {
+		return m_mouse_dy * m_mouse_sensitivity;
+	}
+	else if (device == "scroll") {
+		return m_scroll_dy;
+	}
 }
 
 glm::vec2 Input::get_mouse_pos()

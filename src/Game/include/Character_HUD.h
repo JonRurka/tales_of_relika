@@ -4,11 +4,22 @@
 
 class ISO_Sampler;
 
+namespace Rml {
+	class Context;
+	class ElementDocument;
+}
+
 class Character_HUD : public Component {
 
 public:
 
 	void Init(Camera* camera);
+
+	void HotBar_Visible(bool visible);
+
+	void Set_HotBar_Tile_Material(int hotbar_id, int material_id);
+
+	void Set_Active_HotBar_Tile(int hotbar_id);
 
 protected:
 	void Init() override;
@@ -24,6 +35,11 @@ private:
 	bool show_demo_window = true;
 	bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+	Rml::ElementDocument* m_hotbar_doc{ nullptr };
+	int m_last_active_hotbar_tile{ -1 };
+
+	int m_iter_hotbar_tile{ 0 };
 
 	void draw_ui();
 

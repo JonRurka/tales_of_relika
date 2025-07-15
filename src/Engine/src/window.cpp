@@ -113,6 +113,13 @@ namespace {
         user_ptr->mouse_button_callback(window, button, action, mods);
     }
 
+    void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+        Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
+        if (user_ptr == nullptr)
+            return;
+        user_ptr->scroll_callback(window, xoffset, yoffset);
+    }
+
 }
 
 GLFWwindow* window::Create_Window(const char* title, int width, int height, void* user_obj)
@@ -157,6 +164,7 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
     glfwSetKeyCallback(m_window, static_key_callback);
     glfwSetCursorPosCallback(m_window, static_cursor_position_callback);
     glfwSetMouseButtonCallback(m_window, static_mouse_button_callback);
+    glfwSetScrollCallback(m_window, ScrollCallback);
 
     glfwSetInputMode(m_window, GLFW_STICKY_KEYS, 1);
     glfwSetInputMode(m_window, GLFW_STICKY_MOUSE_BUTTONS, 1);

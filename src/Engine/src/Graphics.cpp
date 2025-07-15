@@ -253,6 +253,12 @@ void Graphics::cursor_position_callback(GLFWwindow* window, double xpos, double 
 	Input::Instance()->cursor_position_callback(window, xpos, ypos);
 }
 
+void Graphics::scroll_callback(GLFWwindow* p_window, double xoffset, double yoffset)
+{
+	Input::Instance()->scroll_callback(p_window, xoffset, yoffset);
+	UI_Engine::Instance()->ScrollCallback(p_window, xoffset, yoffset);
+}
+
 void Graphics::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
 	bool propogated = UI_Engine::Instance()->MouseButtonCallback(window, button, action, mods);

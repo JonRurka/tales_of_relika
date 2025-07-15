@@ -29,6 +29,8 @@ public:
 
 	Rml::ElementDocument* Load_Document_File(std::string name, std::string file_path);
 
+	Rml::ElementDocument* Get_Document(std::string name);
+
 	void Display(std::string doc_name);
 
 	void Update();

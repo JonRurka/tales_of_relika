@@ -242,6 +242,7 @@ namespace input {
 		Up,
 		Repeat,
 		Move,
+		Scroll,
 		Unknown
 	};
 

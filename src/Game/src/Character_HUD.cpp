@@ -6,9 +6,15 @@
 #include "Block_Type.h"
 #include "Block.h"
 
+#include <RmlUi/Core.h>
 #include "imgui.h"
 
+#include "Game_Resources.h"
+
 using namespace VoxelEngine;
+
+#define IMAGE_DIR "material_previews"
+#define IMAGE_EXT ".tga"
 
 #define GRID_SIZE 8
 namespace {
@@ -28,6 +34,56 @@ namespace {
 void Character_HUD::Init(Camera* camera)
 {
 	m_camera = camera;
+
+	m_hotbar_doc = UI_Engine::Instance()->Load_Document_Resource("hot_bar", Game_Resources::UI::Documents::HUD::HOT_BAR);
+	m_hotbar_doc->Show();
+
+	Set_HotBar_Tile_Material(0, 4);
+	Set_Active_HotBar_Tile(0);
+
+	m_iter_hotbar_tile = 0;
+}
+
+void Character_HUD::HotBar_Visible(bool visible)
+{
+	if (visible) {
+		m_hotbar_doc->Show();
+	}
+	else {
+		m_hotbar_doc->Hide();
+	}
+}
+
+void Character_HUD::Set_HotBar_Tile_Material(int hotbar_id, int material_id)
+{
+	std::string img_id = "item_img_" + std::to_string(hotbar_id);
+
+	Rml::Element* img_elem = m_hotbar_doc->GetElementById(img_id);
+
+	std::string tile_img_src = IMAGE_DIR + std::string("/") + std::to_string(material_id) + IMAGE_EXT;
+	img_elem->SetAttribute("src", tile_img_src);
+	img_elem->SetProperty("visibility", "visible");
+}
+
+void Character_HUD::Set_Active_HotBar_Tile(int hotbar_id)
+{
+	if (hotbar_id == m_last_active_hotbar_tile)
+		return;
+
+	std::string cell_id = "item_cell_" + std::to_string(hotbar_id);
+
+	Rml::Element* cell_elem = m_hotbar_doc->GetElementById(cell_id);
+
+	cell_elem->SetProperty("border-color", "gray");
+
+	if (m_last_active_hotbar_tile >= 0)
+	{
+		cell_id = "item_cell_" + std::to_string(m_last_active_hotbar_tile);
+		cell_elem = m_hotbar_doc->GetElementById(cell_id);
+		cell_elem->SetProperty("border-color", "black");
+	}
+
+	m_last_active_hotbar_tile = hotbar_id;
 }
 
 void Character_HUD::Init()
@@ -37,10 +93,28 @@ void Character_HUD::Init()
 
 void Character_HUD::Update(float dt)
 {
-	bool can_place = false;
-	if (Utilities::Get_Time() - m_edit_timer > 0.1f) {
+	/*bool can_place = false;
+	double cur_time = Utilities::Get_Time();
+	if (cur_time - m_edit_timer > 1.0f) {
+		m_edit_timer = cur_time;
 		can_place = true;
-	}
+		Set_Active_HotBar_Tile(m_iter_hotbar_tile);
+
+		m_iter_hotbar_tile++;
+		if (m_iter_hotbar_tile >= 10)
+			m_iter_hotbar_tile = 0;
+	}*/
+
+	//Logger::LogDebug(LOG_POS("Update"), "%f", Input::Get_Input_Y("scroll"));
+
+	 int scroll_delta = std::round(Input::Get_Input_Y("scroll"));
+	 m_iter_hotbar_tile += scroll_delta;
+
+	 if (m_iter_hotbar_tile < 0)
+		 m_iter_hotbar_tile = 9;
+	 if (m_iter_hotbar_tile >= 10)
+		 m_iter_hotbar_tile = 0;
+	 Set_Active_HotBar_Tile(m_iter_hotbar_tile);
 
 	draw_ui();
 

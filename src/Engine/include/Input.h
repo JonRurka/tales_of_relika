@@ -43,6 +43,7 @@ public:
 
 
 
+
 	static glm::vec2 Get_Mouse_Position() { return m_instance->get_mouse_pos(); }
 
 	static void Mouse_Sensitivity(double value) { m_instance->m_mouse_sensitivity = value; }
@@ -70,7 +71,9 @@ private:
 	double m_mouse_sensitivity{ 1 };
 	int m_frames_mouse_moved{ 0 };
 
-
+	double m_scroll_dx{ 0 };
+	double m_scroll_dy{ 0 };
+	int m_scroll_frames{ 0 };
 
 	//MouseButtonAction OnMouseMoveInput_delegate;
 	//MouseButtonAction OnMouseButtonInput_delegate;
@@ -79,6 +82,7 @@ private:
 	void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/);
 	void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/);
+	void scroll_callback(GLFWwindow* window, double xpos, double ypos);
 
 	void update(float dt);
 

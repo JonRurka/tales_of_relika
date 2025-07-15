@@ -85,7 +85,13 @@ public:
 
 		class Documents {
 		public:
+
 			inline static const std::string DEMO = "UI::bitmap_font.rml";
+
+			class HUD {
+			public:
+				inline static const std::string HOT_BAR = "UI::HUD::HotBar.rml";
+			};
 		};
 
 	};

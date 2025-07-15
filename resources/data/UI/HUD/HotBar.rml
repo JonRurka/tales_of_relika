@@ -1,0 +1,63 @@
+<rml>
+<head>
+	<link type="text/rcss" href="../rml.rcss"/>
+	<style>
+	body {
+		width: 100%;
+		height: 100%;
+	}
+	
+	.item_parent{
+		width: 100%;
+		position: fixed;
+		bottom: 25px;
+	}
+
+	.item_container{
+		margin: auto;
+		width: 500px;
+		height: 50px;
+	}
+
+	.item_cell{
+		width: 50px;
+		height: 49px;
+		background-color: rgba(0, 0, 0, 128);
+		padding: 0px;
+		margin: 0px;
+		border-width: 1px;
+	}
+
+	.item_table{
+		
+	}
+	
+	.tile_img{
+		width : 48px;
+		height: 47px;
+	}
+	</style>
+</head>
+<body>
+
+<div class='item_parent'>
+  <div class='item_container'>
+    <table class='item_table'>
+      <tr>
+        <td style='border-color: black;' class='item_cell' id='item_cell_0'><img id='item_img_0' style='visibility: hidden;' class='tile_img' src="" /></td>
+        <td style='border-color: black;' class='item_cell' id='item_cell_1'><img id='item_img_1' style='visibility: hidden;' class='tile_img' src="" /></td>
+        <td style='border-color: black;' class='item_cell' id='item_cell_2'><img id='item_img_2' style='visibility: hidden;' class='tile_img' src="" /></td>
+        <td style='border-color: black;' class='item_cell' id='item_cell_3'><img id='item_img_3' style='visibility: hidden;' class='tile_img' src="" /></td>
+        <td style='border-color: black;' class='item_cell' id='item_cell_4'><img id='item_img_4' style='visibility: hidden;' class='tile_img' src="" /></td>
+        <td style='border-color: black;' class='item_cell' id='item_cell_5'><img id='item_img_5' style='visibility: hidden;' class='tile_img' src="" /></td>
+        <td style='border-color: black;' class='item_cell' id='item_cell_6'><img id='item_img_6' style='visibility: hidden;' class='tile_img' src="" /></td>
+        <td style='border-color: black;' class='item_cell' id='item_cell_7'><img id='item_img_7' style='visibility: hidden;' class='tile_img' src="" /></td>
+        <td style='border-color: black;' class='item_cell' id='item_cell_8'><img id='item_img_8' style='visibility: hidden;' class='tile_img' src="" /></td>
+        <td style='border-color: black;' class='item_cell' id='item_cell_9'><img id='item_img_9' style='visibility: hidden;' class='tile_img' src="" /></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+</body>
+</rml>

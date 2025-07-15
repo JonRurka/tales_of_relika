@@ -72,6 +72,8 @@ public:
 
 	void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 
+	void scroll_callback(GLFWwindow*, double, double yoffset);
+
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/);
 
 	void Register_Resize_Tex(Texture* tex);

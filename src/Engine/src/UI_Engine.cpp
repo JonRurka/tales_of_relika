@@ -56,9 +56,9 @@ bool UI_Engine::Init()
 	});
 
 	// TODO: Make event in window class and Graphics class for this instead.
-	glfwSetScrollCallback(window, [](GLFWwindow* p_window, double xoffset, double yoffset) {
-		m_instance->ScrollCallback(p_window, xoffset, yoffset);
-	});
+	//glfwSetScrollCallback(window, [](GLFWwindow* p_window, double xoffset, double yoffset) {
+	//	m_instance->ScrollCallback(p_window, xoffset, yoffset);
+	//});
 
 	glfwSetWindowContentScaleCallback(window, [](GLFWwindow* p_window, float xscale, float yscale) { 
 		m_instance->WindowContentScaleCallback(p_window, xscale, yscale);
@@ -184,6 +184,21 @@ Rml::ElementDocument* UI_Engine::Load_Document_Resource(std::string name, std::s
 		return nullptr;
 	}
 
+	Resources::Asset asset = Resources::Get_Data_Asset(resource_name);
+	std::string rel_path = asset.relative_path;
+
+	Rml::ElementDocument* document = m_context->LoadDocument(rel_path);
+	if (!document) {
+		Logger::LogError(LOG_POS("Load_Document_File"), "Failed to load document file: %s", name.c_str());
+		return nullptr;
+	}
+
+	m_documents[name] = document;
+	Logger::LogInfo(LOG_POS("Load_Document_File"), "Document file %s loaded.", name.c_str());
+	return document;
+	
+
+	/*
 	std::string file_content = Resources::Get_Data_File_String(resource_name);
 
 	auto stream = Rml::MakeUnique<Rml::StreamMemory>();
@@ -197,7 +212,7 @@ Rml::ElementDocument* UI_Engine::Load_Document_Resource(std::string name, std::s
 	
 	m_documents[name] = document;
 	Logger::LogInfo(LOG_POS("Load_Document_Resource"), "Document asset %s loaded: %s", name.c_str(), file_content.c_str());
-	return document;
+	return document;*/
 }
 
 Rml::ElementDocument* UI_Engine::Load_Document_File(std::string name, std::string file_path)
@@ -215,6 +230,14 @@ Rml::ElementDocument* UI_Engine::Load_Document_File(std::string name, std::strin
 	m_documents[name] = document;
 	Logger::LogInfo(LOG_POS("Load_Document_File"), "Document file %s loaded", name.c_str());
 	return document;
+}
+
+Rml::ElementDocument* UI_Engine::Get_Document(std::string name)
+{
+	if (!Document_Exists(name)) {
+		return nullptr;
+	}
+	return m_documents[name];
 }
 
 void UI_Engine::Display(std::string doc_name)
