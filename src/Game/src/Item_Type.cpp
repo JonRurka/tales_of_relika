@@ -2,6 +2,9 @@
 
 #include "Item_Loader.h"
 
+std::unordered_map<int, Item_Type*> Item_Type::m_types;
+std::unordered_map<std::string, Item_Type*> Item_Type::m_name_map;
+
 Item_Type* Item_Type::Empty()
 {
     return m_types[0];

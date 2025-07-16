@@ -515,13 +515,9 @@ static bool CreateShader(GLuint& out_shader_id, GLenum shader_type, const char* 
 {
 	RMLUI_ASSERT(shader_type == GL_VERTEX_SHADER || shader_type == GL_FRAGMENT_SHADER);
 
-	Logger::LogDebug("", "1");
 	GLuint id = glCreateShader(shader_type);
-	Logger::LogDebug("", "2");
 	glShaderSource(id, 1, (const GLchar**)&code_string, NULL);
-	Logger::LogDebug("", "3");
 	glCompileShader(id);
-	Logger::LogDebug("", "4");
 
 	GLint status = 0;
 	glGetShaderiv(id, GL_COMPILE_STATUS, &status);

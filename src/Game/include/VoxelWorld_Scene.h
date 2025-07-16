@@ -10,6 +10,8 @@ class Client_Server;
 class GameClient;
 class NetPlayerManager;
 class LocalPlayerCharacter;
+class Item_Loader;
+class Item_Type;
 
 class VoxelWorld_Scene : public Scene {
 public:
@@ -36,6 +38,8 @@ private:
 	Light* light_comp_dir{ nullptr };
 	WorldObject* Camera_obj{ nullptr };
 	Camera* camera{ nullptr };
+
+	Item_Loader* m_item_loader{ nullptr };
 
 	WorldObject* world_gen_controller_obj{ nullptr };
 	WorldGenController* world_gen_controller{ nullptr };

@@ -309,6 +309,10 @@ bool UI_Engine::KeyCallback(GLFWwindow*, int glfw_key, int, int glfw_action, int
 	if (!m_initialized)
 		return true;
 
+	if (!m_accept_input) {
+		return true;
+	}
+
 	m_glfw_active_modifiers = glfw_mods;
 
 	GLFWwindow* window = Graphics::Instance()->Get_GLFW_Window();
@@ -373,6 +377,11 @@ bool UI_Engine::MouseButtonCallback(GLFWwindow*, int button, int action, int mod
 		return true;
 	if (!m_initialized)
 		return true;
+
+	if (!m_accept_input) {
+		return true;
+	}
+
 	m_glfw_active_modifiers = mods;
 	bool propogated = RmlGLFW::ProcessMouseButtonCallback(m_context, button, action, mods);
 	return propogated;
@@ -384,6 +393,11 @@ bool UI_Engine::ScrollCallback(GLFWwindow*, double, double yoffset)
 		return true;
 	if (!m_initialized)
 		return true;
+
+	if (!m_accept_input) {
+		return true;
+	}
+
 	bool propogated = RmlGLFW::ProcessScrollCallback(m_context, yoffset, m_glfw_active_modifiers);
 	return propogated;
 }

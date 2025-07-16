@@ -214,7 +214,7 @@ void Graphics::Set_Screen_FrameTexture(Texture* tex)
 void Graphics::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	bool propogated = UI_Engine::Instance()->KeyCallback(window, key, scancode, action, mods);
-	if (!propogated)
+	if (propogated)
 		Input::Instance()->key_callback(window, key, scancode, action, mods);
 }
 
@@ -262,7 +262,7 @@ void Graphics::scroll_callback(GLFWwindow* p_window, double xoffset, double yoff
 void Graphics::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
 	bool propogated = UI_Engine::Instance()->MouseButtonCallback(window, button, action, mods);
-	if (!propogated)
+	if (propogated)
 		Input::Instance()->mouse_button_callback(window, button, action, mods);
 }
 

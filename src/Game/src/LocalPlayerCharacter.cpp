@@ -13,11 +13,12 @@ void LocalPlayerCharacter::Init()
 {
 	m_instance = this;
 
-	m_capsule_collider = Object()->Add_Component<CapsuleCollider>();
-	
 	m_body_trans = Object()->Get_Transform();
+	m_body_trans->Position(glm::vec3(0, 50, 0));
 
-	m_body_trans->Position(glm::vec3(0, 20, 0));
+	m_capsule_collider = Object()->Add_Component<CapsuleCollider>();
+	m_capsule_collider->Activate();
+	
 }
 
 void LocalPlayerCharacter::Update(float dt)
@@ -40,23 +41,27 @@ void LocalPlayerCharacter::move_control(float dt)
 {
 
 	glm::vec2 move_vec = glm::vec2(0.0);
-	if (Input::GetKeyDown(input::KeyCode::W)) {
+	if (Input::GetKey(input::KeyCode::W)) {
+		Logger::LogDebug(LOG_POS("move_control"), "move forward");
 		move_vec.y += 1;
 	}
-	if (Input::GetKeyDown(input::KeyCode::S)) {
+	if (Input::GetKey(input::KeyCode::S)) {
 		move_vec.y -= 1;
 	}
-	if (Input::GetKeyDown(input::KeyCode::A)) {
+	if (Input::GetKey(input::KeyCode::A)) {
 		move_vec.x += 1;
 	}
-	if (Input::GetKeyDown(input::KeyCode::D)) {
+	if (Input::GetKey(input::KeyCode::D)) {
 		move_vec.x -= 1;
 	}
 
 	m_capsule_collider->RigidBody()->translate(btVector3(
-		move_vec.x, 0, move_vec.y)
+		move_vec.x * m_moveSpeed, 0, move_vec.y * m_moveSpeed)
 	);
 
+	//btTransform r_trans = m_capsule_collider->RigidBody()->getWorldTransform();
+	//r_trans.set
+	//m_capsule_collider->RigidBody()->setWorldTransform(r_trans);
 	//m_capsule_collider->RigidBody()->applyCentralImpulse(btVector3(move_vec.x, 0, move_vec.y));
 
 }
@@ -71,6 +76,8 @@ void LocalPlayerCharacter::look_control(float dt)
 
 void LocalPlayerCharacter::Set_Camera_Object(WorldObject* cam_object)
 {
+	Logger::LogDebug(LOG_POS("Set_Camera_Object"), "Set camera");
+
 	//cam_object->Parent(Object());
 	cam_object->Get_Transform()->Position(glm::vec3(0, 0, 0));
 
@@ -138,7 +145,14 @@ void LocalPlayerCharacter::update_rotation(float dt, float mouse_x, float mouse_
 	glm::vec3 euler = m_cam_trans->EulerAngles();
 
 	glm::vec3 body_euler = m_body_trans->EulerAngles();
-	m_body_trans->Rotation(body_euler.x, euler.y, body_euler.z);
+
+	btQuaternion quat;
+	quat.setEulerZYX(body_euler.z, euler.y, body_euler.x);
+	btTransform r_trans = m_capsule_collider->RigidBody()->getWorldTransform();
+	r_trans.setRotation(quat);
+	m_capsule_collider->RigidBody()->setWorldTransform(r_trans);
+
+	//m_capsule_collider->RigidBody()->rotate(body_euler.x, euler.y, body_euler.z);
 
 	m_cam_trans->Position(m_body_trans->Position() + glm::vec3(0, 0.45, 0));
 }

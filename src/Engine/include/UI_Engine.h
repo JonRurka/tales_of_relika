@@ -31,6 +31,8 @@ public:
 
 	Rml::ElementDocument* Get_Document(std::string name);
 
+	void Accept_Input(bool val) { m_accept_input = true; }
+
 	void Display(std::string doc_name);
 
 	void Update();
@@ -51,6 +53,8 @@ private:
 
 	bool m_initialized{ false };
 	int m_glfw_active_modifiers{ 0 };
+
+	int m_accept_input{ false };
 
 	std::string m_ui_data_root;
 

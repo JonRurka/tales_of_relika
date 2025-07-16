@@ -93,9 +93,7 @@ void Game::init_block_types()
 	m_material_types = new Material_Types();
 	m_material_types->Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
 	m_material_types->Initialize_Materials();
-
 	Material_Processor::Add<Uniform_Material_Processor>();
-
 	Block_Type::Init();
 }
 

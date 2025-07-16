@@ -10,6 +10,9 @@
 #include "LocalPlayerCharacter.h"
 #include "Character_HUD.h"
 
+#include "Item_Loader.h"
+#include "Item_Type.h"
+
 #include "Standard_Material.h"
 
 void VoxelWorld_Scene::Init()
@@ -18,10 +21,8 @@ void VoxelWorld_Scene::Init()
 
 	setup_camera();
 	setup_lights();
-	setup_chunk_gen();
-	setup_structure_controller();
-	//setup_client_server();
-	//setup_game_client();
+	setup_client_server();
+	setup_game_client();
 
 	//create_test_items();
 
@@ -50,8 +51,10 @@ void VoxelWorld_Scene::Update(float dt)
 
 void VoxelWorld_Scene::GameConnected()
 {
+	setup_chunk_gen();
+	setup_structure_controller();
 	setup_local_player();
-	setup_net_player_manager();
+	//setup_net_player_manager();
 }
 
 void VoxelWorld_Scene::setup_camera()
@@ -132,11 +135,17 @@ void VoxelWorld_Scene::setup_game_client()
 {
 	game_client_obj = Instantiate("Game_Client");
 	game_client = game_client_obj->Add_Component<GameClient>();
+	game_client->SetOnConnectSuccess(OnGameConnect, this);
 	game_client->Init("test_user", 1, m_remote_connection);
+	game_client->Connect();
 }
 
 void VoxelWorld_Scene::setup_local_player()
 {
+	m_item_loader = new Item_Loader();
+	m_item_loader->Load_Items(Game_Resources::Data_Files::ITEM_TYPES);
+	Item_Type::Init();
+
 	local_player_character_obj = Instantiate("Local_Character");
 	local_player_character = local_player_character_obj->Add_Component<LocalPlayerCharacter>();
 	local_player_character->Set_Camera_Object(Camera_obj);
