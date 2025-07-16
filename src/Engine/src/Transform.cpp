@@ -53,6 +53,28 @@ void Transform::Rotate(float x, float y, float z)
 	//m_rotation = model
 }
 
+void Transform::Rotation(glm::vec3 value)
+{
+	Rotation(value.x, value.y, value.z);
+}
+
+void Transform::Rotation(float x, float y, float z)
+{
+	if (m_verbos) {
+		Logger::LogDebug(LOG_POS("Rotate"), "Rotate transform for '%s': (%f, %f, %f)",
+			m_object->Name().c_str(), x, y, z);
+	}
+
+	m_rotation = 
+		glm::angleAxis(glm::radians(x), glm::vec3(1.0f, 0.0f, 0.0f)) *
+		glm::angleAxis(glm::radians(y), glm::vec3(0.0f, 1.0f, 0.0f)) *
+		glm::angleAxis(glm::radians(z), glm::vec3(0.0f, 0.0f, 1.0f));
+	//rot_mat = glm::rotate(rot_mat, glm::radians(x), glm::vec3(1.0f, 0.0f, 0.0f));
+	//rot_mat = glm::rotate(rot_mat, glm::radians(y), glm::vec3(0.0f, 1.0f, 0.0f));
+	//rot_mat = glm::rotate(rot_mat, glm::radians(z), glm::vec3(0.0f, 0.0f, 1.0f));
+	set_model_mat();
+}
+
 void Transform::Scale(glm::vec3 value)
 {
 	if (m_verbos) {

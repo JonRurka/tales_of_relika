@@ -10,6 +10,7 @@ public:
 	class Data_Files {
 	public:
 		inline static const std::string BLOCK_TYPES = "block_types.ini";
+		inline static const std::string ITEM_TYPES = "item_types.ini";
 	};
 
 	class Models {

@@ -10,6 +10,7 @@
 #include "imgui.h"
 
 #include "Game_Resources.h"
+#include "Item_Type.h"
 
 using namespace VoxelEngine;
 
@@ -38,10 +39,12 @@ void Character_HUD::Init(Camera* camera)
 	m_hotbar_doc = UI_Engine::Instance()->Load_Document_Resource("hot_bar", Game_Resources::UI::Documents::HUD::HOT_BAR);
 	m_hotbar_doc->Show();
 
-	Set_HotBar_Tile_Material(0, 4);
+	Set_HotBar_Tile_ID(0, 4);
 	Set_Active_HotBar_Tile(0);
 
 	m_iter_hotbar_tile = 0;
+
+	m_hot_bar_items = std::vector<Inventory_Item>(10, Inventory_Item());
 }
 
 void Character_HUD::HotBar_Visible(bool visible)
@@ -54,7 +57,18 @@ void Character_HUD::HotBar_Visible(bool visible)
 	}
 }
 
-void Character_HUD::Set_HotBar_Tile_Material(int hotbar_id, int material_id)
+void Character_HUD::Set_Hotbar_Item(int hotbar_id, Inventory_Item item)
+{
+	m_hot_bar_items[hotbar_id] = item;
+	Set_HotBar_Tile_ID(hotbar_id, item.Get_Type()->Get_ID());
+}
+
+Inventory_Item Character_HUD::Get_Hotbar_Item(int hotbar_id)
+{
+	return m_hot_bar_items[hotbar_id];
+}
+
+void Character_HUD::Set_HotBar_Tile_ID(int hotbar_id, int material_id)
 {
 	std::string img_id = "item_img_" + std::to_string(hotbar_id);
 

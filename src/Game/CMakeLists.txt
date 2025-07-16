@@ -33,6 +33,9 @@ set(${module}_headers
 	include/Block.h
 	include/Material_Processor.h
 	include/Uniform_Material_Processor.h
+	include/Item_Loader.h
+	include/Item_Type.h
+	include/Inventory_Item.h
 )
 
 set(${module}_sources
@@ -65,6 +68,9 @@ set(${module}_sources
 	src/Block.cpp
 	src/Material_Processor.cpp
 	src/Uniform_Material_Processor.cpp
+	src/Item_Loader.cpp
+	src/Item_Type.cpp
+	src/Inventory_Item.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})

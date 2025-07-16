@@ -2,6 +2,8 @@
 
 #include "game_engine.h"
 
+#include "Inventory_Item.h"
+
 class ISO_Sampler;
 
 namespace Rml {
@@ -17,7 +19,9 @@ public:
 
 	void HotBar_Visible(bool visible);
 
-	void Set_HotBar_Tile_Material(int hotbar_id, int material_id);
+	void Set_Hotbar_Item(int hotbar_id, Inventory_Item item);
+
+	Inventory_Item Get_Hotbar_Item(int hotbar_id);
 
 	void Set_Active_HotBar_Tile(int hotbar_id);
 
@@ -41,7 +45,11 @@ private:
 
 	int m_iter_hotbar_tile{ 0 };
 
+	std::vector<Inventory_Item> m_hot_bar_items;
+
 	void draw_ui();
+
+	void Set_HotBar_Tile_ID(int hotbar_id, int material_id);
 
 	void left_click_block(glm::vec3 hit_point, glm::vec3 normal);
 	void right_click_block(glm::vec3 hit_point, glm::vec3 normal);

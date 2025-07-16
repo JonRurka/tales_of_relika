@@ -17,6 +17,8 @@ public:
 		return m_instance;
 	}
 
+	void Set_Camera_Object(WorldObject* cam_object);
+
 	void SendJumpEvent();
 
 	void SendPlayerEvent(OpCodes::Player_Events event_cmd);
@@ -36,13 +38,26 @@ private:
 
 	glm::vec3 m_location;
 
+	Transform* m_body_trans{ nullptr };
+
 	CapsuleCollider* m_capsule_collider{ nullptr };
 
-	void jump_control();
+	float m_moveSpeed = 10.0f; // movement speed of the character
+	float m_turnSpeed = 180.0f; // turn speed of the character
+	Transform* m_cameraTransform; // reference to the camera transform
 
-	void move_control();
+	Transform* m_cam_trans{ nullptr };
+	float m_cam_horizontalAngle{ 0 };
+	float m_cam_verticalAngle{ 0 };
+	glm::vec3 m_cam_euler;
 
-	void look_control();
+	void update_rotation(float dt, float mouse_x, float mouse_y);
+
+	void jump_control(float dt);
+
+	void move_control(float dt);
+
+	void look_control(float dt);
 
 	void Send(OpCodes::Server cmd, std::vector<uint8_t> data, Protocal type = Protocal_Tcp);
 

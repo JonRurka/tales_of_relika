@@ -26,6 +26,10 @@ public:
 
 	void Rotate(float x, float y, float z);
 
+	void Rotation(glm::vec3 value);
+
+	void Rotation(float x, float y, float z);
+
 	void Scale(float s) { Scale(s, s, s); }
 
 	void Scale(glm::vec3 value);
