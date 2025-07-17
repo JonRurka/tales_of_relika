@@ -38,6 +38,7 @@ public:
 		return m_instance->get_mouse_key_up(key);
 	}
 	static void Set_Mouse_Visibility(bool visible) { m_instance->set_mouse_visibility(visible); }
+	static bool Get_Mouse_Visibility() { return m_instance->get_mouse_visibility(); }
 	static double Get_Input_X(std::string device = "") { return m_instance->get_input_x(device); }
 	static double Get_Input_Y(std::string device = "") { return m_instance->get_input_y(device); }
 
@@ -97,6 +98,7 @@ private:
 	bool get_mouse_key(input::MouseButton key);
 	bool get_mouse_key_up(input::MouseButton key);
 	void set_mouse_visibility(bool visible);
+	bool get_mouse_visibility();
 	double get_input_x(std::string device);
 	double get_input_y(std::string device);
 	glm::vec2 get_mouse_pos();

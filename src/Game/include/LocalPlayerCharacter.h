@@ -7,7 +7,8 @@
 
 #include <vector>
 
-class CapsuleCollider;
+class CharacterCollider;
+class Standard_Material;
 
 class LocalPlayerCharacter : public Component {
 public:
@@ -40,16 +41,21 @@ private:
 
 	Transform* m_body_trans{ nullptr };
 
-	CapsuleCollider* m_capsule_collider{ nullptr };
+	CharacterCollider* m_capsule_collider{ nullptr };
 
 	float m_moveSpeed = 10.0f; // movement speed of the character
 	float m_turnSpeed = 180.0f; // turn speed of the character
+	float m_jump_force = 300.0f;
 	Transform* m_cameraTransform; // reference to the camera transform
 
 	Transform* m_cam_trans{ nullptr };
 	float m_cam_horizontalAngle{ 0 };
 	float m_cam_verticalAngle{ 0 };
 	glm::vec3 m_cam_euler;
+
+	Standard_Material* m_character_material{ nullptr };
+
+	bool m_mouse_hidden{ false };
 
 	void update_rotation(float dt, float mouse_x, float mouse_y);
 
@@ -58,6 +64,8 @@ private:
 	void move_control(float dt);
 
 	void look_control(float dt);
+
+	void init_geometry();
 
 	void Send(OpCodes::Server cmd, std::vector<uint8_t> data, Protocal type = Protocal_Tcp);
 

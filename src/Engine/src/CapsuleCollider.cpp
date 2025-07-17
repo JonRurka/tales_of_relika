@@ -9,7 +9,6 @@ void CapsuleCollider::Init()
 {
 	base_Init();
 
-	m_shape = new btSphereShape(m_radius);
 	m_shape = new btCapsuleShape(m_radius, m_height);
 }
 
@@ -19,7 +18,7 @@ void CapsuleCollider::Radius(float radius)
 		delete m_shape;
 	}
 	m_radius = radius;
-	m_shape = new btSphereShape(m_radius);
+	m_shape = new btCapsuleShape(m_radius, m_height);
 	OnRefresh();
 }
 

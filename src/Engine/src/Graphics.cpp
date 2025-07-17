@@ -389,6 +389,7 @@ void Graphics::update_window_title(std::string title)
 
 void Graphics::set_mouse_visibility(bool visible)
 {
+	m_mouse_visible = visible;
 	int visibility_mode = visible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED;
 	glfwSetInputMode(m_window, GLFW_CURSOR, visibility_mode);
 }

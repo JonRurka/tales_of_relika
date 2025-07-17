@@ -8,6 +8,8 @@
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 
+#define DEFAULT_GRAVITY (-10.0f)
+
 class Engine;
 class Collider;
 class BoxCollider;
@@ -42,6 +44,13 @@ public:
 	static RayHit		Raycast(glm::vec3 from, glm::vec3 dir);
 	static RayHitList	RaycastAll(glm::vec3 from, glm::vec3 dir);
 
+	static btBroadphaseInterface* Get_Broadphase() { return m_instance->m_overlappingPairCache; }
+
+	static btDiscreteDynamicsWorld* GetDynamicWorld() { return m_instance->m_dynamicsWorld; }
+
+	static void Gravity(float val) { m_instance->m_gravity = val; }
+	static float Gravity() { return m_instance->m_gravity; }
+	
 private:
 	Physics();
 
@@ -52,6 +61,7 @@ private:
 	btDiscreteDynamicsWorld* m_dynamicsWorld{ nullptr };
 
 	double m_last_update{ 0 };
+	float m_gravity{ DEFAULT_GRAVITY };
 
 	//keep track of the shapes, we release memory at exit.
 	//make sure to re-use collision shapes among rigid bodies whenever possible!
@@ -66,6 +76,8 @@ private:
 
 	static void Add_Rigidbody(btRigidBody* body) { m_instance->add_rigidbody(body); }
 	void add_rigidbody(btRigidBody* body);
+
+	//static void Add_Object();
 
 	static void Remove_Rigidbody(btRigidBody* body) { m_instance->remove_rigidbody(body); }
 	void remove_rigidbody(btRigidBody* body);

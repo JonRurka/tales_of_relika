@@ -136,6 +136,8 @@ void Camera::Set_Skybox(Cubemap* value)
 
 void Camera::ScreenPointToRay(glm::vec2 screen_pos, glm::vec3& start, glm::vec3& dir)
 {
+
+
 	float width = Graphics::Width();
 	float height = Graphics::Height();
 
@@ -153,6 +155,14 @@ void Camera::ScreenPointToRay(glm::vec2 screen_pos, glm::vec3& start, glm::vec3&
 	origin = inv_pv * point;
 	origin /= origin.w;
 	start = origin;
+
+	bool start_null = glm::all(glm::isnan(start));
+	bool dir_null = glm::all(glm::isnan(dir));
+	if (start_null || dir_null) {
+		start = glm::vec3(0);
+		dir = glm::vec3(0, 0, 1);
+		Logger::LogError(LOG_POS("ScreenPointToRay"), "Resultant Start or Dir null!");
+	}
 }
 
 Texture* Camera::FrameTexture()

@@ -410,6 +410,11 @@ void Input::set_mouse_visibility(bool visible)
 	Graphics::Instance()->set_mouse_visibility(visible);
 }
 
+bool Input::get_mouse_visibility()
+{
+	return Graphics::Instance()->get_mouse_visibility();
+}
+
 double Input::get_input_x(std::string device)
 {
 	if (device == "") {

@@ -76,7 +76,7 @@ void VoxelWorld_Scene::setup_camera()
 	Camera_obj->Get_Transform()->LookAt(glm::vec3(0.0f, 10.0f, 100.0f));
 	camera = Camera_obj->Add_Component<Camera>();
 	camera->Clear_Color(glm::vec4(1.0, 1.0, 0.0, 1.0));
-	//Editor_Camera_Control* cam_control = Camera_obj->Add_Component<Editor_Camera_Control>();
+	Editor_Camera_Control* cam_control = Camera_obj->Add_Component<Editor_Camera_Control>();
 	//cam_control->Speed(10.0f);
 	//camera->Clear_Color(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	//camera->FOV(90.0f);
@@ -148,7 +148,7 @@ void VoxelWorld_Scene::setup_local_player()
 
 	local_player_character_obj = Instantiate("Local_Character");
 	local_player_character = local_player_character_obj->Add_Component<LocalPlayerCharacter>();
-	local_player_character->Set_Camera_Object(Camera_obj);
+	//local_player_character->Set_Camera_Object(Camera_obj);
 }
 
 void VoxelWorld_Scene::setup_net_player_manager()

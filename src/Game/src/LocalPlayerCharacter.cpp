@@ -5,7 +5,13 @@
 #include "Network/BufferUtils.h"
 #include "Physics.h"
 #include "CapsuleCollider.h"
+#include "CharacterCollider.h"
+#include "Standard_Material.h"
+#include "Game_Resources.h"
+#include "Primitives.h"
 
+#include"BulletCollision/CollisionDispatch/btGhostObject.h"
+#include"BulletDynamics/Character/btKinematicCharacterController.h"
 
 LocalPlayerCharacter* LocalPlayerCharacter::m_instance{nullptr};
 
@@ -16,16 +22,27 @@ void LocalPlayerCharacter::Init()
 	m_body_trans = Object()->Get_Transform();
 	m_body_trans->Position(glm::vec3(0, 50, 0));
 
-	m_capsule_collider = Object()->Add_Component<CapsuleCollider>();
+	m_capsule_collider = Object()->Add_Component<CharacterCollider>();
+	m_capsule_collider->Mass(50.0);
 	m_capsule_collider->Activate();
 	
+	//m_capsule_collider->RigidBody()->setAngularFactor(btVector3(1.0f, 1.0f, 1.0f));
+
+	init_geometry();
+
+
 }
 
 void LocalPlayerCharacter::Update(float dt)
 {
-	//jump_control(dt);
-	//move_control(dt);
-	look_control(dt);
+	if (Input::GetKeyDown(KeyCode::Escape)) {
+		m_mouse_hidden = !m_mouse_hidden;
+		Input::Set_Mouse_Visibility(m_mouse_hidden);
+	}
+
+	jump_control(dt);
+	move_control(dt);
+	//look_control(dt);
 }
 
 void LocalPlayerCharacter::OnDestroy()
@@ -34,30 +51,59 @@ void LocalPlayerCharacter::OnDestroy()
 
 void LocalPlayerCharacter::jump_control(float dt)
 {
-	
+	if (Input::GetKeyDown(KeyCode::Space)) {
+		//m_capsule_collider->RigidBody()->applyCentralImpulse(btVector3(0, m_jump_force, 0));
+	}
 }
 
 void LocalPlayerCharacter::move_control(float dt)
 {
-
+	bool do_move = false;
 	glm::vec2 move_vec = glm::vec2(0.0);
-	if (Input::GetKey(input::KeyCode::W)) {
-		Logger::LogDebug(LOG_POS("move_control"), "move forward");
+	if (Input::GetKey(input::KeyCode::Up)) {
+		//Logger::LogDebug(LOG_POS("move_control"), "move forward");
+		do_move = true;
 		move_vec.y += 1;
 	}
-	if (Input::GetKey(input::KeyCode::S)) {
+	if (Input::GetKey(input::KeyCode::Down)) {
+		do_move = true;
 		move_vec.y -= 1;
 	}
-	if (Input::GetKey(input::KeyCode::A)) {
+	if (Input::GetKey(input::KeyCode::Left)) {
+		do_move = true;
 		move_vec.x += 1;
 	}
-	if (Input::GetKey(input::KeyCode::D)) {
+	if (Input::GetKey(input::KeyCode::Right)) {
+		do_move = true;
 		move_vec.x -= 1;
 	}
 
-	m_capsule_collider->RigidBody()->translate(btVector3(
-		move_vec.x * m_moveSpeed, 0, move_vec.y * m_moveSpeed)
-	);
+	
+	if (do_move) {
+		glm::vec3 tr_move_vec = glm::vec3(move_vec.x, 0, move_vec.y);
+
+		if (m_capsule_collider->Get_Controller()->onGround())
+			m_capsule_collider->Get_Controller()->setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
+		else
+			m_capsule_collider->Get_Controller()->setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 30);
+		//glm::vec3 transformed_move_vec = m_body_trans->Local_To_World_Direction(glm::vec3(move_vec.x, 0, move_vec.y));
+		//glm::vec3 transformed_move_vec = glm::vec3(move_vec.x, 0, move_vec.y);
+		//btVector3 curr_vel = m_capsule_collider->RigidBody()->getLinearVelocity();
+		//m_capsule_collider->RigidBody()->setLinearVelocity(btVector3(
+		//	transformed_move_vec.x * m_moveSpeed, curr_vel.y(), transformed_move_vec.z * m_moveSpeed)
+		//);
+	}
+	else {
+		m_capsule_collider->Get_Controller()->setWalkDirection(btVector3(0, 0, 0));
+	}
+
+	btTransform r_trans = m_capsule_collider->Get_Ghost_Object()->getWorldTransform();
+	btVector3 bt_forward = r_trans(btVector3(0, 0, 1));
+	glm::vec3 forward = glm::normalize(glm::vec3(bt_forward.x(), bt_forward.y(), bt_forward.z()) - m_body_trans->Position());
+
+	Graphics::DrawDebugRay(m_body_trans->Position(), forward, glm::vec3(1, 0, 0));
+
+	//m_capsule_collider->RigidBody()->getWorldTransform()
 
 	//btTransform r_trans = m_capsule_collider->RigidBody()->getWorldTransform();
 	//r_trans.set
@@ -68,19 +114,50 @@ void LocalPlayerCharacter::move_control(float dt)
 
 void LocalPlayerCharacter::look_control(float dt)
 {
-	if (Input::GetMouseKey(MouseButton::Right)) {
+	if (m_mouse_hidden)
+	{
 		float mouse_x = Input::Get_Input_X();
 		float mouse_y = Input::Get_Input_Y();
-		//Logger::LogDebug(LOG_POS("look_control"), "(%f, %f)",
-		//	mouse_x, mouse_y);
-		update_rotation(dt, mouse_x, mouse_y);
+		//update_rotation(dt, mouse_x, mouse_y);
 	}
+	m_cam_trans->Position(m_body_trans->Position() + glm::vec3(0, 0.45, 0));
+}
+
+void LocalPlayerCharacter::init_geometry()
+{
+	m_character_material = new Standard_Material();
+	m_character_material->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
+	m_character_material->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	m_character_material->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));
+	m_character_material->setFloat("material_shininess", 32.0f);
+	m_character_material->setFloat("material_specular_intensity", 1.0f);
+	m_character_material->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	m_character_material->setFloat("globalAmbientIntensity", 0.1f);
+	m_character_material->setTexture("material_diffuse", Game_Resources::Textures::CONTAINER_DIFFUSE);
+	m_character_material->setTexture("material_specular", Game_Resources::Textures::CONTAINER_SPECULAR);
+
+	glm::vec4 cube_color(1.0f, 1.0f, 1.0f, 1.0f);
+	std::vector<glm::vec4> floor_cube_colors;
+	floor_cube_colors.assign(Primitives::Capsule_Vertices.size(), cube_color);
+
+	Mesh* cube_mesh = new Mesh();
+	cube_mesh->Vertices(Primitives::Capsule_Vertices);
+	cube_mesh->Normals(Primitives::Capsule_Normals);
+	cube_mesh->Colors(floor_cube_colors);
+	cube_mesh->Indices(Primitives::Capsule_Triangles);
+	//cube_mesh->TexCoords(floor_tex_coords);
+	cube_mesh->Activate();
+
+	Object()->Get_MeshRenderer()->Set_Mesh(cube_mesh);
+	Object()->Get_MeshRenderer()->Set_Material(m_character_material);
 }
 
 
 void LocalPlayerCharacter::Set_Camera_Object(WorldObject* cam_object)
 {
 	Logger::LogDebug(LOG_POS("Set_Camera_Object"), "Set camera");
+	Input::Set_Mouse_Visibility(false);
+	m_mouse_hidden = true;
 
 	//cam_object->Parent(Object());
 	cam_object->Get_Transform()->Position(m_body_trans->Position() + glm::vec3(0, 0.45, 0));
@@ -134,8 +211,8 @@ void LocalPlayerCharacter::update_rotation(float dt, float mouse_x, float mouse_
 	float horiz_rad = glm::radians(m_cam_euler.y);
 	float vert_rad = glm::radians(m_cam_euler.x);
 
-	Logger::LogDebug(LOG_POS("update_rotation"), "(%f, %f)", 
-		horiz_rad, vert_rad);
+	//Logger::LogDebug(LOG_POS("update_rotation"), "(%f, %f)", 
+	//	horiz_rad, vert_rad);
 
 	glm::vec3 currentViewingDirection = glm::vec3(
 		cos(vert_rad) * sin(horiz_rad),
@@ -155,11 +232,11 @@ void LocalPlayerCharacter::update_rotation(float dt, float mouse_x, float mouse_
 
 	btQuaternion quat;
 	quat.setEulerZYX(body_euler.z, euler.y, body_euler.x);
-	btTransform r_trans = m_capsule_collider->RigidBody()->getWorldTransform();
-	r_trans.setRotation(quat);
+	btTransform r_trans = m_capsule_collider->Get_Ghost_Object()->getWorldTransform();
+	//r_trans.setRotation(quat);
 	//m_capsule_collider->RigidBody()->setWorldTransform(r_trans);
 
 	//m_capsule_collider->RigidBody()->rotate(body_euler.x, euler.y, body_euler.z);
 
-	m_cam_trans->Position(m_body_trans->Position() + glm::vec3(0, 0.45, 0));
+	
 }

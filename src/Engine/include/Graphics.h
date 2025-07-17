@@ -104,6 +104,7 @@ private:
 	UI_Engine* m_UI{ nullptr };
 
 	bool m_initialized{ false };
+	bool m_mouse_visible{ true };
 
 	Mesh* m_screen_mesh{nullptr};
 	Shader* m_screen_shader{ nullptr };
@@ -127,6 +128,8 @@ private:
 	void update_window_title(std::string title);
 
 	void set_mouse_visibility(bool visible);
+
+	bool get_mouse_visibility() { return m_mouse_visible; }
 
 	inline static const std::string LOG_LOC{ "GRAPHICS" };
 };

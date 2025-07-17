@@ -84,7 +84,7 @@ STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos
 	else{
 		iso_result = height_iso;
 	}
-	//iso_result = height_iso;
+	iso_result = height_iso;
 	
 	
 	if (change_iso){

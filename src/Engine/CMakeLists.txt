@@ -45,12 +45,15 @@ set(${module}_headers
 	include/LuaEngine.h
 	include/UI_Engine.h
 	
+	include/Primitives.h
+	
 	include/Light.h
 	include/Collider.h
 	include/BoxCollider.h
 	include/SphereCollider.h
 	include/CapsuleCollider.h
 	include/MeshCollider.h
+	include/CharacterCollider.h
 )
 
 set(${module}_sources
@@ -96,6 +99,7 @@ set(${module}_sources
 	src/SphereCollider.cpp
 	src/CapsuleCollider.cpp
 	src/MeshCollider.cpp
+	src/CharacterCollider.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})

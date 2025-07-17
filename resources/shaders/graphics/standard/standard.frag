@@ -132,14 +132,17 @@ vec3 get_light(Light p_light){
 		}*/
 	}
 	
+	vec3 diffuse_color = vec3(1, 1, 1);//vec3(texture(material_diffuse, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)))
+	
 	// diffuse
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = intensity * lightColor * material.diffuseColor * diff * vec3(texture(material_diffuse, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
+    vec3 diffuse = intensity * lightColor * material.diffuseColor * diff * diffuse_color;
 	
 	// specular
+	vec3 spec_tex_col = vec3(0, 0, 0);//vec3(texture(material_specular, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
 	vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = intensity * material.specular_intensity * lightColor * spec /*material.specular*/ * vec3(texture(material_specular, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
+    vec3 specular = intensity * material.specular_intensity * lightColor * spec /*material.specular*/ * spec_tex_col;
 	
 	return vec3(diffuse + specular);
 }
@@ -150,8 +153,9 @@ void main()
 	
 	vec3 resColor = vec3(0.0f);
 	
+	vec3 ambient_tex_col = vec3(1, 1, 1);//vec3(texture(material_diffuse, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)))
 	// ambient
-	vec3 ambient = globalAmbientIntensity * globalAmbientLightColor * material.ambientColor * vec3(texture(material_diffuse, vec2(TexCoords.x * material.scale.x, TexCoords.y * material.scale.y)));
+	vec3 ambient = globalAmbientIntensity * globalAmbientLightColor * material.ambientColor * ambient_tex_col;
 	//vec3 ambient = 1.0 * globalAmbientLightColor * vec3(1.0f) * vec3(texture(material.diffuse, TexCoords));
 	resColor += ambient;
 	
