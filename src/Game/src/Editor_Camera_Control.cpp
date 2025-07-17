@@ -25,6 +25,8 @@ void Editor_Camera_Control::Update(float dt)
 	if (Input::GetMouseKey(MouseButton::Right)) {
 		float mouse_x = Input::Get_Input_X();
 		float mouse_y = Input::Get_Input_Y();
+		Logger::LogDebug(LOG_POS("Update"), "(%f, %f)",
+			mouse_x, mouse_y);
 		update_rotation(dt, mouse_x, mouse_y);
 		is_holding_left_mouse = true;
 	}
@@ -76,6 +78,8 @@ void Editor_Camera_Control::update_rotation(float dt, float mouse_x, float mouse
 	float horiz_rad = glm::radians(m_euler.y);
 	float vert_rad = glm::radians(m_euler.x);
 
+	Logger::LogDebug(LOG_POS("update_rotation"), "(%f, %f)",
+		horiz_rad, vert_rad);
 
 	glm::vec3 currentViewingDirection = glm::vec3(
 		cos(vert_rad) * sin(horiz_rad),

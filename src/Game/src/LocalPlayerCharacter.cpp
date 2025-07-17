@@ -23,8 +23,8 @@ void LocalPlayerCharacter::Init()
 
 void LocalPlayerCharacter::Update(float dt)
 {
-	jump_control(dt);
-	move_control(dt);
+	//jump_control(dt);
+	//move_control(dt);
 	look_control(dt);
 }
 
@@ -68,9 +68,13 @@ void LocalPlayerCharacter::move_control(float dt)
 
 void LocalPlayerCharacter::look_control(float dt)
 {
-	float mouse_x = Input::Get_Input_X();
-	float mouse_y = Input::Get_Input_Y();
-	update_rotation(dt, mouse_x, mouse_y);
+	if (Input::GetMouseKey(MouseButton::Right)) {
+		float mouse_x = Input::Get_Input_X();
+		float mouse_y = Input::Get_Input_Y();
+		//Logger::LogDebug(LOG_POS("look_control"), "(%f, %f)",
+		//	mouse_x, mouse_y);
+		update_rotation(dt, mouse_x, mouse_y);
+	}
 }
 
 
@@ -79,9 +83,9 @@ void LocalPlayerCharacter::Set_Camera_Object(WorldObject* cam_object)
 	Logger::LogDebug(LOG_POS("Set_Camera_Object"), "Set camera");
 
 	//cam_object->Parent(Object());
-	cam_object->Get_Transform()->Position(glm::vec3(0, 0, 0));
+	cam_object->Get_Transform()->Position(m_body_trans->Position() + glm::vec3(0, 0.45, 0));
 
-	m_cam_trans = Object()->Get_Transform();
+	m_cam_trans = cam_object->Get_Transform();
 	Input::Mouse_Sensitivity(50);
 
 	m_cam_euler = m_cam_trans->EulerAngles();
@@ -130,6 +134,8 @@ void LocalPlayerCharacter::update_rotation(float dt, float mouse_x, float mouse_
 	float horiz_rad = glm::radians(m_cam_euler.y);
 	float vert_rad = glm::radians(m_cam_euler.x);
 
+	Logger::LogDebug(LOG_POS("update_rotation"), "(%f, %f)", 
+		horiz_rad, vert_rad);
 
 	glm::vec3 currentViewingDirection = glm::vec3(
 		cos(vert_rad) * sin(horiz_rad),
@@ -138,6 +144,7 @@ void LocalPlayerCharacter::update_rotation(float dt, float mouse_x, float mouse_
 	);
 
 	glm::quat new_rot = glm::quatLookAt(currentViewingDirection, glm::vec3(0.0f, 1.0f, 0.0f));
+
 	m_cam_trans->Rotation(new_rot);
 
 	//Logger::LogDebug(LOG_POS("Init"), "New Rotation: ( %f, %f)", m_horizontalAngle, m_verticalAngle);
@@ -150,7 +157,7 @@ void LocalPlayerCharacter::update_rotation(float dt, float mouse_x, float mouse_
 	quat.setEulerZYX(body_euler.z, euler.y, body_euler.x);
 	btTransform r_trans = m_capsule_collider->RigidBody()->getWorldTransform();
 	r_trans.setRotation(quat);
-	m_capsule_collider->RigidBody()->setWorldTransform(r_trans);
+	//m_capsule_collider->RigidBody()->setWorldTransform(r_trans);
 
 	//m_capsule_collider->RigidBody()->rotate(body_euler.x, euler.y, body_euler.z);
 
