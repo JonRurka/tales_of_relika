@@ -9,6 +9,7 @@
 #include "NetPlayerManager.h"
 #include "LocalPlayerCharacter.h"
 #include "Character_HUD.h"
+#include "Primitives.h"
 
 #include "Item_Loader.h"
 #include "Item_Type.h"
@@ -55,6 +56,37 @@ void VoxelWorld_Scene::GameConnected()
 	setup_structure_controller();
 	setup_local_player();
 	//setup_net_player_manager();
+
+
+
+	/*Standard_Material* m_character_material = new Standard_Material();
+	m_character_material->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
+	m_character_material->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	m_character_material->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));
+	m_character_material->setFloat("material_shininess", 32.0f);
+	m_character_material->setFloat("material_specular_intensity", 1.0f);
+	m_character_material->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	m_character_material->setFloat("globalAmbientIntensity", 0.1f);
+	m_character_material->setTexture("material_diffuse", Game_Resources::Textures::CONTAINER_DIFFUSE);
+	m_character_material->setTexture("material_specular", Game_Resources::Textures::CONTAINER_SPECULAR);
+
+	WorldObject* obj = Instantiate("test_obj");
+
+	glm::vec4 cube_color(1.0f, 1.0f, 1.0f, 1.0f);
+	std::vector<glm::vec4> floor_cube_colors;
+	floor_cube_colors.assign(Primitives::Capsule_Vertices.size(), cube_color);
+
+	Mesh* cube_mesh = new Mesh();
+	cube_mesh->Vertices(Primitives::Capsule_Vertices);
+	cube_mesh->Normals(Primitives::Capsule_Normals);
+	cube_mesh->Colors(floor_cube_colors);
+	cube_mesh->Indices(Primitives::Capsule_Triangles);
+	//cube_mesh->TexCoords(floor_tex_coords);
+	cube_mesh->Activate();
+
+	obj->Get_Transform()->Translate(0.0f, 10.0f, 0.0f);
+	obj->Get_MeshRenderer()->Set_Mesh(cube_mesh);
+	obj->Get_MeshRenderer()->Set_Material(m_character_material);*/
 }
 
 void VoxelWorld_Scene::setup_camera()
@@ -76,7 +108,7 @@ void VoxelWorld_Scene::setup_camera()
 	Camera_obj->Get_Transform()->LookAt(glm::vec3(0.0f, 10.0f, 100.0f));
 	camera = Camera_obj->Add_Component<Camera>();
 	camera->Clear_Color(glm::vec4(1.0, 1.0, 0.0, 1.0));
-	Editor_Camera_Control* cam_control = Camera_obj->Add_Component<Editor_Camera_Control>();
+	//Editor_Camera_Control* cam_control = Camera_obj->Add_Component<Editor_Camera_Control>();
 	//cam_control->Speed(10.0f);
 	//camera->Clear_Color(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	//camera->FOV(90.0f);
@@ -148,7 +180,7 @@ void VoxelWorld_Scene::setup_local_player()
 
 	local_player_character_obj = Instantiate("Local_Character");
 	local_player_character = local_player_character_obj->Add_Component<LocalPlayerCharacter>();
-	//local_player_character->Set_Camera_Object(Camera_obj);
+	local_player_character->Set_Camera_Object(Camera_obj);
 }
 
 void VoxelWorld_Scene::setup_net_player_manager()

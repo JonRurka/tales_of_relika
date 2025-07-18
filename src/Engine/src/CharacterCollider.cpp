@@ -3,6 +3,7 @@
 #include "WorldObject.h"
 #include "Transform.h"
 #include "Logger.h"
+#include "Graphics.h"
 
 #include"BulletCollision/CollisionDispatch/btGhostObject.h"
 #include"BulletDynamics/Character/btKinematicCharacterController.h"
@@ -11,7 +12,7 @@ void CharacterCollider::Init()
 {
 	base_Init();
 
-	m_shape = new btCapsuleShape(m_radius, m_height);
+	m_shape = new btCapsuleShapeZ(m_radius, m_height);
 }
 
 void CharacterCollider::Radius(float radius) 
@@ -20,7 +21,7 @@ void CharacterCollider::Radius(float radius)
 		delete m_shape;
 	}
 	m_radius = radius;
-	m_shape = new btCapsuleShape(m_radius, m_height);
+	m_shape = new btCapsuleShapeZ(m_radius, m_height);
 }
 
 void CharacterCollider::Height(float height) 
@@ -29,7 +30,7 @@ void CharacterCollider::Height(float height)
 		delete m_shape;
 	}
 	m_height = height;
-	m_shape = new btCapsuleShape(m_radius, m_height);
+	m_shape = new btCapsuleShapeZ(m_radius, m_height);
 }
 
 void CharacterCollider::Update(float dt)
@@ -43,10 +44,16 @@ void CharacterCollider::Update(float dt)
 	btQuaternion  quat = t.getRotation();
 
 	Object()->Get_Transform()->Position(glm::fvec3(pos.x(), pos.y(), pos.z()));
-	Object()->Get_Transform()->Rotation(glm::quat(quat.x(), quat.y(), quat.z(), quat.w()));
+	//Object()->Get_Transform()->Rotation(glm::quat(quat.x(), quat.y(), quat.z(), quat.w()));
 
-	Logger::LogDebug(LOG_POS("Update"), "(%f, %f, %f)",
-		pos.x(), pos.y(), pos.z());
+	//Logger::LogDebug(LOG_POS("Update"), "(%f, %f, %f)",
+	//	pos.x(), pos.y(), pos.z());
+
+	//btVector3 min;
+	//btVector3 max;
+	//m_charCon->getGhostObject()->getCollisionShape()->getAabb(t, min, max);
+	//Graphics::DrawDebugRay(glm::vec3(min.x(), min.y(), min.z()), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+	//Graphics::DrawDebugRay(glm::vec3(max.x(), max.y(), max.z()), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0));
 }
 
 void CharacterCollider::Load(json data)
@@ -79,7 +86,7 @@ void CharacterCollider::OnRefresh()
 	m_ghostObject->setCollisionShape(m_shape);
 	m_ghostObject->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
 
-	m_charCon = new btKinematicCharacterController(m_ghostObject, (btCapsuleShape*)m_shape, 0.05f);
+	m_charCon = new btKinematicCharacterController(m_ghostObject, (btCapsuleShapeZ*)m_shape, 0.05f, btVector3(0, 1, 0));
 	m_charCon->setGravity(btVector3(0, Physics::Gravity(), 0));
 
 	Physics::GetDynamicWorld()->addCollisionObject(m_ghostObject, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::AllFilter);

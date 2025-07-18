@@ -7,6 +7,9 @@
 
 #include <vector>
 
+#define CAM_OFFSET_DEFAULT (glm::vec3(0, 1.2, 0))
+#define JUMP_POWER_DEFAULT (4.0)
+
 class CharacterCollider;
 class Standard_Material;
 
@@ -53,6 +56,13 @@ private:
 	float m_cam_verticalAngle{ 0 };
 	glm::vec3 m_cam_euler;
 
+	glm::vec3 cam_offset{ CAM_OFFSET_DEFAULT };
+	float m_jump_power{ JUMP_POWER_DEFAULT };
+
+	//btQuaternion m_body_quat;
+	glm::quat m_body_quat;
+	glm::vec3 m_look_dir_forward;
+	glm::vec3 m_look_dir_right;
 	Standard_Material* m_character_material{ nullptr };
 
 	bool m_mouse_hidden{ false };

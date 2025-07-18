@@ -3,7 +3,7 @@
 #include "Collider.h"
 
 #define DEFAULT_RADIUS (0.5f)
-#define DEFAULT_HEIGHT (2.0f)
+#define DEFAULT_HEIGHT (1.5f)
 
 class btPairCachingGhostObject;
 class btKinematicCharacterController;
