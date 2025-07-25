@@ -23,6 +23,10 @@ set(${module}_headers
 	include/Linux_conio.h
 	include/WorldController.h
 	include/World.h
+	include/WorldTerrain.h
+	include/WorldStructures.h
+	include/ServerTerrainChunk.h
+	include/ServerStructureChunk.h
 	include/Player.h
 	include/Server_Main.h
 	include/stdafx.h
@@ -44,6 +48,10 @@ set(${module}_sources
 	src/IUser.cpp
 	src/WorldController.cpp
 	src/World.cpp
+	src/WorldTerrain.cpp
+	src/WorldStructures.cpp
+	src/ServerTerrainChunk.cpp
+	src/ServerStructureChunk.cpp
 	src/Linux_conio.cpp
 	src/Player.cpp
 	src/Server_Main.cpp

@@ -7,6 +7,7 @@
 #include "HashHelper.h"
 #include "LuaEngine.h"
 #include "WorldController.h"
+#include "WorldTerrain.h"
 
 #include "glaze/glaze.hpp" 
 
@@ -147,7 +148,11 @@ void World::async_init()
 	m_running = true;
 	m_last_orientation_update = Server_Main::GetEpoch();
 	m_last_frame = Server_Main::GetEpoch();
-	async_init();
+
+	m_world_terrain = new WorldTerrain();
+	m_world_terrain->Init();
+
+	init_lua();
 }
 
 void World::init_lua()

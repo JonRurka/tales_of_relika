@@ -9,6 +9,7 @@
 #include "Standard_Material.h"
 #include "Game_Resources.h"
 #include "Primitives.h"
+#include "Character_HUD.h"
 
 #include"BulletCollision/CollisionDispatch/btGhostObject.h"
 #include"BulletDynamics/Character/btKinematicCharacterController.h"
@@ -162,6 +163,9 @@ void LocalPlayerCharacter::Set_Camera_Object(WorldObject* cam_object)
 
 	m_cam_euler = m_cam_trans->EulerAngles();
 	update_rotation(0, 0, 0);
+
+	m_hud = cam_object->Add_Component<Character_HUD>();
+	m_hud->Init(Camera::Get_Active());
 }
 
 void LocalPlayerCharacter::SendJumpEvent()

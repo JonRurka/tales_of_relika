@@ -114,8 +114,8 @@ void VoxelWorld_Scene::setup_camera()
 	//camera->FOV(90.0f);
 	camera->Set_Skybox(skybox_cubmap);
 
-	Character_HUD* hud = Camera_obj->Add_Component<Character_HUD>();
-	hud->Init(camera);
+	//Character_HUD* hud = Camera_obj->Add_Component<Character_HUD>();
+	//hud->Init(camera);
 
 
 	/*

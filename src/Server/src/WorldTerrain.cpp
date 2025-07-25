@@ -1,110 +1,60 @@
 #include "WorldTerrain.h"
-#include "WorldGenController.h"
 
-#include "Stitch_VBO.h"
-#include "Opaque_Chunk_Material.h"
-#include "TerrainChunk.h"
+#include "Logger.h"
+#include "Resources.h"
 #include "Game_Resources.h"
-#include "Material_Types.h"
 
-#include <algorithm>
-
-WorldGenController* WorldGenController::m_Instance{nullptr};
+#include "ServerTerrainChunk.h"
 
 namespace {
-	std::vector<double> construct_times;
-	const int max_times = 1000;
-
 
 	int floor_to_int(float val) {
 		return static_cast<int>(std::floor(val));
 	}
 }
 
-int WorldGenController::Hash_Chunk(glm::ivec3 chunk)
+WorldTerrain* WorldTerrain::m_Instance{nullptr};
+
+WorldTerrain::WorldTerrain()
 {
-	return Utilities::Hash_Chunk_Coord(chunk);
 }
 
-void WorldGenController::Init()
+void WorldTerrain::Init()
 {
 	m_Instance = this;
 
 	std::string block_types_str = Resources::Get_Data_File_String(Game_Resources::Data_Files::BLOCK_TYPES);
-	Logger::LogDebug(LOG_POS("Init"), "%s", block_types_str.c_str());
-
-
+	//Logger::LogDebug(LOG_POS("Init"), "%s", block_types_str.c_str());
+	
 	Logger::LogInfo(LOG_POS("Init"), "Initialized");
-
-	mTarget = Object()->Get_Transform(); // TODO: Get player transform.
 
 	m_half = 0;// ((1 / m_voxelsPerMeter) / 2.0);
 
-	int padded_radius = m_max_chunk_radius + 2;
-	m_max_column_target = std::round(3.14 * (m_max_chunk_radius * m_max_chunk_radius));
-	m_max_cached_columns = std::round(3.14 * (padded_radius * padded_radius));
+	int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
+	m_vertices = new glm::vec4[Max_Verts];
+	//m_normals = new glm::vec4[Max_Verts];
+	m_triangles = new unsigned int[Max_Verts];
 
-	m_max_cached_chunks = m_max_cached_columns * m_chunks_depth;
-
-
-	m_chunk_opaque_mat = new Opaque_Chunk_Material(); 
-	//m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
-	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance()->Terrain_Diffuse_Texture_Array());
-	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance()->Terrain_Normal_Texture_Array());
-	m_chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	m_chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	m_chunk_opaque_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
-	m_chunk_opaque_mat->setFloat("material.shininess", 8.0f);
-	m_chunk_opaque_mat->setFloat("material.specular_intensity", 1.0f);
-	m_chunk_opaque_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	m_chunk_opaque_mat->setFloat("globalAmbientIntensity", 0.01f);
-
-	//Logger::LogDebug(LOG_POS("Init"), "Max cached chunks: %i", m_max_cached_chunks);
-
+	compute_triangles();
 	initialize_voxel_engine();
-
-	Start();
+	create_chunk_cache();
 }
 
-void WorldGenController::Update(float dt)
+void WorldTerrain::Update()
 {
 	process_deletions();
 	process_additions();
-
-	if (m_gen_finished) {
-		process_modifications();
-	}
+	process_modifications();
 }
 
-void WorldGenController::Start()
+void WorldTerrain::Refresh_Chunk(glm::ivec3 chunk)
 {
-	create_chunk_cache();
-	generate_circular();
-
-	//Logger::LogDebug(LOG_POS("Start"), "The queue is %i long", m_create_queue.size());
-}
-
-TerrainChunk* WorldGenController::Get_Chunk(glm::ivec3 chunk_coord)
-{
-	return get_chunk(chunk_coord).chunk_comp;
-}
-
-ISO_Sampler* WorldGenController::Get_ISO_Sampler()
-{
-	return ((SmoothVoxelBuilder*)m_builder)->Get_ISO_Sampler();
-}
-
-void WorldGenController::Refresh_Chunk(glm::ivec3 chunk)
-{
-	//Logger::LogDebug(LOG_POS("Refresh_Chunk"), "Refresh chunk (%i, %i, %i)",
-	//	chunk.x, chunk.y, chunk.z);
 	TerrainMod val(glm::vec3(0, 0, 0));
 	Modify_Voxel(chunk, val, false);
 }
 
-void WorldGenController::Modify_Voxel_ISO(glm::ivec3 voxel, float iso)
+void WorldTerrain::Modify_Voxel_ISO(glm::ivec3 voxel, float iso)
 {
-	//Logger::LogDebug(LOG_POS("Modify_Voxel_ISO"), "Modify voxel");
 	glm::ivec3 chunk = voxelToChunk(voxel);
 	glm::ivec3 voxel_local = globalToLocalChunkCoord(chunk, voxel);
 
@@ -122,7 +72,7 @@ void WorldGenController::Modify_Voxel_ISO(glm::ivec3 voxel, float iso)
 	Modify_Voxel(chunk, mod);
 }
 
-void WorldGenController::Modify_Voxel_Type(glm::ivec3 voxel, int type)
+void WorldTerrain::Modify_Voxel_Type(glm::ivec3 voxel, int type)
 {
 	glm::ivec3 chunk = voxelToChunk(voxel);
 	glm::ivec3 voxel_local = globalToLocalChunkCoord(chunk, voxel);
@@ -137,11 +87,11 @@ void WorldGenController::Modify_Voxel_Type(glm::ivec3 voxel, int type)
 	Modify_Voxel(chunk, mod);
 }
 
-void WorldGenController::Modify_Voxel(std::vector<TerrainMod> values)
+void WorldTerrain::Modify_Voxel(std::vector<TerrainMod> values)
 {
 	std::unordered_map<int, std::vector<TerrainMod>> mods;
 
-	for (const auto& elem : values) 
+	for (const auto& elem : values)
 	{
 		glm::ivec3 chunk = voxelToChunk(elem.Voxel);
 		glm::ivec3 voxel_local = globalToLocalChunkCoord(chunk, elem.Voxel);
@@ -164,29 +114,28 @@ void WorldGenController::Modify_Voxel(std::vector<TerrainMod> values)
 		mods[chunk_hash].push_back(mod);
 	}
 
-	for (const auto& pair : mods) 
+	for (const auto& pair : mods)
 	{
 		glm::ivec3 chunk = pair.second[0].chunk_coord;
 		Modify_Voxel(chunk, pair.second);
 	}
 }
 
-void WorldGenController::Modify_Voxel(glm::ivec3 chunk, TerrainMod value, bool update_neighbor)
+void WorldTerrain::Modify_Voxel(glm::ivec3 chunk, TerrainMod value, bool update_neighbor = true)
 {
 	std::vector<TerrainMod> values;
 	values.push_back(value);
 	Modify_Voxel(chunk, values, update_neighbor);
 }
 
-void WorldGenController::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> values, bool update_neighbor)
+void WorldTerrain::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> values, bool update_neighbor = true)
 {
-
 	Submit_Terrain_Modification(chunk, values);
 
-	
+
 	if (update_neighbor) {
 		std::unordered_map<int, std::vector<TerrainMod>> neighboor_updates;
-		for (const auto& val : values) 
+		for (const auto& val : values)
 		{
 			glm::ivec3 voxel = val.Voxel;
 
@@ -198,7 +147,7 @@ void WorldGenController::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> 
 				other_chunk = glm::ivec3(chunk.x - 1, chunk.y, chunk.z);
 				other_chunk_voxel = glm::ivec3(m_chunk_size_x, voxel.y, voxel.z);
 				has_neighboor = true;
-				
+
 			}
 			if (voxel.x == (m_chunk_size_x - 1)) {
 				other_chunk = glm::ivec3(chunk.x + 1, chunk.y, chunk.z);
@@ -254,54 +203,55 @@ void WorldGenController::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> 
 		}
 
 	}
-
 }
 
-void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMod value)
+void WorldTerrain::Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMod value)
 {
-	if (!m_gen_finished)
-		return;
-
 	TerrainModEntry entry{};
 	entry.chunk = chunk;
 	entry.changes.push_back(value);
 	m_terrain_change_queue.push(entry);
-	//Logger::LogDebug(LOG_POS("Submit_Terrain_Modification"), "Submitted terrain change for chunk (%i, %i, %i).",
-	//	chunk.x, chunk.y, chunk.z);
 }
 
-void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, std::vector<TerrainMod> values)
+void WorldTerrain::Submit_Terrain_Modification(glm::ivec3 chunk, std::vector<TerrainMod> values)
 {
-	if (!m_gen_finished)
-		return;
-
 	TerrainModEntry entry{};
 	entry.chunk = chunk;
 	entry.changes = values;
 	m_terrain_change_queue.push(entry);
-	//Logger::LogDebug(LOG_POS("Submit_Terrain_Modification_arr"), "Submitted terrain %i changes for chunk (%i, %i, %i).",
-	//	values.size(), chunk.x, chunk.y, chunk.z);
 }
 
-glm::fvec3 WorldGenController::Target_Position()
+int WorldTerrain::Hash_Chunk(glm::ivec3 chunk) 
 {
-	return mTarget->Position();
+	return Utilities::Hash_Chunk_Coord(chunk);
 }
 
-glm::ivec3 WorldGenController::Target_Chunk()
+std::vector<glm::ivec3> WorldTerrain::Get_Chunk_Coords(glm::fvec3 loc, int radius, int depth)
 {
-	glm::vec3 target_pos = Target_Position();
-	glm::ivec3 target_chunk = WorldGenController::WorldPosToChunkCoord(target_pos);
-	return target_chunk;
+	std::vector<glm::ivec3> res;
+
+	glm::ivec3 chunk_center = WorldPosToChunkCoord(loc);
+	std::vector<glm::ivec3> cols = get_columns_in_radius(chunk_center.x, chunk_center.z, radius);
+	int y_start = chunk_center.y - (depth / 2);
+
+	for (const auto& c : cols) {
+		for (int i = 0; i < depth; i++) {
+			int y = y_start + i;
+			glm::ivec3 chunk_coord = glm::ivec3(c.x, y, c.y);
+			res.push_back(chunk_coord);
+		}
+	}
+
+	return res;
 }
 
-WorldGenController::ChunkRef WorldGenController::get_chunk(glm::ivec3 chunk_coord)
+WorldTerrain::ChunkRef WorldTerrain::get_chunk(glm::ivec3 chunk_coord)
 {
 	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
 	return m_chunk_map[hash];
 }
 
-void WorldGenController::initialize_voxel_engine()
+void WorldTerrain::initialize_voxel_engine()
 {
 	settings.GetSettings()->setString("programDir", "");
 	settings.GetSettings()->setFloat("voxelsPerMeter", m_voxelsPerMeter);
@@ -309,7 +259,7 @@ void WorldGenController::initialize_voxel_engine()
 	settings.GetSettings()->setInt("chunkMeterSizeY", m_chunkMeterSizeX);
 	settings.GetSettings()->setInt("chunkMeterSizeZ", m_chunkMeterSizeX);
 	settings.GetSettings()->setInt("TotalBatchGroups", 1);
-	settings.GetSettings()->setInt("BatchesPerGroup", 4);
+	settings.GetSettings()->setInt("BatchesPerGroup", 1);
 	settings.GetSettings()->setInt("InvertTrianges", false);
 
 	m_chunk_size_x = m_chunkMeterSizeX * m_voxelsPerMeter;
@@ -320,14 +270,9 @@ void WorldGenController::initialize_voxel_engine()
 	m_builder->Init(&settings);
 
 	m_terrain_mods = ((SmoothVoxelBuilder*)m_builder)->Get_Terrain_Modifications();
-
-	int max_vert = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
-
-	vbo_stitch = new Stitch_VBO();
-	vbo_stitch->Init(m_builder, max_vert);
 }
 
-void WorldGenController::process_additions()
+void WorldTerrain::process_additions()
 {
 	bool has_items = !m_create_queue.empty();
 
@@ -344,38 +289,9 @@ void WorldGenController::process_additions()
 		end = Utilities::Get_Time();
 		timer = (end - start) * 1000.0;
 	}
-
-
-	if (m_world_gen_started && !m_gen_finished)
-	{
-
-		if (m_create_queue.empty()) {
-
-			double sum = 0;
-			for (const auto& elem : construct_times) {
-				sum += elem;
-			}
-			double avg = sum / construct_times.size();
-
-			m_gen_stop = Utilities::Get_Time();
-			m_gen_finished = true;
-			double m_total_time = (m_gen_stop - m_gen_start) * 1000.0f;
-			//Logger::LogInfo(LOG_POS("process_additions"), "%i Chunks generated in %f ms. Average construct time: %f ms.", 
-			//	m_num_filled_init_chunks, (m_gen_stop - m_gen_start) * 1000.0f, avg * 1000.0f);
-			double gen_average_ms = m_chunk_init_all_gen_time_ms / m_num_all_init_chunks;
-			Logger::LogInfo(LOG_POS("process_additions"), "%i Chunks generated in %f ms. Average chunk gen time: %f ms. (%f chunks/sec). Total time: %f ms",
-				m_num_all_init_chunks, m_chunk_init_all_gen_time_ms, gen_average_ms, 1.0 / (gen_average_ms / 1000.0), m_total_time);
-
-			//Logger::LogDebug(LOG_POS("process_additions"), "Num chunks in map: %i", m_chunk_map.size());
-		}
-
-		// TODO: Other stuff when chunk gen has finished.
-
-	}
-
 }
 
-void WorldGenController::process_deletions()
+void WorldTerrain::process_deletions()
 {
 	while (!m_delete_queue.empty()) {
 		glm::ivec3 chunk_coord = m_delete_queue.front();
@@ -392,8 +308,7 @@ void WorldGenController::process_deletions()
 	}
 }
 
-// return true if more items in queue.
-bool WorldGenController::process_batch()
+bool WorldTerrain::process_batch()
 {
 	ChunkRef batch[MAX_BATCH_SIZE];
 
@@ -424,35 +339,30 @@ bool WorldGenController::process_batch()
 
 	std::vector<glm::ivec4> counts = m_builder->GetSize();
 
-	bool has_full_chunks = false;
-	for (int i = 0; i < num_additions; i++) {
-		int num_verts = counts[i].x;
-		batch[i].chunk_comp->Process_Mesh_Update(counts[i]);
-		if (num_verts > 0) {
-			m_num_filled_init_chunks++;
-			has_full_chunks = true;
-		}
-		m_num_all_init_chunks++;
-	}
+	int num_verts = counts[0].x;
+
+	m_builder->Extract(
+		m_vertices,
+		nullptr,
+		nullptr,
+		nullptr,
+		counts[0]
+	);
+	std::vector<glm::vec4> verts(m_vertices, m_vertices + counts[0].x);
+	std::vector<unsigned int> tris(m_triangles, m_triangles + counts[0].x);
+	//std::vector<glm::vec4> normals(m_normals, m_normals + counts[0].x);
+
+	batch[0].chunk_comp->Process_Mesh_Update(verts, tris, counts[0]);
 
 	double end_time = Utilities::Get_Time();
 	double duration_ms = (end_time - start_time) * 1000.0;
-	m_chunk_init_all_gen_time_ms += duration_ms;
 
-	if (has_full_chunks) { // chunks where nothing was generated don't count.
-		construct_times.push_back(gen_times.y);
-		if (construct_times.size() >= max_times) {
-			construct_times.erase(construct_times.begin());
-		}
-	}
 
-	return !m_create_queue.empty();
 }
 
-void WorldGenController::process_modifications()
+void WorldTerrain::process_modifications()
 {
-
-	while (!m_terrain_change_queue.empty()) 
+	while (!m_terrain_change_queue.empty())
 	{
 		//Logger::LogDebug(LOG_POS("process_modifications"), "Items in mod queue: %i", m_terrain_change_queue.size());
 
@@ -489,80 +399,45 @@ void WorldGenController::process_modifications()
 		glm::dvec4 render_times = m_builder->Render(&render_options);
 		std::vector<glm::ivec4> counts = m_builder->GetSize();
 
-		get_chunk(chunk).chunk_comp->Process_Mesh_Update(counts[0]);
+		m_builder->Extract(
+			m_vertices,
+			nullptr,
+			nullptr,
+			nullptr,
+			counts[0]
+		);
+		std::vector<glm::vec4> verts(m_vertices, m_vertices + counts[0].x);
+		std::vector<unsigned int> tris(m_triangles, m_triangles + counts[0].x);
+
+		get_chunk(chunk).chunk_comp->Process_Mesh_Update(verts, tris, counts[0]);
 	}
 }
 
-WorldGenController::ChunkRef WorldGenController::create_chunk_object()
-{
-	WorldObject* obj = Instantiate("Cached Voxel Chunk");
-	obj->Get_Transform()->Set_Verbos(false);
-	obj->Get_Transform()->Position(glm::vec3(0.0, 1000.0, 0.0));
-	TerrainChunk* comp = obj->Add_Component<TerrainChunk>();
-	comp->Init(this, vbo_stitch);
-
-	ChunkRef chk{};
-	chk.chunk_obj = obj;
-	chk.chunk_comp = comp;
-	//m_chunk_map[hash] = chk;
-
-	return chk;
-}
-
-// Way to multi-thread this.
-// https://stackoverflow.com/questions/61857306/safely-skip-an-task-if-mutex-is-locked
-void WorldGenController::generate_circular()
+void WorldTerrain::create_chunk_cache() 
 {
 	double start = Utilities::Get_Time();
 
-	if (mTarget == nullptr) {
-		Logger::LogError(LOG_POS("generate_circular"), "Cannot generate chunks with null target.");
-		return;
-	}
-
-
-	glm::ivec3 target_chunk_pos = worldPosToChunkCoord(mTarget->Position());
-
-	std::vector<glm::ivec3> cols = get_columns_in_radius(target_chunk_pos.x, target_chunk_pos.z, m_max_chunk_radius);
-
-	//Logger::LogInfo(LOG_POS("generate_circular"), "Generating %i Columns", cols.size());
-
-	int y_start = target_chunk_pos.y - (m_chunks_depth / 2);
-
-	int queued_chunks_num = 0;
-
-	for (const auto& c : cols) {
-		for (int i = 0; i < m_chunks_depth; i++) {
-			int y = y_start + i;
-			glm::ivec3 chunk_coord = glm::ivec3(c.x, y, c.y);
-			bool queued = queue_chunk_create(chunk_coord);
-			if (queued) {
-				queued_chunks_num++;
-			}
-		}
-	}
-
-	double end = Utilities::Get_Time();
-	Logger::LogDebug(LOG_POS("generate_circular"), "Queued %i chunks in %f ms.", queued_chunks_num, (end - start) * 1000);
-
-	m_gen_start = Utilities::Get_Time();
-	m_world_gen_started = true;
-}
-
-void WorldGenController::create_chunk_cache()
-{
-	double start = Utilities::Get_Time();
-
-	for (int i = 0; i < m_max_cached_chunks; ++i) {
+	for (int i = 0; i < m_initial_cached_columns; ++i) {
 		ChunkRef chk = create_chunk_object();
 		m_cached_chunks.push(chk);
 	}
 
 	double end = Utilities::Get_Time();
-	Logger::LogDebug(LOG_POS("create_chunk_cache"), "Created %i cached chunks in %f ms.", m_max_cached_chunks, (end - start) * 1000);
+	Logger::LogDebug(LOG_POS("create_chunk_cache"), "Created %i cached chunks in %f ms.", m_initial_cached_columns, (end - start) * 1000);
 }
 
-bool WorldGenController::queue_chunk_create(glm::ivec3 chunk_coord)
+WorldTerrain::ChunkRef WorldTerrain::create_chunk_object()
+{
+	ServerTerrainChunk* comp = new ServerTerrainChunk();
+	comp->Init(this);
+
+	ChunkRef chk{};
+	chk.chunk_comp = comp;
+
+	return chk;
+}
+
+ServerTerrainChunk* WorldTerrain::queue_chunk_create(glm::ivec3 chunk_coord)
 {
 	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
 
@@ -580,27 +455,48 @@ bool WorldGenController::queue_chunk_create(glm::ivec3 chunk_coord)
 
 	m_create_queue.push(chunk);
 
-	return true;
+	return chunk.chunk_comp;
 }
 
-void WorldGenController::queue_chunk_delete(glm::ivec3 chunk_coord)
+void WorldTerrain::queue_chunk_delete(glm::ivec3 chunk_coord) 
 {
 	m_delete_queue.push(chunk_coord);
 }
 
-bool WorldGenController::chunk_exists(glm::ivec3 chunk_coord)
+bool WorldTerrain::chunk_exists(glm::ivec3 chunk_coord) 
 {
 	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
 	return m_chunk_map.contains(hash);
 }
 
-void WorldGenController::remove_chunk(glm::ivec3 chunk_coord)
+void WorldTerrain::remove_chunk(glm::ivec3 chunk_coord) 
 {
 	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
 	m_chunk_map.erase(hash);
 }
 
-std::vector<glm::ivec3> WorldGenController::get_columns_in_radius(int center_x, int center_z, int radius)
+void WorldTerrain::compute_triangles()
+{
+	int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
+	bool m_invert_tris = false;
+	for (int i = 0; i < Max_Verts; i += 3) {
+		unsigned int tris_start = i;
+
+		if (m_invert_tris) {
+			m_triangles[tris_start + 0] = tris_start + 0;
+			m_triangles[tris_start + 1] = tris_start + 1;
+			m_triangles[tris_start + 2] = tris_start + 2;
+		}
+		else
+		{
+			m_triangles[tris_start + 0] = tris_start + 2;
+			m_triangles[tris_start + 1] = tris_start + 1;
+			m_triangles[tris_start + 2] = tris_start + 0;
+		}
+	}
+}
+
+std::vector<glm::ivec3> WorldTerrain::get_columns_in_radius(int center_x, int center_z, int radius)
 {
 	const int padding = 1;
 	int padded_rad = (radius + padding);
@@ -633,19 +529,18 @@ std::vector<glm::ivec3> WorldGenController::get_columns_in_radius(int center_x, 
 	std::ranges::sort(col_list, std::ranges::less{}, &glm::ivec3::z);
 
 	return col_list;
-
 }
 
-glm::ivec3 WorldGenController::worldPosToChunkCoord(glm::fvec3 pos)
+glm::ivec3 WorldTerrain::worldPosToChunkCoord(glm::fvec3 pos)
 {
 	return glm::ivec3(
-		std::round(pos.x / (m_chunkMeterSizeX + m_half)), 
+		std::round(pos.x / (m_chunkMeterSizeX + m_half)),
 		std::round(pos.y / (m_chunkMeterSizeY + m_half)),
 		std::round(pos.z / (m_chunkMeterSizeZ + m_half))
 	);
 }
 
-glm::fvec3 WorldGenController::chunkCoordToWorldPos(glm::ivec3 chunk_coord)
+glm::fvec3 WorldTerrain::chunkCoordToWorldPos(glm::ivec3 chunk_coord)
 {
 	return glm::fvec3(
 		std::round((chunk_coord.x * m_chunkMeterSizeX) - m_half),
@@ -654,7 +549,7 @@ glm::fvec3 WorldGenController::chunkCoordToWorldPos(glm::ivec3 chunk_coord)
 	);
 }
 
-glm::ivec3 WorldGenController::voxelToChunk(glm::ivec3 location)
+glm::ivec3 WorldTerrain::voxelToChunk(glm::ivec3 location)
 {
 	int x = floor_to_int(location.x / (float)m_chunk_size_x);
 	int y = floor_to_int(location.y / (float)m_chunk_size_y);
@@ -662,7 +557,7 @@ glm::ivec3 WorldGenController::voxelToChunk(glm::ivec3 location)
 	return glm::ivec3(x, y, z);
 }
 
-glm::ivec3 WorldGenController::chunkToVoxel(glm::ivec3 location)
+glm::ivec3 WorldTerrain::chunkToVoxel(glm::ivec3 location)
 {
 	int x = ((location.x) * m_chunk_size_x);
 	int y = ((location.y) * m_chunk_size_y);
@@ -670,26 +565,26 @@ glm::ivec3 WorldGenController::chunkToVoxel(glm::ivec3 location)
 	return glm::ivec3(x, y, z);
 }
 
-glm::ivec3 WorldGenController::globalToLocalChunkCoord(glm::ivec3 location) {
+glm::ivec3 WorldTerrain::globalToLocalChunkCoord(glm::ivec3 location) {
 	glm::ivec3 ChunkCoord = voxelToChunk(location);
 	return GlobalToLocalChunkCoord(ChunkCoord, location);
 }
 
-glm::ivec3 WorldGenController::globalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location) {
+glm::ivec3 WorldTerrain::globalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location) {
 	int x = location.x - (ChunkCoord.x * m_chunk_size_x);
 	int y = location.y - (ChunkCoord.y * m_chunk_size_y);
 	int z = location.z - (ChunkCoord.z * m_chunk_size_z);
 	return glm::ivec3(x, y, z);
 }
 
-glm::ivec3 WorldGenController::localToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location) {
+glm::ivec3 WorldTerrain::localToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location) {
 	int x = location.x + (Chunk.x * m_chunk_size_x);
 	int y = location.y + (Chunk.y * m_chunk_size_y);
 	int z = location.z + (Chunk.z * m_chunk_size_z);
 	return glm::ivec3(x, y, z);
 }
 
-glm::fvec3 WorldGenController::voxelToWorld(glm::ivec3 loc)
+glm::fvec3 WorldTerrain::voxelToWorld(glm::ivec3 loc)
 {
 	float newX = (((loc.x / (float)m_voxelsPerMeter) - m_half));
 	float newY = (((loc.y / (float)m_voxelsPerMeter) - m_half));
@@ -697,11 +592,10 @@ glm::fvec3 WorldGenController::voxelToWorld(glm::ivec3 loc)
 	return glm::fvec3(newX, newY, newZ);
 }
 
-glm::ivec3 WorldGenController::worldToVoxel(glm::fvec3 worldPos)
+glm::ivec3 WorldTerrain::worldToVoxel(glm::fvec3 worldPos)
 {
 	int x = floor_to_int(((worldPos.x) + m_half) * (float)m_voxelsPerMeter);
 	int y = floor_to_int(((worldPos.y) + m_half) * (float)m_voxelsPerMeter);
 	int z = floor_to_int(((worldPos.z) + m_half) * (float)m_voxelsPerMeter);
 	return glm::ivec3(x, y, z);
 }
-

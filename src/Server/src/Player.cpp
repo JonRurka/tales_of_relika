@@ -3,7 +3,8 @@
 #include "World.h"
 #include "WorldController.h"
 #include "HashHelper.h"
-
+#include "WorldTerrain.h"
+#include "ServerTerrainChunk.h"
 
 #include "glaze/glaze.hpp" 
 #include <nlohmann/json.hpp>
@@ -101,6 +102,18 @@ void Player::WorldUpdate(float dt)
 		m_trigger_save = false;
 	}
 
+}
+
+void Player::Set_Current_World(World* world, uint8_t inst_id)
+{
+	m_current_world = world;
+	m_world_instance_id = inst_id;
+	m_trigger_save = true;
+	m_current_terrain = world->Terrain();
+
+	update_terrain_chunks();
+
+	
 }
 
 void Player::AssignPlayer(World* world)
@@ -206,6 +219,44 @@ void Player::save_player_data()
 
 	// Save data
 
+}
+
+void Player::update_terrain_chunks()
+{
+	auto chunk_coords = m_current_terrain->Get_Chunk_Coords(m_location, PLAYER_CHUNK_SIM_RADIUS, PLAYER_CHUNK_SIM_DEPTH);
+	std::vector<int> valid_chunks;
+	valid_chunks.reserve(chunk_coords.size());
+	for (const auto& c : chunk_coords) 
+	{
+		int hash = WorldTerrain::Hash_Chunk(c);
+		valid_chunks.push_back(hash);
+		if (m_simulated_terrain_chunks.contains(hash))
+			continue;
+
+		ServerTerrainChunk* chunk = nullptr;
+		if (m_current_terrain->Chunk_Exists(c))
+			chunk = m_current_terrain->Get_Chunk(c);
+		else 
+			chunk = m_current_terrain->Spawn_Chunk(c);
+		chunk->Iterate();
+
+		m_simulated_terrain_chunks[hash] = chunk;
+	}
+
+	std::vector<int> remove_chunks;
+	for (const auto& pair : m_simulated_terrain_chunks) 
+	{
+		if (!List_Contains(valid_chunks, pair.first)) {
+			m_simulated_terrain_chunks[pair.first]->Deiterate();
+			remove_chunks.push_back(pair.first);
+		}
+	}
+
+	for (const auto& hash : remove_chunks)
+	{
+		m_simulated_terrain_chunks.erase(hash);
+	}
+	
 }
 
 

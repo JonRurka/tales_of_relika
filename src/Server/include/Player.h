@@ -9,8 +9,12 @@
 
 #define PLAYER_ORIENTATION_SIZE (7 * sizeof(float))
 #define PLAYER_SCAN_RADIUS 100
+#define PLAYER_CHUNK_SIM_RADIUS 2
+#define PLAYER_CHUNK_SIM_DEPTH 4
 
 class World;
+class WorldTerrain;
+class ServerTerrainChunk;
 
 class Player : public IUser {
 public:
@@ -100,11 +104,7 @@ public:
 
 	void WorldUpdate(float dt);
 
-	void Set_Current_World(World* world, uint8_t inst_id) {
-		m_current_world = world;
-		m_world_instance_id = inst_id;
-		m_trigger_save = true;
-	}
+	void Set_Current_World(World* world, uint8_t inst_id);
 
 	void AssignPlayer(World* world);
 
@@ -260,6 +260,7 @@ private:
 	std::mutex m_player_mutex;
 
 	World* m_current_world;
+	WorldTerrain* m_current_terrain;
 
 	uint16_t m_world_instance_id;
 
@@ -276,6 +277,8 @@ private:
 	std::unordered_map<std::string, sol::state> m_player_lua_base_scripts;
 	std::unordered_map<std::string, sol::state> m_player_lua_extension_scripts;
 
+	std::unordered_map<int, ServerTerrainChunk*> m_simulated_terrain_chunks;
+
 	std::vector<std::function<void()>> m_init_events;
 	std::vector<std::function<void(double)>> m_update_events;
 
@@ -284,6 +287,8 @@ private:
 	void update_nearby_players();
 
 	void save_player_data();
+
+	void update_terrain_chunks();
 
 	inline static const std::string LOG_LOC{ "PLAYER" };
 };

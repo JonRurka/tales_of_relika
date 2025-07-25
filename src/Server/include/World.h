@@ -12,6 +12,7 @@
 
 class SocketUser;
 class Player;
+class WorldTerrain;
 
 class World {
 public:
@@ -66,6 +67,8 @@ public:
 
 	void WorldMutexUnlock();
 
+	WorldTerrain* Terrain() { return m_world_terrain; }
+
 	static void Run(World* world);
 
 	static void Register_Lua_Functions(sol::state lua);
@@ -105,6 +108,7 @@ private:
 	std::vector<std::function<bool(uint32_t)>> m_player_add_events;
 	std::vector<std::function<bool(uint32_t)>> m_player_remove_events;
 
+	WorldTerrain* m_world_terrain{ nullptr };
 
 	void async_init();
 

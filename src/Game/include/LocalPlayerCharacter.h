@@ -8,10 +8,11 @@
 #include <vector>
 
 #define CAM_OFFSET_DEFAULT (glm::vec3(0, 1.2, 0))
-#define JUMP_POWER_DEFAULT (4.0)
+#define JUMP_POWER_DEFAULT (6.0)
 
 class CharacterCollider;
 class Standard_Material;
+class Character_HUD;
 
 class LocalPlayerCharacter : public Component {
 public:
@@ -64,6 +65,8 @@ private:
 	glm::vec3 m_look_dir_forward;
 	glm::vec3 m_look_dir_right;
 	Standard_Material* m_character_material{ nullptr };
+
+	Character_HUD* m_hud;
 
 	bool m_mouse_hidden{ false };
 

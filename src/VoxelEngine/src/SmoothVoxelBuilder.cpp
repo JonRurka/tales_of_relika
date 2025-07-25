@@ -1275,8 +1275,12 @@ void SmoothVoxelBuilder::Extract(glm::vec4* out_vertex, glm::vec4* out_normal, g
             //int start = 
             //printf("Extract: %i, %i, %i, %i\n", counts.x, counts.z, counts.y, counts.w);
             m_out_vertex_buffer->GetData(out_vertex, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
-            m_out_normal_buffer->GetData(out_normal, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
-            m_out_mat_buffer->GetData(out_mat, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
+
+            if (out_normal != nullptr)
+                m_out_normal_buffer->GetData(out_normal, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
+
+            if (out_mat != nullptr)
+                m_out_mat_buffer->GetData(out_mat, counts.y * VECTOR4_SIZE, counts.x * VECTOR4_SIZE);
 
             //m_out_triangles_buffer->GetData(out_trianges, counts.z * counts.x * sizeof(int), counts.x * sizeof(int));
             //All_Zero(out_vertex, counts.x, "Extract");
