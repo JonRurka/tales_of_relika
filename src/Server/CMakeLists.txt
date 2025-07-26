@@ -23,6 +23,7 @@ set(${module}_headers
 	include/Linux_conio.h
 	include/WorldController.h
 	include/World.h
+	include/WorldPhysics.h
 	include/WorldTerrain.h
 	include/WorldStructures.h
 	include/ServerTerrainChunk.h
@@ -48,6 +49,7 @@ set(${module}_sources
 	src/IUser.cpp
 	src/WorldController.cpp
 	src/World.cpp
+	src/WorldPhysics.cpp
 	src/WorldTerrain.cpp
 	src/WorldStructures.cpp
 	src/ServerTerrainChunk.cpp

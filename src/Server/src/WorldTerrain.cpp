@@ -7,21 +7,18 @@
 #include "ServerTerrainChunk.h"
 
 namespace {
-
 	int floor_to_int(float val) {
 		return static_cast<int>(std::floor(val));
 	}
 }
 
-WorldTerrain* WorldTerrain::m_Instance{nullptr};
-
 WorldTerrain::WorldTerrain()
 {
 }
 
-void WorldTerrain::Init()
+void WorldTerrain::Init(World* world)
 {
-	m_Instance = this;
+	m_world = world;
 
 	std::string block_types_str = Resources::Get_Data_File_String(Game_Resources::Data_Files::BLOCK_TYPES);
 	//Logger::LogDebug(LOG_POS("Init"), "%s", block_types_str.c_str());
@@ -40,8 +37,14 @@ void WorldTerrain::Init()
 	create_chunk_cache();
 }
 
-void WorldTerrain::Update()
+void WorldTerrain::Update(float dt)
 {
+	for (const auto& pair : m_chunk_map)
+	{
+		pair.second.chunk_comp->Update(dt);
+	}
+
+
 	process_deletions();
 	process_additions();
 	process_modifications();
@@ -121,14 +124,14 @@ void WorldTerrain::Modify_Voxel(std::vector<TerrainMod> values)
 	}
 }
 
-void WorldTerrain::Modify_Voxel(glm::ivec3 chunk, TerrainMod value, bool update_neighbor = true)
+void WorldTerrain::Modify_Voxel(glm::ivec3 chunk, TerrainMod value, bool update_neighbor)
 {
 	std::vector<TerrainMod> values;
 	values.push_back(value);
 	Modify_Voxel(chunk, values, update_neighbor);
 }
 
-void WorldTerrain::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> values, bool update_neighbor = true)
+void WorldTerrain::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> values, bool update_neighbor)
 {
 	Submit_Terrain_Modification(chunk, values);
 
@@ -226,6 +229,11 @@ int WorldTerrain::Hash_Chunk(glm::ivec3 chunk)
 	return Utilities::Hash_Chunk_Coord(chunk);
 }
 
+ServerTerrainChunk* WorldTerrain::Get_Chunk(glm::ivec3 chunk_coord)
+{
+	return get_chunk(chunk_coord).chunk_comp;
+}
+
 std::vector<glm::ivec3> WorldTerrain::Get_Chunk_Coords(glm::fvec3 loc, int radius, int depth)
 {
 	std::vector<glm::ivec3> res;
@@ -270,6 +278,7 @@ void WorldTerrain::initialize_voxel_engine()
 	m_builder->Init(&settings);
 
 	m_terrain_mods = ((SmoothVoxelBuilder*)m_builder)->Get_Terrain_Modifications();
+	m_heightmap_gen = ((SmoothVoxelBuilder*)m_builder)->Get_Heightmap_Generator();
 }
 
 void WorldTerrain::process_additions()
@@ -442,7 +451,7 @@ ServerTerrainChunk* WorldTerrain::queue_chunk_create(glm::ivec3 chunk_coord)
 	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
 
 	if (m_chunk_map.contains(hash)) {
-		return false;
+		return m_chunk_map[hash].chunk_comp;
 	}
 
 	ChunkRef chunk = m_cached_chunks.front();

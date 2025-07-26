@@ -3,6 +3,7 @@
 #include "game_engine.h"
 #include "dynamic_compute.h"
 
+#include "Network/Data.h"
 
 class WorldGenController;
 class StructureController;
@@ -21,6 +22,12 @@ public:
 		game_client->GameConnected();
 	}
 	void GameConnected();
+
+	static void OnWorldPlayerDataResult_cb(void* obj, Data data) {
+		VoxelWorld_Scene* game_client = (VoxelWorld_Scene*)obj;
+		game_client->OnWorldPlayerDataResult(data);
+	}
+	void OnWorldPlayerDataResult(Data data);
 
 protected:
 	void Init() override;
@@ -63,15 +70,15 @@ private:
 
 	void setup_lights();
 
-	void setup_chunk_gen();
+	void setup_chunk_gen(json world_data);
 
-	void setup_structure_controller();
+	void setup_structure_controller(json world_data);
 
 	void setup_client_server();
 
 	void setup_game_client();
 
-	void setup_local_player();
+	void setup_local_player(json player_data);
 
 	void setup_net_player_manager();
 

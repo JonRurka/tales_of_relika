@@ -29,6 +29,19 @@ void GameClient::Connect()
 	m_client->Connect();
 }
 
+void GameClient::Send_World(OpCodes::Server_World cmd)
+{
+	Send_World(cmd, std::vector<uint8_t>());
+}
+
+void GameClient::Send_World(OpCodes::Server_World cmd, std::vector<uint8_t> data)
+{
+	std::vector<uint8_t> send_data;
+	send_data.push_back((uint8_t)cmd);
+	send_data = BufferUtils::Add(send_data, data);
+	m_client->Send(OpCodes::Server::World_Command, send_data);
+}
+
 void GameClient::Init()
 {
 	m_instance = this;

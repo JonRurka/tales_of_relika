@@ -4,6 +4,7 @@
 
 #include "game_engine.h"
 
+#include "Network/OpCodes.h"
 #include "Network/Data.h"
 
 
@@ -30,6 +31,9 @@ public:
 	}
 
 	void Connect();
+
+	void Send_World(OpCodes::Server_World cmd);
+	void Send_World(OpCodes::Server_World cmd, std::vector<uint8_t> data);
 
 protected:
 	void Init() override;

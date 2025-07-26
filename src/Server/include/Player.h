@@ -3,6 +3,8 @@
 #include "stdafx.h"
 #include "IUser.h"
 
+#include "WorldPhysics.h"
+
 
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
@@ -11,10 +13,16 @@
 #define PLAYER_SCAN_RADIUS 100
 #define PLAYER_CHUNK_SIM_RADIUS 2
 #define PLAYER_CHUNK_SIM_DEPTH 4
+#define DEFAULT_RADIUS (0.5f)
+#define DEFAULT_HEIGHT (1.5f)
+#define DEFAULT_MASS (50.0f)
 
 class World;
 class WorldTerrain;
 class ServerTerrainChunk;
+
+class btPairCachingGhostObject;
+class btKinematicCharacterController;
 
 class Player : public IUser {
 public:
@@ -35,10 +43,17 @@ public:
 		std::vector<uint8_t> Data;
 	};
 
+	struct PlayerWorldProfile {
+	public:
+		uint64_t WorldID;
+		glm::fvec3 Location;
+
+	};
+
 	struct PlayerGameData {
 	public:
 		uint64_t CurrentWorldID;
-
+		
 
 	};
 
@@ -101,6 +116,8 @@ public:
 	bool SetIdentity(std::string json_identity);
 
 	bool SetIdentity(PlayerIdentity identity);
+
+	bool Has_World_Profile(uint64_t world_id);
 
 	void WorldUpdate(float dt);
 
@@ -256,9 +273,11 @@ private:
 	//int m_distributor;
 	PlayerIdentity m_identity;
 	PlayerGameData m_game_data;
+	std::unordered_map<uint64_t, PlayerWorldProfile> m_world_profiles;
 
 	std::mutex m_player_mutex;
 
+	PlayerWorldProfile* m_current_profile;
 	World* m_current_world;
 	WorldTerrain* m_current_terrain;
 
@@ -282,11 +301,25 @@ private:
 	std::vector<std::function<void()>> m_init_events;
 	std::vector<std::function<void(double)>> m_update_events;
 
+
+	btCollisionShape* m_shape{ nullptr };
+	float m_radius{ DEFAULT_RADIUS };
+	float m_height{ DEFAULT_HEIGHT };
+	btPairCachingGhostObject* m_ghostObject;
+	btKinematicCharacterController* m_charCon;
+	btVector3 m_localInertia{ btVector3(0.0f, 0.0f, 0.0f) };
+	float m_mass{ DEFAULT_MASS };
+
 	bool m_trigger_save{ false };
 
 	void update_nearby_players();
 
 	void save_player_data();
+
+	void remove_character_controller();
+	void refresh_character_controller();
+
+	void load_world_profile();
 
 	void update_terrain_chunks();
 

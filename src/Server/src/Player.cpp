@@ -4,7 +4,11 @@
 #include "WorldController.h"
 #include "HashHelper.h"
 #include "WorldTerrain.h"
+#include "WorldPhysics.h"
 #include "ServerTerrainChunk.h"
+
+#include "BulletCollision/CollisionDispatch/btGhostObject.h"
+#include "BulletDynamics/Character/btKinematicCharacterController.h"
 
 #include "glaze/glaze.hpp" 
 #include <nlohmann/json.hpp>
@@ -71,6 +75,11 @@ bool Player::SetIdentity(PlayerIdentity identity)
 	return true;
 }
 
+bool Player::Has_World_Profile(uint64_t world_id)
+{
+	return m_world_profiles.contains(world_id);
+}
+
 void Player::WorldUpdate(float dt)
 {
 	
@@ -111,6 +120,8 @@ void Player::Set_Current_World(World* world, uint8_t inst_id)
 	m_trigger_save = true;
 	m_current_terrain = world->Terrain();
 
+	refresh_character_controller();
+	load_world_profile();
 	update_terrain_chunks();
 
 	
@@ -219,6 +230,59 @@ void Player::save_player_data()
 
 	// Save data
 
+}
+
+void Player::remove_character_controller()
+{
+	if (m_charCon != nullptr) {
+		m_current_world->Physics()->GetDynamicWorld()->removeAction(m_charCon);
+		m_current_world->Physics()->GetDynamicWorld()->removeCollisionObject(m_ghostObject);
+
+		delete m_charCon;
+		m_charCon = nullptr;
+
+		delete m_ghostObject;
+		m_ghostObject = nullptr;
+
+		delete m_shape;
+		m_shape = nullptr;
+	}
+}
+
+void Player::refresh_character_controller()
+{
+	remove_character_controller();
+
+	m_shape = new btCapsuleShapeZ(m_radius, m_height);
+	m_shape->calculateLocalInertia(m_mass, m_localInertia);
+
+	btTransform startTransform;
+	startTransform.setIdentity();
+	startTransform.setOrigin(btVector3(m_location.x, m_location.y, m_location.z));
+
+	m_ghostObject = new btPairCachingGhostObject();
+	m_ghostObject->setWorldTransform(startTransform);
+	m_ghostObject->setCollisionShape(m_shape);
+	m_ghostObject->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
+
+	m_charCon = new btKinematicCharacterController(m_ghostObject, (btCapsuleShapeZ*)m_shape, 0.05f, btVector3(0, 1, 0));
+	m_charCon->setGravity(btVector3(0, m_current_world->Physics()->Gravity(), 0));
+
+	m_current_world->Physics()->GetDynamicWorld()->addCollisionObject(m_ghostObject, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::AllFilter);
+	m_current_world->Physics()->GetDynamicWorld()->addAction(m_charCon);
+
+}
+
+void Player::load_world_profile()
+{
+	uint64_t current_id = m_current_world->World_ID();
+	if (!Has_World_Profile(current_id))
+	{
+		m_current_world->Create_World_Profile(Get_UserID());
+	}
+	m_current_profile = &m_world_profiles[current_id];
+
+	m_location = m_current_profile->Location;
 }
 
 void Player::update_terrain_chunks()

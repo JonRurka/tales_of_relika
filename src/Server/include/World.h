@@ -13,6 +13,7 @@
 class SocketUser;
 class Player;
 class WorldTerrain;
+class WorldPhysics;
 
 class World {
 public:
@@ -63,11 +64,15 @@ public:
 
 	std::vector<Player::pointer> PlayersInRadius(glm::vec3 point, float radius);
 
+	Player::PlayerWorldProfile Create_World_Profile(uint32_t player_id);
+
 	void WorldMutexLock();
 
 	void WorldMutexUnlock();
 
 	WorldTerrain* Terrain() { return m_world_terrain; }
+
+	WorldPhysics* Physics() { return m_world_physics; }
 
 	static void Run(World* world);
 
@@ -109,8 +114,14 @@ private:
 	std::vector<std::function<bool(uint32_t)>> m_player_remove_events;
 
 	WorldTerrain* m_world_terrain{ nullptr };
+	WorldPhysics* m_world_physics{ nullptr };
+
+	glm::fvec3 m_spawn_point;
+	bool m_spawn_point_set{ false };
 
 	void async_init();
+
+	void load_initial_terrain();
 
 	void init_lua();
 	void init_lua_script(sol::state& lua);
@@ -141,7 +152,13 @@ private:
 
 	void UpdateOrientation_NetCmd(Player& user, Data data);
 
+	void RequestWorldPlayerData_NetCmd(Player& user, Data data);
+
 	void RequestPlayers_NetCmd(Player& user, Data data);
+
+
+	void test_set_spawn_point();
+
 
 	inline static const std::string LOG_LOC{ "WORLD" };
 };

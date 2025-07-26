@@ -13,17 +13,19 @@ public:
 
 	enum class Server_World : uint8_t {
 		Debug_Start = 0x01,
-		Request_Players = 0x02,
-		Update_Orientation = 0x03,
-		Player_Event = 0x04
+		Request_World_Player_Data = 0x02,
+		Request_Players = 0x03,
+		Update_Orientation = 0x04,
+		Player_Event = 0x05
 	};
 
 	enum class Client : uint8_t {
 		System_Reserved = 0xff,
 		Identify_Result = 0x01,
-		Spawn_Players = 0x02,
-		Update_Orientations = 0x03,
-		Player_Events = 0x04
+		World_Player_Data_Result = 0x02,
+		Spawn_Players = 0x03,
+		Update_Orientations = 0x04,
+		Player_Events = 0x05
 	};
 
 	enum class Player_Events : uint8_t {

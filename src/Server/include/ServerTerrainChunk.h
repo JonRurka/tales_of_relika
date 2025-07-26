@@ -9,7 +9,10 @@
 
 #include <vector>
 
+#include "WorldPhysics.h"
+
 class WorldTerrain;
+class World;
 
 class ServerTerrainChunk {
 public:
@@ -17,6 +20,8 @@ public:
 	ServerTerrainChunk();
 
 	void Init(WorldTerrain* controller);
+
+	void Update(float dt);
 
 	void Assign(glm::ivec3 chunk_coord);
 
@@ -38,9 +43,24 @@ private:
 	glm::fvec3 m_chunk_world_pos;
 	glm::ivec4 m_counts;
 	WorldTerrain* m_controller;
+	World* m_world;
+	WorldPhysics* m_world_physics;
 	bool m_assigned{ false };
 	bool m_should_despawn{ false };
 	int m_usages{ 0 };
 	bool m_keep_alive{ false };
 
+	btVector3 m_localInertia{ btVector3(0.0f, 0.0f, 0.0f) };
+	btCollisionShape* m_opaque_shape{ nullptr };
+	btTriangleIndexVertexArray* m_opaque_TriangleIndexVertexArray{ nullptr };
+	btTriangleMesh* m_opaque_triangle_mesh{ nullptr };
+	btRigidBody* m_opaque_rigidbody{ nullptr };
+
+	void test_removal();
+
+	void set_opaque_collider(std::vector<glm::vec4> vert, std::vector<unsigned int> tris, glm::ivec4 counts);
+
+	void clear_opaque_collision();
+
+	inline static const std::string LOG_LOC{ "SERVER_TERRAIN_CHUNK" };
 };

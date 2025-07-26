@@ -14,7 +14,14 @@
 #include "Item_Loader.h"
 #include "Item_Type.h"
 
+#include "HashHelper.h"
+#include "Network/NetClient.h"
+#include "Network/OpCodes.h"
+#include "Network/BufferUtils.h"
+
 #include "Standard_Material.h"
+
+
 
 void VoxelWorld_Scene::Init()
 {
@@ -52,9 +59,10 @@ void VoxelWorld_Scene::Update(float dt)
 
 void VoxelWorld_Scene::GameConnected()
 {
-	setup_chunk_gen();
-	setup_structure_controller();
-	setup_local_player();
+	game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
+
+
+
 	//setup_net_player_manager();
 
 
@@ -87,6 +95,21 @@ void VoxelWorld_Scene::GameConnected()
 	obj->Get_Transform()->Translate(0.0f, 10.0f, 0.0f);
 	obj->Get_MeshRenderer()->Set_Mesh(cube_mesh);
 	obj->Get_MeshRenderer()->Set_Material(m_character_material);*/
+}
+
+void VoxelWorld_Scene::OnWorldPlayerDataResult(Data data)
+{
+	std::string data_json_str = HashHelper::BytesToString(data.Buffer);
+	json world_player_data = json::parse(data_json_str);
+
+	json world_data = world_player_data["world"];
+	json player_data = world_player_data["player"];
+
+	setup_chunk_gen(world_data);
+	setup_structure_controller(world_data);
+	setup_local_player(player_data);
+
+	world_gen_controller->Start();
 }
 
 void VoxelWorld_Scene::setup_camera()
@@ -142,13 +165,13 @@ void VoxelWorld_Scene::setup_lights()
 	light_comp_dir->Strength(0.9f);
 }
 
-void VoxelWorld_Scene::setup_chunk_gen()
+void VoxelWorld_Scene::setup_chunk_gen(json world_data)
 {
 	world_gen_controller_obj = Instantiate("World_Gen_Controller");
 	world_gen_controller = world_gen_controller_obj->Add_Component<WorldGenController>();
 }
 
-void VoxelWorld_Scene::setup_structure_controller()
+void VoxelWorld_Scene::setup_structure_controller(json world_data)
 {
 	structure_controller_obj = Instantiate("Structure_Controller");
 	structure_controller = structure_controller_obj->Add_Component<StructureController>();
@@ -168,19 +191,29 @@ void VoxelWorld_Scene::setup_game_client()
 	game_client_obj = Instantiate("Game_Client");
 	game_client = game_client_obj->Add_Component<GameClient>();
 	game_client->SetOnConnectSuccess(OnGameConnect, this);
+	game_client->Net_Client()->AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
 	game_client->Init("test_user", 1, m_remote_connection);
 	game_client->Connect();
 }
 
-void VoxelWorld_Scene::setup_local_player()
+void VoxelWorld_Scene::setup_local_player(json player_data)
 {
 	m_item_loader = new Item_Loader();
 	m_item_loader->Load_Items(Game_Resources::Data_Files::ITEM_TYPES);
 	Item_Type::Init();
 
+	json location_obj = player_data["location"];
+	float x = location_obj["x"];
+	float y = location_obj["y"];
+	float z = location_obj["z"];
+	glm::vec3 loc = glm::vec3(x, y, z);
+
 	local_player_character_obj = Instantiate("Local_Character");
+	local_player_character_obj->Get_Transform()->Position(loc);
 	local_player_character = local_player_character_obj->Add_Component<LocalPlayerCharacter>();
 	local_player_character->Set_Camera_Object(Camera_obj);
+
+	world_gen_controller->SetTarget(local_player_character_obj->Get_Transform());
 }
 
 void VoxelWorld_Scene::setup_net_player_manager()

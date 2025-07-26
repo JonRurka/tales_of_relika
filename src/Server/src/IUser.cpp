@@ -7,3 +7,10 @@ void IUser::Send(OpCodes::Client cmd, std::vector<uint8_t> message, Protocal typ
 		m_socket_user->Send(cmd, message, type);
 	}
 }
+
+void IUser::Send(OpCodes::Client cmd, std::string message, Protocal type)
+{
+	if (Connected()) {
+		m_socket_user->Send(cmd, message, type);
+	}
+}

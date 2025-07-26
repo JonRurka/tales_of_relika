@@ -22,6 +22,7 @@ using namespace DynamicCompute::Compute;
 #define DEFAULT_PROCESS_TIME_RUNTIME_CREATE_MS 16.0
 
 class ServerTerrainChunk;
+class World;
 
 class WorldTerrain {
 public:
@@ -69,25 +70,23 @@ public:
 		}
 	};
 
-	static WorldTerrain* Instance() { return m_Instance; }
+	glm::ivec3 WorldPosToChunkCoord(glm::fvec3 pos) { return worldPosToChunkCoord(pos); }
 
-	static glm::ivec3 WorldPosToChunkCoord(glm::fvec3 pos) { return m_Instance->worldPosToChunkCoord(pos); }
+	glm::fvec3 ChunkCoordToWorldPos(glm::ivec3 chunk_coord) { return chunkCoordToWorldPos(chunk_coord); }
 
-	static glm::fvec3 ChunkCoordToWorldPos(glm::ivec3 chunk_coord) { return m_Instance->chunkCoordToWorldPos(chunk_coord); }
+	glm::ivec3 VoxelToChunk(glm::ivec3 location) { return voxelToChunk(location); }
 
-	static glm::ivec3 VoxelToChunk(glm::ivec3 location) { return m_Instance->voxelToChunk(location); }
+	glm::ivec3 ChunkToVoxel(glm::ivec3 location) { return chunkToVoxel(location); }
 
-	static glm::ivec3 ChunkToVoxel(glm::ivec3 location) { return m_Instance->chunkToVoxel(location); }
+	glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 location) { return globalToLocalChunkCoord(location); }
 
-	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 location) { return m_Instance->globalToLocalChunkCoord(location); }
+	glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location) { return globalToLocalChunkCoord(ChunkCoord, location); }
 
-	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location) { return m_Instance->globalToLocalChunkCoord(ChunkCoord, location); }
+	glm::ivec3 LocalToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location) { return localToGlobalCoord(Chunk, location); }
 
-	static glm::ivec3 LocalToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location) { return m_Instance->localToGlobalCoord(Chunk, location); }
+	glm::fvec3 VoxelToWorld(glm::ivec3 loc) { return voxelToWorld(loc); }
 
-	static glm::fvec3 VoxelToWorld(glm::ivec3 loc) { return m_Instance->voxelToWorld(loc); }
-
-	static glm::ivec3 WorldToVoxel(glm::fvec3 worldPos) { return m_Instance->worldToVoxel(worldPos); }
+	glm::ivec3 WorldToVoxel(glm::fvec3 worldPos) { return worldToVoxel(worldPos); }
 
 	static int Hash_Chunk(glm::ivec3 chunk);
 
@@ -113,9 +112,15 @@ public:
 
 	std::vector<glm::ivec3> Get_Chunk_Coords(glm::fvec3 loc, int radius, int depth);
 
-	void Init();
+	World* Get_World() { return m_world; }
 
-	void Update();
+	TerrainModifications* Get_TerrainModifications() { return m_terrain_mods; }
+
+	HeightmapGenerator* Get_HeightmapGenerator() { return m_heightmap_gen; }
+
+	void Init(World* world);
+
+	void Update(float dt);
 
 private:
 
@@ -130,11 +135,12 @@ private:
 		glm::ivec3 chunk;
 	};
 
-	static WorldTerrain* m_Instance;
-
 	IVoxelBuilder_private* m_builder{ nullptr };
 	TerrainModifications* m_terrain_mods{ nullptr };
+	HeightmapGenerator* m_heightmap_gen{ nullptr };
 	ChunkSettings settings;
+
+	World* m_world{nullptr};
 
 	double m_voxelsPerMeter{ DEFAULT_VOXELS_PER_METER };
 	double m_chunkMeterSizeX{ DEFAULT_METER_SIZE };

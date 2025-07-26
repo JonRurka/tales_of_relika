@@ -101,6 +101,11 @@ bool HeightmapGenerator::Has_Column(glm::ivec2 column_coord)
 	return m_column_map.contains(column_coord_hash);
 }
 
+float HeightmapGenerator::Sample(glm::ivec2 column_coord, int x, int y)
+{
+	return 0;
+}
+
 int HeightmapGenerator::Get_Column_Data_Offset(glm::ivec2 column_coord)
 {
 	int column_coord_hash = Utilities::Hash_Chunk_Coord(glm::ivec3(column_coord, 0));

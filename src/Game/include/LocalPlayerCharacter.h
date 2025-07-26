@@ -17,6 +17,7 @@ class Character_HUD;
 class LocalPlayerCharacter : public Component {
 public:
 
+	//struct
 
 	static LocalPlayerCharacter* Get_Instance() {
 		return m_instance;

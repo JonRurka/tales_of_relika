@@ -28,6 +28,8 @@ public:
 
 	bool Has_Column(glm::ivec2 column_coord);
 
+	float Sample(glm::ivec2 column_coord, int x, int y);
+
 	int Get_Column_Data_Offset(glm::ivec2 column_coord);
 
 	IComputeBuffer* Height_Data() { return m_out_height_data; }

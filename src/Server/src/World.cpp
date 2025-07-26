@@ -8,10 +8,17 @@
 #include "LuaEngine.h"
 #include "WorldController.h"
 #include "WorldTerrain.h"
+#include "WorldPhysics.h"
+#include "ServerTerrainChunk.h"
 
 #include "glaze/glaze.hpp" 
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 #define ORIENTATION_SEND_RATE ((1 / 20.0) * 1000) // MS
+#define INITIAL_CHUNK_SIM_RADIUS 4
+#define INITIAL_CHUNK_SIM_DEPTH 4
 
 					  
 void World::Init()
@@ -120,6 +127,15 @@ std::vector<Player::pointer> World::PlayersInRadius(glm::vec3 point, float radiu
 	return close_players;
 }
 
+Player::PlayerWorldProfile World::Create_World_Profile(uint32_t player_id)
+{
+	Player::PlayerWorldProfile player_profile{};
+
+	player_profile.Location = m_spawn_point;
+
+	return player_profile;
+}
+
 void World::WorldMutexLock()
 {
 	m_world_mtx.lock();
@@ -149,10 +165,28 @@ void World::async_init()
 	m_last_orientation_update = Server_Main::GetEpoch();
 	m_last_frame = Server_Main::GetEpoch();
 
+	m_world_physics = new WorldPhysics();
+	m_world_physics->Init();
+
 	m_world_terrain = new WorldTerrain();
-	m_world_terrain->Init();
+	m_world_terrain->Init(this);
+
+	load_initial_terrain();
 
 	init_lua();
+}
+
+void World::load_initial_terrain()
+{
+	auto chunk_coords = m_world_terrain->Get_Chunk_Coords(glm::vec3(m_spawn_point.x, 0, m_spawn_point.z), INITIAL_CHUNK_SIM_RADIUS, INITIAL_CHUNK_SIM_DEPTH);
+
+	for (const auto& c : chunk_coords)
+	{
+		ServerTerrainChunk* chunk = m_world_terrain->Spawn_Chunk(c);
+		chunk->KeepAlive(true);
+	}
+
+
 }
 
 void World::init_lua()
@@ -265,10 +299,14 @@ void World::GameLoop()
 
 void World::AsynUpdate(float dt)
 {
+	m_world_terrain->Update(dt);
 	ProcessNetCommands();
 	UpdatePlayers(dt);
 	SendOrientationUpdates();
 	SendPlayerEvents();
+
+
+	test_set_spawn_point();
 }
 
 void World::UpdatePlayers(float dt)
@@ -351,6 +389,9 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 				Logger::LogWarning(LOG_POS("ExecuteNetCommand"), "Received malformed Match Player Event from '" + player->Get_UserName() + "'!");
 			}
 			break;
+		case OpCodes::Server_World::Request_World_Player_Data:
+			RequestWorldPlayerData_NetCmd(*player, data);
+			break;
 		case OpCodes::Server_World::Request_Players:
 			RequestPlayers_NetCmd(*player, data);
 			break;
@@ -384,9 +425,50 @@ void World::UpdateOrientation_NetCmd(Player& player, Data data)
 	//Logger::Log("Received orientation update ("+std::to_string(data.Buffer.size()) + "): " + loc_str + ", " + rot_str + ", " + std::to_string(data.Type));
 }
 
+void World::RequestWorldPlayerData_NetCmd(Player& user, Data data)
+{
+	glm::vec3 player_loc = user.Get_Location();
+
+
+
+	json res_json;
+
+	json world_data;
+	world_data["world_id"] = m_world_id;
+
+
+	json player_data;
+
+	json player_location;
+	player_location["x"] = player_loc.x;
+	player_location["y"] = player_loc.y;
+	player_location["z"] = player_loc.z;
+	player_data["location"] = player_location;
+
+
+	res_json["world"] = world_data;
+	res_json["player"] = player_data;
+
+	std::string ident_jsn_str = res_json.dump();
+	user.Send(OpCodes::Client::World_Player_Data_Result, ident_jsn_str);
+}
+
 void World::RequestPlayers_NetCmd(Player& user, Data data)
 {
 	user.Spawn_Surrounding_Players();
+}
+
+void World::test_set_spawn_point()
+{
+	if (m_spawn_point_set)
+		return;
+
+	WorldPhysics::RayHit hit = m_world_physics->Raycast(glm::fvec3(m_spawn_point.x, 200, m_spawn_point.z), glm::vec3(0, -400, 0));
+	if (hit.did_hit) 
+	{
+		m_spawn_point = hit.hit_point;
+		m_spawn_point_set = true;
+	}
 }
 
 

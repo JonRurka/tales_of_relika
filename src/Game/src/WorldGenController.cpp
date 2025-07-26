@@ -62,8 +62,6 @@ void WorldGenController::Init()
 	//Logger::LogDebug(LOG_POS("Init"), "Max cached chunks: %i", m_max_cached_chunks);
 
 	initialize_voxel_engine();
-
-	Start();
 }
 
 void WorldGenController::Update(float dt)
