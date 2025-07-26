@@ -10,7 +10,7 @@
 #include "BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "BulletDynamics/Character/btKinematicCharacterController.h"
 
-#include "glaze/glaze.hpp" 
+//#include "glaze/glaze.hpp" 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 

@@ -74,7 +74,7 @@ target_link_libraries(${PROJECT_NAME}
 	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
-	glaze::glaze
+	#glaze::glaze
 	boost::boost
 	Vulkan::Vulkan
 	glm::glm

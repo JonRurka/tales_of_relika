@@ -65,7 +65,7 @@ target_link_libraries(${module}
 	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
-	glaze::glaze 
+	#glaze::glaze 
 	boost::boost
 	Vulkan::Vulkan
 	glm::glm
