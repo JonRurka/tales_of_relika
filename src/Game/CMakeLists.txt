@@ -87,7 +87,7 @@ target_link_libraries(${module}
 	glfw
 	sol2::sol2
 	Bullet::Bullet
-	OpenAL::OpenAL
+	#OpenAL::OpenAL
 	inih::inih
 	imgui::imgui
 	#vulkan-headers::vulkan-headers

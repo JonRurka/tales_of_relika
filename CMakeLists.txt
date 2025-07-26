@@ -24,7 +24,7 @@ find_package(Boost REQUIRED)
 find_package(sol2 REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(fmt REQUIRED)
-find_package(OpenAL REQUIRED)
+#find_package(OpenAL REQUIRED)
 find_package(inih REQUIRED)
 find_package(imgui REQUIRED)
 
