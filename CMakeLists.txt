@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 if (UNIX)
     add_compile_options(-pthread -fPIC)
+	set(CMAKE_CXX_COMPILER /opt/gcc-15/bin/g++)
 endif ()
 
 find_package(ZLIB REQUIRED)
