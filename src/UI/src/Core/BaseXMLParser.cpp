@@ -26,9 +26,9 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/BaseXMLParser.h"
-#include "../../Include/RmlUi/Core/Profiling.h"
-#include "../../Include/RmlUi/Core/Stream.h"
+#include "RmlUi/Core/BaseXMLParser.h"
+#include "RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/Stream.h"
 #include "XMLParseTools.h"
 #include <string.h>
 
