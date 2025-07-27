@@ -27,10 +27,10 @@
  */
 
 #include "BlockContainer.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/Element.h"
-#include "../../../Include/RmlUi/Core/ElementScroll.h"
-#include "../../../Include/RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/ElementScroll.h"
+#include "RmlUi/Core/Profiling.h"
 #include "FloatedBoxSpace.h"
 #include "InlineContainer.h"
 #include "LayoutDetails.h"
