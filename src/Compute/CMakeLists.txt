@@ -84,10 +84,10 @@ add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
 
 target_link_libraries(${module}
 	${VULKAN_LIBS}
+	${OPENCL_LIBS}
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
 	boost::boost
-	OpenCL OpenCLUtils OpenCLUtilsCpp
 	glm::glm
 	glfw
 	Bullet::Bullet

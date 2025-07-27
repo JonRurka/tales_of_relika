@@ -28,7 +28,18 @@ find_package(fmt REQUIRED)
 find_package(inih REQUIRED)
 find_package(imgui REQUIRED)
 
-set(OpenCL_SDK_Lib ${PROJECT_SOURCE_DIR}/lib/OpenCL_SDK/win32)
+
+if (UNIX)
+	set(OpenCL_SDK_Lib ${PROJECT_SOURCE_DIR}/lib/OpenCL_SDK/unix)
+	LIST(APPEND OPENCL_LIBS 
+		libOpenCLSDK libOpenCLSDKCpp libOpenCLUtils libOpenCLUtilsCpp
+	)
+else()
+	set(OpenCL_SDK_Lib ${PROJECT_SOURCE_DIR}/lib/OpenCL_SDK/win32)
+	LIST(APPEND OPENCL_LIBS 
+		OpenCL OpenCLUtils OpenCLUtilsCpp
+	)
+endif()
 link_directories(${OpenCL_SDK_Lib})
 
 find_package(Vulkan REQUIRED
