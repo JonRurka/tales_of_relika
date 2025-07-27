@@ -42,8 +42,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define CL_TARGET_OPENCL_VERSION 210
-#define CL_HPP_TARGET_OPENCL_VERSION 210
+//#define CL_TARGET_OPENCL_VERSION 210
+//#define CL_HPP_TARGET_OPENCL_VERSION 210
 
 //#include <boost/stacktrace.hpp>
 #define BOOST_TIMER_ENABLE_DEPRECATED
