@@ -2,7 +2,7 @@
 
 #pragma execution_character_set("utf-8")
 
-#define NOMINMAX
+//#define NOMINMAX
 
 #include <cstdio>
 #include <memory>

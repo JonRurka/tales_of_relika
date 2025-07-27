@@ -21,6 +21,7 @@
 #include <GLFW/glfw3native.h>
 
 #include <chrono>
+#include <algorithm>
 
 #include "window.h"
 #include "Logger.h"
@@ -953,7 +954,7 @@ int ComputeBuffer::CopyTo(ComputeBuffer* other)
 
     int src_size = mSize;
     int dst_size = other->mSize;
-    int size = min(src_size, dst_size);
+    int size = std::min(src_size, dst_size);
     cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, 0, 0, size, num_wait_events, wait_event_ptr, &finished_event);
     g_wait_event = finished_event;
     return res;

@@ -49,7 +49,7 @@ namespace {
 	{
 		size_t from = inPosition;
 		inBuf = const_cast<unsigned char*>(in.data()) + inPosition;
-		inPosition += min(ZLIB_CHUNK, in.size() - from);
+		inPosition += std::min(ZLIB_CHUNK, (int)(in.size() - from));
 		return inPosition - from;
 	}
 }
@@ -140,7 +140,7 @@ std::string Utilities::Get_Filename(const std::string& path)
 	// Find the rightmost separator
 	size_t filename_pos = 0;
 	if (last_slash != std::string::npos && last_backslash != std::string::npos) {
-		filename_pos = max(last_slash, last_backslash);
+		filename_pos = std::max(last_slash, last_backslash);
 	}
 	else if (last_slash != std::string::npos) {
 		filename_pos = last_slash;
@@ -169,7 +169,7 @@ std::string Utilities::Get_Resource_Filename(const std::string& path)
 	// Find the rightmost separator
 	size_t filename_pos = 0;
 	if (last_slash != std::string::npos && last_backslash != std::string::npos) {
-		filename_pos = max(last_slash, last_backslash);
+		filename_pos = std::max(last_slash, last_backslash);
 	}
 	else if (last_slash != std::string::npos) {
 		filename_pos = last_slash;
