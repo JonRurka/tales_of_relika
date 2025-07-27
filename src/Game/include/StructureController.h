@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 #include <queue>
+#include <thread>
 
 #define DEFAULT_METER_SIZE 32.0f
 #define DEFAULT_VOXELS_PER_METER 1.0f
