@@ -26,8 +26,8 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/CallbackTexture.h"
-#include "../../Include/RmlUi/Core/Texture.h"
+#include "RmlUi/Core/CallbackTexture.h"
+#include "RmlUi/Core/Texture.h"
 #include "RenderManagerAccess.h"
 
 namespace Rml {
