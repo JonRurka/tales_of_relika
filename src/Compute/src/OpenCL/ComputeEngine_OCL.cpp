@@ -70,7 +70,7 @@ namespace {
     bool checkExtnAvailability(cl_device_id pDevice, std::string pName)
     {
         char ext_chars[1024];
-        ZeroMemory(ext_chars, 1024);
+        memset(ext_chars, 0, 1024);
         // find extensions required
         clGetDeviceInfo(pDevice, CL_DEVICE_EXTENSIONS, 1024, ext_chars, 0);
         std::string ext_str = std::string(ext_chars);

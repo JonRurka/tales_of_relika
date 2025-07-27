@@ -159,17 +159,17 @@ std::vector<Platform> ComputeInterface_private::GetSupportedPlatforms_OpenCL()
         platform.platform = all_platforms[i];
         printf("Platform ID: %llX\n", (long long)platform.platform);
 
-        ZeroMemory(Info, INFO_SIZE);
+        memset(Info, 0, INFO_SIZE);
         clGetPlatformInfo(all_platforms[i], CL_PLATFORM_NAME, INFO_SIZE, Info, &n_size);
         strcpy(platform.name, Info);
         platform.name_size = n_size;
 
-        ZeroMemory(Info, INFO_SIZE);
+        memset(Info, 0, INFO_SIZE);
         clGetPlatformInfo(all_platforms[i], CL_PLATFORM_VENDOR, INFO_SIZE, Info, &n_size);
         strcpy(platform.vendor, Info);
         platform.vendor_size = n_size;
 
-        ZeroMemory(Info, INFO_SIZE);
+        memset(Info, 0, INFO_SIZE);
         clGetPlatformInfo(all_platforms[i], CL_PLATFORM_VERSION, INFO_SIZE, Info, &n_size);
         strcpy(platform.version, Info);
         platform.version_size = n_size;
@@ -213,13 +213,13 @@ std::vector<OpenCL_Device_Info> ComputeInterface_private::GetSupportedDevices_Op
         info.cl_device = device_ids[i];
         info.platform = pltfrm;
 
-        ZeroMemory(Info, INFO_SIZE);
+        memset(Info, 0, INFO_SIZE);
         n_size = 0;
         clGetDeviceInfo(device_ids[i], CL_DEVICE_VENDOR, INFO_SIZE, Info, &n_size);
         strcpy(info.vendor, Info);
         info.vendor_size = n_size;
 
-        ZeroMemory(Info, INFO_SIZE);
+        memset(Info, 0, INFO_SIZE);
         n_size = 0;
         clGetDeviceInfo(device_ids[i], CL_DEVICE_NAME, INFO_SIZE, Info, &n_size);
         strcpy(info.name, Info);
