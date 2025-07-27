@@ -300,7 +300,8 @@ uint64_t Server_Main::GetMemoryUsage()
 std::shared_ptr<Player> Server_Main::GetPlayer(uint32_t id)
 {
 	if (!m_instance->Has_Player(id)) {
-		throw std::exception("Requested player that does not exist!");
+		//throw std::exception("Requested player that does not exist!");
+		throw std::runtime_error("Requested player that does not exist!");
 	}
 
 	return m_instance->m_players[id];

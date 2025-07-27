@@ -29,6 +29,7 @@
 #include <ctime>
 #include <queue>
 #include <thread>
+#include <stdexcept>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
