@@ -6,7 +6,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
-#include <string>
+#include <string.h>
 #include <map>
 #include <list>
 #include <utility>

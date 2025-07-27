@@ -27,7 +27,7 @@ namespace DynamicCompute {
 
 				void SetProgramDir(std::string dir) {
 					program_dir_size = dir.size();
-					memcpy(program_dir, dir.data(), program_dir_size);
+					std::memcpy(program_dir, dir.data(), program_dir_size);
 					program_dir[program_dir_size] = '\0';
 				}
 			};
