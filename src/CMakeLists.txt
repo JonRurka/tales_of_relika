@@ -2,12 +2,24 @@ project("tales_of_relika")
 
 option(BUILD_SHARED_LIBS "CMake standard option. Choose whether to build shared RmlUi libraries." OFF)
 option(SOURCE_RMLUI "Include RMLUI as source rather than linked library." ON)
+option(VULKAN_PLATFROM "Include Vulkan platform for compute." OFF)
+
 add_compile_definitions(RMLUI_STATIC_LIB)
 add_compile_definitions(RMLUI_GL3_CUSTOM_LOADER="opengl.h")
 
 add_compile_definitions(CL_TARGET_OPENCL_VERSION=210)
 add_compile_definitions(CL_HPP_TARGET_OPENCL_VERSION=210)
 add_compile_definitions(NOMINMAX)
+
+if (VULKAN_PLATFROM)
+	add_compile_definitions(VULKAN_COMPUTE_PLATFROM)
+	LIST(APPEND VULKAN_LIBS 
+		Vulkan::Vulkan
+		nvpro_core
+	)
+else()
+	
+endif()
 
 if(SOURCE_RMLUI)
 	LIST(APPEND RMLUI_LIBS 
@@ -75,12 +87,12 @@ add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
 target_link_libraries(${PROJECT_NAME} 
 	${PLATFORM_LIBRARIES}
 	${RMLUI_LIBS}
+	${VULKAN_LIBS}
 	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
 	#glaze::glaze
 	boost::boost
-	Vulkan::Vulkan
 	glm::glm
 	glfw
 	spirv-cross-core
@@ -93,7 +105,7 @@ target_link_libraries(${PROJECT_NAME}
 	inih::inih
 	imgui::imgui
 	#vulkan-headers::vulkan-headers
-	nvpro_core
+	
 	#GPUOpen::VulkanMemoryAllocator
 	#rmlui
 	#rmlui_debugger

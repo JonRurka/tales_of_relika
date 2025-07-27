@@ -77,12 +77,12 @@ add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
 
 target_link_libraries(${module} 
 	${RMLUI_LIBS}
+	${VULKAN_LIBS}
 	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
 	#glaze::glaze 
 	boost::boost
-	Vulkan::Vulkan
 	glm::glm
 	glfw
 	sol2::sol2

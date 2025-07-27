@@ -4,8 +4,10 @@
 //#include "Compute_OCL/compute_test.h"
 //#pragma comment(lib, "OpenCL.lib")
 
+#ifdef VULKAN_COMPUTE_PLATFROM
 #include "ComputeController_VK.h"
 #include "vulkan_utils.h"
+#endif
 
 //#include "Compute_Vulkan/vulkan_test.h"
 //#include "Compute_Vulkan/vulkan_compute_test.h"
@@ -15,12 +17,15 @@
 //#include "Compute_DirectX/compute_test.h"
 //#include "Compute_DirectX/ComputeController_DX.h"
 //#include "Compute_DirectX/directX_utils.h"
-
 #endif
 
 using namespace DynamicCompute::Compute;
 using namespace DynamicCompute::Compute::OCL;
+
+
+#ifdef VULKAN_COMPUTE_PLATFROM
 using namespace DynamicCompute::Compute::VK;
+#endif
 
 #ifdef WINDOWS_PLATFROM
 //using namespace DynamicCompute::Compute::DX;
@@ -41,8 +46,11 @@ IComputeController_private* ComputeInterface_private::GetComputeController(Compu
 	case ComputeInterface_private::Compute_SDK::OpenCL:
 		return GetComputeController_OCL(info);
 
+
+#ifdef VULKAN_COMPUTE_PLATFROM
 	case ComputeInterface_private::Compute_SDK::VULKAN:
 		return GetComputeController_Vulkan(info);
+#endif
 
 #ifdef WINDOWS_PLATFROM
 	//case ComputeInterface_private::Compute_SDK::DIRECTX:
@@ -62,9 +70,11 @@ IComputeController_private* ComputeInterface_private::GetComputeController(Compu
 void ComputeInterface_private::DisposePlatform(Compute_SDK implementation)
 {
     switch (implementation) {
+#ifdef VULKAN_COMPUTE_PLATFROM
     case Compute_SDK::VULKAN:
         ComputeController_VK::DisposePlatform();
         break;
+#endif
 
 #ifdef WINDOWS_PLATFROM
     //case Compute_SDK::DIRECTX:
@@ -95,6 +105,8 @@ IComputeController_private* ComputeInterface_private::GetComputeController_OCL(C
 
 IComputeController_private* ComputeInterface_private::GetComputeController_Vulkan(ControllerInfo info)
 {
+#ifdef VULKAN_COMPUTE_PLATFROM
+
     //Vulkan_compute_test test;
     //test.Run();
 
@@ -112,6 +124,9 @@ IComputeController_private* ComputeInterface_private::GetComputeController_Vulka
     }
 
     return controller;
+#else
+    return nullptr;
+#endif
 }
 
 /*IComputeController_private* ComputeInterface_private::GetComputeController_DirectX(ControllerInfo info)
@@ -286,6 +301,8 @@ std::vector<Vulkan_Device_Info> ComputeInterface_private::GetSupportedDevices_Vu
 {
     std::vector<Vulkan_Device_Info> result;
 
+#ifdef VULKAN_COMPUTE_PLATFROM
+
     VkApplicationInfo appInfo = VK::Utilities::getApplicationInfo(
         "Get_Devices",
         VK_MAKE_VERSION(1, 0, 0),
@@ -373,6 +390,8 @@ std::vector<Vulkan_Device_Info> ComputeInterface_private::GetSupportedDevices_Vu
 
     vkDestroyInstance(instance, nullptr);
 
+#endif
+
     return result;
 }
 
@@ -431,6 +450,7 @@ std::vector<DirectX_Device_Info> ComputeInterface_private::GetSupportedDevices_D
 
 bool ComputeInterface_private::VK_isDeviceSuitable(VkPhysicalDevice device)
 {
+#ifdef VULKAN_COMPUTE_PLATFROM
     VkPhysicalDeviceProperties deviceProperties;
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
@@ -443,4 +463,8 @@ bool ComputeInterface_private::VK_isDeviceSuitable(VkPhysicalDevice device)
     bool extensionsSupported = VK::Utilities::checkDeviceExtensionSupport(device, deviceExtensions);
 
     return indices.isComplete() && extensionsSupported;
+#else
+    return false;
+#endif
+
 }
