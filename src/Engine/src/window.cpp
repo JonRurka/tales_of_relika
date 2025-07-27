@@ -31,7 +31,9 @@
 window* window::m_instance{NULL};
 
 namespace {
+#ifdef WIN32
     static HMODULE s_module = NULL;
+#endif
 
     void APIENTRY glDebugOutput(GLenum source,
         GLenum type,
