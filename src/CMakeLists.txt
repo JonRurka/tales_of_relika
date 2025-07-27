@@ -5,8 +5,8 @@ option(SOURCE_RMLUI "Include RMLUI as source rather than linked library." OFF)
 add_compile_definitions(RMLUI_STATIC_LIB)
 add_compile_definitions(RMLUI_GL3_CUSTOM_LOADER="opengl.h")
 
-add_compile_definitions(CL_TARGET_OPENCL_VERSION="210")
-add_compile_definitions(CL_HPP_TARGET_OPENCL_VERSION="210")
+add_compile_definitions(CL_TARGET_OPENCL_VERSION=210)
+add_compile_definitions(CL_HPP_TARGET_OPENCL_VERSION=210)
 
 if(SOURCE_RMLUI)
 	LIST(APPEND RMLUI_LIBS 

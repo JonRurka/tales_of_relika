@@ -40,6 +40,7 @@ set(${module}_headers
 	include/OpenCL/ComputeBuffer_OCL.h
 	#include/OpenCL/OCL_forwardDeclarations.h
 	#include/OpenCL/ProgramBuilder.h
+	
 )
 
 set(${module}_sources
