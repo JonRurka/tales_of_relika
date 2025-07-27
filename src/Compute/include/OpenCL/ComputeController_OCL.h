@@ -25,6 +25,9 @@ namespace DynamicCompute {
 				IComputeBuffer_private* NewWriteBuffer(size_t numElements, size_t stride, bool external = false) override;
 
 				IComputeBuffer_private* NewReadWriteBuffer(size_t numElements, size_t stride, bool external = false) override;
+				
+				static IComputeController_private* New();
+				ComputeController_OCL() {}
 
 				void Dispose() {}
 
@@ -33,9 +36,9 @@ namespace DynamicCompute {
 				ComputeBuffer* NewBuffer(ComputeBuffer::Buffer_Type type, size_t length, bool external = false);
 
 			private:
-				ComputeController_OCL() {}
+				
 
-				static IComputeController_private* New();
+				
 
 				ComputeContext* m_context{ nullptr };
 				std::string m_directory;
