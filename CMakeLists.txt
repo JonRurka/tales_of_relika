@@ -32,7 +32,7 @@ find_package(imgui REQUIRED)
 if (UNIX)
 	set(OpenCL_SDK_Lib ${PROJECT_SOURCE_DIR}/lib/OpenCL_SDK/unix)
 	LIST(APPEND OPENCL_LIBS 
-		libOpenCLSDK.a libOpenCLSDKCpp.a libOpenCLUtils.a libOpenCLUtilsCpp.a
+		OpenCL libOpenCLSDK.a libOpenCLSDKCpp.a libOpenCLUtils.a libOpenCLUtilsCpp.a
 	)
 else()
 	set(OpenCL_SDK_Lib ${PROJECT_SOURCE_DIR}/lib/OpenCL_SDK/win32)
