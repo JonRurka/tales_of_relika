@@ -29,10 +29,10 @@
 #ifndef RMLUI_CORE_DATACONTROLLERDEFAULT_H
 #define RMLUI_CORE_DATACONTROLLERDEFAULT_H
 
-#include "../../Include/RmlUi/Core/DataVariable.h"
-#include "../../Include/RmlUi/Core/EventListener.h"
-#include "../../Include/RmlUi/Core/Header.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/DataVariable.h"
+#include "RmlUi/Core/EventListener.h"
+#include "RmlUi/Core/Header.h"
+#include "RmlUi/Core/Types.h"
 #include "DataController.h"
 
 namespace Rml {

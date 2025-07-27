@@ -27,7 +27,7 @@
  */
 
 #include "ElementDefinition.h"
-#include "../../Include/RmlUi/Core/PropertyIdSet.h"
+#include "RmlUi/Core/PropertyIdSet.h"
 #include "StyleSheetNode.h"
 
 namespace Rml {

@@ -27,14 +27,14 @@
  */
 
 #include "GeometryBoxShadow.h"
-#include "../../Include/RmlUi/Core/Box.h"
-#include "../../Include/RmlUi/Core/CompiledFilterShader.h"
-#include "../../Include/RmlUi/Core/DecorationTypes.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/Geometry.h"
-#include "../../Include/RmlUi/Core/Math.h"
-#include "../../Include/RmlUi/Core/MeshUtilities.h"
-#include "../../Include/RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/Box.h"
+#include "RmlUi/Core/CompiledFilterShader.h"
+#include "RmlUi/Core/DecorationTypes.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/Math.h"
+#include "RmlUi/Core/MeshUtilities.h"
+#include "RmlUi/Core/RenderManager.h"
 
 namespace Rml {
 

@@ -26,13 +26,13 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/ElementScroll.h"
-#include "../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../Include/RmlUi/Core/Context.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../Include/RmlUi/Core/Event.h"
-#include "../../Include/RmlUi/Core/Factory.h"
+#include "RmlUi/Core/ElementScroll.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Context.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Event.h"
+#include "RmlUi/Core/Factory.h"
 #include "Layout/LayoutDetails.h"
 #include "WidgetScroll.h"
 

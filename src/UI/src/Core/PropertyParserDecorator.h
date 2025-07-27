@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_PROPERTYPARSERDECORATOR_H
 #define RMLUI_CORE_PROPERTYPARSERDECORATOR_H
 
-#include "../../Include/RmlUi/Core/PropertyParser.h"
+#include "RmlUi/Core/PropertyParser.h"
 #include "ControlledLifetimeResource.h"
 
 namespace Rml {

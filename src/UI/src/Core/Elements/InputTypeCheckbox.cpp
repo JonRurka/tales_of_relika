@@ -27,7 +27,7 @@
  */
 
 #include "InputTypeCheckbox.h"
-#include "../../../Include/RmlUi/Core/Elements/ElementFormControlInput.h"
+#include "RmlUi/Core/Elements/ElementFormControlInput.h"
 
 namespace Rml {
 

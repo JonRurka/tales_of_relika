@@ -26,9 +26,9 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/TransformPrimitive.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/TypeConverter.h"
+#include "RmlUi/Core/TransformPrimitive.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/TypeConverter.h"
 
 namespace Rml {
 namespace Transforms {

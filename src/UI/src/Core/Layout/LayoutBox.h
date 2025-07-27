@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_LAYOUT_LAYOUTBOX_H
 #define RMLUI_CORE_LAYOUT_LAYOUTBOX_H
 
-#include "../../../Include/RmlUi/Core/Box.h"
-#include "../../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/Box.h"
+#include "RmlUi/Core/Types.h"
 
 namespace Rml {
 

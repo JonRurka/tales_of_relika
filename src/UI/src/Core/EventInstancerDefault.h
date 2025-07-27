@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_EVENTINSTANCERDEFAULT_H
 #define RMLUI_CORE_EVENTINSTANCERDEFAULT_H
 
-#include "../../Include/RmlUi/Core/EventInstancer.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/EventInstancer.h"
+#include "RmlUi/Core/Types.h"
 
 namespace Rml {
 

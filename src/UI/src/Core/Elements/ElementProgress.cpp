@@ -26,16 +26,16 @@
  *
  */
 
-#include "../../../Include/RmlUi/Core/Elements/ElementProgress.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/ElementDocument.h"
-#include "../../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../../Include/RmlUi/Core/Factory.h"
-#include "../../../Include/RmlUi/Core/Math.h"
-#include "../../../Include/RmlUi/Core/MeshUtilities.h"
-#include "../../../Include/RmlUi/Core/PropertyIdSet.h"
-#include "../../../Include/RmlUi/Core/StyleSheet.h"
-#include "../../../Include/RmlUi/Core/URL.h"
+#include "RmlUi/Core/Elements/ElementProgress.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/ElementDocument.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/Math.h"
+#include "RmlUi/Core/MeshUtilities.h"
+#include "RmlUi/Core/PropertyIdSet.h"
+#include "RmlUi/Core/StyleSheet.h"
+#include "RmlUi/Core/URL.h"
 #include <algorithm>
 
 namespace Rml {

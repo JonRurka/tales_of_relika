@@ -27,8 +27,8 @@
  */
 
 #include "WidgetTextInputMultiLine.h"
-#include "../../../Include/RmlUi/Core/Dictionary.h"
-#include "../../../Include/RmlUi/Core/ElementText.h"
+#include "RmlUi/Core/Dictionary.h"
+#include "RmlUi/Core/ElementText.h"
 #include <algorithm>
 
 namespace Rml {

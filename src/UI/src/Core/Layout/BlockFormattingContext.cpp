@@ -27,12 +27,12 @@
  */
 
 #include "BlockFormattingContext.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/Element.h"
-#include "../../../Include/RmlUi/Core/Profiling.h"
-#include "../../../Include/RmlUi/Core/PropertyDefinition.h"
-#include "../../../Include/RmlUi/Core/StyleSheetSpecification.h"
-#include "../../../Include/RmlUi/Core/SystemInterface.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/PropertyDefinition.h"
+#include "RmlUi/Core/StyleSheetSpecification.h"
+#include "RmlUi/Core/SystemInterface.h"
 #include "BlockContainer.h"
 #include "FloatedBoxSpace.h"
 #include "LayoutDetails.h"

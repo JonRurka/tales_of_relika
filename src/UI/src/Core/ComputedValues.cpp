@@ -26,8 +26,8 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../Include/RmlUi/Core/Element.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Element.h"
 #include "ComputeProperty.h"
 
 namespace Rml {

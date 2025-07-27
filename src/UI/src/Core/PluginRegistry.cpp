@@ -27,7 +27,7 @@
  */
 
 #include "PluginRegistry.h"
-#include "../../Include/RmlUi/Core/Plugin.h"
+#include "RmlUi/Core/Plugin.h"
 #include "ControlledLifetimeResource.h"
 #include <algorithm>
 

@@ -29,11 +29,11 @@
 #ifndef RMLUI_CORE_ELEMENTMETA_H
 #define RMLUI_CORE_ELEMENTMETA_H
 
-#include "../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/ElementScroll.h"
-#include "../../Include/RmlUi/Core/Traits.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/ElementScroll.h"
+#include "RmlUi/Core/Traits.h"
+#include "RmlUi/Core/Types.h"
 #include "ControlledLifetimeResource.h"
 #include "ElementBackgroundBorder.h"
 #include "ElementEffects.h"

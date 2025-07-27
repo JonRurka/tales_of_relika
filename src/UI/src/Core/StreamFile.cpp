@@ -27,9 +27,9 @@
  */
 
 #include "StreamFile.h"
-#include "../../Include/RmlUi/Core/Core.h"
-#include "../../Include/RmlUi/Core/FileInterface.h"
-#include "../../Include/RmlUi/Core/StringUtilities.h"
+#include "RmlUi/Core/Core.h"
+#include "RmlUi/Core/FileInterface.h"
+#include "RmlUi/Core/StringUtilities.h"
 
 namespace Rml {
 

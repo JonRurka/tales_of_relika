@@ -29,10 +29,10 @@
 #ifndef RMLUI_CORE_FONTENGINEDEFAULT_FONTFACELAYER_H
 #define RMLUI_CORE_FONTENGINEDEFAULT_FONTFACELAYER_H
 
-#include "../../../Include/RmlUi/Core/CallbackTexture.h"
-#include "../../../Include/RmlUi/Core/FontGlyph.h"
-#include "../../../Include/RmlUi/Core/Geometry.h"
-#include "../../../Include/RmlUi/Core/MeshUtilities.h"
+#include "RmlUi/Core/CallbackTexture.h"
+#include "RmlUi/Core/FontGlyph.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/MeshUtilities.h"
 #include "../TextureLayout.h"
 
 namespace Rml {

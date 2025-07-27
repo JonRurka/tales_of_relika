@@ -27,7 +27,7 @@
  */
 
 #include "WidgetTextInputSingleLinePassword.h"
-#include "../../../Include/RmlUi/Core/ElementText.h"
+#include "RmlUi/Core/ElementText.h"
 
 namespace Rml {
 

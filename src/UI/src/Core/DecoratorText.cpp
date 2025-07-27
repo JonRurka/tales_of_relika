@@ -27,14 +27,14 @@
  */
 
 #include "DecoratorText.h"
-#include "../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../Include/RmlUi/Core/Context.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/FontEngineInterface.h"
-#include "../../Include/RmlUi/Core/Geometry.h"
-#include "../../Include/RmlUi/Core/PropertyDefinition.h"
-#include "../../Include/RmlUi/Core/RenderManager.h"
-#include "../../Include/RmlUi/Core/TextShapingContext.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Context.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/FontEngineInterface.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/PropertyDefinition.h"
+#include "RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/TextShapingContext.h"
 
 namespace Rml {
 

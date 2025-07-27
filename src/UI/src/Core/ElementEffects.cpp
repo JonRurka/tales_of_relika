@@ -27,14 +27,14 @@
  */
 
 #include "ElementEffects.h"
-#include "../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../Include/RmlUi/Core/Decorator.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/ElementDocument.h"
-#include "../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../Include/RmlUi/Core/Filter.h"
-#include "../../Include/RmlUi/Core/Profiling.h"
-#include "../../Include/RmlUi/Core/StyleSheet.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Decorator.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/ElementDocument.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Filter.h"
+#include "RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/StyleSheet.h"
 
 namespace Rml {
 

@@ -26,12 +26,12 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/StyleSheet.h"
-#include "../../Include/RmlUi/Core/Decorator.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/Profiling.h"
-#include "../../Include/RmlUi/Core/PropertyDefinition.h"
-#include "../../Include/RmlUi/Core/StyleSheetSpecification.h"
+#include "RmlUi/Core/StyleSheet.h"
+#include "RmlUi/Core/Decorator.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/PropertyDefinition.h"
+#include "RmlUi/Core/StyleSheetSpecification.h"
 #include "ElementDefinition.h"
 #include "ElementStyle.h"
 #include "StyleSheetNode.h"

@@ -26,7 +26,7 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/Plugin.h"
+#include "RmlUi/Core/Plugin.h"
 
 namespace Rml {
 

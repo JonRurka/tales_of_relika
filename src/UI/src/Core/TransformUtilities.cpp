@@ -27,8 +27,8 @@
  */
 
 #include "TransformUtilities.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/TransformPrimitive.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/TransformPrimitive.h"
 
 namespace Rml {
 

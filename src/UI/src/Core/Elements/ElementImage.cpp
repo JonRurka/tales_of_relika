@@ -27,14 +27,14 @@
  */
 
 #include "ElementImage.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/ElementDocument.h"
-#include "../../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../../Include/RmlUi/Core/MeshUtilities.h"
-#include "../../../Include/RmlUi/Core/PropertyIdSet.h"
-#include "../../../Include/RmlUi/Core/StyleSheet.h"
-#include "../../../Include/RmlUi/Core/Texture.h"
-#include "../../../Include/RmlUi/Core/URL.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/ElementDocument.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/MeshUtilities.h"
+#include "RmlUi/Core/PropertyIdSet.h"
+#include "RmlUi/Core/StyleSheet.h"
+#include "RmlUi/Core/Texture.h"
+#include "RmlUi/Core/URL.h"
 #include "../TextureDatabase.h"
 
 namespace Rml {

@@ -27,7 +27,7 @@
  */
 
 #include "LayoutPools.h"
-#include "../../../Include/RmlUi/Core/Element.h"
+#include "RmlUi/Core/Element.h"
 #include "../ControlledLifetimeResource.h"
 #include "../Pool.h"
 #include "BlockContainer.h"

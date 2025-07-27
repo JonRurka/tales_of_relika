@@ -27,7 +27,7 @@
  */
 
 #include "DecoratorUtilities.h"
-#include "../../Include/RmlUi/Core/Property.h"
+#include "RmlUi/Core/Property.h"
 
 namespace Rml {
 

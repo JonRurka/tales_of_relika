@@ -27,7 +27,7 @@
  */
 
 #include "InputTypeRange.h"
-#include "../../../Include/RmlUi/Core/Elements/ElementFormControlInput.h"
+#include "RmlUi/Core/Elements/ElementFormControlInput.h"
 #include "WidgetSlider.h"
 
 namespace Rml {

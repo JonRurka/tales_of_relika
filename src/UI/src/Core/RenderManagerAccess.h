@@ -29,9 +29,9 @@
 #ifndef RMLUI_CORE_RENDERMANAGERACCESS_H
 #define RMLUI_CORE_RENDERMANAGERACCESS_H
 
-#include "../../Include/RmlUi/Core/Core.h"
-#include "../../Include/RmlUi/Core/RenderManager.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/Core.h"
+#include "RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/Types.h"
 
 namespace Rml {
 

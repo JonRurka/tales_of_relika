@@ -26,8 +26,8 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/Math.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/Math.h"
+#include "RmlUi/Core/Types.h"
 #include <cmath>
 #include <cstdlib>
 

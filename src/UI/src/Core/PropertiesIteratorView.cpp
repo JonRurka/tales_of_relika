@@ -26,8 +26,8 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/PropertiesIteratorView.h"
-#include "../../Include/RmlUi/Core/StyleSheetSpecification.h"
+#include "RmlUi/Core/PropertiesIteratorView.h"
+#include "RmlUi/Core/StyleSheetSpecification.h"
 #include "PropertiesIterator.h"
 
 namespace Rml {

@@ -26,12 +26,12 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/PropertySpecification.h"
-#include "../../Include/RmlUi/Core/Debug.h"
-#include "../../Include/RmlUi/Core/Log.h"
-#include "../../Include/RmlUi/Core/Profiling.h"
-#include "../../Include/RmlUi/Core/PropertyDefinition.h"
-#include "../../Include/RmlUi/Core/PropertyDictionary.h"
+#include "RmlUi/Core/PropertySpecification.h"
+#include "RmlUi/Core/Debug.h"
+#include "RmlUi/Core/Log.h"
+#include "RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/PropertyDefinition.h"
+#include "RmlUi/Core/PropertyDictionary.h"
 #include "IdNameMap.h"
 #include "PropertyShorthandDefinition.h"
 #include <algorithm>

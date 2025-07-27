@@ -27,7 +27,7 @@
  */
 
 #include "ElementTextSelection.h"
-#include "../../../Include/RmlUi/Core/PropertyIdSet.h"
+#include "RmlUi/Core/PropertyIdSet.h"
 #include "WidgetTextInput.h"
 
 namespace Rml {

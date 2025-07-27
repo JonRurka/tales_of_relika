@@ -27,17 +27,17 @@
  */
 
 #include "WidgetDropDown.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/Context.h"
-#include "../../../Include/RmlUi/Core/ElementDocument.h"
-#include "../../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../../Include/RmlUi/Core/Elements/ElementFormControl.h"
-#include "../../../Include/RmlUi/Core/Event.h"
-#include "../../../Include/RmlUi/Core/Factory.h"
-#include "../../../Include/RmlUi/Core/Input.h"
-#include "../../../Include/RmlUi/Core/Math.h"
-#include "../../../Include/RmlUi/Core/Profiling.h"
-#include "../../../Include/RmlUi/Core/Property.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Context.h"
+#include "RmlUi/Core/ElementDocument.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Elements/ElementFormControl.h"
+#include "RmlUi/Core/Event.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/Input.h"
+#include "RmlUi/Core/Math.h"
+#include "RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/Property.h"
 #include "../DataModel.h"
 
 namespace Rml {

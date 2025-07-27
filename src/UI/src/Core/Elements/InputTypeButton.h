@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_ELEMENTS_INPUTTYPEBUTTON_H
 #define RMLUI_CORE_ELEMENTS_INPUTTYPEBUTTON_H
 
-#include "../../../Include/RmlUi/Core/ElementDocument.h"
-#include "../../../Include/RmlUi/Core/EventListener.h"
+#include "RmlUi/Core/ElementDocument.h"
+#include "RmlUi/Core/EventListener.h"
 #include "InputType.h"
 
 namespace Rml {

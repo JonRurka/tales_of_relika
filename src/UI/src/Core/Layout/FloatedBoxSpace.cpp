@@ -27,9 +27,9 @@
  */
 
 #include "FloatedBoxSpace.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/Element.h"
-#include "../../../Include/RmlUi/Core/ElementScroll.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/ElementScroll.h"
 #include "BlockContainer.h"
 #include "LayoutPools.h"
 #include <float.h>

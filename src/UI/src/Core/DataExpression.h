@@ -29,9 +29,9 @@
 #ifndef RMLUI_CORE_DATAEXPRESSION_H
 #define RMLUI_CORE_DATAEXPRESSION_H
 
-#include "../../Include/RmlUi/Core/DataTypes.h"
-#include "../../Include/RmlUi/Core/Header.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/DataTypes.h"
+#include "RmlUi/Core/Header.h"
+#include "RmlUi/Core/Types.h"
 
 namespace Rml {
 

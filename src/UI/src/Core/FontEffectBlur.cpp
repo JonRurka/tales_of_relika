@@ -27,7 +27,7 @@
  */
 
 #include "FontEffectBlur.h"
-#include "../../Include/RmlUi/Core/PropertyDefinition.h"
+#include "RmlUi/Core/PropertyDefinition.h"
 #include "Memory.h"
 
 namespace Rml {

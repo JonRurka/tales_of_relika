@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_MEMORY_H
 #define RMLUI_CORE_MEMORY_H
 
-#include "../../Include/RmlUi/Core/Traits.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/Traits.h"
+#include "RmlUi/Core/Types.h"
 
 namespace Rml {
 

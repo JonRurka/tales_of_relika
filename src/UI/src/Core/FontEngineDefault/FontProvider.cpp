@@ -27,11 +27,11 @@
  */
 
 #include "FontProvider.h"
-#include "../../../Include/RmlUi/Core/Core.h"
-#include "../../../Include/RmlUi/Core/FileInterface.h"
-#include "../../../Include/RmlUi/Core/Log.h"
-#include "../../../Include/RmlUi/Core/Math.h"
-#include "../../../Include/RmlUi/Core/StringUtilities.h"
+#include "RmlUi/Core/Core.h"
+#include "RmlUi/Core/FileInterface.h"
+#include "RmlUi/Core/Log.h"
+#include "RmlUi/Core/Math.h"
+#include "RmlUi/Core/StringUtilities.h"
 #include "../ComputeProperty.h"
 #include "FontFace.h"
 #include "FontFamily.h"

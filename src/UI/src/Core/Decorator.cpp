@@ -26,11 +26,11 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/Decorator.h"
-#include "../../Include/RmlUi/Core/PropertyDefinition.h"
-#include "../../Include/RmlUi/Core/RenderManager.h"
-#include "../../Include/RmlUi/Core/StyleSheet.h"
-#include "../../Include/RmlUi/Core/Texture.h"
+#include "RmlUi/Core/Decorator.h"
+#include "RmlUi/Core/PropertyDefinition.h"
+#include "RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/StyleSheet.h"
+#include "RmlUi/Core/Texture.h"
 #include <algorithm>
 
 namespace Rml {

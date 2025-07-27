@@ -27,8 +27,8 @@
  */
 
 #include "FontFamily.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/Math.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Math.h"
 #include "FontFace.h"
 #include <limits.h>
 

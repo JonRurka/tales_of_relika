@@ -27,13 +27,13 @@
  */
 
 #include "DecoratorTiled.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../Include/RmlUi/Core/Geometry.h"
-#include "../../Include/RmlUi/Core/Math.h"
-#include "../../Include/RmlUi/Core/MeshUtilities.h"
-#include "../../Include/RmlUi/Core/PropertyDefinition.h"
-#include "../../Include/RmlUi/Core/Spritesheet.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/Math.h"
+#include "RmlUi/Core/MeshUtilities.h"
+#include "RmlUi/Core/PropertyDefinition.h"
+#include "RmlUi/Core/Spritesheet.h"
 #include <algorithm>
 
 namespace Rml {

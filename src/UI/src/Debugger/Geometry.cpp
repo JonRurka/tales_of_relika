@@ -27,11 +27,11 @@
  */
 
 #include "Geometry.h"
-#include "../../Include/RmlUi/Core/Context.h"
-#include "../../Include/RmlUi/Core/Core.h"
-#include "../../Include/RmlUi/Core/Geometry.h"
-#include "../../Include/RmlUi/Core/MeshUtilities.h"
-#include "../../Include/RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/Context.h"
+#include "RmlUi/Core/Core.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/MeshUtilities.h"
+#include "RmlUi/Core/RenderManager.h"
 
 namespace Rml {
 namespace Debugger {

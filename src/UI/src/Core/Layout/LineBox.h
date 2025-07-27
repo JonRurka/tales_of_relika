@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_LAYOUT_LINEBOX_H
 #define RMLUI_CORE_LAYOUT_LINEBOX_H
 
-#include "../../../Include/RmlUi/Core/StyleTypes.h"
+#include "RmlUi/Core/StyleTypes.h"
 #include "InlineTypes.h"
 
 namespace Rml {

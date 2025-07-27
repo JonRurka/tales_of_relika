@@ -28,8 +28,8 @@
 #ifndef RMLUI_CORE_CONTROLLEDLIFETIMERESOURCE_H
 #define RMLUI_CORE_CONTROLLEDLIFETIMERESOURCE_H
 
-#include "../../Include/RmlUi/Core/Debug.h"
-#include "../../Include/RmlUi/Core/Traits.h"
+#include "RmlUi/Core/Debug.h"
+#include "RmlUi/Core/Traits.h"
 
 namespace Rml {
 

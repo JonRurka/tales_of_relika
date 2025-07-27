@@ -27,13 +27,13 @@
  */
 
 #include "XMLNodeHandlerHead.h"
-#include "../../Include/RmlUi/Core/Core.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/ElementDocument.h"
-#include "../../Include/RmlUi/Core/StringUtilities.h"
-#include "../../Include/RmlUi/Core/SystemInterface.h"
-#include "../../Include/RmlUi/Core/URL.h"
-#include "../../Include/RmlUi/Core/XMLParser.h"
+#include "RmlUi/Core/Core.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/ElementDocument.h"
+#include "RmlUi/Core/StringUtilities.h"
+#include "RmlUi/Core/SystemInterface.h"
+#include "RmlUi/Core/URL.h"
+#include "RmlUi/Core/XMLParser.h"
 #include "DocumentHeader.h"
 #include "TemplateCache.h"
 

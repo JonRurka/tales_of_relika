@@ -32,7 +32,7 @@
     This file is for free-floating functions that are used across more than one file.
 */
 #include "Header.h"
-#include "IncludeLua.h"
+#include "Lua.h"
 #include "LuaType.h"
 #include <RmlUi/Core/Types.h>
 

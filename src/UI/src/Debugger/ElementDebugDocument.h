@@ -29,7 +29,7 @@
 #ifndef RMLUI_DEBUGGER_ELEMENTDEBUGDOCUMENT_H
 #define RMLUI_DEBUGGER_ELEMENTDEBUGDOCUMENT_H
 
-#include "../../Include/RmlUi/Core/ElementDocument.h"
+#include "RmlUi/Core/ElementDocument.h"
 
 namespace Rml {
 namespace Debugger {

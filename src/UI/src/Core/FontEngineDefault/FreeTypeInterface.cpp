@@ -27,9 +27,9 @@
  */
 
 #include "FreeTypeInterface.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/FontMetrics.h"
-#include "../../../Include/RmlUi/Core/Log.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/FontMetrics.h"
+#include "RmlUi/Core/Log.h"
 #include <algorithm>
 #include <ft2build.h>
 #include <limits.h>

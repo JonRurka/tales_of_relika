@@ -29,9 +29,9 @@
 #ifndef RMLUI_CORE_ELEMENTS_WIDGETTEXTINPUT_H
 #define RMLUI_CORE_ELEMENTS_WIDGETTEXTINPUT_H
 
-#include "../../../Include/RmlUi/Core/EventListener.h"
-#include "../../../Include/RmlUi/Core/Geometry.h"
-#include "../../../Include/RmlUi/Core/Vertex.h"
+#include "RmlUi/Core/EventListener.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/Vertex.h"
 #include <float.h>
 
 namespace Rml {

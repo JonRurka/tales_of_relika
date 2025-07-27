@@ -26,7 +26,7 @@
  *
  */
 
-#include "../include/ShellFileInterface.h"
+#include "ShellFileInterface.h"
 #include "RmlUi/Core/Core.h"
 #include <stdio.h>
 

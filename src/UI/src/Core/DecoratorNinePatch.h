@@ -29,9 +29,9 @@
 #ifndef RMLUI_CORE_DECORATORNINEPATCH_H
 #define RMLUI_CORE_DECORATORNINEPATCH_H
 
-#include "../../Include/RmlUi/Core/Decorator.h"
-#include "../../Include/RmlUi/Core/ID.h"
-#include "../../Include/RmlUi/Core/Spritesheet.h"
+#include "RmlUi/Core/Decorator.h"
+#include "RmlUi/Core/ID.h"
+#include "RmlUi/Core/Spritesheet.h"
 
 namespace Rml {
 

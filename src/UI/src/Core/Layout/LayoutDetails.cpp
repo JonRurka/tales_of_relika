@@ -27,12 +27,12 @@
  */
 
 #include "LayoutDetails.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/Element.h"
-#include "../../../Include/RmlUi/Core/ElementScroll.h"
-#include "../../../Include/RmlUi/Core/ElementText.h"
-#include "../../../Include/RmlUi/Core/Math.h"
-#include "../../../Include/RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/ElementScroll.h"
+#include "RmlUi/Core/ElementText.h"
+#include "RmlUi/Core/Math.h"
+#include "RmlUi/Core/Profiling.h"
 #include "ContainerBox.h"
 #include "FormattingContext.h"
 #include "LayoutEngine.h"

@@ -29,9 +29,9 @@
 #ifndef RMLUI_CORE_ELEMENTBACKGROUNDBORDER_H
 #define RMLUI_CORE_ELEMENTBACKGROUNDBORDER_H
 
-#include "../../Include/RmlUi/Core/CallbackTexture.h"
-#include "../../Include/RmlUi/Core/Geometry.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/CallbackTexture.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/Types.h"
 
 namespace Rml {
 

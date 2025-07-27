@@ -27,7 +27,7 @@
  */
 
 #include "LogDefault.h"
-#include "../../Include/RmlUi/Core/StringUtilities.h"
+#include "RmlUi/Core/StringUtilities.h"
 
 #ifdef RMLUI_PLATFORM_WIN32_NATIVE
 	#include <windows.h>

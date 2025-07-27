@@ -29,9 +29,9 @@
 #ifndef RMLUI_DEBUGGER_ELEMENTLOG_H
 #define RMLUI_DEBUGGER_ELEMENTLOG_H
 
-#include "../../Include/RmlUi/Core/ElementDocument.h"
-#include "../../Include/RmlUi/Core/EventListener.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/ElementDocument.h"
+#include "RmlUi/Core/EventListener.h"
+#include "RmlUi/Core/Types.h"
 #include "ElementDebugDocument.h"
 
 namespace Rml {

@@ -26,7 +26,7 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/RenderInterface.h"
+#include "RmlUi/Core/RenderInterface.h"
 
 namespace Rml {
 

@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_LAYOUT_REPLACEDFORMATTINGCONTEXT_H
 #define RMLUI_CORE_LAYOUT_REPLACEDFORMATTINGCONTEXT_H
 
-#include "../../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/Types.h"
 #include "FormattingContext.h"
 #include "LayoutBox.h"
 

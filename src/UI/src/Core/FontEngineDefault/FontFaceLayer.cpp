@@ -27,7 +27,7 @@
  */
 
 #include "FontFaceLayer.h"
-#include "../../../Include/RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/RenderManager.h"
 #include "FontFaceHandleDefault.h"
 #include <string.h>
 #include <type_traits>

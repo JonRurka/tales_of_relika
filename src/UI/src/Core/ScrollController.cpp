@@ -27,10 +27,10 @@
  */
 
 #include "ScrollController.h"
-#include "../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../Include/RmlUi/Core/Core.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/SystemInterface.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Core.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/SystemInterface.h"
 
 namespace Rml {
 

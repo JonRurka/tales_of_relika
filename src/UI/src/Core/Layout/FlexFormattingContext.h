@@ -29,7 +29,7 @@
 #ifndef RMLUI_CORE_LAYOUT_FLEXFORMATTINGCONTEXT_H
 #define RMLUI_CORE_LAYOUT_FLEXFORMATTINGCONTEXT_H
 
-#include "../../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/Types.h"
 #include "FormattingContext.h"
 
 namespace Rml {

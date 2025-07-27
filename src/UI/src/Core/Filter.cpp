@@ -26,8 +26,8 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/Filter.h"
-#include "../../Include/RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/Filter.h"
+#include "RmlUi/Core/RenderManager.h"
 
 namespace Rml {
 

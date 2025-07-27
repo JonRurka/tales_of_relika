@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_LAYOUT_TABLEFORMATTINGDETAILS_H
 #define RMLUI_CORE_LAYOUT_TABLEFORMATTINGDETAILS_H
 
-#include "../../../Include/RmlUi/Core/StyleTypes.h"
-#include "../../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/StyleTypes.h"
+#include "RmlUi/Core/Types.h"
 #include <float.h>
 
 namespace Rml {

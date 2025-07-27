@@ -27,11 +27,11 @@
  */
 
 #include "FilterBasic.h"
-#include "../../Include/RmlUi/Core/CompiledFilterShader.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/PropertyDefinition.h"
-#include "../../Include/RmlUi/Core/PropertyDictionary.h"
-#include "../../Include/RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/CompiledFilterShader.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/PropertyDefinition.h"
+#include "RmlUi/Core/PropertyDictionary.h"
+#include "RmlUi/Core/RenderManager.h"
 
 namespace Rml {
 

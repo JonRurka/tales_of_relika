@@ -27,9 +27,9 @@
  */
 
 #include "DataExpression.h"
-#include "../../Include/RmlUi/Core/DataModelHandle.h"
-#include "../../Include/RmlUi/Core/Event.h"
-#include "../../Include/RmlUi/Core/Variant.h"
+#include "RmlUi/Core/DataModelHandle.h"
+#include "RmlUi/Core/Event.h"
+#include "RmlUi/Core/Variant.h"
 #include "DataModel.h"
 #include <stack>
 

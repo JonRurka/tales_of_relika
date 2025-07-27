@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_DECORATORUTILITIES_H
 #define RMLUI_CORE_DECORATORUTILITIES_H
 
-#include "../../Include/RmlUi/Core/NumericValue.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/NumericValue.h"
+#include "RmlUi/Core/Types.h"
 
 namespace Rml {
 

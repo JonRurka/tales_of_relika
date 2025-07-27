@@ -27,9 +27,9 @@
  */
 
 #include "ComputeProperty.h"
-#include "../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../Include/RmlUi/Core/Property.h"
-#include "../../Include/RmlUi/Core/StringUtilities.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Property.h"
+#include "RmlUi/Core/StringUtilities.h"
 #include "ControlledLifetimeResource.h"
 
 namespace Rml {

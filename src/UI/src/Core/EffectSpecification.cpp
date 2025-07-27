@@ -26,8 +26,8 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/EffectSpecification.h"
-#include "../../Include/RmlUi/Core/PropertyDefinition.h"
+#include "RmlUi/Core/EffectSpecification.h"
+#include "RmlUi/Core/PropertyDefinition.h"
 
 namespace Rml {
 

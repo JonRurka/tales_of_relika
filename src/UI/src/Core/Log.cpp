@@ -26,10 +26,10 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/Log.h"
-#include "../../Include/RmlUi/Core/Core.h"
-#include "../../Include/RmlUi/Core/StringUtilities.h"
-#include "../../Include/RmlUi/Core/SystemInterface.h"
+#include "RmlUi/Core/Log.h"
+#include "RmlUi/Core/Core.h"
+#include "RmlUi/Core/StringUtilities.h"
+#include "RmlUi/Core/SystemInterface.h"
 #include "LogDefault.h"
 #include <stdarg.h>
 #include <stdio.h>

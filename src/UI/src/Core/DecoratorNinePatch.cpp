@@ -27,11 +27,11 @@
  */
 
 #include "DecoratorNinePatch.h"
-#include "../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../Include/RmlUi/Core/Geometry.h"
-#include "../../Include/RmlUi/Core/PropertyDefinition.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/PropertyDefinition.h"
 
 namespace Rml {
 

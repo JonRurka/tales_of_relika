@@ -29,9 +29,9 @@
 #ifndef RMLUI_CORE_FILTERBLUR_H
 #define RMLUI_CORE_FILTERBLUR_H
 
-#include "../../Include/RmlUi/Core/Filter.h"
-#include "../../Include/RmlUi/Core/ID.h"
-#include "../../Include/RmlUi/Core/NumericValue.h"
+#include "RmlUi/Core/Filter.h"
+#include "RmlUi/Core/ID.h"
+#include "RmlUi/Core/NumericValue.h"
 
 namespace Rml {
 

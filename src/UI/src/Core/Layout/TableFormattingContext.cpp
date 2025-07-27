@@ -27,9 +27,9 @@
  */
 
 #include "TableFormattingContext.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/Element.h"
-#include "../../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/Types.h"
 #include "ContainerBox.h"
 #include "LayoutDetails.h"
 #include "LayoutEngine.h"

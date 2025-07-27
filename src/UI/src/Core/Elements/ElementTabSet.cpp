@@ -26,9 +26,9 @@
  *
  */
 
-#include "../../../Include/RmlUi/Core/Elements/ElementTabSet.h"
-#include "../../../Include/RmlUi/Core/Factory.h"
-#include "../../../Include/RmlUi/Core/Math.h"
+#include "RmlUi/Core/Elements/ElementTabSet.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/Math.h"
 
 namespace Rml {
 

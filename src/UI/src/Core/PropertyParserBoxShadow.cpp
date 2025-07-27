@@ -27,8 +27,8 @@
  */
 
 #include "PropertyParserBoxShadow.h"
-#include "../../Include/RmlUi/Core/DecorationTypes.h"
-#include "../../Include/RmlUi/Core/StringUtilities.h"
+#include "RmlUi/Core/DecorationTypes.h"
+#include "RmlUi/Core/StringUtilities.h"
 
 namespace Rml {
 

@@ -25,7 +25,7 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/Traits.h"
+#include "RmlUi/Core/Traits.h"
 
 namespace Rml {
 

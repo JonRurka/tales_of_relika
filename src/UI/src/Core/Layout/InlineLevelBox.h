@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_LAYOUT_INLINELEVELBOX_H
 #define RMLUI_CORE_LAYOUT_INLINELEVELBOX_H
 
-#include "../../../Include/RmlUi/Core/Box.h"
-#include "../../../Include/RmlUi/Core/StyleTypes.h"
+#include "RmlUi/Core/Box.h"
+#include "RmlUi/Core/StyleTypes.h"
 #include "InlineTypes.h"
 
 namespace Rml {

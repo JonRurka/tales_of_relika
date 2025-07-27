@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_LAYOUT_INLINECONTAINER_H
 #define RMLUI_CORE_LAYOUT_INLINECONTAINER_H
 
-#include "../../../Include/RmlUi/Core/Box.h"
-#include "../../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/Box.h"
+#include "RmlUi/Core/Types.h"
 #include "InlineBox.h"
 #include "LayoutBox.h"
 

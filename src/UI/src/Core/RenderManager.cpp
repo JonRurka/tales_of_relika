@@ -26,12 +26,12 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/RenderManager.h"
-#include "../../Include/RmlUi/Core/Core.h"
-#include "../../Include/RmlUi/Core/Geometry.h"
-#include "../../Include/RmlUi/Core/Profiling.h"
-#include "../../Include/RmlUi/Core/RenderInterface.h"
-#include "../../Include/RmlUi/Core/SystemInterface.h"
+#include "RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/Core.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/RenderInterface.h"
+#include "RmlUi/Core/SystemInterface.h"
 #include "TextureDatabase.h"
 
 namespace Rml {

@@ -27,11 +27,11 @@
  */
 
 #include "PropertyParserFilter.h"
-#include "../../Include/RmlUi/Core/Factory.h"
-#include "../../Include/RmlUi/Core/Filter.h"
-#include "../../Include/RmlUi/Core/Profiling.h"
-#include "../../Include/RmlUi/Core/PropertySpecification.h"
-#include "../../Include/RmlUi/Core/StyleSheetTypes.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/Filter.h"
+#include "RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/PropertySpecification.h"
+#include "RmlUi/Core/StyleSheetTypes.h"
 
 namespace Rml {
 

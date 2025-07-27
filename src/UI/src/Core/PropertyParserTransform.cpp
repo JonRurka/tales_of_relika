@@ -27,9 +27,9 @@
  */
 
 #include "PropertyParserTransform.h"
-#include "../../Include/RmlUi/Core/NumericValue.h"
-#include "../../Include/RmlUi/Core/Transform.h"
-#include "../../Include/RmlUi/Core/TransformPrimitive.h"
+#include "RmlUi/Core/NumericValue.h"
+#include "RmlUi/Core/Transform.h"
+#include "RmlUi/Core/TransformPrimitive.h"
 #include <string.h>
 
 namespace Rml {

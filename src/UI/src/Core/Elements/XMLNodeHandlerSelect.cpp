@@ -27,10 +27,10 @@
  */
 
 #include "XMLNodeHandlerSelect.h"
-#include "../../../Include/RmlUi/Core/Elements/ElementFormControlSelect.h"
-#include "../../../Include/RmlUi/Core/Factory.h"
-#include "../../../Include/RmlUi/Core/Log.h"
-#include "../../../Include/RmlUi/Core/XMLParser.h"
+#include "RmlUi/Core/Elements/ElementFormControlSelect.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/Log.h"
+#include "RmlUi/Core/XMLParser.h"
 
 namespace Rml {
 

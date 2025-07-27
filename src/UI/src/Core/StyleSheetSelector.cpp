@@ -27,7 +27,7 @@
  */
 
 #include "StyleSheetSelector.h"
-#include "../../Include/RmlUi/Core/Element.h"
+#include "RmlUi/Core/Element.h"
 #include "StyleSheetNode.h"
 #include <tuple>
 

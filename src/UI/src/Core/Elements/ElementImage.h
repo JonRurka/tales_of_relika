@@ -29,11 +29,11 @@
 #ifndef RMLUI_CORE_ELEMENTS_ELEMENTIMAGE_H
 #define RMLUI_CORE_ELEMENTS_ELEMENTIMAGE_H
 
-#include "../../../Include/RmlUi/Core/Element.h"
-#include "../../../Include/RmlUi/Core/Geometry.h"
-#include "../../../Include/RmlUi/Core/Header.h"
-#include "../../../Include/RmlUi/Core/Spritesheet.h"
-#include "../../../Include/RmlUi/Core/Texture.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/Header.h"
+#include "RmlUi/Core/Spritesheet.h"
+#include "RmlUi/Core/Texture.h"
 
 namespace Rml {
 

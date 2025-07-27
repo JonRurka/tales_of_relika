@@ -27,10 +27,10 @@
  */
 
 #include "XMLNodeHandlerTemplate.h"
-#include "../../Include/RmlUi/Core/Dictionary.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/Factory.h"
-#include "../../Include/RmlUi/Core/XMLParser.h"
+#include "RmlUi/Core/Dictionary.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/XMLParser.h"
 #include "Template.h"
 #include "TemplateCache.h"
 #include "XMLParseTools.h"

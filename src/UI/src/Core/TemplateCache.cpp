@@ -27,7 +27,7 @@
  */
 
 #include "TemplateCache.h"
-#include "../../Include/RmlUi/Core/Log.h"
+#include "RmlUi/Core/Log.h"
 #include "StreamFile.h"
 #include "Template.h"
 

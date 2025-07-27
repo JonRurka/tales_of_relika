@@ -27,10 +27,10 @@
  */
 
 #include "InputTypeText.h"
-#include "../../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../../Include/RmlUi/Core/Elements/ElementFormControlInput.h"
-#include "../../../Include/RmlUi/Core/PropertyIdSet.h"
-#include "../../../Include/RmlUi/Core/StyleSheetSpecification.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Elements/ElementFormControlInput.h"
+#include "RmlUi/Core/PropertyIdSet.h"
+#include "RmlUi/Core/StyleSheetSpecification.h"
 #include "WidgetTextInputSingleLine.h"
 #include "WidgetTextInputSingleLinePassword.h"
 

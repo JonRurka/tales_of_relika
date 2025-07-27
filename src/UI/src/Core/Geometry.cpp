@@ -26,7 +26,7 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/Geometry.h"
 #include "RenderManagerAccess.h"
 
 namespace Rml {

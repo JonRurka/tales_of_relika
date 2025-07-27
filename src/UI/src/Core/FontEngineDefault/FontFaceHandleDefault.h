@@ -29,12 +29,12 @@
 #ifndef RMLUI_CORE_FONTENGINEDEFAULT_FONTFACEHANDLE_H
 #define RMLUI_CORE_FONTENGINEDEFAULT_FONTFACEHANDLE_H
 
-#include "../../../Include/RmlUi/Core/FontEffect.h"
-#include "../../../Include/RmlUi/Core/FontGlyph.h"
-#include "../../../Include/RmlUi/Core/FontMetrics.h"
-#include "../../../Include/RmlUi/Core/Geometry.h"
-#include "../../../Include/RmlUi/Core/Texture.h"
-#include "../../../Include/RmlUi/Core/Traits.h"
+#include "RmlUi/Core/FontEffect.h"
+#include "RmlUi/Core/FontGlyph.h"
+#include "RmlUi/Core/FontMetrics.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/Texture.h"
+#include "RmlUi/Core/Traits.h"
 #include "FontTypes.h"
 
 namespace Rml {

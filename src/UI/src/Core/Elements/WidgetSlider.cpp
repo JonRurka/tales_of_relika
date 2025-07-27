@@ -27,13 +27,13 @@
  */
 
 #include "WidgetSlider.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/Context.h"
-#include "../../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../../Include/RmlUi/Core/Elements/ElementFormControl.h"
-#include "../../../Include/RmlUi/Core/Factory.h"
-#include "../../../Include/RmlUi/Core/Input.h"
-#include "../../../Include/RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Context.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Elements/ElementFormControl.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/Input.h"
+#include "RmlUi/Core/Profiling.h"
 #include "../Clock.h"
 
 namespace Rml {

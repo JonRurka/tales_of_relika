@@ -27,13 +27,13 @@
  */
 
 #include "ElementBackgroundBorder.h"
-#include "../../Include/RmlUi/Core/Box.h"
-#include "../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../Include/RmlUi/Core/Context.h"
-#include "../../Include/RmlUi/Core/DecorationTypes.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/MeshUtilities.h"
-#include "../../Include/RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/Box.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Context.h"
+#include "RmlUi/Core/DecorationTypes.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/MeshUtilities.h"
+#include "RmlUi/Core/RenderManager.h"
 #include "GeometryBoxShadow.h"
 
 namespace Rml {

@@ -26,14 +26,14 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/XMLParser.h"
-#include "../../Include/RmlUi/Core/Factory.h"
-#include "../../Include/RmlUi/Core/Log.h"
-#include "../../Include/RmlUi/Core/Profiling.h"
-#include "../../Include/RmlUi/Core/Stream.h"
-#include "../../Include/RmlUi/Core/Types.h"
-#include "../../Include/RmlUi/Core/URL.h"
-#include "../../Include/RmlUi/Core/XMLNodeHandler.h"
+#include "RmlUi/Core/XMLParser.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/Log.h"
+#include "RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/Stream.h"
+#include "RmlUi/Core/Types.h"
+#include "RmlUi/Core/URL.h"
+#include "RmlUi/Core/XMLNodeHandler.h"
 #include "ControlledLifetimeResource.h"
 #include "DocumentHeader.h"
 

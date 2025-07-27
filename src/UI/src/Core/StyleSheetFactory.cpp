@@ -27,8 +27,8 @@
  */
 
 #include "StyleSheetFactory.h"
-#include "../../Include/RmlUi/Core/Log.h"
-#include "../../Include/RmlUi/Core/StyleSheetContainer.h"
+#include "RmlUi/Core/Log.h"
+#include "RmlUi/Core/StyleSheetContainer.h"
 #include "StreamFile.h"
 #include "StyleSheetNode.h"
 #include "StyleSheetParser.h"

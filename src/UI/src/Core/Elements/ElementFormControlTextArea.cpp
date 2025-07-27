@@ -26,12 +26,12 @@
  *
  */
 
-#include "../../../Include/RmlUi/Core/Elements/ElementFormControlTextArea.h"
-#include "../../../Include/RmlUi/Core/ElementText.h"
-#include "../../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../../Include/RmlUi/Core/Math.h"
-#include "../../../Include/RmlUi/Core/PropertyIdSet.h"
-#include "../../../Include/RmlUi/Core/StyleSheetSpecification.h"
+#include "RmlUi/Core/Elements/ElementFormControlTextArea.h"
+#include "RmlUi/Core/ElementText.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Math.h"
+#include "RmlUi/Core/PropertyIdSet.h"
+#include "RmlUi/Core/StyleSheetSpecification.h"
 #include "WidgetTextInputMultiLine.h"
 
 namespace Rml {

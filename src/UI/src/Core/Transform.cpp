@@ -26,10 +26,10 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/Transform.h"
-#include "../../Include/RmlUi/Core/Property.h"
-#include "../../Include/RmlUi/Core/StyleSheetSpecification.h"
-#include "../../Include/RmlUi/Core/TransformPrimitive.h"
+#include "RmlUi/Core/Transform.h"
+#include "RmlUi/Core/Property.h"
+#include "RmlUi/Core/StyleSheetSpecification.h"
+#include "RmlUi/Core/TransformPrimitive.h"
 
 namespace Rml {
 

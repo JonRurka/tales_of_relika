@@ -26,9 +26,9 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/URL.h"
-#include "../../Include/RmlUi/Core/Log.h"
-#include "../../Include/RmlUi/Core/StringUtilities.h"
+#include "RmlUi/Core/URL.h"
+#include "RmlUi/Core/Log.h"
+#include "RmlUi/Core/StringUtilities.h"
 #include <stdio.h>
 #include <string.h>
 

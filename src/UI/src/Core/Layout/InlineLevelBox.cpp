@@ -27,10 +27,10 @@
  */
 
 #include "InlineLevelBox.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/Core.h"
-#include "../../../Include/RmlUi/Core/ElementText.h"
-#include "../../../Include/RmlUi/Core/FontEngineInterface.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Core.h"
+#include "RmlUi/Core/ElementText.h"
+#include "RmlUi/Core/FontEngineInterface.h"
 #include "LayoutDetails.h"
 #include "LayoutPools.h"
 

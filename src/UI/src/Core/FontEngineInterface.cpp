@@ -26,8 +26,8 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/FontEngineInterface.h"
-#include "../../Include/RmlUi/Core/StringUtilities.h"
+#include "RmlUi/Core/FontEngineInterface.h"
+#include "RmlUi/Core/StringUtilities.h"
 
 namespace Rml {
 

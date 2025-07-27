@@ -27,9 +27,9 @@
  */
 
 #include "WidgetTextInputSingleLine.h"
-#include "../../../Include/RmlUi/Core/Dictionary.h"
-#include "../../../Include/RmlUi/Core/ElementText.h"
-#include "../../../Include/RmlUi/Core/Elements/ElementFormControl.h"
+#include "RmlUi/Core/Dictionary.h"
+#include "RmlUi/Core/ElementText.h"
+#include "RmlUi/Core/Elements/ElementFormControl.h"
 #include <algorithm>
 
 namespace Rml {

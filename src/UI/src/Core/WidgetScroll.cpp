@@ -27,13 +27,13 @@
  */
 
 #include "WidgetScroll.h"
-#include "../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../Include/RmlUi/Core/Context.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../Include/RmlUi/Core/Event.h"
-#include "../../Include/RmlUi/Core/Factory.h"
-#include "../../Include/RmlUi/Core/Property.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Context.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Event.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/Property.h"
 #include "Clock.h"
 #include "Layout/LayoutDetails.h"
 #include <algorithm>

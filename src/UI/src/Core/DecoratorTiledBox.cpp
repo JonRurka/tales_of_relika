@@ -27,9 +27,9 @@
  */
 
 #include "DecoratorTiledBox.h"
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/Geometry.h"
-#include "../../Include/RmlUi/Core/RenderManager.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/RenderManager.h"
 
 namespace Rml {
 

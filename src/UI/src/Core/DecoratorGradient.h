@@ -29,10 +29,10 @@
 #ifndef RMLUI_CORE_DECORATORGRADIENT_H
 #define RMLUI_CORE_DECORATORGRADIENT_H
 
-#include "../../Include/RmlUi/Core/DecorationTypes.h"
-#include "../../Include/RmlUi/Core/Decorator.h"
-#include "../../Include/RmlUi/Core/Geometry.h"
-#include "../../Include/RmlUi/Core/ID.h"
+#include "RmlUi/Core/DecorationTypes.h"
+#include "RmlUi/Core/Decorator.h"
+#include "RmlUi/Core/Geometry.h"
+#include "RmlUi/Core/ID.h"
 #include "DecoratorUtilities.h"
 
 namespace Rml {

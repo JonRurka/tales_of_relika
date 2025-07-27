@@ -27,12 +27,12 @@
  */
 
 #include "DebuggerPlugin.h"
-#include "../../Include/RmlUi/Core/Context.h"
-#include "../../Include/RmlUi/Core/Core.h"
-#include "../../Include/RmlUi/Core/ElementInstancer.h"
-#include "../../Include/RmlUi/Core/ElementUtilities.h"
-#include "../../Include/RmlUi/Core/Factory.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/Context.h"
+#include "RmlUi/Core/Core.h"
+#include "RmlUi/Core/ElementInstancer.h"
+#include "RmlUi/Core/ElementUtilities.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/Types.h"
 #include "DebuggerSystemInterface.h"
 #include "ElementContextHook.h"
 #include "ElementDebugDocument.h"

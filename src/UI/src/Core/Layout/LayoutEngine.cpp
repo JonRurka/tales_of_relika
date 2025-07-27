@@ -27,9 +27,9 @@
  */
 
 #include "LayoutEngine.h"
-#include "../../../Include/RmlUi/Core/Element.h"
-#include "../../../Include/RmlUi/Core/Log.h"
-#include "../../../Include/RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/Log.h"
+#include "RmlUi/Core/Profiling.h"
 #include "ContainerBox.h"
 #include "FormattingContext.h"
 

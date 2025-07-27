@@ -27,7 +27,7 @@
  */
 
 #include "EventInstancerDefault.h"
-#include "../../Include/RmlUi/Core/Event.h"
+#include "RmlUi/Core/Event.h"
 
 namespace Rml {
 

@@ -30,7 +30,7 @@
 #define RMLUI_LUA_LUATYPE_H
 
 #include "Header.h"
-#include "IncludeLua.h"
+#include "Lua.h"
 
 // As an example, if you used this macro like
 // RMLUI_LUAMETHOD(Unit,GetId)

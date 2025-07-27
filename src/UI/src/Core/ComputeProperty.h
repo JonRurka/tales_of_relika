@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_COMPUTEPROPERTY_H
 #define RMLUI_CORE_COMPUTEPROPERTY_H
 
-#include "../../Include/RmlUi/Core/NumericValue.h"
-#include "../../Include/RmlUi/Core/StyleTypes.h"
+#include "RmlUi/Core/NumericValue.h"
+#include "RmlUi/Core/StyleTypes.h"
 
 namespace Rml {
 

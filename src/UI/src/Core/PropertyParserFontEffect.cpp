@@ -27,12 +27,12 @@
  */
 
 #include "PropertyParserFontEffect.h"
-#include "../../Include/RmlUi/Core/Factory.h"
-#include "../../Include/RmlUi/Core/FontEffect.h"
-#include "../../Include/RmlUi/Core/FontEffectInstancer.h"
-#include "../../Include/RmlUi/Core/Profiling.h"
-#include "../../Include/RmlUi/Core/PropertySpecification.h"
-#include "../../Include/RmlUi/Core/Utilities.h"
+#include "RmlUi/Core/Factory.h"
+#include "RmlUi/Core/FontEffect.h"
+#include "RmlUi/Core/FontEffectInstancer.h"
+#include "RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/PropertySpecification.h"
+#include "RmlUi/Core/Utilities.h"
 #include <algorithm>
 
 namespace Rml {

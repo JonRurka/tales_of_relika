@@ -26,8 +26,8 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/RenderInterfaceCompatibility.h"
-#include "../../Include/RmlUi/Core/Math.h"
+#include "RmlUi/Core/RenderInterfaceCompatibility.h"
+#include "RmlUi/Core/Math.h"
 
 namespace Rml {
 

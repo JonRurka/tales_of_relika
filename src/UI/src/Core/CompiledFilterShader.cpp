@@ -26,7 +26,7 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/CompiledFilterShader.h"
+#include "RmlUi/Core/CompiledFilterShader.h"
 #include "RenderManagerAccess.h"
 
 namespace Rml {

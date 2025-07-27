@@ -29,9 +29,9 @@
 #ifndef RMLUI_CORE_FONTEFFECTOUTLINE_H
 #define RMLUI_CORE_FONTEFFECTOUTLINE_H
 
-#include "../../Include/RmlUi/Core/ConvolutionFilter.h"
-#include "../../Include/RmlUi/Core/FontEffect.h"
-#include "../../Include/RmlUi/Core/FontEffectInstancer.h"
+#include "RmlUi/Core/ConvolutionFilter.h"
+#include "RmlUi/Core/FontEffect.h"
+#include "RmlUi/Core/FontEffectInstancer.h"
 
 namespace Rml {
 

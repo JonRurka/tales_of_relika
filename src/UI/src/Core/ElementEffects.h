@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_ELEMENTEFFECTS_H
 #define RMLUI_CORE_ELEMENTEFFECTS_H
 
-#include "../../Include/RmlUi/Core/CompiledFilterShader.h"
-#include "../../Include/RmlUi/Core/Types.h"
+#include "RmlUi/Core/CompiledFilterShader.h"
+#include "RmlUi/Core/Types.h"
 
 namespace Rml {
 

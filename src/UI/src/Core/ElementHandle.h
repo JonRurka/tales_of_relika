@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_ELEMENTHANDLE_H
 #define RMLUI_CORE_ELEMENTHANDLE_H
 
-#include "../../Include/RmlUi/Core/Element.h"
-#include "../../Include/RmlUi/Core/Header.h"
+#include "RmlUi/Core/Element.h"
+#include "RmlUi/Core/Header.h"
 
 namespace Rml {
 

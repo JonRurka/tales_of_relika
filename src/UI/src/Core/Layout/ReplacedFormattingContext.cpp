@@ -27,8 +27,8 @@
  */
 
 #include "ReplacedFormattingContext.h"
-#include "../../../Include/RmlUi/Core/ComputedValues.h"
-#include "../../../Include/RmlUi/Core/Element.h"
+#include "RmlUi/Core/ComputedValues.h"
+#include "RmlUi/Core/Element.h"
 #include "BlockFormattingContext.h"
 #include "ContainerBox.h"
 #include "LayoutDetails.h"

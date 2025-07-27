@@ -26,7 +26,7 @@
  *
  */
 
-#include "../../Include/RmlUi/Core/Profiling.h"
+#include "RmlUi/Core/Profiling.h"
 
 #ifdef RMLUI_TRACY_MEMORY_PROFILING
 	#include <cstdlib>
