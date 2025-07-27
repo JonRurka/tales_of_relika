@@ -541,9 +541,9 @@ void Resources::get_assets_recursively(std::string basePath, std::vector<Asset>&
 
         std::string curr_rel_path = rel_path;
 
-        if (hasExtension(ffd.cFileName)) {
+        if (hasExtension(entry->d_name)) {
 
-            std::string file_name = std::string(ffd.cFileName);
+            std::string file_name = std::string(entry->d_name);
 
             std::string rel_file_path = rel_path;
             std::replace(rel_file_path.begin(), rel_file_path.end(), '.', sep()[0]);
