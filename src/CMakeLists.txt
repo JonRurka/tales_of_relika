@@ -1,7 +1,7 @@
 project("tales_of_relika")
 
 option(BUILD_SHARED_LIBS "CMake standard option. Choose whether to build shared RmlUi libraries." OFF)
-option(SOURCE_RMLUI "Include RMLUI as source rather than linked library." OFF)
+option(SOURCE_RMLUI "Include RMLUI as source rather than linked library." ON)
 add_compile_definitions(RMLUI_STATIC_LIB)
 add_compile_definitions(RMLUI_GL3_CUSTOM_LOADER="opengl.h")
 
