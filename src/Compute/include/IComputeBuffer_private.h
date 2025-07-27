@@ -2,6 +2,7 @@
 
 #include "ForwardDeclarations.h"
 
+#include <cstddef>
 
 namespace DynamicCompute {
     namespace Compute {

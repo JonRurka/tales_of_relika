@@ -4,7 +4,7 @@
 #include <string>
 
 #include "opengl.h"
-#include "Renderer.h";
+#include "Renderer.h"
 
 class Mesh;
 class Shader;

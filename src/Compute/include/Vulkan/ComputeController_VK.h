@@ -5,6 +5,9 @@
 
 namespace DynamicCompute {
 	namespace Compute {
+
+		class ComputeInterface_private;
+
 		namespace VK {
 
 			class ComputeContext;
@@ -43,13 +46,17 @@ namespace DynamicCompute {
 
 				~ComputeController_VK();
 				ComputeController_VK() {}
+
+				// should be private.
+				static IComputeController_private* New();
+				static void DisposePlatform();
+
 			private:
 				
 
 				
 
-				static IComputeController_private* New();
-				static void DisposePlatform();
+				
 
 				ComputeContext* m_context{ nullptr };
 				std::string m_directory{ "" };

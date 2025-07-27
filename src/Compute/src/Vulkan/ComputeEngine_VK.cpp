@@ -768,9 +768,9 @@ int ComputeKernel::Execute(uint32_t x, uint32_t y, uint32_t z)
 
 	vkCmdDispatch(
 		*mComputeCmdBuffer, 
-		std::max((int)std::ceilf((float)x / (float)mWorkGroupSize.x), 1),
-		std::max((int)std::ceilf((float)y / (float)mWorkGroupSize.y), 1),
-		std::max((int)std::ceilf((float)z / (float)mWorkGroupSize.z), 1));
+		std::max((int)std::ceil((float)x / (float)mWorkGroupSize.x), 1),
+		std::max((int)std::ceil((float)y / (float)mWorkGroupSize.y), 1),
+		std::max((int)std::ceil((float)z / (float)mWorkGroupSize.z), 1));
 
 	if (vkEndCommandBuffer(*mComputeCmdBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to record command buffer!");
@@ -826,9 +826,9 @@ int ComputeKernel::ExecuteBatch(uint32_t num, uint32_t x, uint32_t y, uint32_t z
 
 	vkCmdDispatch(
 		*mComputeCmdBuffer,
-		std::max((int)std::ceilf((float)x / (float)mWorkGroupSize.x), 1),
-		std::max((int)std::ceilf((float)y / (float)mWorkGroupSize.y), 1),
-		std::max((int)std::ceilf((float)z / (float)mWorkGroupSize.z), 1));
+		std::max((int)std::ceil((float)x / (float)mWorkGroupSize.x), 1),
+		std::max((int)std::ceil((float)y / (float)mWorkGroupSize.y), 1),
+		std::max((int)std::ceil((float)z / (float)mWorkGroupSize.z), 1));
 
 	if (vkEndCommandBuffer(*mComputeCmdBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to record command buffer!");

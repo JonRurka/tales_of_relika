@@ -45,7 +45,7 @@ public:
 	
 	static std::string Decode_Base64(std::string base64_input);
 
-	static int Write_File_Bytes(const std::string& path, static std::vector<char> data);
+	static int Write_File_Bytes(const std::string& path, std::vector<char> data);
 
 	static std::vector<char> Read_File_Bytes(const std::string& path);
 

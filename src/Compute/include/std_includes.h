@@ -23,6 +23,7 @@
 #include <set>
 #include <algorithm>
 #include <iomanip>
+#include <cstddef>
 
 #include <glm/glm.hpp>
 
