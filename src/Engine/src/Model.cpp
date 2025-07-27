@@ -5,7 +5,7 @@
 #include "Logger.h"
 
 #include <iostream>
-#include <tchar.h>
+//#include <tchar.h>
 #include <functional>
 
 #include <assimp/Importer.hpp>
