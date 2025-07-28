@@ -109,6 +109,12 @@ std::vector<std::string> Utilities::Split(std::string s, std::string delim)
 	return result;
 }
 
+std::string Utilities::ReplaceAll(std::string val, std::string s1, std::string s2)
+{
+	boost::replace_all(val, s1, s2);
+	return val;
+}
+
 std::string Utilities::getFileExtension(const std::string& filePath)
 {
 	// Find the last occurrence of the dot
@@ -123,8 +129,11 @@ std::string Utilities::getFileExtension(const std::string& filePath)
 	return toLowerCase(filePath.substr(dotPos));
 }
 
-std::string Utilities::Get_Filename(const std::string& path)
+std::string Utilities::Get_Filename(std::string path)
 {
+	path = ReplaceAll(path, "\\", File_Seperator());
+	path = ReplaceAll(path, "/", File_Seperator());
+
 	if (path.empty()) {
 		return "";  // Return empty string for empty input
 	}
@@ -207,8 +216,11 @@ std::string Utilities::Decode_Base64(std::string base64_input)
 	}
 }
 
-int Utilities::Write_File_Bytes(const std::string& path, std::vector<char> data) 
+int Utilities::Write_File_Bytes(std::string path, std::vector<char> data) 
 {
+	path = ReplaceAll(path, "\\", File_Seperator());
+	path = ReplaceAll(path, "/", File_Seperator());
+
 	std::ofstream file(path, std::ios::binary);
 	if (!file.is_open()) {
 		Logger::LogError(LOG_POS("Read_File"), "Failed to open file '%s'.", path.c_str());
@@ -226,8 +238,11 @@ int Utilities::Write_File_Bytes(const std::string& path, std::vector<char> data)
 	return data.size();
 }
 
-std::vector<char> Utilities::Read_File_Bytes(const std::string& path)
+std::vector<char> Utilities::Read_File_Bytes(std::string path)
 {
+	path = ReplaceAll(path, "\\", File_Seperator());
+	path = ReplaceAll(path, "/", File_Seperator());
+
 	std::vector<char> res;
 	
 	// Open the file in binary mode
@@ -269,8 +284,10 @@ std::vector<char> Utilities::Read_File_Bytes(const std::string& path)
 	return res;
 }
 
-void Utilities::Read_File_Bytes(const std::string& path, size_t offset, size_t size, char* out_bytes)
+void Utilities::Read_File_Bytes(std::string path, size_t offset, size_t size, char* out_bytes)
 {
+	path = ReplaceAll(path, "\\", File_Seperator());
+	path = ReplaceAll(path, "/", File_Seperator());
 	//std::vector<char> res;
 
 	// Open the file in binary mode
@@ -314,8 +331,11 @@ void Utilities::Read_File_Bytes(const std::string& path, size_t offset, size_t s
 	//return res;
 }
 
-std::string Utilities::Read_File_String(const std::string& path)
+std::string Utilities::Read_File_String(std::string path)
 {
+	path = ReplaceAll(path, "\\", File_Seperator());
+	path = ReplaceAll(path, "/", File_Seperator());
+
 	std::string res = "";
 	std::ifstream file;
 	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);

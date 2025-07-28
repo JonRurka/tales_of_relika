@@ -37,21 +37,23 @@ public:
 
 	static std::vector<std::string> Split(std::string src, std::string delim);
 
+	static std::string ReplaceAll(std::string val, std::string, std::string);
+
 	static std::string getFileExtension(const std::string& filePath);
 
-	static std::string Get_Filename(const std::string& path);
+	static std::string Get_Filename(std::string path);
 
 	static std::string Get_Resource_Filename(const std::string& path);
 	
 	static std::string Decode_Base64(std::string base64_input);
 
-	static int Write_File_Bytes(const std::string& path, std::vector<char> data);
+	static int Write_File_Bytes(std::string path, std::vector<char> data);
 
-	static std::vector<char> Read_File_Bytes(const std::string& path);
+	static std::vector<char> Read_File_Bytes(std::string path);
 
-	static void Read_File_Bytes(const std::string& path, size_t offset, size_t size, char* out_bytes);
+	static void Read_File_Bytes(std::string path, size_t offset, size_t size, char* out_bytes);
 
-	static std::string Read_File_String(const std::string& path);
+	static std::string Read_File_String(std::string path);
 
 	static double Get_Time();
 
