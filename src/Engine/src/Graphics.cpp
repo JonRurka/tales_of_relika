@@ -91,10 +91,13 @@ void Graphics::Initialize()
 	if (!ui_init_success) {
 		Logger::LogError(LOG_POS("Initialize"), "Failed to initialize Rml UI Engine!");
 	}
+	Logger::LogDebug(LOG_POS("Initialize"), "finished with UI stuff");
 
 	glEnable(GL_DEPTH_TEST);
+	Logger::LogDebug(LOG_POS("Initialize"), "glEnable(GL_DEPTH_TEST)");
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	Logger::LogDebug(LOG_POS("Initialize"), "glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)");
 
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_FRONT);
@@ -103,7 +106,9 @@ void Graphics::Initialize()
 
 	// TODO: Per-material blending.
 	glEnable(GL_BLEND);
+	Logger::LogDebug(LOG_POS("Initialize"), "glEnable(GL_BLEND);");
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	Logger::LogDebug(LOG_POS("Initialize"), "glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);");
 
 	Logger::LogDebug(LOG_POS("Initialize"), "Set some gl functions...");
 
