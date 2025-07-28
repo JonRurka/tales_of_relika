@@ -145,13 +145,15 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
     int scaled_height = (height * m_main_scale);
 
 	m_window = glfwCreateWindow(scaled_width, scaled_height, title, NULL, NULL);
-	glfwSetWindowUserPointer(m_window, user_obj);
 	if (m_window == NULL)
 	{
         Logger::LogError(LOG_POS("Create_Window"), "Failed to create GLFW window");
 		glfwTerminate();
         return m_window;
 	}
+
+    glfwSetWindowUserPointer(m_window, user_obj);
+
 	glfwMakeContextCurrent(m_window);
     glfwSwapInterval(1);  // Enable vsync
 
