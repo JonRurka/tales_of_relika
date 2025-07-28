@@ -147,7 +147,7 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 	m_window = glfwCreateWindow(scaled_width, scaled_height, title, NULL, NULL);
 	if (m_window == NULL)
 	{
-        Logger::LogError(LOG_POS("Create_Window"), "Failed to create GLFW window");
+        Logger::LogFatal(LOG_POS("Create_Window"), "Failed to create GLFW window");
 		glfwTerminate();
         return m_window;
 	}
@@ -159,7 +159,7 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 
 	if (!Init_Glad())
 	{
-		Logger::LogError(LOG_POS("Create_Window"), "Failed to initialize GLAD");
+		Logger::LogFatal(LOG_POS("Create_Window"), "Failed to initialize GLAD");
         glfwTerminate();
         return m_window;
 	}

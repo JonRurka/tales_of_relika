@@ -105,6 +105,8 @@ void Graphics::Initialize()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	Logger::LogDebug(LOG_POS("Initialize"), "Set some gl functions...");
+
 
 	std::vector<glm::vec4> quad_verts = {
 		glm::vec4(-1.0f,  1.0f,  0.0f, 0.0f),
@@ -131,10 +133,14 @@ void Graphics::Initialize()
 		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
 	};
 
+	Logger::LogDebug(LOG_POS("Initialize"), "Set system quad/line verts");
+
 	m_screen_mesh = new Mesh();
 	m_screen_mesh->Vertices(quad_verts);
 	m_screen_mesh->TexCoords(quad_tex_coord);
 	m_screen_mesh->Activate();
+
+	Logger::LogDebug(LOG_POS("Initialize"), "Create screen mesh");
 
 	m_screen_shader = Shader::Create("screen_shader", SCREEN_VERT_SHADER, SCREEN_FRAG_SHADER);
 	if (m_screen_shader == nullptr || !m_screen_shader->Initialized()) {
@@ -142,16 +148,22 @@ void Graphics::Initialize()
 		return;
 	}
 
+	Logger::LogDebug(LOG_POS("Initialize"), "Create screen shader");
+
 
 	m_line_mesh = new Mesh();
 	m_line_mesh->Vertices(line_verts);
 	m_line_mesh->Activate();
+
+	Logger::LogDebug(LOG_POS("Initialize"), "Create line mesh");
 
 	m_line_shader = Shader::Create("line_shader", LINE_VERT_SHADER, LINE_FRAG_SHADER);
 	if (m_line_shader == nullptr || !m_line_shader->Initialized()) {
 		Logger::LogFatal(LOG_POS("Initialize"), "Failed to create line shader.");
 		return;
 	}
+
+	Logger::LogDebug(LOG_POS("Initialize"), "Create line shader");
 
 
 	Logger::LogInfo(LOG_POS("Initialize"), "Graphics Initialized");
