@@ -173,12 +173,14 @@ void World::async_init()
 
 	load_initial_terrain();
 
-	init_lua();
+	//init_lua();
 }
 
 void World::load_initial_terrain()
 {
 	auto chunk_coords = m_world_terrain->Get_Chunk_Coords(glm::vec3(m_spawn_point.x, 0, m_spawn_point.z), INITIAL_CHUNK_SIM_RADIUS, INITIAL_CHUNK_SIM_DEPTH);
+
+	Logger::LogInfo(LOG_POS("load_initial_terrain"), "Creating %i initial world chunks...", chunk_coords.size());
 
 	for (const auto& c : chunk_coords)
 	{
@@ -300,13 +302,15 @@ void World::GameLoop()
 void World::AsynUpdate(float dt)
 {
 	m_world_terrain->Update(dt);
+	m_world_physics->Update(dt);
+
 	ProcessNetCommands();
 	UpdatePlayers(dt);
 	SendOrientationUpdates();
 	SendPlayerEvents();
 
 
-	test_set_spawn_point();
+	//test_set_spawn_point();
 }
 
 void World::UpdatePlayers(float dt)

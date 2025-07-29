@@ -26,8 +26,27 @@ public:
 
 	static GLFWwindow* glfw_window() { return m_instance->m_window; }
 
+
+	static void* Get_Context() { return m_instance->m_cur_context; }
+	static void* Get_Display() { return m_instance->m_cur_display; }
+
+
+
+	static bool Has_Window() 
+	{
+		if (m_instance == nullptr)
+			return false;
+		if (m_instance->m_window == nullptr)
+			return false;
+		return true;
+	}
+
 private:
-	GLFWwindow* m_window;
+	GLFWwindow* m_window{nullptr};
+
+	void* m_cur_context{ nullptr };
+	void* m_cur_display{ nullptr };
+
 	float m_main_scale{ 0 };
 	static window* m_instance;
 

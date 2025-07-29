@@ -22,6 +22,7 @@
 
 #include <chrono>
 #include <algorithm>
+#include <assert.h>
 
 #include "window.h"
 #include "Logger.h"
@@ -38,6 +39,10 @@ using namespace DynamicCompute::Compute::OCL;
 #define CL_GL_DYNAMIC_DRAW 0x88E8
 #define CL_GL_STATIC_COPY 0x88E6
 #define CL_GL_DYNAMIC_COPY 0x88EA
+
+#define GET_EVENT() (mContextObj->Get_Wait_Event())
+#define GET_EVENT_PTR() (mContextObj->Get_Wait_Event_Ptr())
+#define SET_EVENT(val) (mContextObj->Set_Wait_Event(val))
 
 
 //#pragma comment(lib, "OpenCL.lib")
@@ -61,8 +66,8 @@ namespace {
         throw "!Access Violation!";
     }
 
-    cl_event g_wait_event{ NULL }; // TODO: Change this.
-    bool g_manual_sync{ false }; // TODO: Change this.
+    //cl_event g_wait_event{ NULL }; // TODO: Change this.
+    //bool g_manual_sync{ false }; // TODO: Change this.
 
     clGetGLContextInfoKHR_fn pclGetGLContextInfoKHR;
 
@@ -234,40 +239,17 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
 {
    
     platform_id = (cl_platform_id)pltform.platform;
-    //Logger::LogDebug(LOG_POS("Init"), "Init Platform ID: %X", platform_id);
-    
-#if USE_GL_CONTEXT == 1
 
 #if WIN32
-
-    pclGetGLContextInfoKHR = (clGetGLContextInfoKHR_fn)clGetExtensionFunctionAddressForPlatform(platform_id, "clGetGLContextInfoKHR");
-    //wglGetCurrentContext
-    //Logger::LogDebug(LOG_POS("Init"), "Creating context with WIN32 OpenGL context");
-    properties[0] = CL_GL_CONTEXT_KHR;
-    properties[1] = (cl_context_properties)wglGetCurrentContext();
-    //properties[1] = (cl_context_properties)glfwGetWGLContext(window::glfw_window());
-    properties[2] = CL_WGL_HDC_KHR;
-    properties[3] = (cl_context_properties)wglGetCurrentDC();
-    //properties[3] = (cl_context_properties)GetDC(glfwGetWin32Window(window::glfw_window()));
-#else
-    properties[0] = CL_GL_CONTEXT_KHR;
-    properties[1] = (cl_context_properties)glfwGetGLXContext(window::glfw_window());
-    properties[2] = CL_GLX_DISPLAY_KHR;
-    properties[3] = (cl_context_properties)glfwGetX11Display();
+    pclGetGLContextInfoKHR = (clGetGLContextInfoKHR_fn)clGetExtensionFunctionAddressForPlatform(ComputeEngine::GetPlatform(), "clGetGLContextInfoKHR");
 #endif
-    properties[4] = CL_CONTEXT_PLATFORM;
-    properties[5] = (cl_context_properties)platform_id;
-    properties[6] = 0;
-#else
 
-    properties[0] = CL_CONTEXT_PLATFORM;
-    properties[1] = (cl_context_properties)platform_id;
-    properties[2] = 0;
-#endif
+    //Logger::LogDebug(LOG_POS("Init"), "Init Platform ID: %X", platform_id);
 
    app_dir = dir;
 
    mInitialized = true;
+   Logger::LogInfo(LOG_POS("Init"), "CL Compute Engine Initialized.");
 
    return 0;
 }
@@ -277,7 +259,7 @@ ComputeContext* ComputeEngine::GetNewContext(OpenCL_Device_Info device) {
         return nullptr;
     }
     
-    mContexts.emplace_back(ComputeContext(properties, device));
+    mContexts.emplace_back(ComputeContext(device));
     auto& buf = mContexts.back();
     buf.mCanCallDispose = true;
     return &buf;
@@ -339,7 +321,7 @@ ComputeBuffer* ComputeContext::GetBuffer(ComputeBuffer::Buffer_Type type, size_t
         return NULL;
     }
 
-    mBuffers.emplace_back(ComputeBuffer(context, command_queue, numContexts, flags, flags_staging, size, external));
+    mBuffers.emplace_back(ComputeBuffer(this, context, command_queue, numContexts, flags, flags_staging, size, external));
     auto& buf = mBuffers.back();
     //buf.mCanCallDispose = true;
     return &buf;
@@ -372,13 +354,69 @@ void ComputeContext::Dispose()
     mInitialized = false;
 }
 
-ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Device_Info device)
+ComputeContext::ComputeContext(OpenCL_Device_Info device)
 {
     cl_int err;
     numContexts = 0;
 
     deviceID = (cl_device_id)device.cl_device;
 
+    cl_context_properties properties[7];
+
+    bool support_gl_sharing = device.enable_context_sharing && window::Has_Window();
+
+    if (support_gl_sharing)
+    {
+#if WIN32
+        HGLRC cur_context = (HGLRC)window::Get_Context();
+        HDC cur_DC = (HDC)window::Get_Display();
+
+        assert(cur_context != nullptr);
+        assert(cur_DC != nullptr);
+
+        //wglGetCurrentContext
+        //Logger::LogDebug(LOG_POS("Init"), "Creating context with WIN32 OpenGL context");
+        properties[0] = CL_GL_CONTEXT_KHR;
+        properties[1] = (cl_context_properties)cur_context;
+        //properties[1] = (cl_context_properties)glfwGetWGLContext(window::glfw_window());
+        properties[2] = CL_WGL_HDC_KHR;
+        properties[3] = (cl_context_properties)cur_DC;
+        //properties[3] = (cl_context_properties)GetDC(glfwGetWin32Window(window::glfw_window()));
+#else // Unix
+
+        GLXContext cur_context = (GLXContext)window::Get_Context();
+        Display* cur_display = (Display*)window::Get_Display();
+
+        assert(cur_context != nullptr);
+        assert(cur_display != nullptr);
+
+        properties[0] = CL_GL_CONTEXT_KHR;
+        properties[1] = (cl_context_properties)cur_context;
+        //properties[1] = (cl_context_properties)glfwGetGLXContext(window::glfw_window());
+        properties[2] = CL_GLX_DISPLAY_KHR;
+        properties[3] = (cl_context_properties)cur_display;
+        //properties[3] = (cl_context_properties)glfwGetX11Display();
+#endif
+
+        properties[4] = CL_CONTEXT_PLATFORM;
+        properties[5] = (cl_context_properties)ComputeEngine::GetPlatform();
+        properties[6] = 0;
+
+        Logger::LogDebug(LOG_POS("ComputeContext"), "Setting context sharing CL properties.");
+    }
+    else
+    {
+
+        properties[0] = CL_CONTEXT_PLATFORM;
+        properties[1] = (cl_context_properties)ComputeEngine::GetPlatform();
+        properties[2] = 0;
+        properties[3] = 0;
+        properties[4] = 0;
+        properties[5] = 0;
+        properties[6] = 0;
+
+        Logger::LogDebug(LOG_POS("ComputeContext"), "Not setting context sharing CL properties.");
+    }
 
     Logger::LogInfo(LOG_POS("ComputeContext"), "Picked Device: %s", device.name);
 
@@ -403,7 +441,7 @@ ComputeContext::ComputeContext(cl_context_properties properties[3], OpenCL_Devic
     //CL_DEVICE_PREFERRED_INTEROP_USER_SYNC
     clGetDeviceInfo(deviceID, CL_DEVICE_PREFERRED_INTEROP_USER_SYNC, sizeof(cl_bool), &manual_sync, 0);
     //Logger::LogDebug(LOG_POS("ComputeContext"), "Requires manual sync: %i\n", (int)manual_sync);
-    g_manual_sync = manual_sync | FORCE_MANUAL_SYNC;
+    m_manual_sync = (manual_sync | FORCE_MANUAL_SYNC) && support_gl_sharing;
 
     cl_ulong local_size;
     clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &local_size, 0);
@@ -660,6 +698,7 @@ ComputeKernel::ComputeKernel(ComputeProgram* program_obj, char* name, cl_command
    m_program = program;
    command_queue = queue;
    mProgramObj = program_obj;
+   mContextObj = program_obj->GetContext();
 
    //kernels = new cl_kernel[numKernels];
    //command_queue = new cl_command_queue[numKernels];
@@ -699,28 +738,28 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
 
     //printf("Executing kernel...\n");
     cl_event finished_event;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
 
-    if (g_manual_sync) {
+    if (mProgramObj->GetContext()->Supports_Manual_Sync()) {
         cl_int res = clEnqueueAcquireGLObjects(command_queue, m_ext_buffers.size(), m_ext_buffers.data(), num_wait_events, wait_event_ptr, &finished_event);
         if (res != CL_SUCCESS) {
             printf("clEnqueueAcquireGLObjects failed: %i\n", res);
         }
-        g_wait_event = finished_event;
-        wait_event_ptr = &g_wait_event;
+        SET_EVENT(finished_event);
+        wait_event_ptr = GET_EVENT_PTR();
         num_wait_events = 1;
     }
 
 
     int res = clEnqueueNDRangeKernel(command_queue, kernel, work_dim, NULL, global_work_size, NULL, num_wait_events, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
 
 
-    if (g_manual_sync) {
-        clEnqueueReleaseGLObjects(command_queue, m_ext_buffers.size(), m_ext_buffers.data(), 1, &g_wait_event, &finished_event);
-        g_wait_event = finished_event;
+    if (mProgramObj->GetContext()->Supports_Manual_Sync()) {
+        clEnqueueReleaseGLObjects(command_queue, m_ext_buffers.size(), m_ext_buffers.data(), 1, GET_EVENT_PTR(), &finished_event);
+        SET_EVENT(finished_event);
     }
     
     if (res != CL_SUCCESS)
@@ -731,7 +770,7 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
     // printf("clFinish.\n");
 
     if (WAIT_IDLE)
-        clWaitForEvents(1, &g_wait_event);
+        clWaitForEvents(1, GET_EVENT_PTR());
 
     //res = clFinish(command_queue);
     //printf("Finished clFinish.\n");
@@ -757,9 +796,10 @@ void ComputeKernel::Dispose()
 
 
 
-ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int numContext, cl_mem_flags type, cl_mem_flags type_staging, size_t length, bool external)
+ComputeBuffer::ComputeBuffer(ComputeContext* context_obj, cl_context contexts, cl_command_queue queue, int numContext, cl_mem_flags type, cl_mem_flags type_staging, size_t length, bool external)
 {
    num = numContext;
+   mContextObj = context_obj;
    //buffer = new cl_mem[numContext];
    //command_queue = new cl_command_queue[numContext];
    mSize = length;
@@ -797,7 +837,7 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
        if (res != CL_SUCCESS) {
            Logger::LogError(LOG_POS("ComputeBuffer"), "Failed to create CL GL Interop buffer: %i", res);
        }
-       if (!g_manual_sync) {
+       if (!mContextObj->Supports_Manual_Sync()) {
            cl_int res_acq = clEnqueueAcquireGLObjects(command_queue, 1, &cl_gl_buff, 0, NULL, &finished_event);
            if (res != CL_SUCCESS) {
                Logger::LogError(LOG_POS("ComputeBuffer"), "Failed to acquire for CL GL buffer: %i", res_acq);
@@ -825,20 +865,20 @@ ComputeBuffer::ComputeBuffer(cl_context contexts, cl_command_queue queue, int nu
 int ComputeBuffer::SetData(void* data)
 {
     cl_event finished_event;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
     cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, 0, mSize, data, num_wait_events, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
 
     if (res != 0)
     {
         return res;
     }
 
-    wait_event_ptr = &g_wait_event;
+    wait_event_ptr = GET_EVENT_PTR();
     res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, 0, 0, mSize, 1, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
 
     return res;
 }
@@ -846,8 +886,8 @@ int ComputeBuffer::SetData(void* data)
 int ComputeBuffer::GetData(void* outData)
 {
     cl_event finished_event;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
     cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, 0, 0, mSize, num_wait_events, wait_event_ptr, &finished_event);
 
@@ -856,9 +896,9 @@ int ComputeBuffer::GetData(void* outData)
         return res;
     }
 
-    wait_event_ptr = &g_wait_event;
+    wait_event_ptr = GET_EVENT_PTR();
     res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, 0, mSize, outData, 1, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
     //clWaitForEvents(1, &g_wait_event);
     return res;
 }
@@ -866,18 +906,18 @@ int ComputeBuffer::GetData(void* outData)
 int ComputeBuffer::SetData(void* data, int size) 
 {
     cl_event finished_event;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
     cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, data, num_wait_events, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
     if (res != 0)
     {
         return res;
     }
-    wait_event_ptr = &g_wait_event;
+    wait_event_ptr = GET_EVENT_PTR();
     res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, 0, 0, size, 1, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
 
     return res;
 }
@@ -885,20 +925,20 @@ int ComputeBuffer::SetData(void* data, int size)
 int ComputeBuffer::GetData(void* outData, int size) 
 {
     cl_event finished_event;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
     cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, 0, 0, size, num_wait_events, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
 
     if (res != 0)
     {
         return res;
     }
 
-    wait_event_ptr = &g_wait_event;
+    wait_event_ptr = GET_EVENT_PTR();
     res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, 0, size, outData, 1, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
     //clWaitForEvents(1, &g_wait_event);
     return res;
 }
@@ -906,20 +946,20 @@ int ComputeBuffer::GetData(void* outData, int size)
 int ComputeBuffer::SetData(void* data, int DstStart, int size) 
 {
     cl_event finished_event;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
     cl_int res = clEnqueueWriteBuffer(command_queue, buffer_staging, CL_TRUE, DstStart, size, data, num_wait_events, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
 
     if (res != 0)
     {
         return res;
     }
 
-    wait_event_ptr = &g_wait_event;
+    wait_event_ptr = GET_EVENT_PTR();
     res = clEnqueueCopyBuffer(command_queue, buffer_staging, buffer, DstStart, DstStart, size, 1, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
 
     return res;
 }
@@ -927,20 +967,20 @@ int ComputeBuffer::SetData(void* data, int DstStart, int size)
 int ComputeBuffer::GetData(void* outData, int SrcStart, int size) 
 {
     cl_event finished_event;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
     cl_int res = clEnqueueCopyBuffer(command_queue, buffer, buffer_staging, SrcStart, SrcStart, size, num_wait_events, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
 
     if (res != 0)
     {
         return res;
     }
 
-    wait_event_ptr = &g_wait_event;
+    wait_event_ptr = GET_EVENT_PTR();
     res = clEnqueueReadBuffer(command_queue, buffer_staging, CL_TRUE, SrcStart, size, outData, 1, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
     //clWaitForEvents(1, &g_wait_event);
     return res;
 }
@@ -948,37 +988,37 @@ int ComputeBuffer::GetData(void* outData, int SrcStart, int size)
 int ComputeBuffer::CopyTo(ComputeBuffer* other) 
 {
     cl_event finished_event;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
 
     int src_size = mSize;
     int dst_size = other->mSize;
     int size = std::min(src_size, dst_size);
     cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, 0, 0, size, num_wait_events, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
     return res;
 }
 
 int ComputeBuffer::CopyTo(ComputeBuffer* other, int size) 
 {
     cl_event finished_event;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
     cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, 0, 0, size, num_wait_events, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
     return res;
 }
 
 int ComputeBuffer::CopyTo(ComputeBuffer* other, int srcStart, int dstStart, int size) 
 {
     cl_event finished_event;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
     cl_int res = clEnqueueCopyBuffer(command_queue, buffer, other->buffer, srcStart, dstStart, size, num_wait_events, wait_event_ptr, &finished_event);
-    g_wait_event = finished_event;
+    SET_EVENT(finished_event);
     return res;
 }
 
@@ -998,15 +1038,15 @@ void ComputeBuffer::Dispose()
 
 void ComputeBuffer::FlushExternal(int size)
 {
-    bool manual_sync = g_manual_sync;
+    bool manual_sync = mContextObj->Supports_Manual_Sync();
 
     if (size < 0) {
         size = mSize;
     }
 
-    cl_event finished_event = 0;
-    int num_wait_events = (g_wait_event == NULL) ? 0 : 1;
-    cl_event* wait_event_ptr = (g_wait_event == NULL) ? NULL : &g_wait_event;
+    cl_event finished_event;
+    int num_wait_events = (GET_EVENT() == NULL) ? 0 : 1;
+    cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
     auto start = std::chrono::high_resolution_clock::now();
     /*if (!wglMakeCurrent(wglGetCurrentDC(), wglGetCurrentContext())) {
@@ -1029,8 +1069,8 @@ void ComputeBuffer::FlushExternal(int size)
         if (res != CL_SUCCESS) {
             printf("clEnqueueAcquireGLObjects failed: %i\n", res);
         }
-        g_wait_event = finished_event;
-        wait_event_ptr = &g_wait_event;
+        SET_EVENT(finished_event);
+        wait_event_ptr = GET_EVENT_PTR();
         num_wait_events = 1;
         //clWaitForEvents(1, &g_wait_event);
     }
@@ -1044,8 +1084,8 @@ void ComputeBuffer::FlushExternal(int size)
     if (cpy_res != CL_SUCCESS) {
         Logger::LogError(LOG_POS("FlushExternal"), "Failed to flush to GL buffer: %i", cpy_res);
     }
-    g_wait_event = finished_event;
-    wait_event_ptr = &g_wait_event;
+    SET_EVENT(finished_event);
+    wait_event_ptr = GET_EVENT_PTR();
     end = std::chrono::high_resolution_clock::now();
     auto copy_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
@@ -1053,10 +1093,10 @@ void ComputeBuffer::FlushExternal(int size)
     start = std::chrono::high_resolution_clock::now();
     if (manual_sync) {
         clEnqueueReleaseGLObjects(command_queue, 1, &cl_gl_buff, 1, wait_event_ptr, &finished_event);
-        g_wait_event = finished_event;
+        SET_EVENT(finished_event);
     }
 
-    clWaitForEvents(1, &g_wait_event);
+    clWaitForEvents(1, GET_EVENT_PTR());
     end = std::chrono::high_resolution_clock::now();
     auto release_duration = std::chrono::duration<double>(end - start).count() * 1000;
 

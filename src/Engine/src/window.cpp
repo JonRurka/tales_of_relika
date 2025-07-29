@@ -10,8 +10,12 @@
 #include <Graphics.h>
 #include <Engine.h>
 
+
+
+
 #ifdef WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
 #include <GLFW/glfw3native.h>
 
 //#include <GL/wgl.h>
@@ -28,7 +32,7 @@
 
 #include "Logger.h"
 
-window* window::m_instance{NULL};
+window* window::m_instance{nullptr};
 
 namespace {
 #ifdef WIN32
@@ -186,6 +190,14 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 	}
 
     load_module();
+
+#if WIN32
+    m_cur_context = glfwGetWGLContext(m_window);
+    m_cur_display = GetDC(glfwGetWin32Window(m_window));
+#else
+    m_cur_context = glfwGetGLXContext(m_window);
+    m_cur_display = glfwGetX11Display();
+#endif
 
     return m_window;
 }

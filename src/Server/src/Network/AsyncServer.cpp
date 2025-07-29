@@ -1,5 +1,6 @@
 #include "AsyncServer.h"
 #include "SocketUser.h"
+#include "WorldController.h"
 #include "../Server_Main.h"
 #include "Logger.h"
 #include "../HashHelper.h"

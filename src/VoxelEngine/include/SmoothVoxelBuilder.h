@@ -157,6 +157,8 @@ namespace VoxelEngine {
 		std::string m_shaderDir;
 		int m_WorkGroups = 0;
 
+		bool m_share_gl_context{false};
+
 		int m_active_batches{ 0 };
 
 		int m_num_locations{ 0 };

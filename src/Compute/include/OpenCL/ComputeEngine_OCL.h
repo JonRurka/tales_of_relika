@@ -33,6 +33,8 @@ namespace DynamicCompute {
                 cl_GLuint gl_buff;
                 cl_mem cl_gl_buff;
 
+                ComputeContext* mContextObj{ nullptr };
+
                 bool mInitialized{ false };
                 bool mDestroyed{ false };
                 bool mCanCallDispose{ true };
@@ -49,7 +51,7 @@ namespace DynamicCompute {
                 };
 
 
-                ComputeBuffer(cl_context context, cl_command_queue queue, int numContext, cl_mem_flags type, cl_mem_flags type_staging, size_t length, bool external);
+                ComputeBuffer(ComputeContext* context_obj, cl_context context, cl_command_queue queue, int numContext, cl_mem_flags type, cl_mem_flags type_staging, size_t length, bool external);
 
                 cl_mem* Get_CL_Mem()
                 {
@@ -95,7 +97,8 @@ namespace DynamicCompute {
                 cl_command_queue command_queue;
                 int status;
 
-                ComputeProgram* mProgramObj;
+                ComputeProgram* mProgramObj{nullptr};
+                ComputeContext* mContextObj{nullptr};
 
                 std::vector<cl_mem> m_ext_buffers;
 
@@ -176,6 +179,9 @@ namespace DynamicCompute {
                 cl_device_id deviceID;
                 int numContexts;
 
+                cl_event m_wait_event{ NULL };
+                bool m_manual_sync{ false };
+
                 bool mInitialized{ false };
                 bool mDestroyed{ false };
                 bool mCanCallDispose{ true };
@@ -183,11 +189,17 @@ namespace DynamicCompute {
                 inline static const std::string LOG_LOC{ "ComputeContext" };
 
             public:
-                ComputeContext(cl_context_properties properties[3], OpenCL_Device_Info device);
+                ComputeContext(OpenCL_Device_Info device);
                 
                 cl_device_id Get_CL_Device_ID() {
                     return deviceID;
                 }
+
+                bool Supports_Manual_Sync() { return m_manual_sync; }
+
+                void Set_Wait_Event(cl_event val) { m_wait_event = val; }
+                cl_event Get_Wait_Event() { return m_wait_event; }
+                cl_event* Get_Wait_Event_Ptr() { return &m_wait_event; }
 
                 //int SetProgram(const char* source);
                 ComputeProgram* Add_Program(std::string name);

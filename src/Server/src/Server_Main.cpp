@@ -53,17 +53,24 @@ void Server_Main::PlayerAuthenticated(std::shared_ptr<Player> player, bool autho
 
 		if (Has_Player(player->Get_UserID())) {
 			Logger::Log(LOG_POS("PlayerAuthenticated"), player->Get_UserName() + " logged on again!");
+			uint8_t res = 0x00;
+			player->Send(OpCodes::Client::Identify_Result, std::vector<uint8_t>({ res }));
 			player->Socket_User()->Close(true);
 			//delete player;
+
 		}
 		else {
 			player->Socket_User()->Set_Authenticated(true);
 			m_players[player->Get_UserID()] = player;
 			PlayerJoined(player);
+			uint8_t res = 0x00;
+			player->Send(OpCodes::Client::Identify_Result, std::vector<uint8_t>({ res }));
 		}
 	}
 	else {
 		Logger::Log(LOG_POS("PlayerAuthenticated"), player->Get_UserName() + " not authorized.");
+		uint8_t res = 0x00;
+		player->Send(OpCodes::Client::Identify_Result, std::vector<uint8_t>({ res }));
 		player->Socket_User()->Close(true);
 		//delete player;
 	}
@@ -72,21 +79,15 @@ void Server_Main::PlayerAuthenticated(std::shared_ptr<Player> player, bool autho
 void Server_Main::PlayerJoined(std::shared_ptr<Player> player)
 {
 	bool has_data = player->LoadPlayerData();
-	if (has_data) {
-		// load existing player
-		uint64_t world_id = player->Player_Game_Data().CurrentWorldID;
-
-		if (WorldController::GetInstance()->World_Exists(world_id)) {
-			player->AssignPlayer(WorldController::GetInstance()->Get_World(world_id));
-		}
-	}
-	else {
-		// create new player profile.
-
-
+	if (!has_data) {
+		player->CreatePlayerData();
 	}
 
+	uint64_t world_id = player->Player_Game_Data().CurrentWorldID;
 
+	if (WorldController::GetInstance()->World_Exists(world_id)) {
+		player->AssignPlayer(WorldController::GetInstance()->Get_World(world_id));
+	}
 }
 
 void Server_Main::PrintQueueLengths()
@@ -191,6 +192,8 @@ void Server_Main::Init()
 
 	m_authenticator = new PlayerAuthenticator(this);
 	m_net_server = new AsyncServer(this);
+	m_world_controller = new WorldController();
+	m_world_controller->Init();
 
 	m_net_server->AddCommand(OpCodes::Server::Submit_Identity, Server_Main::UserIdentify_cb, this);
 	//m_net_server->AddCommand(OpCodes::Server::Join_Match, Server_Main::JoinMatch_cb, this);
@@ -198,14 +201,6 @@ void Server_Main::Init()
 	m_last_memory_print_time = GetEpoch();
 
 	Logger::Log(LOG_POS("Init"), "Server Initialized Successfully!");
-
-
-	
-	
-
-
-
-
 
 }
 
@@ -234,6 +229,7 @@ void Server_Main::Update(double dt)
 
 	m_com_executer->Process();
 	m_net_server->Update(dt);
+	m_world_controller->Update(dt);
 
 	if (m_executedCommand != "")
 	{
@@ -328,10 +324,6 @@ void Server_Main::UserIdentify(SocketUser& user, Data data)
 		user.Close(true);
 		//delete player;
 	}
-
-	uint8_t res = is_identified ? 0x01 : 0x00;
-
-	user.Send(OpCodes::Client::Identify_Result, std::vector<uint8_t>({ res }));
 }
 
 

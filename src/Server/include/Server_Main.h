@@ -14,6 +14,7 @@ class MatchManager;
 class PlayerAuthenticator;
 class Player;
 class LuaEngine;
+class WorldController;
 
 class Server_Main {
 public:
@@ -61,6 +62,8 @@ private:
 	MatchManager* m_match_manager;
 
 	PlayerAuthenticator* m_authenticator;
+
+	WorldController* m_world_controller;
 
 	LuaEngine* m_lua_engine;
 

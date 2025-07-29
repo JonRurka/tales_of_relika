@@ -39,7 +39,10 @@ private:
 	double m_start_time{ 0 };
 
 	bool m_remote_connection{ false };
-	bool m_client_server_inited{ false };
+	bool m_client_connected{ false };
+	bool m_init_data_requested{ false };
+
+	double m_connected_time{ 0 };
 
 	WorldObject* light_obj_dir{ nullptr };
 	Light* light_comp_dir{ nullptr };

@@ -127,6 +127,9 @@ void SmoothVoxelBuilder::Init(ChunkSettings* settings)
     m_shaderDir = p_settings.getString("programDir");
 
     m_invert_tris = p_settings.getInt("InvertTrianges") >= 1 ? true : false;
+
+
+    m_share_gl_context = p_settings.getBool("SharedGL");
     
     CalculateVariables();
 
@@ -372,6 +375,8 @@ void SmoothVoxelBuilder::InitializeComputePrograms()
 
         m_device_cl = Utilities::Get_Recommended_Device();
         Logger::LogDebug(LOG_POS("InitializeComputePrograms"), "Using OpenCL Compute Device: %s", m_device_cl.name);
+
+        m_device_cl.enable_context_sharing = m_share_gl_context;
 
         m_controllerInfo.device = &m_device_cl;
         m_controllerInfo.platform = m_device_cl.platform;

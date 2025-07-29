@@ -127,6 +127,8 @@ public:
 
 	bool LoadPlayerData();
 
+	void CreatePlayerData();
+
 	PlayerGameData Player_Game_Data() const { return m_game_data; }
 
 	World* Get_Current_World() {
@@ -271,22 +273,22 @@ private:
 	//std::string m_distro_userID;
 	//uint32_t m_UserID;
 	//int m_distributor;
-	PlayerIdentity m_identity;
-	PlayerGameData m_game_data;
+	PlayerIdentity m_identity{};
+	PlayerGameData m_game_data{};
 	std::unordered_map<uint64_t, PlayerWorldProfile> m_world_profiles;
 
 	std::mutex m_player_mutex;
 
-	PlayerWorldProfile* m_current_profile;
-	World* m_current_world;
-	WorldTerrain* m_current_terrain;
+	PlayerWorldProfile* m_current_profile{nullptr};
+	World* m_current_world{ nullptr };
+	WorldTerrain* m_current_terrain{ nullptr };
 
-	uint16_t m_world_instance_id;
+	uint16_t m_world_instance_id{ 0 };
 
 	std::queue<PlayerEvent> m_active_events;
 
-	glm::vec3 m_location;
-	glm::quat m_rotation;
+	glm::vec3 m_location{glm::vec3()};
+	glm::quat m_rotation{ glm::quat() };
 
 	std::vector<pointer> m_nearby_players;
 
@@ -305,8 +307,8 @@ private:
 	btCollisionShape* m_shape{ nullptr };
 	float m_radius{ DEFAULT_RADIUS };
 	float m_height{ DEFAULT_HEIGHT };
-	btPairCachingGhostObject* m_ghostObject;
-	btKinematicCharacterController* m_charCon;
+	btPairCachingGhostObject* m_ghostObject{ nullptr };
+	btKinematicCharacterController* m_charCon{ nullptr };
 	btVector3 m_localInertia{ btVector3(0.0f, 0.0f, 0.0f) };
 	float m_mass{ DEFAULT_MASS };
 

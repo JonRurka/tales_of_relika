@@ -88,6 +88,7 @@ void Graphics::Initialize()
 
 	m_UI = new UI_Engine();
 	bool ui_init_success = m_UI->Init();
+	Logger::LogDebug(LOG_POS("Initialize"), "UI Init");
 	if (!ui_init_success) {
 		Logger::LogError(LOG_POS("Initialize"), "Failed to initialize Rml UI Engine!");
 	}

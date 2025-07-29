@@ -33,8 +33,9 @@ void WorldTerrain::Init(World* world)
 	m_triangles = new unsigned int[Max_Verts];
 
 	compute_triangles();
-	initialize_voxel_engine();
 	create_chunk_cache();
+	initialize_voxel_engine();
+	
 }
 
 void WorldTerrain::Update(float dt)
@@ -269,6 +270,7 @@ void WorldTerrain::initialize_voxel_engine()
 	settings.GetSettings()->setInt("TotalBatchGroups", 1);
 	settings.GetSettings()->setInt("BatchesPerGroup", 1);
 	settings.GetSettings()->setInt("InvertTrianges", false);
+	settings.GetSettings()->setBool("SharedGL", false);
 
 	m_chunk_size_x = m_chunkMeterSizeX * m_voxelsPerMeter;
 	m_chunk_size_y = m_chunkMeterSizeY * m_voxelsPerMeter;
@@ -463,6 +465,9 @@ ServerTerrainChunk* WorldTerrain::queue_chunk_create(glm::ivec3 chunk_coord)
 	m_chunk_map[hash] = chunk;
 
 	m_create_queue.push(chunk);
+
+	Logger::LogDebug(LOG_POS("queue_chunk_create"), "created chunk (%i): (%i, %i, %i)",
+		m_cached_chunks.size(), chunk_coord.x, chunk_coord.y, chunk_coord.z);
 
 	return chunk.chunk_comp;
 }

@@ -183,6 +183,10 @@ namespace VoxelEngine {
 			m_int_settings[name] = val;
 		}
 
+		void setBool(std::string name, bool val) {
+			m_bool_settings[name] = val;
+		}
+
 		void setString(std::string name, std::string val) {
 			m_string_settings[name] = val;
 		}
@@ -196,6 +200,10 @@ namespace VoxelEngine {
 			return m_int_settings[name];
 		}
 
+		int getBool(std::string name) {
+			return m_bool_settings[name];
+		}
+
 		std::string getString(std::string name) {
 			return m_string_settings[name];
 		}
@@ -204,6 +212,7 @@ namespace VoxelEngine {
 		std::map<std::string, float> m_float_settings;
 		std::map<std::string, int> m_int_settings;
 		std::map<std::string, std::string> m_string_settings;
+		std::map<std::string, bool> m_bool_settings;
 	};
 
 	struct ChunkSettings {
@@ -223,6 +232,8 @@ namespace VoxelEngine {
 			m_settings.setInt("chunkMeterSizeZ", 32);
 			m_settings.setInt("voxelsPerMeter", 1);
 			m_settings.setInt("InvertTrianges", 0);
+
+			m_settings.setBool("SharedGL", true);
 		}
 
 	private:

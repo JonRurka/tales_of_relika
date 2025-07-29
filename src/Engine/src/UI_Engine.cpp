@@ -115,8 +115,8 @@ bool UI_Engine::Init()
 
 	//Rml::Debugger::Initialise(m_context);
 
-	Logger::LogInfo(LOG_POS("Init"), "Rml UI initialized successfully.");
 	m_initialized = true;
+	Logger::LogInfo(LOG_POS("Init"), "Rml UI initialized successfully.");
 }
 
 void UI_Engine::Load_Font(std::string resource_name)

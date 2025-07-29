@@ -141,6 +141,15 @@ bool Player::LoadPlayerData()
 	return false;
 }
 
+void Player::CreatePlayerData()
+{
+	m_game_data = PlayerGameData{};
+	m_game_data.CurrentWorldID = WorldController::GetInstance()->Default_World()->World_ID();
+
+
+
+}
+
 void Player::SyncOrientations()
 {
 	uint8_t num_orientations = m_nearby_players.size();

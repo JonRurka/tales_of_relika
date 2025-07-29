@@ -309,6 +309,7 @@ void WorldGenController::initialize_voxel_engine()
 	settings.GetSettings()->setInt("TotalBatchGroups", 1);
 	settings.GetSettings()->setInt("BatchesPerGroup", 4);
 	settings.GetSettings()->setInt("InvertTrianges", false);
+	settings.GetSettings()->setBool("SharedGL", true);
 
 	m_chunk_size_x = m_chunkMeterSizeX * m_voxelsPerMeter;
 	m_chunk_size_y = m_chunkMeterSizeY * m_voxelsPerMeter;

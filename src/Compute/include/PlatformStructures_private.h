@@ -57,6 +57,8 @@ namespace DynamicCompute {
             void* cl_device;
             Platform platform;
 
+            bool enable_context_sharing;
+
             char vendor[1000];
             unsigned short vendor_size;
 

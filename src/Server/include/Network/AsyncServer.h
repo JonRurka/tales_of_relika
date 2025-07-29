@@ -110,8 +110,6 @@ private:
 	bool m_run;
 	bool m_run_async_commands;
 
-	
-
 	PlayerAuthenticator m_authenticator;
 	Server_Main* m_server;
 	boost::asio::io_context m_io_service_udp;

@@ -21,7 +21,7 @@
 
 #include "Standard_Material.h"
 
-
+#define SERVER_START_WAIT_TIME (2.0f)
 
 void VoxelWorld_Scene::Init()
 {
@@ -32,6 +32,9 @@ void VoxelWorld_Scene::Init()
 	setup_client_server();
 	setup_game_client();
 
+	//json world_data;
+	//setup_chunk_gen(world_data);
+
 	//create_test_items();
 
 
@@ -40,13 +43,24 @@ void VoxelWorld_Scene::Init()
 
 void VoxelWorld_Scene::Update(float dt)
 {
-	if (!m_client_server_inited) {
+	if (m_client_connected) {
+		if (!m_init_data_requested) {
+			if (Utilities::Get_Time() - m_connected_time > SERVER_START_WAIT_TIME) {
+				m_init_data_requested = true;
+				Logger::LogInfo(LOG_POS("Update"), "Requesting world player data...");
+				//game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
+			}
+		}
+	}
+
+
+	if (!m_client_connected) {
 
 		double cur_time = Utilities::Get_Time();
 		if (cur_time - m_start_time > 1.0)
 		{
-			//game_client->Connect();
-			m_client_server_inited = true;
+			
+			m_client_connected = true;
 		}
 
 	}
@@ -59,7 +73,11 @@ void VoxelWorld_Scene::Update(float dt)
 
 void VoxelWorld_Scene::GameConnected()
 {
-	game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
+	m_connected_time = Utilities::Get_Time();
+	m_client_connected = true;
+
+
+	//game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
 
 
 
@@ -99,6 +117,8 @@ void VoxelWorld_Scene::GameConnected()
 
 void VoxelWorld_Scene::OnWorldPlayerDataResult(Data data)
 {
+	Logger::LogInfo(LOG_POS("OnWorldPlayerDataResult"), "Received world player data.");
+
 	std::string data_json_str = HashHelper::BytesToString(data.Buffer);
 	json world_player_data = json::parse(data_json_str);
 
@@ -190,10 +210,10 @@ void VoxelWorld_Scene::setup_game_client()
 {
 	game_client_obj = Instantiate("Game_Client");
 	game_client = game_client_obj->Add_Component<GameClient>();
+	game_client->Init("test_user", 1, m_remote_connection);
 	game_client->SetOnConnectSuccess(OnGameConnect, this);
 	game_client->Net_Client()->AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
-	game_client->Init("test_user", 1, m_remote_connection);
-	game_client->Connect();
+	//game_client->Connect();
 }
 
 void VoxelWorld_Scene::setup_local_player(json player_data)

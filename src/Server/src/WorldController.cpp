@@ -15,6 +15,7 @@ WorldController::WorldController()
 {
 	m_instance = this;
 	AsyncServer::GetInstance()->AddCommand(OpCodes::Server::World_Command, WorldController::RoutWorldNetCommand_cb, this, true);
+	//Logger::LogDebug(LOG_POS("NEW"), "Added commands");
 }
 
 WorldController::~WorldController()
@@ -42,7 +43,8 @@ void WorldController::RoutWorldNetCommand(SocketUser& user, Data data)
 	Player* player = Player::Cast_IUser(user.GetUser()).get();
 
 	if (player != nullptr && player->Get_Current_World() != nullptr) {
-		player->Get_Current_World()->SubmitWorldCommand(player, data);
+		World* curr_world = player->Get_Current_World();
+		curr_world->SubmitWorldCommand(player, data);
 	}
 
 }
@@ -54,6 +56,7 @@ void WorldController::Create_World()
 
 	uint64_t world_id = world->World_ID();
 	m_loaded_worlds[world_id] = world;
+	m_default_world = world;
 }
 
 void WorldController::Load_Worlds()
@@ -63,6 +66,7 @@ void WorldController::Load_Worlds()
 
 	uint64_t world_id = world->World_ID();
 	m_loaded_worlds[world_id] = world;
+	m_default_world = world;
 }
 
 bool WorldController::World_Exists(uint64_t world_id)
