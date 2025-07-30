@@ -149,6 +149,7 @@ Server_Main::Server_Main(char* args)
 
 Server_Main::Server_Main(Options options)
 {
+	Logger::LogInfo(LOG_POS("Server_Main"), "Creating server...");
 	m_instance = this;
 
 	frameCounter = 0;
@@ -162,11 +163,13 @@ Server_Main::Server_Main(Options options)
 	int bytes = GetModuleFileName(NULL, pBuf, 256);
 #else // linux
 	readlink("/proc/self/exe", pBuf, 256);
-
+	Logger::LogInfo(LOG_POS("Server_Main"), "Detected directory: %s", pBuf);
 #endif
 
 	m_app_dir = pBuf;
 	m_app_dir = m_app_dir.substr(0, m_app_dir.find_last_of(Utilities::File_Seperator()));
+
+	Logger::LogInfo(LOG_POS("Server_Main"), "Server Created");
 }
 
 void Server_Main::Start()
