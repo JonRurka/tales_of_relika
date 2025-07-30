@@ -62,6 +62,8 @@ namespace DynamicCompute {
 			//static IComputeController_private* GetComputeController_DirectX(ControllerInfo info);
 
 			static bool VK_isDeviceSuitable(VkPhysicalDevice device);
+
+			inline static const std::string LOG_LOC{ "COMPUTE_INTERFACE" };
 		};
 
 	}

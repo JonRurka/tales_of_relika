@@ -1,5 +1,7 @@
 #include "ComputeInterface_private.h"
 
+#include "Logger.h"
+
 #include "ComputeController_OCL.h"
 //#include "Compute_OCL/compute_test.h"
 //#pragma comment(lib, "OpenCL.lib")
@@ -158,8 +160,10 @@ std::vector<Platform> ComputeInterface_private::GetSupportedPlatforms_OpenCL()
     cl_platform_id all_platforms[10];
 
     // retreives a list of platforms available
-    if (clGetPlatformIDs(10, all_platforms, &num_of_platforms) != CL_SUCCESS)
+    cl_int cl_res = clGetPlatformIDs(10, all_platforms, &num_of_platforms);
+    if (cl_res != CL_SUCCESS)
     {
+        Logger::LogError(LOG_POS("GetSupportedPlatforms_OpenCL"), "Failed to get compute platforms: %i", cl_res);
         return res;
     }
 
