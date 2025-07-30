@@ -170,7 +170,7 @@ void World::async_init()
 	//m_world_physics->Init();
 
 	m_world_terrain = new WorldTerrain();
-	m_world_terrain->Init(this);
+	//m_world_terrain->Init(this);
 
 	//load_initial_terrain();
 
