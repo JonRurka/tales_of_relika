@@ -537,14 +537,23 @@ OpenCL_Device_Info Utilities::Get_Recommended_Device()
 	//printf("\n");
 
 	OpenCL_Device_Info picked_device;
+	bool found_device = false;
 	picked_device.num_compute_units = 0;
 	int max_comp = 0;
 	for (const auto& elem : devices) {
 		if (elem.num_compute_units > picked_device.num_compute_units) {
 			picked_device = elem;
+			Logger::LogDebug(LOG_POS("Get_Recommended_Device"), "Found a device.");
+			found_device = true;
 		}
 	}
 	//picked_device = devices[1];
+
+	if (!found_device)
+	{
+		Logger::LogError(LOG_POS("Get_Recommended_Device"), "Failed to find a compute device.");
+	}
+
 	return picked_device;
 }
 
