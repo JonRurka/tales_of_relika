@@ -14,8 +14,6 @@
 
 
 #ifdef WIN32
-#define GLFW_EXPOSE_NATIVE_WIN32
-#define GLFW_EXPOSE_NATIVE_WGL
 #include <GLFW/glfw3native.h>
 
 //#include <GL/wgl.h>
@@ -24,8 +22,6 @@
 #include <windows.h>
 #include <windowsx.h>
 #elif defined LINUX
-#define GLFW_EXPOSE_NATIVE_GLX
-#define GLFW_EXPOSE_NATIVE_X11
 #include <GL/glx.h>
 #include <GLFW/glfw3native.h>
 #endif
