@@ -280,7 +280,7 @@ void WorldTerrain::initialize_voxel_engine()
 	m_chunk_size_z = m_chunkMeterSizeZ * m_voxelsPerMeter;
 
 	m_builder = new SmoothVoxelBuilder();
-	//m_builder->Init(&settings);
+	m_builder->Init(&settings);
 
 	m_terrain_mods = ((SmoothVoxelBuilder*)m_builder)->Get_Terrain_Modifications();
 	m_heightmap_gen = ((SmoothVoxelBuilder*)m_builder)->Get_Heightmap_Generator();
