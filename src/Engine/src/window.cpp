@@ -21,7 +21,7 @@
 #include "resources.h"
 #include <windows.h>
 #include <windowsx.h>
-#elif defined LINUX
+#else
 #include <GL/glx.h>
 #include <GLFW/glfw3native.h>
 #endif
