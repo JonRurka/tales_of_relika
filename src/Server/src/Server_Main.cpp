@@ -159,9 +159,9 @@ Server_Main::Server_Main(Options options)
 	char pBuf[256]{};
 	size_t len = sizeof(pBuf);
 #ifdef WINDOWS_PLATFROM
-	int bytes = GetModuleFileName(NULL, pBuf, len);
+	int bytes = GetModuleFileName(NULL, pBuf, 256);
 #else // linux
-	readlink("/proc/self/exe", pBuf, len);
+	readlink("/proc/self/exe", pBuf, 256);
 
 #endif
 
@@ -186,6 +186,7 @@ void Server_Main::LoadSettings(std::string file)
 
 void Server_Main::Init()
 {
+	Logger::LogInfo(LOG_POS("Init"), "Initializing server...");
 	m_running = true;
 
 	if (m_options.Type == Server_Type::Remote) {
@@ -199,18 +200,30 @@ void Server_Main::Init()
 
 		Logger::LogInfo(LOG_POS("Init"), "Created server Resources.");
 	}
+	else 
+	{
+		Logger::LogInfo(LOG_POS("Init"), "Using game Resources.");
+	}
 
+	//if ()
 	m_com_executer = new CommandExecuter();
 	m_com_executer->Run(false);
+	Logger::LogInfo(LOG_POS("Init"), "Initialized Command Executer.");
 
 	//Logger::Log("Server Started!");
 
 	m_lua_engine = new LuaEngine();
+	Logger::LogInfo(LOG_POS("Init"), "Initialized Lua Engine.");
 
 	m_authenticator = new PlayerAuthenticator(this);
+	Logger::LogInfo(LOG_POS("Init"), "Initialized Player Authenticator.");
+
 	m_net_server = new AsyncServer(this);
+	Logger::LogInfo(LOG_POS("Init"), "Initialized Async TCP/UDP Server.");
+
 	m_world_controller = new WorldController();
 	m_world_controller->Init();
+	Logger::LogInfo(LOG_POS("Init"), "Initialized World Controller.");
 
 	m_net_server->AddCommand(OpCodes::Server::Submit_Identity, Server_Main::UserIdentify_cb, this);
 	//m_net_server->AddCommand(OpCodes::Server::Join_Match, Server_Main::JoinMatch_cb, this);
