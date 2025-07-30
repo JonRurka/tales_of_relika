@@ -525,13 +525,13 @@ OpenCL_Device_Info Utilities::Get_Recommended_Device()
 {
 	std::vector<OpenCL_Device_Info> devices;
 	std::vector<Platform> platforms = ComputeInterface::GetSupportedPlatforms_OpenCL();
-	//printf("Reported Platforms: %i\n", (int)platforms.size());
+	printf("Reported Platforms: %i\n", (int)platforms.size());
 	for (const auto& plt : platforms) {
-		//printf("Platform Name: %s (%llX)\n", plt.name, (long long)plt.platform);
+		printf("Platform Name: %s (%llX)\n", plt.name, (long long)plt.platform);
 		std::vector<OpenCL_Device_Info> plt_devices = ComputeInterface::GetSupportedDevices_OpenCL(plt);
 		for (const auto& device : plt_devices) {
 			devices.push_back(device);
-			//printf("\tDevice: %s, GPU: %i, CPU: %i, Comp Units: %i\n", device.name, (int)device.is_type_GPU, (int)device.is_type_CPU, device.num_compute_units);
+			printf("\tDevice: %s, GPU: %i, CPU: %i, Comp Units: %i\n", device.name, (int)device.is_type_GPU, (int)device.is_type_CPU, device.num_compute_units);
 		}
 	}
 	//printf("\n");
