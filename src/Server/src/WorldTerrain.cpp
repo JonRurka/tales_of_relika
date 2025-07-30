@@ -35,7 +35,7 @@ void WorldTerrain::Init(World* world)
 
 	compute_triangles();
 	create_chunk_cache();
-	initialize_voxel_engine();
+	//initialize_voxel_engine();
 
 	Logger::LogInfo(LOG_POS("Init"), "Initialized");
 	
