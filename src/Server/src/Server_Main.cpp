@@ -149,6 +149,7 @@ Server_Main::Server_Main(char* args)
 
 Server_Main::Server_Main(Options options)
 {
+	Logger::Set_Direct(true);
 	Logger::LogInfo(LOG_POS("Server_Main"), "Creating server...");
 	m_instance = this;
 
