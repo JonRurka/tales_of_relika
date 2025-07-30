@@ -131,7 +131,7 @@ void SmoothVoxelBuilder::Init(ChunkSettings* settings)
 
     m_share_gl_context = p_settings.getBool("SharedGL");
     
-    //CalculateVariables();
+    CalculateVariables();
 
     //InitializeComputePrograms();
     //CreateComputeBuffers();
