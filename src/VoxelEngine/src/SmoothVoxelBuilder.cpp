@@ -133,7 +133,7 @@ void SmoothVoxelBuilder::Init(ChunkSettings* settings)
     
     CalculateVariables();
 
-    //InitializeComputePrograms();
+    InitializeComputePrograms();
     //CreateComputeBuffers();
     //FinalizePrograms();
     
