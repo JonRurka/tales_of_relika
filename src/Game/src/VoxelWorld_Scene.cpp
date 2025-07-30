@@ -48,7 +48,7 @@ void VoxelWorld_Scene::Update(float dt)
 			if (Utilities::Get_Time() - m_connected_time > SERVER_START_WAIT_TIME) {
 				m_init_data_requested = true;
 				Logger::LogInfo(LOG_POS("Update"), "Requesting world player data...");
-				//game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
+				game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
 			}
 		}
 	}
@@ -73,10 +73,9 @@ void VoxelWorld_Scene::Update(float dt)
 
 void VoxelWorld_Scene::GameConnected()
 {
+	Logger::LogInfo(LOG_POS("GameConnected"), "Game server connected successfully.");
 	m_connected_time = Utilities::Get_Time();
 	m_client_connected = true;
-
-
 	//game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
 
 
@@ -213,7 +212,8 @@ void VoxelWorld_Scene::setup_game_client()
 	game_client->Init("test_user", 1, m_remote_connection);
 	game_client->SetOnConnectSuccess(OnGameConnect, this);
 	game_client->Net_Client()->AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
-	//game_client->Connect();
+	game_client->Connect();
+	Logger::LogInfo(LOG_POS("setup_game_client"), "Connecting to game server...");
 }
 
 void VoxelWorld_Scene::setup_local_player(json player_data)

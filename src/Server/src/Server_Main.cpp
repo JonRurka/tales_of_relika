@@ -10,7 +10,12 @@
 #include "World.h"
 #include "IUser.h"
 #include "Player.h"
+#include "Utilities.h"
+#include "Resources.h"
+#include "Game_Resources.h"
 #include "LuaEngine.h"
+#include "Material_Types.h"
+#include "Material_Processor.h"
  
 Server_Main* Server_Main::m_instance = nullptr;
 Server_Main::QueueLengths Server_Main::m_queue_lengths{};
@@ -161,7 +166,7 @@ Server_Main::Server_Main(Options options)
 #endif
 
 	m_app_dir = pBuf;
-	m_app_dir = m_app_dir.substr(0, m_app_dir.find_last_of('\\'));
+	m_app_dir = m_app_dir.substr(0, m_app_dir.find_last_of(Utilities::File_Seperator()));
 }
 
 void Server_Main::Start()
@@ -182,6 +187,18 @@ void Server_Main::LoadSettings(std::string file)
 void Server_Main::Init()
 {
 	m_running = true;
+
+	if (m_options.Type == Server_Type::Remote) {
+		m_server_resources = new Resources();
+
+		m_material_types = new Material_Types();
+		m_material_types->Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
+		m_material_types->Initialize_Materials(false);
+		//Material_Processor::Add<Uniform_Material_Processor>();
+		//Block_Type::Init();
+
+		Logger::LogInfo(LOG_POS("Init"), "Created server Resources.");
+	}
 
 	m_com_executer = new CommandExecuter();
 	m_com_executer->Run(false);

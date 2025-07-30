@@ -33,6 +33,7 @@ void WorldController::Update(float dt)
 
 void WorldController::RoutWorldNetCommand(SocketUser& user, Data data)
 {
+	Logger::LogDebug(LOG_POS("RoutWorldNetCommand"), "Received a command. 1");
 	if (!user.Get_Authenticated()) {
 		// send fail
 		Logger::Log(LOG_POS("RoutWorldNetCommand"), "World command route failed: user not authenticated!");
@@ -44,7 +45,15 @@ void WorldController::RoutWorldNetCommand(SocketUser& user, Data data)
 
 	if (player != nullptr && player->Get_Current_World() != nullptr) {
 		World* curr_world = player->Get_Current_World();
+		Logger::LogDebug(LOG_POS("RoutWorldNetCommand"), "Received a command. 2");
 		curr_world->SubmitWorldCommand(player, data);
+	}
+	else 
+	{
+		int player_null = player == nullptr;
+		int world_null = player->Get_Current_World() != nullptr;
+		Logger::LogDebug(LOG_POS("RoutWorldNetCommand"), "World command route failed: user or world null! Player: %i, World: %i",
+			player_null, world_null);
 	}
 
 }

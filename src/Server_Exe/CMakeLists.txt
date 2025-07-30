@@ -23,6 +23,7 @@ add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
 
 target_link_libraries(${PROJECT_NAME} 
 	${PLATFORM_LIBRARIES}
+	${VULKAN_LIBS}
 	ZLIB::ZLIB
 	assimp::assimp 
 	nlohmann_json::nlohmann_json 
@@ -36,4 +37,4 @@ target_link_libraries(${PROJECT_NAME}
 	#rmlui_debugger
 	#rmlui_shell
 )
-target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine)
+target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Game Server)

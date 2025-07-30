@@ -87,6 +87,7 @@ void World::SubmitWorldCommand(Player* user, Data data)
 	m_command_queue_lock.lock();
 	m_command_queue.push(command);
 	m_command_queue_lock.unlock();
+	Logger::LogDebug(LOG_POS("SubmitWorldCommand"), "World command pushed.");
 }
 
 bool World::HasPlayer(uint32_t player_id)
@@ -219,6 +220,8 @@ void World::init_lua_script(sol::state& lua)
 
 bool World::add_player(Player::pointer player, bool trigger_events)
 {
+	Logger::LogInfo(LOG_POS("add_player"), "Player '%s' attempting to join world. 1", player->Get_UserName().c_str());
+
 	uint32_t user_id = player->Get_UserID();
 	if (m_players.contains(user_id)) {
 		return true;
@@ -244,8 +247,10 @@ bool World::add_player(Player::pointer player, bool trigger_events)
 	} while (contains_id);
 
 	player->Set_Current_World(this, inst_id);
-	m_players[inst_id] = player;
+	m_players[user_id] = player;
 	m_player_short_ids[inst_id] = user_id;
+
+	Logger::LogInfo(LOG_POS("add_player"), "Player '%s' join world. 2", player->Get_UserName().c_str());
 
 	return true;
 }
@@ -302,7 +307,7 @@ void World::GameLoop()
 void World::AsynUpdate(float dt)
 {
 	m_world_terrain->Update(dt);
-	m_world_physics->Update(dt);
+	//m_world_physics->Update(dt);
 
 	ProcessNetCommands();
 	UpdatePlayers(dt);
@@ -349,6 +354,8 @@ void World::ProcessNetCommands()
 		NetCommand data = current_commands.front();
 		current_commands.pop();
 
+		Logger::LogDebug(LOG_POS("ProcessNetCommands"), "pop command and process.");
+
 		ExecuteNetCommand(data.user, data.data);
 	}
 }
@@ -368,10 +375,14 @@ int World::threadSafeCommandQueueDuplicate(std::mutex& lock, std::queue<NetComma
 
 void World::ExecuteNetCommand(uint32_t user, Data data)
 {
-	if (!HasPlayer(user))
+	if (!HasPlayer(user)) {
+		Logger::LogError(LOG_POS("ExecuteNetCommand"), "Received world command for non-present player.");
 		return;
+	}
 
 	Player* player = m_players[user].get();
+
+	Logger::LogDebug(LOG_POS("ExecuteNetCommand"), "Received world command for player.");
 
 	if (data.Buffer.size() > 0) 
 	{
@@ -431,6 +442,7 @@ void World::UpdateOrientation_NetCmd(Player& player, Data data)
 
 void World::RequestWorldPlayerData_NetCmd(Player& user, Data data)
 {
+	Logger::LogDebug(LOG_POS("RequestWorldPlayerData_NetCmd"), "Received request for player data.");
 	glm::vec3 player_loc = user.Get_Location();
 
 

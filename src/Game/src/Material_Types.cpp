@@ -172,10 +172,12 @@ void Material_Types::Load_Materials(std::string resource_file_name)
 
 }
 
-void Material_Types::Initialize_Materials()
+void Material_Types::Initialize_Materials(bool load_textures)
 {
-    load_terrain_textures();
-    load_structure_textures();
+    if (load_textures) {
+        load_terrain_textures();
+        load_structure_textures();
+    }
 
     set_terrain_gen_macros();
 }

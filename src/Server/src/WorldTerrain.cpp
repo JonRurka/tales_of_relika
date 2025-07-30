@@ -466,8 +466,8 @@ ServerTerrainChunk* WorldTerrain::queue_chunk_create(glm::ivec3 chunk_coord)
 
 	m_create_queue.push(chunk);
 
-	Logger::LogDebug(LOG_POS("queue_chunk_create"), "created chunk (%i): (%i, %i, %i)",
-		m_cached_chunks.size(), chunk_coord.x, chunk_coord.y, chunk_coord.z);
+	//Logger::LogDebug(LOG_POS("queue_chunk_create"), "created chunk (%i): (%i, %i, %i)",
+	//	m_cached_chunks.size(), chunk_coord.x, chunk_coord.y, chunk_coord.z);
 
 	return chunk.chunk_comp;
 }

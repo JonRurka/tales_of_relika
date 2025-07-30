@@ -40,7 +40,7 @@ public:
 
 	void Load_Materials(std::string resource_file_name);
 
-	void Initialize_Materials();
+	void Initialize_Materials(bool load_textures = true);
 
 	int Terrain_Material_ID(std::string name);
 

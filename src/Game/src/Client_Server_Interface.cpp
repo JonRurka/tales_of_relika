@@ -12,6 +12,7 @@ void Client_Server::Init()
 {
 	Server_Main::Options options;
 	options.Type = Server_Main::Server_Type::Local;
+	options.Async = true;
 	m_server = new Server_Main(options);
 }
 

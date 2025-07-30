@@ -15,6 +15,8 @@ class PlayerAuthenticator;
 class Player;
 class LuaEngine;
 class WorldController;
+class Resources;
+class Material_Types;
 
 class Server_Main {
 public:
@@ -41,37 +43,41 @@ private:
 
 	static Server_Main* m_instance;
 
-	Options m_options;
+	Options m_options{};
 
 	std::string m_cmdArgs;
 	std::string m_app_dir;
-	bool m_running;
+	bool m_running{ false };
 
-	CommandExecuter* m_com_executer;
+	CommandExecuter* m_com_executer{ nullptr };
 	std::string m_curCommand;
 	std::string m_executedCommand;
 
 	std::thread m_loop_thread;
 
-	int frameCounter;
+	int frameCounter{ 0 };
 	boost::timer timer;
-	double lastTime;
+	double lastTime{ 0 };
 
-	AsyncServer* m_net_server;
+	AsyncServer* m_net_server{ nullptr };
 
-	MatchManager* m_match_manager;
+	MatchManager* m_match_manager{ nullptr };
 
-	PlayerAuthenticator* m_authenticator;
+	PlayerAuthenticator* m_authenticator{ nullptr };
 
-	WorldController* m_world_controller;
+	WorldController* m_world_controller{ nullptr };
 
-	LuaEngine* m_lua_engine;
+	LuaEngine* m_lua_engine{ nullptr };
+
+	Resources* m_server_resources{ nullptr };
+
+	Material_Types* m_material_types{nullptr};
 
 	std::unordered_map<uint32_t, std::shared_ptr<Player>> m_players;
 
 	std::map<std::string, uint64_t> m_memory_usage;
 	std::mutex m_memory_lock;
-	uint64_t m_last_memory_print_time;
+	uint64_t m_last_memory_print_time{ 0 };
 
 	static QueueLengths m_queue_lengths;
 
