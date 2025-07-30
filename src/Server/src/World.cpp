@@ -169,8 +169,8 @@ void World::async_init()
 	//m_world_physics = new WorldPhysics();
 	//m_world_physics->Init();
 
-	//m_world_terrain = new WorldTerrain();
-	//m_world_terrain->Init(this);
+	m_world_terrain = new WorldTerrain();
+	m_world_terrain->Init(this);
 
 	//load_initial_terrain();
 
@@ -306,7 +306,7 @@ void World::GameLoop()
 
 void World::AsynUpdate(float dt)
 {
-	m_world_terrain->Update(dt);
+	//m_world_terrain->Update(dt);
 	//m_world_physics->Update(dt);
 
 	ProcessNetCommands();
