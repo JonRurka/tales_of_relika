@@ -21,7 +21,6 @@ namespace DynamicCompute {
 			struct ControllerInfo {
 			public:
 				Platform platform;
-				
 				void* device;
 				char program_dir[1000];
 				int program_dir_size;
