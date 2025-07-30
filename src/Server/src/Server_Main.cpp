@@ -226,7 +226,7 @@ void Server_Main::Init()
 	Logger::LogInfo(LOG_POS("Init"), "Initialized Async TCP/UDP Server.");
 
 	m_world_controller = new WorldController();
-	m_world_controller->Init();
+	//m_world_controller->Init();
 	Logger::LogInfo(LOG_POS("Init"), "Initialized World Controller.");
 
 	m_net_server->AddCommand(OpCodes::Server::Submit_Identity, Server_Main::UserIdentify_cb, this);
