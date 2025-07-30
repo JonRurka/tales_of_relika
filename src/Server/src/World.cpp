@@ -166,8 +166,8 @@ void World::async_init()
 	m_last_orientation_update = Server_Main::GetEpoch();
 	m_last_frame = Server_Main::GetEpoch();
 
-	m_world_physics = new WorldPhysics();
-	m_world_physics->Init();
+	//m_world_physics = new WorldPhysics();
+	//m_world_physics->Init();
 
 	m_world_terrain = new WorldTerrain();
 	m_world_terrain->Init(this);
