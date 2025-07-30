@@ -23,7 +23,7 @@ void WorldTerrain::Init(World* world)
 	std::string block_types_str = Resources::Get_Data_File_String(Game_Resources::Data_Files::BLOCK_TYPES);
 	//Logger::LogDebug(LOG_POS("Init"), "%s", block_types_str.c_str());
 	
-	Logger::LogInfo(LOG_POS("Init"), "Initialized");
+	
 
 	m_half = 0;// ((1 / m_voxelsPerMeter) / 2.0);
 
@@ -32,9 +32,12 @@ void WorldTerrain::Init(World* world)
 	//m_normals = new glm::vec4[Max_Verts];
 	m_triangles = new unsigned int[Max_Verts];
 
+
 	compute_triangles();
 	create_chunk_cache();
 	initialize_voxel_engine();
+
+	Logger::LogInfo(LOG_POS("Init"), "Initialized");
 	
 }
 
@@ -281,6 +284,8 @@ void WorldTerrain::initialize_voxel_engine()
 
 	m_terrain_mods = ((SmoothVoxelBuilder*)m_builder)->Get_Terrain_Modifications();
 	m_heightmap_gen = ((SmoothVoxelBuilder*)m_builder)->Get_Heightmap_Generator();
+
+	Logger::LogInfo(LOG_POS("initialize_voxel_engine"), "Initialized Voxel Engine.");
 }
 
 void WorldTerrain::process_additions()
@@ -508,6 +513,7 @@ void WorldTerrain::compute_triangles()
 			m_triangles[tris_start + 2] = tris_start + 0;
 		}
 	}
+	Logger::LogDebug(LOG_POS("compute_triangles"), "Computed Trianges.");
 }
 
 std::vector<glm::ivec3> WorldTerrain::get_columns_in_radius(int center_x, int center_z, int radius)
