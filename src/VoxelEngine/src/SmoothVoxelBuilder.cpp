@@ -406,6 +406,8 @@ void SmoothVoxelBuilder::InitializeComputePrograms()
         return;
     }
 
+    return;
+
     // program 1
     
     //m_program_compute = new VoxelComputeProgram(m_controller, PROGRAM);
