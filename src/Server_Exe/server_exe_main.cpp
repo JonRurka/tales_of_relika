@@ -10,7 +10,7 @@ using namespace DynamicCompute::Compute;
 
 int main()
 {
-	Logger::Set_Direct(true);
+	/*Logger::Set_Direct(true);
 
 	IComputeProgram::FileType m_type = IComputeProgram::FileType::Text_Data;
 
@@ -26,8 +26,7 @@ int main()
 
 	IComputeController* m_controller = ComputeInterface::GetComputeController(ComputeInterface::OpenCL, m_controllerInfo);
 
-
-	return 0;
+	return 0;*/
 
 
 	Server_Main::Options options{};

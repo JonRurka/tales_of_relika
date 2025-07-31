@@ -363,6 +363,12 @@ ComputeContext::ComputeContext(OpenCL_Device_Info device)
     cl_int err;
     numContexts = 0;
 
+    if (!device.valid)
+    {
+        Logger::LogError(LOG_POS("ComputeContext"), "Device not valid!");
+        return;
+    }
+
     deviceID = (cl_device_id)device.cl_device;
 
     cl_context_properties properties[7];

@@ -536,7 +536,7 @@ OpenCL_Device_Info Utilities::Get_Recommended_Device()
 	}
 	//printf("\n");
 
-	OpenCL_Device_Info picked_device;
+	OpenCL_Device_Info picked_device{};
 	bool found_device = false;
 	picked_device.num_compute_units = 0;
 	int max_comp = 0;
@@ -551,6 +551,7 @@ OpenCL_Device_Info Utilities::Get_Recommended_Device()
 
 	if (!found_device)
 	{
+		picked_device.valid = false;
 		Logger::LogError(LOG_POS("Get_Recommended_Device"), "Failed to find a compute device.");
 	}
 

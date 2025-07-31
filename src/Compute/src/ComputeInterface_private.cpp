@@ -292,6 +292,7 @@ std::vector<OpenCL_Device_Info> ComputeInterface_private::GetSupportedDevices_Op
         info.is_type_Accelerator = (type & CL_DEVICE_TYPE_ACCELERATOR) == CL_DEVICE_TYPE_ACCELERATOR;
 
         //device.OpenCL_Info = info;
+        info.valid = true;
 
         res.push_back(info);
     }
