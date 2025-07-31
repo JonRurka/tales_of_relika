@@ -366,8 +366,10 @@ bool WorldTerrain::process_batch()
 	);
 
 	std::vector<glm::vec4> verts(m_vertices, m_vertices + counts[0].x);
-	std::vector<unsigned int> tris(m_triangles, m_triangles + counts[0].x);
+	//std::vector<unsigned int> tris(m_triangles, m_triangles + counts[0].x);
 	//std::vector<glm::vec4> normals(m_normals, m_normals + counts[0].x);
+
+	std::vector<unsigned int> tris;
 
 	batch[0].chunk_comp->Process_Mesh_Update(verts, tris, counts[0]);
 

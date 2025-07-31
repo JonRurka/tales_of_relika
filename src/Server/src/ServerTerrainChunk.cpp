@@ -52,8 +52,6 @@ void ServerTerrainChunk::Deiterate()
 
 void ServerTerrainChunk::Process_Mesh_Update(std::vector<glm::vec4> vert, std::vector<unsigned int> tris, glm::ivec4 counts)
 {
-	Logger::LogDebug(LOG_POS("Process_Mesh_Update"), "Received %i verts", vert.size());
-
 	//return;
 	set_opaque_collider(vert, tris, counts);
 }
@@ -97,6 +95,7 @@ void ServerTerrainChunk::set_opaque_collider(std::vector<glm::vec4> vert, std::v
 		m_opaque_TriangleIndexVertexArray->addIndexedMesh(indexedMesh);
 
 		m_opaque_shape = new btBvhTriangleMeshShape(m_opaque_TriangleIndexVertexArray, true, true);
+		Logger::LogDebug(LOG_POS("set_opaque_collider"), "Created (index) collider with %i verts", vert.size());
 	}
 	else {
 		m_opaque_triangle_mesh = new btTriangleMesh();
@@ -123,6 +122,8 @@ void ServerTerrainChunk::set_opaque_collider(std::vector<glm::vec4> vert, std::v
 
 		}
 		m_opaque_shape = new btBvhTriangleMeshShape(m_opaque_triangle_mesh, true, true);
+
+		Logger::LogDebug(LOG_POS("set_opaque_collider"), "Created collider with %i verts", vert.size());
 	}
 
 	btTransform startTransform;
