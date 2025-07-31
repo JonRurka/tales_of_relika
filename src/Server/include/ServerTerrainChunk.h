@@ -8,8 +8,10 @@
 #include <glm/vec4.hpp>
 
 #include <vector>
+#include <unordered_map>
 
 #include "WorldPhysics.h"
+#include "ColliderGenerator.h"
 
 class WorldTerrain;
 class World;
@@ -50,11 +52,19 @@ private:
 	int m_usages{ 0 };
 	bool m_keep_alive{ false };
 
+	std::unordered_map<uint64_t, ColliderGenerator::Request*> m_collider_requests;
+	uint64_t m_col_request_num{ 0 };
+	uint64_t m_last_applied_col{ 0 };
+	ColliderGenerator::Request* m_current_col_req{ nullptr };
+
 	btVector3 m_localInertia{ btVector3(0.0f, 0.0f, 0.0f) };
 	btCollisionShape* m_opaque_shape{ nullptr };
 	btTriangleIndexVertexArray* m_opaque_TriangleIndexVertexArray{ nullptr };
 	btTriangleMesh* m_opaque_triangle_mesh{ nullptr };
 	btRigidBody* m_opaque_rigidbody{ nullptr };
+
+	void process_collider();
+	void apply_collider(ColliderGenerator::Request* req);
 
 	void test_removal();
 

@@ -17,6 +17,7 @@ class LuaEngine;
 class WorldController;
 class Resources;
 class Material_Types;
+class ColliderGenerator;
 
 class Server_Main {
 public:
@@ -72,6 +73,8 @@ private:
 	Resources* m_server_resources{ nullptr };
 
 	Material_Types* m_material_types{nullptr};
+
+	ColliderGenerator* m_collider_generator{ nullptr };
 
 	std::unordered_map<uint32_t, std::shared_ptr<Player>> m_players;
 

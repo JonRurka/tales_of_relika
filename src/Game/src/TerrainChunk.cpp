@@ -144,8 +144,8 @@ void TerrainChunk::Update(float dt)
 
 	if (!m_has_collision) {
 		if (Collision_Enabled()) {
-			Logger::LogInfo(LOG_POS("Update"), "Enabling collision for (%i, %i, %i)...",
-				m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
+			//Logger::LogInfo(LOG_POS("Update"), "Enabling collision for (%i, %i, %i)...",
+			//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 			Refresh();
 			m_has_collision = true;
 			

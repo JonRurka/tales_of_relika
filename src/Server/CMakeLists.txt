@@ -24,6 +24,7 @@ set(${module}_headers
 	include/WorldController.h
 	include/World.h
 	include/WorldPhysics.h
+	include/ColliderGenerator.h
 	include/WorldTerrain.h
 	include/WorldStructures.h
 	include/ServerTerrainChunk.h
@@ -50,6 +51,7 @@ set(${module}_sources
 	src/WorldController.cpp
 	src/World.cpp
 	src/WorldPhysics.cpp
+	src/ColliderGenerator.cpp
 	src/WorldTerrain.cpp
 	src/WorldStructures.cpp
 	src/ServerTerrainChunk.cpp

@@ -2,6 +2,7 @@
 
 #include "WorldTerrain.h"
 #include "World.h"
+#include "ColliderGenerator.h"
 
 ServerTerrainChunk::ServerTerrainChunk()
 {
@@ -19,7 +20,8 @@ void ServerTerrainChunk::Update(float dt)
 	if (!m_assigned)
 		return;
 
-
+	
+	process_collider();
 	test_removal();
 }
 
@@ -52,13 +54,88 @@ void ServerTerrainChunk::Deiterate()
 
 void ServerTerrainChunk::Process_Mesh_Update(std::vector<glm::vec4> vert, std::vector<unsigned int> tris, glm::ivec4 counts)
 {
-	//return;
-	set_opaque_collider(vert, tris, counts);
+	if (vert.size() <= 0)
+		return;
+
+	ColliderGenerator::Request* req = ColliderGenerator::Push_Request(m_chunk_coords, vert, tris);
+	m_col_request_num++;
+	m_collider_requests[m_col_request_num] = req;
+	
+
+
+	//set_opaque_collider(vert, tris, counts);
 }
 
 void ServerTerrainChunk::VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float iso, bool Type_changed, int type) 
 {
 
+}
+
+void ServerTerrainChunk::process_collider()
+{
+	struct spawn_ready 
+	{
+		ColliderGenerator::Request* req;
+		uint64_t id;
+	};
+
+
+	std::queue<spawn_ready> ready_chunks;
+	for (const auto& pair : m_collider_requests)
+	{
+		if (pair.second->Ready())
+		{
+			spawn_ready p{ pair.second, pair.first };
+			ready_chunks.push(p);
+		}
+	}
+
+	while (!ready_chunks.empty()) 
+	{
+		spawn_ready pair = ready_chunks.front();
+		ready_chunks.pop();
+
+		m_collider_requests.erase(pair.id);
+
+		if (pair.id <= m_last_applied_col) {
+			ColliderGenerator::Release_Request(pair.req);
+			continue;
+		}
+
+		apply_collider(pair.req);
+
+		m_last_applied_col = pair.id;
+	}
+}
+
+void ServerTerrainChunk::apply_collider(ColliderGenerator::Request* req)
+{
+	if (m_current_col_req != nullptr)
+	{
+		clear_opaque_collision();
+		ColliderGenerator::Release_Request(m_current_col_req);
+		m_current_col_req = nullptr;
+	}
+
+	if (!req->Valid()) {
+		return;
+	}
+
+	m_opaque_shape = req->Mesh_Shape();
+
+	btTransform startTransform;
+	startTransform.setIdentity();
+	startTransform.setOrigin(btVector3(m_chunk_world_pos.x, m_chunk_world_pos.y, m_chunk_world_pos.z));
+
+	m_localInertia = btVector3(0.0f, 0.0f, 0.0f);
+	btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(0, myMotionState, m_opaque_shape, m_localInertia);
+	m_opaque_rigidbody = new btRigidBody(rbInfo);
+	m_world_physics->Add_Rigidbody(m_opaque_rigidbody);
+
+	Logger::LogDebug(LOG_POS("apply_collider"), "Applied collider with %i vertices.", req->Num_Verts());
+
+	m_current_col_req = req;
 }
 
 void ServerTerrainChunk::test_removal()
@@ -83,9 +160,11 @@ void ServerTerrainChunk::set_opaque_collider(std::vector<glm::vec4> vert, std::v
 		return;
 	}
 
-	std::vector<glm::vec3> vert3 = Utilities::vec4_to_vec3_arr(vert);
+	
 
 	if (tris.size() > 0) {
+		std::vector<glm::vec3> vert3 = Utilities::vec4_to_vec3_arr(vert);
+
 		btIndexedMesh indexedMesh;
 		indexedMesh.m_numTriangles = tris.size() / 3;
 		indexedMesh.m_triangleIndexBase = (unsigned char*)tris.data();
@@ -132,8 +211,8 @@ void ServerTerrainChunk::set_opaque_collider(std::vector<glm::vec4> vert, std::v
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration<double>(end - start).count();
 
-		Logger::LogDebug(LOG_POS("set_opaque_collider"), "Created collider with %i verts in %f ms",
-			vert.size(), (float)((duration) * 1000.0f));
+		//Logger::LogDebug(LOG_POS("set_opaque_collider"), "Created collider with %i verts in %f ms",
+		//	vert.size(), (float)((duration) * 1000.0f));
 	}
 
 	btTransform startTransform;

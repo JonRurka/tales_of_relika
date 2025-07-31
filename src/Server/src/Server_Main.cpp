@@ -16,6 +16,9 @@
 #include "LuaEngine.h"
 #include "Material_Types.h"
 #include "Material_Processor.h"
+#include "ColliderGenerator.h"
+
+#define COLLIDER_GEN_WORKERS 4
  
 Server_Main* Server_Main::m_instance = nullptr;
 Server_Main::QueueLengths Server_Main::m_queue_lengths{};
@@ -224,6 +227,9 @@ void Server_Main::Init()
 
 	m_net_server = new AsyncServer(this);
 	Logger::LogInfo(LOG_POS("Init"), "Initialized Async TCP/UDP Server.");
+
+	m_collider_generator = new ColliderGenerator();
+	m_collider_generator->Init(COLLIDER_GEN_WORKERS);
 
 	m_world_controller = new WorldController();
 	m_world_controller->Init();
