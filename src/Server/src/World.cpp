@@ -316,7 +316,7 @@ void World::AsynUpdate(float dt)
 	SendPlayerEvents();
 
 
-	//test_set_spawn_point();
+	test_set_spawn_point();
 }
 
 void World::UpdatePlayers(float dt)
@@ -485,6 +485,8 @@ void World::test_set_spawn_point()
 	{
 		m_spawn_point = hit.hit_point;
 		m_spawn_point_set = true;
+		Logger::LogInfo(LOG_POS("test_set_spawn_point"), "Found new Spawn Point: (%f, %f, %f)",
+			m_spawn_point.x, m_spawn_point.y, m_spawn_point.z);
 	}
 }
 
