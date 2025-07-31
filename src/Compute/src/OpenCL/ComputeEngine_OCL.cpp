@@ -244,9 +244,9 @@ int ComputeEngine::Init(Platform pltform, std::string dir)
    
     platform_id = (cl_platform_id)pltform.platform;
 
-#if WIN32
+//#if WIN32
     pclGetGLContextInfoKHR = (clGetGLContextInfoKHR_fn)clGetExtensionFunctionAddressForPlatform(ComputeEngine::GetPlatform(), "clGetGLContextInfoKHR");
-#endif
+//#endif
 
     //Logger::LogDebug(LOG_POS("Init"), "Init Platform ID: %X", platform_id);
 
