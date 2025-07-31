@@ -187,7 +187,7 @@ void World::load_initial_terrain()
 	{
 		ServerTerrainChunk* chunk = m_world_terrain->Spawn_Chunk(c);
 		chunk->KeepAlive(true);
-		break;
+		//break;
 	}
 
 
