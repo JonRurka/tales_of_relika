@@ -350,20 +350,20 @@ bool WorldTerrain::process_batch()
 
 	double start_time = Utilities::Get_Time();
 
-	//glm::dvec4 gen_times = m_builder->Generate(&gen_options);
-	//glm::dvec4 render_times = m_builder->Render(&render_options);
+	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
+	glm::dvec4 render_times = m_builder->Render(&render_options);
 
-	std::vector<glm::ivec4> counts = {glm::ivec4(1, 0, 0, 0)}; //m_builder->GetSize();
+	std::vector<glm::ivec4> counts = m_builder->GetSize();
 
 	int num_verts = counts[0].x;
 
-	/*m_builder->Extract(
+	m_builder->Extract(
 		m_vertices,
 		nullptr,
 		nullptr,
 		nullptr,
 		counts[0]
-	);*/
+	);
 
 	std::vector<glm::vec4> verts(m_vertices, m_vertices + counts[0].x);
 	std::vector<unsigned int> tris(m_triangles, m_triangles + counts[0].x);
