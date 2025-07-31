@@ -439,6 +439,7 @@ ComputeContext::ComputeContext(OpenCL_Device_Info device)
         Logger::LogError(LOG_POS("ComputeContext"), "CL_GL Extension Not Found!!!");
     }
 
+    Logger::LogDebug(LOG_POS("ComputeContext"), "pre deviceSupportsExternGL()");
     if (deviceSupportsExternGL(deviceID, properties)) {
         Logger::LogInfo(LOG_POS("ComputeContext"), "CL_GL Device Supported.");
         external_supported = true;
