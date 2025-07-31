@@ -74,6 +74,9 @@ void ServerTerrainChunk::test_removal()
 
 void ServerTerrainChunk::set_opaque_collider(std::vector<glm::vec4> vert, std::vector<unsigned int> tris, glm::ivec4 counts)
 {
+	//double start_time = Utilities::Get_Time();
+	//auto start = std::chrono::high_resolution_clock::now();
+
 	clear_opaque_collision();
 
 	if (vert.size() <= 0) {
@@ -98,6 +101,9 @@ void ServerTerrainChunk::set_opaque_collider(std::vector<glm::vec4> vert, std::v
 		Logger::LogDebug(LOG_POS("set_opaque_collider"), "Created (index) collider with %i verts", vert.size());
 	}
 	else {
+		
+		auto start = std::chrono::high_resolution_clock::now();
+
 		m_opaque_triangle_mesh = new btTriangleMesh();
 		//m_triangle_mesh->addIndexedMesh(indexedMesh);
 		glm::vec3 col = glm::vec3(0.0, 0.0, 0.0);
@@ -123,7 +129,11 @@ void ServerTerrainChunk::set_opaque_collider(std::vector<glm::vec4> vert, std::v
 		}
 		m_opaque_shape = new btBvhTriangleMeshShape(m_opaque_triangle_mesh, true, true);
 
-		Logger::LogDebug(LOG_POS("set_opaque_collider"), "Created collider with %i verts", vert.size());
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration<double>(end - start).count();
+
+		Logger::LogDebug(LOG_POS("set_opaque_collider"), "Created collider with %i verts in %f ms",
+			vert.size(), (float)((duration) * 1000.0f));
 	}
 
 	btTransform startTransform;
@@ -135,6 +145,13 @@ void ServerTerrainChunk::set_opaque_collider(std::vector<glm::vec4> vert, std::v
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(0, myMotionState, m_opaque_shape, m_localInertia);
 	m_opaque_rigidbody = new btRigidBody(rbInfo);
 	m_world_physics->Add_Rigidbody(m_opaque_rigidbody);
+
+	//double end_time = Utilities::Get_Time();
+	//auto end = std::chrono::high_resolution_clock::now();
+	//auto duration = std::chrono::duration<double>(end - start).count();
+
+	//Logger::LogDebug(LOG_POS("set_opaque_collider"), "Created collider with %i verts in %f ms",
+	//	vert.size(), (float)((duration) * 1000.0f));
 }
 
 void ServerTerrainChunk::clear_opaque_collision()
