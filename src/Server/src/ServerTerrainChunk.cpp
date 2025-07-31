@@ -52,6 +52,9 @@ void ServerTerrainChunk::Deiterate()
 
 void ServerTerrainChunk::Process_Mesh_Update(std::vector<glm::vec4> vert, std::vector<unsigned int> tris, glm::ivec4 counts)
 {
+	Logger::LogDebug(LOG_POS("Process_Mesh_Update"), "Received %i verts", vert.size());
+
+	return;
 	set_opaque_collider(vert, tris, counts);
 }
 

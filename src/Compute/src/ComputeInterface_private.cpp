@@ -95,7 +95,7 @@ IComputeController_private* ComputeInterface_private::GetComputeController_OCL(C
 
     IComputeController_private* controller = ComputeController_OCL::New();
 
-    //controller->Init(info.platform, info.device, info.program_dir);
+    controller->Init(info.platform, info.device, info.program_dir);
 
 	return controller;
 }
