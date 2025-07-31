@@ -357,13 +357,14 @@ bool WorldTerrain::process_batch()
 
 	int num_verts = counts[0].x;
 
-	m_builder->Extract(
+	/*m_builder->Extract(
 		m_vertices,
 		nullptr,
 		nullptr,
 		nullptr,
 		counts[0]
-	);
+	);*/
+
 	std::vector<glm::vec4> verts(m_vertices, m_vertices + counts[0].x);
 	std::vector<unsigned int> tris(m_triangles, m_triangles + counts[0].x);
 	//std::vector<glm::vec4> normals(m_normals, m_normals + counts[0].x);
