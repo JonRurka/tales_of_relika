@@ -308,7 +308,7 @@ void World::GameLoop()
 void World::AsynUpdate(float dt)
 {
 	m_world_terrain->Update(dt);
-	//m_world_physics->Update(dt);
+	m_world_physics->Update(dt);
 
 	ProcessNetCommands();
 	UpdatePlayers(dt);

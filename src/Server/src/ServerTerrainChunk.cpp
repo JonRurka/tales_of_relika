@@ -54,7 +54,7 @@ void ServerTerrainChunk::Process_Mesh_Update(std::vector<glm::vec4> vert, std::v
 {
 	Logger::LogDebug(LOG_POS("Process_Mesh_Update"), "Received %i verts", vert.size());
 
-	return;
+	//return;
 	set_opaque_collider(vert, tris, counts);
 }
 
