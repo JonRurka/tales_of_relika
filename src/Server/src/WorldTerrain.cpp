@@ -350,8 +350,8 @@ bool WorldTerrain::process_batch()
 
 	double start_time = Utilities::Get_Time();
 
-	glm::dvec4 gen_times = m_builder->Generate(&gen_options);
-	glm::dvec4 render_times = m_builder->Render(&render_options);
+	//glm::dvec4 gen_times = m_builder->Generate(&gen_options);
+	//glm::dvec4 render_times = m_builder->Render(&render_options);
 
 	std::vector<glm::ivec4> counts = {glm::ivec4(1, 0, 0, 0)}; //m_builder->GetSize();
 
