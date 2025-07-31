@@ -55,7 +55,7 @@ void iso_sample_main(uint index)
     float ySideLength = static_settings.SideLength.y;
     float zSideLength = static_settings.SideLength.z;
 	
-	uint fullChunkSize = static_settings.FullChunkSize[0];
+	uint fullChunkSize = static_settings.FullChunkSize.x;
 	
 	int x = voxel.x;
     int y = voxel.y;
@@ -91,7 +91,7 @@ void iso_sample_main(uint index)
     s.ChunkSizeX = ChunkSizeX - GRID_PADDING;
     s.ChunkSizeY = ChunkSizeY - GRID_PADDING;
     s.ChunkSizeZ = ChunkSizeZ - GRID_PADDING;
-    s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
+    s.VoxelsPerMeter = static_settings.VoxelsPerMeter.x;
     s.seed = 0;
     s.quality = QUALITY_STD;
 	

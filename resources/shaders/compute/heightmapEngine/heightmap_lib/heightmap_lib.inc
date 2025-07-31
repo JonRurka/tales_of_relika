@@ -90,7 +90,7 @@ void heightmap_gen_main(uint index)
 	s.column_index = chunk_data_index;
     s.ChunkSizeX = ChunkSizeX;
     s.ChunkSizeZ = ChunkSizeZ;
-    s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
+    s.VoxelsPerMeter = static_settings.VoxelsPerMeter.x;
 	
 	float height_sample_val = height_sample_3(pos_originWorld.x, pos_originWorld.y, s);
 	

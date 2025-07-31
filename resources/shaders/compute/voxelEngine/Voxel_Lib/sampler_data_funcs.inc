@@ -52,7 +52,12 @@ float height_sample_5(int x, int y, int column_idx, STRUCT Settings s, int n_ind
 		val = get_buffer_scalar(in_heightmap_data, data_index);
 	}
 	else{
+		#ifdef NO_VECTOR_INDEX
+		fvec4 tmpVec = get_buffer_vector(in_height_neighboor_data, data_index);
+		val = ((float*)&tmpVec)[n_index];
+		#else
 		val = get_buffer_vector(in_height_neighboor_data, data_index)[n_index];
+		#endif
 	}
 	
 	return val;

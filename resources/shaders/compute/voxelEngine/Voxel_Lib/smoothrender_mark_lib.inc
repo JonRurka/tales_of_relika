@@ -88,7 +88,7 @@ void smoothrender_mark_main(uint batch_index){
 
     // TODO: disable with run settings if location.w is -1.
 
-    CreateStitchMap(batch_index, static_settings.batches[0], UINT(static_settings.FullChunkSize[0]));
+    CreateStitchMap(batch_index, static_settings.batches.x, UINT(static_settings.FullChunkSize.x));
 	
 	//if (batch_index == 0)
 	//	Set_Debug_Data(batch_index, FVEC4(1, 1, 1, 1));
@@ -108,7 +108,7 @@ void smoothrender_mark_async_main(uint idx){
 	uint row_index = idx % grid_size;
 	ivec2 row_coords = C_1D_to_2D(row_index, chunkSize.y);
 	
-	CreateStitchMapAsync(idx, grid_size, batch_index, row_index, row_coords, chunkSize, static_settings.FullChunkSize[0]);
+	CreateStitchMapAsync(idx, grid_size, batch_index, row_index, row_coords, chunkSize, static_settings.FullChunkSize.x);
 }
 
 #endif // _SMOOTHRENDER_MARK_INC_

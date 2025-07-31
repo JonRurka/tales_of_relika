@@ -218,11 +218,11 @@ void CreateStitchMap(uint batch_index, uint batchesPerGroup, uint fullChunkSize)
 
 void smoothrender_mark_main(uint batch_index){
 
-    struct Static_Settings static_settings = in_static_settings[0];
+    struct Static_Settings static_settings = in_static_settings.x;
 
 
 
-    CreateStitchMap(batch_index, static_settings.batches[0], (uint)(static_settings.FullChunkSize[0]));
+    CreateStitchMap(batch_index, static_settings.batches.x, (uint)(static_settings.FullChunkSize.x));
 
 
 

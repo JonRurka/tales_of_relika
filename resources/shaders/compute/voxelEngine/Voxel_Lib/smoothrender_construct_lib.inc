@@ -266,15 +266,15 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 
         //vec4 n1 = vec4(norm.x, norm.y, norm.z, 0);
         int t1 = INT(curTris) + 2;
-        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), pos1, FVEC4(norm1.x, norm1.y, norm1.z, 0), t1, count);
+        count = SetMeshEntry(GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch)), pos1, FVEC4(norm1.x, norm1.y, norm1.z, 0), t1, count);
         
         //vec4 n2 = vec4(norm.x, norm.y, norm.z, 0);
         int t2 = INT(curTris) + 1;
-        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), pos2, FVEC4(norm2.x, norm2.y, norm2.z, 0), t2, count);
+        count = SetMeshEntry(GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch)), pos2, FVEC4(norm2.x, norm2.y, norm2.z, 0), t2, count);
         
         //vec4 n3 = vec4(norm.x, norm.y, norm.z, 0);
         int t3 = INT(curTris) + 0;
-        count = SetMeshEntry(GetBatchIndex(batch[0], v_index, batch[2]), pos3, FVEC4(norm3.x, norm3.y, norm3.z, 0), t3, count);
+        count = SetMeshEntry(GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch)), pos3, FVEC4(norm3.x, norm3.y, norm3.z, 0), t3, count);
 		
 		
 		/*Print_4("%i: Poly Verts 1: (%f, %f, %f)\n", i,
@@ -288,7 +288,7 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
 	//if (count != 6)
 		//Print_5("Construct (%i, %i, %i): %i, %i \n", index_pos.x, index_pos.y, index_pos.z, count, cubeIndex);
 	
-    Set_Count(GetBatchIndex(batch[0], v_index, batch[2]), count);
+    Set_Count(GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch)), count);
 	//Set_Debug_Data(v_index, FVEC4(edge_ent, cubeIndex, count, i));
 	//Set_Debug_Data(v_index, FVEC4(count, 0, 0, 0));
 }
@@ -371,9 +371,9 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
     float ySideLength = static_settings.SideLength.y;
     float zSideLength = static_settings.SideLength.z;
 
-    uint fullChunkSize = static_settings.FullChunkSize[0];
+    uint fullChunkSize = static_settings.FullChunkSize.x;
 
-    //int v_index = GetVoxelIndex(batch[0], g_index, fullChunkSize);
+    //int v_index = GetVoxelIndex(BATCH_0(batch), g_index, fullChunkSize);
 	ivec3 index_pos_tmp = C_1D_to_3D(v_index, ChunkSizeX, ChunkSizeZ);
     ivec4 index_pos = IVEC4(index_pos_tmp.x, index_pos_tmp.y, index_pos_tmp.z, 0);
 
@@ -419,8 +419,8 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
 		fvec4 globalWorldPos = pos_originWorld + Get_Global_Offset(i);
 		fvec4 localWorldPos = pos_localWorld + Get_Global_Offset(i);
 		
-		uint batch_group_idx = UINT(batch[1]);
-		uint batches_per_group = UINT(batch_settings[0]);
+		uint batch_group_idx = UINT(BATCH_1(batch));
+		uint batches_per_group = UINT(BATCH_0(batch_settings));
 		
 		uint size_x = ChunkSizeX + GRID_PADDING;
 		uint size_z = ChunkSizeZ + GRID_PADDING;
@@ -431,7 +431,7 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
 		
 		uint index_exp = C_3D_to_1D(offset_x, offset_y, offset_z, size_x, size_z);
 		//uint index2 = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX, ChunkSizeZ);
-		uint batch_voxel_index = GetBatchIndex((batch_group_idx % batches_per_group), index_exp, batch[3]);
+		uint batch_voxel_index = GetBatchIndex((batch_group_idx % batches_per_group), index_exp, BATCH_3(batch));
 		
 		//STRUCT IsoSample iso_sample = iso_sample_4(s, p_index_pos.xyz, globalWorldPos.xyz, 4);
 		//fvec3 normal = normal_sample(s, p_index_pos.xyz, globalWorldPos.xyz);
@@ -466,8 +466,8 @@ void RenderBlock(ivec4 batch, uint g_index, uint v_index, STRUCT ISO_Material gr
 		//gr_point.type_ratio = FVEC4(0, 0, 0, 0);// iso_mat.material_ratios;
     }
 
-    Set_Count(GetBatchIndex(batch[0], v_index, batch[2]), 0);
-    SetStitchMap(GetBatchIndex(batch[0], v_index, batch[2]), -1);
+    Set_Count(GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch)), 0);
+    SetStitchMap(GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch)), -1);
 
     CreateVertList(static_settings, batch, g_index, v_index, grid, 0, ChunkSizeX, ChunkSizeY, ChunkSizeZ);
     
@@ -477,22 +477,22 @@ void smoothrender_construct_main(uint index)
 {
 	STRUCT Static_Settings static_settings = GET_STATIC_SETTINGS();
 	
-	uint numBatchesPerGroup = static_settings.batches[0];
-	uint numBatchGroups = static_settings.batches[1];
+	uint numBatchesPerGroup = static_settings.batches.x;
+	uint numBatchGroups = static_settings.batches.y;
 	
 	STRUCT Run_Settings run_settings_ctrl = GET_RUN_SETTINGS_CTRL();
 	uint batch_group = run_settings_ctrl.Location.x;
 	uint start_index = (batch_group * numBatchesPerGroup);
 	
-	uint inst_index = start_index + (INT(index) / static_settings.FullChunkSize[0]);
+	uint inst_index = start_index + (INT(index) / static_settings.FullChunkSize.x);
 	STRUCT Run_Settings run_settings = GET_RUN_SETTINGS(inst_index);
 	
 	
 	int batchIndex = run_settings.Location.w;
     int batchIndexExpanded = run_settings.Location.w;
-    ivec4 batch = IVEC4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize[0], static_settings.FullChunkSize[1]);
+    ivec4 batch = IVEC4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize.x, static_settings.FullChunkSize.y);
 
-	uint voxel_index = GetVoxelIndex(batchIndex, index, batch[2]);
+	uint voxel_index = GetVoxelIndex(batchIndex, index, BATCH_2(batch));
 	
 	//if (voxel_index == 0)
 	//	Print_1("construct: inst_index: %i\n", batchIndex);
@@ -500,15 +500,15 @@ void smoothrender_construct_main(uint index)
 	//	Print_2("%i: batch_group: %i\n", index, batch_group);
 	
 	if (run_settings.Location.w == -1){
-        Set_Count(GetBatchIndex(batch[0], voxel_index, batch[2]), 0);
-        SetStitchMap(GetBatchIndex(batch[0], voxel_index, batch[2]), -1);
+        Set_Count(GetBatchIndex(BATCH_0(batch), voxel_index, BATCH_2(batch)), 0);
+        SetStitchMap(GetBatchIndex(BATCH_0(batch), voxel_index, BATCH_2(batch)), -1);
         return;
     }
 	
 	
 	
 	//ISO_Material mat_point = in_iso_mat_data[index];
-	uint batch_ind = GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, batch[3]);
+	uint batch_ind = GetBatchIndex((batchIndexExpanded % static_settings.batches.x), voxel_index, BATCH_3(batch));
     
 	STRUCT ISO_Material mat_point = New_ISO_Material();//get_buffer_object(in_iso_mat_data, batch_ind);//get_iso_mat(index);
     

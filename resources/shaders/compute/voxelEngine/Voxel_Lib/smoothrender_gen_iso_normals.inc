@@ -75,9 +75,9 @@ STRUCT IsoNormalSample Gen_Grid_Point(ivec4 batch, uint g_index, uint v_index, S
     float ySideLength = static_settings.SideLength.y;
     float zSideLength = static_settings.SideLength.z;
 
-    uint fullChunkSize = static_settings.FullChunkSize[0];
+    uint fullChunkSize = static_settings.FullChunkSize.x;
 
-    //int v_index = GetVoxelIndex(batch[0], g_index, fullChunkSize);
+    //int v_index = GetVoxelIndex(BATCH_0(batch), g_index, fullChunkSize);
 	ivec3 index_pos_tmp = C_1D_to_3D(v_index, ChunkSizeX, ChunkSizeZ);
     ivec4 index_pos = IVEC4(index_pos_tmp.x, index_pos_tmp.y, index_pos_tmp.z, 0);
 
@@ -119,7 +119,7 @@ STRUCT IsoNormalSample Gen_Grid_Point(ivec4 batch, uint g_index, uint v_index, S
     s.ChunkSizeX = ChunkSizeX;
     s.ChunkSizeY = ChunkSizeY;
     s.ChunkSizeZ = ChunkSizeZ;
-    s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
+    s.VoxelsPerMeter = static_settings.VoxelsPerMeter.x;
     s.seed = 0;
     s.quality = QUALITY_STD;
 	
@@ -128,7 +128,7 @@ STRUCT IsoNormalSample Gen_Grid_Point(ivec4 batch, uint g_index, uint v_index, S
 	
 	uint index_exp = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX + 1, ChunkSizeZ + 1);
 	uint index2 = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX, ChunkSizeZ);
-	uint batch_index = GetBatchIndex((UINT(batch[1]) % UINT(batch_settings[0])), index_exp, batch[3]);
+	uint batch_index = GetBatchIndex((UINT(BATCH_1(batch)) % UINT(BATCH_0(batch_settings))), index_exp, BATCH_3(batch));
 	
 	STRUCT IsoSample iso_sample = iso_sample_4(s, p_index_pos.xyz, globalWorldPos.xyz, 4);
 	fvec3 normal = normal_sample(s, p_index_pos.xyz, globalWorldPos.xyz);
@@ -150,14 +150,14 @@ void smoothrender_gen_iso_normal_main(uint index)
 {	
 	STRUCT Static_Settings static_settings = GET_STATIC_SETTINGS();
 	
-	uint numBatchesPerGroup = static_settings.batches[0];
-	uint numBatchGroups = static_settings.batches[1];
+	uint numBatchesPerGroup = static_settings.batches.x;
+	uint numBatchGroups = static_settings.batches.y;
 	
 	STRUCT Run_Settings run_settings_ctrl = GET_RUN_SETTINGS_CTRL();
 	uint batch_group = run_settings_ctrl.Location.x;
 	uint start_index = (batch_group * numBatchesPerGroup);
 	
-	uint inst_index = start_index + (INT(index) / static_settings.FullChunkSize[1]);
+	uint inst_index = start_index + (INT(index) / static_settings.FullChunkSize.y);
 	STRUCT Run_Settings run_settings = GET_RUN_SETTINGS(inst_index);
 	
 	
@@ -167,9 +167,9 @@ void smoothrender_gen_iso_normal_main(uint index)
 	
 	int batchIndex = run_settings.Location.w;
     int batchIndexExpanded = run_settings.Location.w;
-    ivec4 batch = IVEC4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize[0], static_settings.FullChunkSize[1]);
+    ivec4 batch = IVEC4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize.x, static_settings.FullChunkSize.y);
 
-	uint voxel_index = GetVoxelIndex(batchIndex, index, batch[3]);
+	uint voxel_index = GetVoxelIndex(batchIndex, index, BATCH_3(batch));
 	
 	uint ChunkSizeX = static_settings.ChunkSize.x + GRID_PADDING;
     uint ChunkSizeY = static_settings.ChunkSize.y + GRID_PADDING;
@@ -179,9 +179,9 @@ void smoothrender_gen_iso_normal_main(uint index)
     float ySideLength = static_settings.SideLength.y;
     float zSideLength = static_settings.SideLength.z;
 	
-	uint fullChunkSize = static_settings.FullChunkSize[0];
+	uint fullChunkSize = static_settings.FullChunkSize.x;
 	
-	//int v_index = GetVoxelIndex(batch[0], g_index, fullChunkSize);
+	//int v_index = GetVoxelIndex(BATCH_0(batch), g_index, fullChunkSize);
 	ivec3 index_pos = C_1D_to_3D(voxel_index, ChunkSizeX, ChunkSizeZ);
     //ivec4 index_pos = IVEC4(index_pos_tmp.x, index_pos_tmp.y, index_pos_tmp.z, 0);
 
@@ -225,7 +225,7 @@ void smoothrender_gen_iso_normal_main(uint index)
     s.ChunkSizeX = ChunkSizeX - GRID_PADDING;
     s.ChunkSizeY = ChunkSizeY - GRID_PADDING;
     s.ChunkSizeZ = ChunkSizeZ - GRID_PADDING;
-    s.VoxelsPerMeter = static_settings.VoxelsPerMeter[0];
+    s.VoxelsPerMeter = static_settings.VoxelsPerMeter.x;
     s.seed = 0;
     s.quality = QUALITY_STD;
 	
@@ -235,13 +235,13 @@ void smoothrender_gen_iso_normal_main(uint index)
 	
 	//uint index_exp = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX + 1, ChunkSizeZ + 1);
 	//uint index2 = C_3D_to_1D(p_index_pos.x, p_index_pos.y, p_index_pos.z, ChunkSizeX, ChunkSizeZ);
-	//uint batch_index = GetBatchIndex((UINT(batch[1]) % UINT(batch_settings[0])), index_exp, batch[3]);
+	//uint batch_index = GetBatchIndex((UINT(BATCH_1(batch)) % UINT(batch_settings[0])), index_exp, BATCH_3(batch));
 	
 	STRUCT IsoSample iso_sample = iso_sample_4(s, p_index_pos.xyz, globalWorldPos.xyz, 4);
 	fvec3 normal = normal_sample(s, p_index_pos.xyz, globalWorldPos.xyz);
 	
 	
-	//uint batch_ind = GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, batch[3]);
+	//uint batch_ind = GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, BATCH_3(batch));
 	
 	//STRUCT IsoNormalSample iso_normal_sample = Gen_Grid_Point(batch, index, voxel_index, static_settings, run_settings);
 	//STRUCT IsoSample iso_sample = iso_normal_sample.iso_type;
@@ -265,7 +265,7 @@ void smoothrender_gen_iso_normal_main(uint index)
 	
 	
 	// dst_voxel_index
-	uint batch_voxel_index = GetBatchIndex((batchIndexExpanded % static_settings.batches[0]), voxel_index, batch[3]);
+	uint batch_voxel_index = GetBatchIndex((batchIndexExpanded % static_settings.batches.x), voxel_index, BATCH_3(batch));
 	set_buffer_object(out_iso_type, batch_voxel_index, iso_type_res);
 	set_buffer_object(out_normal, batch_voxel_index, normal_res);
 	

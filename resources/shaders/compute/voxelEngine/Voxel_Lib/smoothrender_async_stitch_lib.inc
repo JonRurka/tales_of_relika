@@ -79,7 +79,7 @@ int getSourceOffset(uint batch_num, uint total_batches, bool source){
         }
         
         ivec4 cnt = get_buffer_vector(out_counts_data, i);
-        result += cnt[0];
+        result += cnt.x;
     }
 
     return -2147483648; // should not return here.
@@ -87,25 +87,25 @@ int getSourceOffset(uint batch_num, uint total_batches, bool source){
 
 void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index, uvec4 chunkSize){
 
-    //out_debug_data[g_index].values = vec4(batch[0], g_index, v_index, 0);
-    //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(batch[0], g_index, v_index, 0);
+    //out_debug_data[g_index].values = vec4(BATCH_0(batch), g_index, v_index, 0);
+    //out_debug_data[GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch))].values = vec4(BATCH_0(batch), g_index, v_index, 0);
 
 	ivec3 v_coord = C_1D_to_3D(v_index, chunkSize.x, chunkSize.y);
 	ivec2 grid_coord = IVEC2(v_coord.y, v_coord.z);
 	uint grid_size = (chunkSize.x * chunkSize.y);
 	uint grid_local_idx = C_2D_to_1D(grid_coord.x, grid_coord.y, UINT(chunkSize.y));
-	uint grid_global_idx = (batch[0] * grid_size) + grid_local_idx;
+	uint grid_global_idx = (BATCH_0(batch) * grid_size) + grid_local_idx;
 	ivec4 row_offset_data = GetStitchOffset(grid_global_idx);
 	int row_offset = row_offset_data.x;
 	int row_size = row_offset_data.y;
 
-    int this_count = GetCount(GetBatchIndex(batch[0], v_index, batch[2]));
-	int row_index = GetStitchMap(GetBatchIndex(batch[0], v_index, batch[2]));
+    int this_count = GetCount(GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch)));
+	int row_index = GetStitchMap(GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch)));
     int buffer_index = row_offset + row_index;
 
-    int batch_offset = batch[0] * (batch[2] * 15);
+    int batch_offset = BATCH_0(batch) * (BATCH_2(batch) * 15);
 
-    int dst_offset = getSourceOffset(batch[0], batch_settings[2], (v_index % batch[2]) == 0);//batch[0] * 65535;
+    int dst_offset = getSourceOffset(BATCH_0(batch), BATCH_2(batch_settings), (v_index % BATCH_2(batch)) == 0);//BATCH_0(batch) * 65535;
 
 	//if (v_coord.x == 0 && v_coord.y == 4 && v_coord.z == 0){
 		//Print_1("Stitch count: %i\n", this_count);
@@ -119,12 +119,12 @@ void Process_Voxel(ivec4 batch, uvec4 batch_settings, uint g_index, uint v_index
 	}
 
     if (buffer_index == -1 || this_count == 0){
-        //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(g_index, buffer_index, this_count, 0);
+        //out_debug_data[GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch))].values = vec4(g_index, buffer_index, this_count, 0);
         return;
     }
 
     int tri_start = buffer_index;
-    //out_debug_data[GetBatchIndex(batch[0], v_index, batch[2])].values = vec4(g_index, buffer_index, this_count, tri_start);
+    //out_debug_data[GetBatchIndex(BATCH_0(batch), v_index, BATCH_2(batch))].values = vec4(g_index, buffer_index, this_count, tri_start);
 
 	//Set_Debug_Data(v_index, FVEC4(v_index, buffer_index, this_count, 0));
 
@@ -252,21 +252,21 @@ void smoothrender_async_stitch_main(uint index)
 {
 	STRUCT Static_Settings static_settings = GET_STATIC_SETTINGS();
 	
-	uint numBatchesPerGroup = static_settings.batches[0];
-	uint numBatchGroups = static_settings.batches[1];
+	uint numBatchesPerGroup = static_settings.batches.x;
+	uint numBatchGroups = static_settings.batches.y;
 	
 	STRUCT Run_Settings run_settings_ctrl = GET_RUN_SETTINGS_CTRL();
 	uint batch_group = run_settings_ctrl.Location.x;
 	uint start_index = (batch_group * numBatchesPerGroup);
 	
-	uint inst_index = start_index + (INT(index) / static_settings.FullChunkSize[0]);
+	uint inst_index = start_index + (INT(index) / static_settings.FullChunkSize.x);
     STRUCT Run_Settings run_settings = GET_RUN_SETTINGS(inst_index);
 	
 	int batchIndex = run_settings.Location.w;
     int batchIndexExpanded = run_settings.Location.w;
-    ivec4 batch = IVEC4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize[0], static_settings.FullChunkSize[1]);
+    ivec4 batch = IVEC4(batchIndex, batchIndexExpanded, static_settings.FullChunkSize.x, static_settings.FullChunkSize.y);
 	
-	uint voxel_index = GetVoxelIndex(batchIndexExpanded, index, batch[2]);
+	uint voxel_index = GetVoxelIndex(batchIndexExpanded, index, BATCH_2(batch));
 
     if (run_settings.Location.w == -1){
         return;

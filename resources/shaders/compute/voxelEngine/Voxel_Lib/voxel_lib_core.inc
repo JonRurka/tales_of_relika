@@ -1,6 +1,8 @@
 #ifndef _VOXEL_LIB_CORE_INC_
 #define _VOXEL_LIB_CORE_INC_
 
+#define NO_VECTOR_INDEX 1
+
 #include "../../libUSL/USL.inc"
 
 #ifdef USE_LIBNOISE
@@ -150,6 +152,19 @@ struct Polygon{
 #define RUN_SETTINGS_STRIDE 2
 #define RUN_SETTINGS_IDX(i) ((i) * RUN_SETTINGS_STRIDE)
 #define RUN_SETTINGS_LOCATION(inst_index) get_buffer_vector(in_run_settings, (RUN_SETTINGS_IDX(inst_index + 1) + 0))
+
+#ifdef NO_VECTOR_INDEX
+#define BATCH_0(batch) (batch.x)
+#define BATCH_1(batch) (batch.y)
+#define BATCH_2(batch) (batch.z)
+#define BATCH_3(batch) (batch.w)
+#else
+#define BATCH_0(batch) (batch[0])
+#define BATCH_1(batch) (batch[1])
+#define BATCH_2(batch) (batch[2])
+#define BATCH_3(batch) (batch[3])
+#endif
+
 
 STRUCT Polygon New_Polygon(fvec4 v1, fvec4 v2, fvec4 v3){
 	STRUCT Polygon res;
