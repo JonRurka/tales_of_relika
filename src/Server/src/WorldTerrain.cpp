@@ -374,7 +374,7 @@ bool WorldTerrain::process_batch()
 	double end_time = Utilities::Get_Time();
 	double duration_ms = (end_time - start_time) * 1000.0;
 
-
+	return true;
 }
 
 void WorldTerrain::process_modifications()
