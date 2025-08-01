@@ -27,9 +27,14 @@ public:
 
 	void SendJumpEvent();
 
-	void SendPlayerEvent(OpCodes::Player_Events event_cmd);
+	void SendPlayerEvent(OpCodes::Player_Events event_cmd, Protocal protocal = Protocal_Tcp);
 
-	void SendPlayerEvent(OpCodes::Player_Events event_cmd, std::vector<uint8_t> data);
+	void SendPlayerEvent(OpCodes::Player_Events event_cmd, std::vector<uint8_t> data, Protocal protocal = Protocal_Tcp);
+
+	static void OnOrientationSync_cb(void* obj, Data data) {
+		m_instance->OnOrientationSync(data);
+	}
+	void OnOrientationSync(Data data);
 
 protected:
 	void Init() override;
@@ -42,7 +47,10 @@ private:
 
 	static LocalPlayerCharacter* m_instance;
 
+	glm::vec3 m_old_location;
 	glm::vec3 m_location;
+	glm::vec3 m_velocity;
+	glm::vec3 m_server_loc;
 
 	Transform* m_body_trans{ nullptr };
 
@@ -68,6 +76,10 @@ private:
 	Standard_Material* m_character_material{ nullptr };
 
 	Character_HUD* m_hud;
+
+	double m_last_send_move{ 0 };
+
+	double m_debug_time{ 0 };
 
 	bool m_mouse_hidden{ false };
 

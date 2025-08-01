@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iterator>
+#include <chrono>
 
 #include <boost/dll.hpp>
 #include <boost/filesystem.hpp>
@@ -37,6 +38,9 @@ using namespace DynamicCompute;
 using namespace DynamicCompute::Compute;
 
 namespace {
+
+	std::chrono::steady_clock::time_point g_start_point;
+
 	typedef std::vector<unsigned char> vec_char;
 	unsigned char out_buf[ZLIB_CHUNK];
 
@@ -356,9 +360,16 @@ std::string Utilities::Read_File_String(std::string path)
 	return res;
 }
 
+void Utilities::Init_Time()
+{
+	g_start_point = std::chrono::high_resolution_clock::now();
+}
+
 double Utilities::Get_Time()
 {
-	return glfwGetTime();
+	auto now_point = std::chrono::high_resolution_clock::now();
+	return std::chrono::duration<double>(now_point - g_start_point).count();
+	//return glfwGetTime();
 }
 
 int Utilities::Is_Extension_Supported(const std::string extension)

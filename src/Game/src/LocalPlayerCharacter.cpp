@@ -14,6 +14,8 @@
 #include"BulletCollision/CollisionDispatch/btGhostObject.h"
 #include"BulletDynamics/Character/btKinematicCharacterController.h"
 
+#define MOVE_SEND_TIMEOUT 1.0//(1. / 30.f)
+
 LocalPlayerCharacter* LocalPlayerCharacter::m_instance{nullptr};
 
 void LocalPlayerCharacter::Init()
@@ -21,13 +23,17 @@ void LocalPlayerCharacter::Init()
 	m_instance = this;
 
 	m_body_trans = Object()->Get_Transform();
-	m_body_trans->Position(glm::vec3(0, 50, 0));
+	m_location = m_body_trans->Position();
+	m_old_location = m_location;
+	//m_body_trans->Position(glm::vec3(0, 50, 0));
 
 	m_capsule_collider = Object()->Add_Component<CharacterCollider>();
 	m_capsule_collider->Mass(50.0);
 	m_capsule_collider->Activate();
 	
 	//m_capsule_collider->RigidBody()->setAngularFactor(btVector3(1.0f, 1.0f, 1.0f));
+
+	GameClient::Instance()->Net_Client()->AddCommand(OpCodes::Client::Sync_Player_Orientation, OnOrientationSync_cb, this);
 
 	init_geometry();
 
@@ -44,6 +50,15 @@ void LocalPlayerCharacter::Update(float dt)
 	jump_control(dt);
 	move_control(dt);
 	look_control(dt);
+
+	if (Utilities::Get_Time() - m_debug_time > 1.0f)
+	{
+		m_debug_time = Utilities::Get_Time();
+		Logger::LogDebug(LOG_POS("Update"), "Current Pos: (%f, %f, %f), Current Velocity: (%f, %f, %f), Server Pos: (%f, %f, %f)",
+			m_body_trans->Position().x, m_body_trans->Position().y, m_body_trans->Position().z,
+			m_velocity.x, m_velocity.y, m_velocity.z,
+			m_server_loc.x, m_server_loc.y, m_server_loc.z);
+	}
 }
 
 void LocalPlayerCharacter::OnDestroy()
@@ -88,7 +103,6 @@ void LocalPlayerCharacter::move_control(float dt)
 		do_move = true;
 		move_vec -= right;
 	}
-
 	
 	if (do_move) {
 		glm::vec3 tr_move_vec = glm::vec3(move_vec.x, 0, move_vec.z);
@@ -103,7 +117,54 @@ void LocalPlayerCharacter::move_control(float dt)
 		m_capsule_collider->Get_Controller()->setWalkDirection(btVector3(0, 0, 0));
 	}
 
+	m_location = m_body_trans->Position();
+
+	btVector3 pos = m_capsule_collider->Get_Controller()->getLinearVelocity();
+	m_velocity = glm::fvec3(pos.x(), pos.y(), pos.z());// (m_location - m_old_location) / dt;
+
+	m_old_location = m_location;
+
+
+	double curr_time = Utilities::Get_Time();
+	if (curr_time - m_last_send_move > MOVE_SEND_TIMEOUT)
+	{
+		m_last_send_move = Utilities::Get_Time();
+		std::vector<uint8_t> send_data;
+		send_data.push_back((do_move ? 0x01 : 0x00));
+		send_data = BufferUtils::AppendFloat(send_data, move_vec.x);
+		send_data = BufferUtils::AppendFloat(send_data, move_vec.z);
+		// TODO: heading
+
+		SendPlayerEvent(OpCodes::Player_Events::Process_Move, send_data, Protocal_Udp);
+		//Logger::LogDebug(LOG_POS("move_control"), "Send Move state");
+	}
+
 	//Graphics::DrawDebugRay(m_body_trans->Position(), forward * 5.0f, glm::vec3(1, 0, 0));
+
+}
+
+void LocalPlayerCharacter::OnOrientationSync(Data data)
+{
+	auto data_buf = data.Buffer;
+	//float* orientation_buff = (float*)(data.Buffer.data());
+	//glm::vec3 player_loc = glm::vec3(orientation_buff[0], orientation_buff[1], orientation_buff[2]);
+	//glm::quat player_rot = glm::quat(orientation_buff[3], orientation_buff[4], orientation_buff[5], orientation_buff[6]);
+
+	float loc_x = *((float*)data_buf.data());
+	data_buf = BufferUtils::RemoveFront(Remove_Float, data_buf);
+
+	float loc_y = *((float*)data_buf.data());
+	data_buf = BufferUtils::RemoveFront(Remove_Float, data_buf);
+
+	float loc_z = *((float*)data_buf.data());
+	data_buf = BufferUtils::RemoveFront(Remove_Float, data_buf);
+
+	glm::vec3 player_loc = glm::vec3(loc_x, loc_y, loc_z);
+
+	Logger::LogDebug(LOG_POS("OnOrientationSync"), "(%f, %f, %f)",
+		player_loc.x, player_loc.y, player_loc.z);
+	m_server_loc = player_loc;
+
 
 }
 
@@ -173,18 +234,18 @@ void LocalPlayerCharacter::SendJumpEvent()
 	SendPlayerEvent(OpCodes::Player_Events::Jump);
 }
 
-void LocalPlayerCharacter::SendPlayerEvent(OpCodes::Player_Events event_cmd)
+void LocalPlayerCharacter::SendPlayerEvent(OpCodes::Player_Events event_cmd, Protocal protocal)
 {
-	SendPlayerEvent(OpCodes::Player_Events::Jump, std::vector<uint8_t>());
+	SendPlayerEvent(event_cmd, std::vector<uint8_t>(), protocal);
 }
 
-void LocalPlayerCharacter::SendPlayerEvent(OpCodes::Player_Events event_cmd, std::vector<uint8_t> data)
+void LocalPlayerCharacter::SendPlayerEvent(OpCodes::Player_Events event_cmd, std::vector<uint8_t> data, Protocal protocal)
 {
 	std::vector<uint8_t> send_data;
 	send_data.push_back((uint8_t)OpCodes::Server_World::Player_Event);
 	send_data.push_back((uint8_t)event_cmd);
 	send_data = BufferUtils::Add(send_data, data);
-	Send(OpCodes::Server::World_Command, send_data);
+	Send(OpCodes::Server::World_Command, send_data, protocal);
 }
 
 void LocalPlayerCharacter::Send(OpCodes::Server cmd, std::vector<uint8_t> data, Protocal type)

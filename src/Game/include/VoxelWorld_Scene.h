@@ -39,6 +39,7 @@ private:
 	double m_start_time{ 0 };
 
 	bool m_remote_connection{ false };
+	bool m_server_started{ false };
 	bool m_client_connected{ false };
 	bool m_init_data_requested{ false };
 

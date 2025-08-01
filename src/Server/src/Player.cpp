@@ -82,7 +82,7 @@ bool Player::Has_World_Profile(uint64_t world_id)
 
 void Player::WorldUpdate(float dt)
 {
-	
+	//Logger::LogDebug(LOG_POS("WorldUpdate"), "update is being called.");
 
 	if (m_identity.UserID == 0) {
 
@@ -106,6 +106,8 @@ void Player::WorldUpdate(float dt)
 		//Add_Player_Event(OpCodes::Player_Events::Jump);
 	}
 
+	move_control(dt);
+
 	if (m_trigger_save) {
 		save_player_data();
 		m_trigger_save = false;
@@ -120,11 +122,9 @@ void Player::Set_Current_World(World* world, uint8_t inst_id)
 	m_trigger_save = true;
 	m_current_terrain = world->Terrain();
 
-	refresh_character_controller();
 	load_world_profile();
+	refresh_character_controller();
 	update_terrain_chunks();
-
-	
 }
 
 void Player::AssignPlayer(World* world)
@@ -150,7 +150,28 @@ void Player::CreatePlayerData()
 
 }
 
-void Player::SyncOrientations()
+void Player::Add_Player_Event(PlayerEvent p_event)
+{
+	//Logger::LogDebug(LOG_POS("Add_Player_Event"), "Received Player Event for player %s: %i", 
+	//	Get_UserName().c_str(), p_event.Command);
+	//m_active_event = p_event;
+
+	switch (p_event.Command) {
+	case OpCodes::Player_Events::None:
+		break;
+
+	case OpCodes::Player_Events::Process_Move:
+		process_controll_event(p_event);
+		break;
+
+	case OpCodes::Player_Events::Jump:
+		// Just forward command to be re-broadcast by match, if applicable.
+		Forward_Player_Event(p_event);
+		break;
+	}
+}
+
+void Player::SyncNearbyOrientations()
 {
 	uint8_t num_orientations = m_nearby_players.size();
 	int player_entry_size = (OrientationSize() + 1);
@@ -171,7 +192,24 @@ void Player::SyncOrientations()
 
 	std::vector<uint8_t> send_buff(m_orientation_send_buffer, m_orientation_send_buffer + m_orientation_send_buffer_size);
 	Send(OpCodes::Client::Update_Orientations, send_buff, Protocal_Udp); 
+	delete[] m_orientation_send_buffer;
+}
 
+void Player::SyncOwnOrientation()
+{
+	Logger::LogDebug(LOG_POS("SyncOwnOrientation"), "(%f, %f, %f)",
+		m_location.x, m_location.y, m_location.z);
+
+	std::vector<uint8_t> send_buff;
+	send_buff = BufferUtils::AppendFloat(send_buff, m_location.x);
+	send_buff = BufferUtils::AppendFloat(send_buff, m_location.y);
+	send_buff = BufferUtils::AppendFloat(send_buff, m_location.z);
+
+	//uint8_t* m_orientation_send_buffer = new uint8_t[OrientationSize()];
+	//Serialize_Orientation(m_orientation_send_buffer);
+	//std::vector<uint8_t> send_buff(m_orientation_send_buffer, m_orientation_send_buffer + OrientationSize());
+	Send(OpCodes::Client::Sync_Player_Orientation, send_buff, Protocal_Udp);
+	//delete[] m_orientation_send_buffer;
 }
 
 void Player::PlayerMutexLock()
@@ -223,6 +261,64 @@ std::string Player::PlayerSpawnData::To_String()
 	return res.dump();
 }
 
+void Player::process_controll_event(PlayerEvent p_event)
+{
+	auto data = p_event.Data;
+
+	bool do_move = data[0] == 0x01 ? true : false;
+	data = BufferUtils::RemoveFront(Remove_Byte, data);
+
+	float move_x = *((float*)data.data());
+	data = BufferUtils::RemoveFront(Remove_Float, data);
+
+	float move_z = *((float*)data.data());
+	data = BufferUtils::RemoveFront(Remove_Float, data);
+
+	m_move_state.Do_Move = do_move;
+	m_move_state.Move_Dir = glm::vec2(move_x, move_z);
+
+	Logger::LogDebug(LOG_POS("process_controll_event"), "Receive Move state - Do Move: %i, Move Dir: (%f, %f)",
+		(do_move ? 1 : 0), move_x, move_z);
+}
+
+void Player::move_control(float dt) 
+{
+	if (m_charCon == nullptr)
+		return;
+
+	if (m_move_state.Do_Move) {
+		glm::vec3 tr_move_vec = glm::vec3(m_move_state.Move_Dir.x, 0, m_move_state.Move_Dir.y);
+
+		if (m_charCon->onGround())
+			m_charCon->setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
+		else
+			m_charCon->setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
+
+	}
+	else {
+		m_charCon->setWalkDirection(btVector3(0, 0, 0));
+	}
+
+	btTransform t;
+	t = m_charCon->getGhostObject()->getWorldTransform();
+	btVector3 pos = t.getOrigin();
+	btQuaternion quat = t.getRotation();
+	m_location = glm::vec3(pos.x(), pos.y(), pos.z());
+
+	btVector3 bt_vel = m_charCon->getLinearVelocity();
+	m_velocity = glm::fvec3(bt_vel.x(), bt_vel.y(), bt_vel.z());// (m_location - m_old_location) / dt;
+	m_old_location = m_location;
+
+	if (Utilities::Get_Time() - m_debug_timer > 1.0f)
+	{
+		m_debug_timer = Utilities::Get_Time();
+
+		Logger::LogDebug(LOG_POS("move_control"), "Current Pos: (%f, %f, %f), Velocity: (%f, %f, %f)",
+			m_location.x, m_location.y, m_location.z, 
+			m_velocity.x, m_velocity.y, m_velocity.z);
+	}
+}
+
 void Player::update_nearby_players()
 {
 	if (m_current_world == nullptr) {
@@ -262,6 +358,9 @@ void Player::refresh_character_controller()
 {
 	remove_character_controller();
 
+	Logger::LogDebug(LOG_POS("refresh_character_controller"), "Creat character controller: (%f, %f, %f)",
+		m_location.x, m_location.y, m_location.z);
+
 	m_shape = new btCapsuleShapeZ(m_radius, m_height);
 	m_shape->calculateLocalInertia(m_mass, m_localInertia);
 
@@ -287,11 +386,14 @@ void Player::load_world_profile()
 	uint64_t current_id = m_current_world->World_ID();
 	if (!Has_World_Profile(current_id))
 	{
-		m_current_world->Create_World_Profile(Get_UserID());
+		m_world_profiles[current_id] = m_current_world->Create_World_Profile(Get_UserID());
 	}
 	m_current_profile = &m_world_profiles[current_id];
 
 	m_location = m_current_profile->Location;
+	m_old_location = m_location;
+	Logger::LogDebug(LOG_POS("load_world_profile"), "Loaded location from world profile: (%f, %f, %f)", 
+		m_location.x, m_location.y, m_location.z);
 }
 
 void Player::update_terrain_chunks()

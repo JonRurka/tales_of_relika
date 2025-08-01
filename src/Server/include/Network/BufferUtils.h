@@ -7,10 +7,12 @@
 
 typedef unsigned int Remove;
 
+#define Remove_Byte			1
 #define Remove_CMD			1
 #define Remove_LENGTH		2
 #define Remove_IS_SERVER	1
 #define Remove_UDP_ID		2
+#define Remove_Float		sizeof(float)
 
 class BufferUtils {
 public:
@@ -64,6 +66,12 @@ public:
 
 		//origin.insert(origin.begin(), byteToAdd);
 		//return origin;
+	}
+
+	static std::vector<uint8_t> AppendFloat(std::vector<uint8_t> data, float val)
+	{
+		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(float));
+		return Add(data, val_data);
 	}
 
 	static std::vector<uint8_t> Add(std::vector<uint8_t> buffer_1, std::vector<uint8_t> buffer_2) {

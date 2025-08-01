@@ -344,6 +344,12 @@ void NetClient::process_cmd(std::vector<uint8_t> data, Protocal type)
         data = BufferUtils::RemoveFront(Remove_UDP_ID, data);
     }
 
+    if (data.size() <= 0)
+    {
+        Logger::LogError(LOG_POS("process_cmd"), "Received malformed net command: Missing command!");
+        return;
+    }
+
     int8_t command = data[0];
     std::vector<uint8_t> dst = BufferUtils::RemoveFront(Remove_CMD, data);
 

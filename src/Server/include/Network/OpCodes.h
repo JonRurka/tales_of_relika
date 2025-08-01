@@ -25,12 +25,14 @@ public:
 		World_Player_Data_Result = 0x02,
 		Spawn_Players = 0x03,
 		Update_Orientations = 0x04,
-		Player_Events = 0x05
+		Sync_Player_Orientation = 0x05,
+		Player_Events = 0x06
 	};
 
 	enum class Player_Events : uint8_t {
 		None = 0x00,
-		Jump = 0x01
+		Process_Move,
+		Jump,
 	};
 
 };

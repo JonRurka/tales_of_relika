@@ -68,8 +68,6 @@ private:
 
 	void test_removal();
 
-	void set_opaque_collider(std::vector<glm::vec4> vert, std::vector<unsigned int> tris, glm::ivec4 counts);
-
 	void clear_opaque_collision();
 
 	inline static const std::string LOG_LOC{ "SERVER_TERRAIN_CHUNK" };

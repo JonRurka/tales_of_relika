@@ -193,6 +193,7 @@ void Server_Main::LoadSettings(std::string file)
 
 void Server_Main::Init()
 {
+	Utilities::Init_Time();
 	Logger::LogInfo(LOG_POS("Init"), "Initializing server...");
 	m_running = true;
 

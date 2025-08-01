@@ -20,6 +20,9 @@ void NetPlayerManager::RegisterLocalPlayer(LocalPlayerCharacter* local_player)
 
 void NetPlayerManager::OnUpdateOrientations(Data data)
 {
+	return;
+
+
 	uint8_t num_orientations = data.Buffer[0];
 	data.Buffer = BufferUtils::RemoveFront(1, data.Buffer);
 
@@ -155,15 +158,17 @@ void NetPlayerManager::Init()
 	m_instance = this;
 	m_last_sent_location = Utilities::Get_Time();
 	add_net_commands();
-	RequestPlayers();
+	//RequestPlayers();
 }
 
 void NetPlayerManager::Update(float dt)
 {
+	//Logger::LogDebug(LOG_POS("NetPlayerManager"), "Update");
+
 	double now = Utilities::Get_Time();
 
 	if ((now - m_last_sent_location) > ORIENTATION_SEND_RATE) {
-		send_player_location();
+		//send_player_location();
 		m_last_sent_location = Utilities::Get_Time();
 	}
 

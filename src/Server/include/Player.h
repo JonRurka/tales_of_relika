@@ -89,6 +89,12 @@ public:
 		std::string To_String();
 	};
 
+	struct PlayerMoveState {
+	public:
+		bool Do_Move{ false };
+		glm::vec2 Move_Dir{glm::vec2(0, 0)};
+	};
+
 	class LuaBridge {
 	public:
 
@@ -187,19 +193,7 @@ public:
 		Add_Player_Event(p_event);
 	}
 
-	void Add_Player_Event(PlayerEvent p_event) {
-		//m_active_event = p_event;
-
-		switch (p_event.Command) {
-		case OpCodes::Player_Events::None:
-			break;
-
-		case OpCodes::Player_Events::Jump:
-			// Just forward command to be re-broadcast by match, if applicable.
-			Forward_Player_Event(p_event);
-			break;
-		}
-	}
+	void Add_Player_Event(PlayerEvent p_event);
 
 	void Forward_Player_Event(PlayerEvent p_event) {
 		m_active_events.push(p_event);
@@ -257,7 +251,9 @@ public:
 		return num_events;
 	}
 
-	void SyncOrientations();
+	void SyncNearbyOrientations();
+
+	void SyncOwnOrientation();
 
 	void PlayerMutexLock();
 
@@ -277,6 +273,8 @@ private:
 	PlayerGameData m_game_data{};
 	std::unordered_map<uint64_t, PlayerWorldProfile> m_world_profiles;
 
+	PlayerMoveState m_move_state{};
+
 	std::mutex m_player_mutex;
 
 	PlayerWorldProfile* m_current_profile{nullptr};
@@ -287,7 +285,9 @@ private:
 
 	std::queue<PlayerEvent> m_active_events;
 
-	glm::vec3 m_location{glm::vec3()};
+	glm::vec3 m_old_location{ glm::vec3() };
+	glm::vec3 m_location{ glm::vec3() };
+	glm::vec3 m_velocity{ glm::vec3() };
 	glm::quat m_rotation{ glm::quat() };
 
 	std::vector<pointer> m_nearby_players;
@@ -314,6 +314,13 @@ private:
 
 	bool m_trigger_save{ false };
 
+
+	double m_debug_timer{ 0 };
+
+	void process_controll_event(PlayerEvent p_event);
+
+	void move_control(float dt);
+
 	void update_nearby_players();
 
 	void save_player_data();
@@ -325,5 +332,5 @@ private:
 
 	void update_terrain_chunks();
 
-	inline static const std::string LOG_LOC{ "PLAYER" };
+	inline static const std::string LOG_LOC{ "SERVER_PLAYER" };
 };

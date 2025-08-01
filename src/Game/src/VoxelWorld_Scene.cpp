@@ -21,7 +21,8 @@
 
 #include "Standard_Material.h"
 
-#define SERVER_START_WAIT_TIME (2.0f)
+#define SERVER_START_WAIT_TIME (4.0f)
+#define SERVER_DATA_REQUEST_WAIT_TIME (2.0f)
 
 void VoxelWorld_Scene::Init()
 {
@@ -30,7 +31,7 @@ void VoxelWorld_Scene::Init()
 	setup_camera();
 	setup_lights();
 	setup_client_server();
-	setup_game_client();
+	
 
 	//json world_data;
 	//setup_chunk_gen(world_data);
@@ -43,9 +44,20 @@ void VoxelWorld_Scene::Init()
 
 void VoxelWorld_Scene::Update(float dt)
 {
+	if (!m_server_started) {
+
+		double cur_time = Utilities::Get_Time();
+		if (cur_time - m_start_time > SERVER_START_WAIT_TIME)
+		{
+			setup_game_client();
+			m_server_started = true;
+		}
+
+	}
+
 	if (m_client_connected) {
 		if (!m_init_data_requested) {
-			if (Utilities::Get_Time() - m_connected_time > SERVER_START_WAIT_TIME) {
+			if (Utilities::Get_Time() - m_connected_time > SERVER_DATA_REQUEST_WAIT_TIME) {
 				m_init_data_requested = true;
 				Logger::LogInfo(LOG_POS("Update"), "Requesting world player data...");
 				game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
@@ -54,18 +66,6 @@ void VoxelWorld_Scene::Update(float dt)
 	}
 
 
-	if (!m_client_connected) {
-
-		double cur_time = Utilities::Get_Time();
-		if (cur_time - m_start_time > 1.0)
-		{
-			
-			m_client_connected = true;
-		}
-
-	}
-
-	
 
 	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()));
 	//Logger::LogDebug(LOG_POS("Update"), "update");
@@ -127,6 +127,7 @@ void VoxelWorld_Scene::OnWorldPlayerDataResult(Data data)
 	setup_chunk_gen(world_data);
 	setup_structure_controller(world_data);
 	setup_local_player(player_data);
+	setup_net_player_manager();
 
 	world_gen_controller->Start();
 }
@@ -227,6 +228,9 @@ void VoxelWorld_Scene::setup_local_player(json player_data)
 	float y = location_obj["y"];
 	float z = location_obj["z"];
 	glm::vec3 loc = glm::vec3(x, y, z);
+
+	Logger::LogDebug(LOG_POS("setup_local_player"), "Received Pos: (%f, %f, %f)",
+		loc.x, loc.y, loc.z);
 
 	local_player_character_obj = Instantiate("Local_Character");
 	local_player_character_obj->Get_Transform()->Position(loc);

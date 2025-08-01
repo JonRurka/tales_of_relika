@@ -55,6 +55,7 @@ public:
 
 	static std::string Read_File_String(std::string path);
 
+	static void Init_Time();
 	static double Get_Time();
 
 	static int Is_Extension_Supported(const std::string extension);

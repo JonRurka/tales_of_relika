@@ -38,8 +38,13 @@ void World::Update(float dt)
 
 void World::SubmitPlayerEvent(Player& player, OpCodes::Player_Events event_cmd, std::vector<uint8_t> data)
 {
-	if (player.Socket_User()->Get_Authenticated()) {
+	if (player.Socket_User()->Get_Authenticated()) 
+	{
 		player.Add_Player_Event(event_cmd, data);
+	}
+	else 
+	{
+		Logger::LogError(LOG_POS("SubmitPlayerEvent"), "Received Player Event for unathenticated player: %s.", player.Get_UserName().c_str());
 	}
 }
 
@@ -87,7 +92,7 @@ void World::SubmitWorldCommand(Player* user, Data data)
 	m_command_queue_lock.lock();
 	m_command_queue.push(command);
 	m_command_queue_lock.unlock();
-	Logger::LogDebug(LOG_POS("SubmitWorldCommand"), "World command pushed.");
+	//Logger::LogDebug(LOG_POS("SubmitWorldCommand"), "World command pushed.");
 }
 
 bool World::HasPlayer(uint32_t player_id)
@@ -110,7 +115,7 @@ std::vector<Player::pointer> World::GetPlayers()
 	}
 	m_world_mtx.unlock();
 
-	return std::vector<Player::pointer>();
+	return current_players;
 }
 
 std::vector<Player::pointer> World::PlayersInRadius(glm::vec3 point, float radius)
@@ -322,6 +327,7 @@ void World::AsynUpdate(float dt)
 void World::UpdatePlayers(float dt)
 {
 	std::vector<Player::pointer> current_players = GetPlayers();
+	//Logger::LogDebug(LOG_POS("UpdatePlayers"), "Update %i players.", current_players.size());
 	for (auto& p : current_players) {
 		p->WorldUpdate(dt);
 	}
@@ -336,7 +342,8 @@ void World::SendOrientationUpdates()
 		std::vector<Player::pointer> current_players = GetPlayers();
 
 		for (const auto& p : current_players) {
-			p->SyncOrientations();
+			p->SyncNearbyOrientations();
+			p->SyncOwnOrientation();
 		}
 	}
 }
@@ -354,8 +361,6 @@ void World::ProcessNetCommands()
 	while (!current_commands.empty()) {
 		NetCommand data = current_commands.front();
 		current_commands.pop();
-
-		Logger::LogDebug(LOG_POS("ProcessNetCommands"), "pop command and process.");
 
 		ExecuteNetCommand(data.user, data.data);
 	}
@@ -383,7 +388,7 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 
 	Player* player = m_players[user].get();
 
-	Logger::LogDebug(LOG_POS("ExecuteNetCommand"), "Received world command for player.");
+	//Logger::LogDebug(LOG_POS("ExecuteNetCommand"), "Received world command for player.");
 
 	if (data.Buffer.size() > 0) 
 	{
@@ -402,7 +407,7 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 				SubmitPlayerEvent(*player, event_cmd, data.Buffer);
 			}
 			else {
-				Logger::LogWarning(LOG_POS("ExecuteNetCommand"), "Received malformed Match Player Event from '" + player->Get_UserName() + "'!");
+				Logger::LogWarning(LOG_POS("ExecuteNetCommand"), "Received malformed World Player Event from '" + player->Get_UserName() + "': Missing command!");
 			}
 			break;
 		case OpCodes::Server_World::Request_World_Player_Data:
@@ -412,6 +417,10 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 			RequestPlayers_NetCmd(*player, data);
 			break;
 		}
+	}
+	else 
+	{
+		Logger::LogError(LOG_POS("ExecuteNetCommand"), "Received malformed World command: Missing command!");
 	}
 }
 
@@ -432,8 +441,8 @@ void World::UpdateOrientation_NetCmd(Player& player, Data data)
 	glm::vec3 location = glm::vec3(loc_x, loc_y, loc_z);
 	glm::quat rotation = glm::quat(rot_w, rot_x, rot_y, rot_z);
 
-	player.Set_Location(location);
-	player.Set_Rotation(rotation);
+	//player.Set_Location(location);
+	//player.Set_Rotation(rotation);
 
 	std::string loc_str = "(" + std::to_string(loc_x) + ", " + std::to_string(loc_y) + ", " + std::to_string(loc_z) + ")";
 	std::string rot_str = "(" + std::to_string(rot_x) + ", " + std::to_string(rot_y) + ", " + std::to_string(rot_z) + ", " + std::to_string(rot_w) + ")";
@@ -462,6 +471,9 @@ void World::RequestWorldPlayerData_NetCmd(Player& user, Data data)
 	player_location["z"] = player_loc.z;
 	player_data["location"] = player_location;
 
+	Logger::LogDebug(LOG_POS("RequestWorldPlayerData_NetCmd"), "Requested Pos: (%f, %f, %f)",
+		player_loc.x, player_loc.y, player_loc.z);
+
 
 	res_json["world"] = world_data;
 	res_json["player"] = player_data;
@@ -483,7 +495,7 @@ void World::test_set_spawn_point()
 	WorldPhysics::RayHit hit = m_world_physics->Raycast(glm::fvec3(m_spawn_point.x, 200, m_spawn_point.z), glm::vec3(0, -400, 0));
 	if (hit.did_hit) 
 	{
-		m_spawn_point = hit.hit_point;
+		m_spawn_point = hit.hit_point + glm::vec3(0, 50, 0);
 		m_spawn_point_set = true;
 		Logger::LogInfo(LOG_POS("test_set_spawn_point"), "Found new Spawn Point: (%f, %f, %f)",
 			m_spawn_point.x, m_spawn_point.y, m_spawn_point.z);

@@ -36,7 +36,7 @@ void Engine::Activate_Scene(std::string value)
 
 float Engine::Run_Time()
 {
-	return Utilities::Get_Time() - m_instance->m_start_time;
+	return Utilities::Get_Time();// -m_instance->m_start_time;
 }
 
 int Engine::Run()
@@ -71,6 +71,7 @@ void Engine::Initialize_Scene(Scene* scene, json data)
 
 void Engine::initialize()
 {
+	Utilities::Init_Time();
 	m_instance = this;
 	m_running = true;
 	m_start_time = Utilities::Get_Time();
