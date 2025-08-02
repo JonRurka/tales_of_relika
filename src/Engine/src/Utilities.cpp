@@ -39,7 +39,7 @@ using namespace DynamicCompute::Compute;
 
 namespace {
 
-	std::chrono::steady_clock::time_point g_start_point;
+	std::chrono::high_resolution_clock::time_point g_start_point;
 
 	typedef std::vector<unsigned char> vec_char;
 	unsigned char out_buf[ZLIB_CHUNK];
