@@ -217,7 +217,7 @@ void Server_Main::Init()
 	m_com_executer = new CommandExecuter();
 	if (m_options.Type == Server_Type::Remote) {
 		m_com_executer->Run(false);
-		Logger::LogInfo(LOG_POS("Init"), "Initialized Command Executer.");
+		Logger::LogInfo(LOG_POS("Init"), "Initialized Command Executer.")
 	}
 
 	//Logger::Log("Server Started!");
