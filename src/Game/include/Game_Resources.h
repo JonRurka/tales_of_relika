@@ -89,6 +89,12 @@ public:
 
 			inline static const std::string DEMO = "UI::bitmap_font.rml";
 
+			class MENU {
+			public:
+				inline static const std::string SPLASH = "UI::MENU::splash.rml";
+				inline static const std::string MAIN = "UI::MENU::main.rml";
+			};
+
 			class HUD {
 			public:
 				inline static const std::string HOT_BAR = "UI::HUD::HotBar.rml";

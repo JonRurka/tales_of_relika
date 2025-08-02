@@ -11,6 +11,7 @@ set(${module}_headers
 	include/imgui_impl_opengl3.h
 	include/imgui_impl_opengl3_loader.h
 	include/stb_image.h
+	include/httplib.h
 
 	include/game_engine.h
 	include/Logger.h
