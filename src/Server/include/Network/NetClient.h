@@ -62,6 +62,12 @@ public:
 
     bool Send(std::vector<uint8_t> data, Protocal type = Protocal_Tcp);
 
+    int UDP_Recv_Q_Size() { return m_udp_recv_queue.size(); }
+    int UPD_Send_Q_Size() { return m_udp_send_queue.size(); }
+
+    int TCP_Recv_Q_Size() { return m_tcp_recv_queue.size(); }
+    int TCP_Send_Q_Size() { return m_tcp_send_queue.size(); }
+
     void Stop();
 
     void Disconnect(bool sendClose);

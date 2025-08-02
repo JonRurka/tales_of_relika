@@ -14,3 +14,8 @@ void IUser::Send(OpCodes::Client cmd, std::string message, Protocal type)
 		m_socket_user->Send(cmd, message, type);
 	}
 }
+
+int IUser::UDP_Send_Q_Size()
+{
+	return m_socket_user->udp_connection_client->Send_Q_Size();
+}

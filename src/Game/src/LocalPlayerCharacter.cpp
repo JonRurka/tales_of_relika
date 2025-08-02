@@ -14,7 +14,7 @@
 #include"BulletCollision/CollisionDispatch/btGhostObject.h"
 #include"BulletDynamics/Character/btKinematicCharacterController.h"
 
-#define MOVE_SEND_TIMEOUT 1.0//(1. / 30.f)
+#define MOVE_SEND_TIMEOUT (1. / 20.f)
 
 LocalPlayerCharacter* LocalPlayerCharacter::m_instance{nullptr};
 
@@ -23,9 +23,11 @@ void LocalPlayerCharacter::Init()
 	m_instance = this;
 
 	m_body_trans = Object()->Get_Transform();
+	//m_body_trans->Position(glm::vec3(100, 50, 100));
+
 	m_location = m_body_trans->Position();
 	m_old_location = m_location;
-	//m_body_trans->Position(glm::vec3(0, 50, 0));
+	
 
 	m_capsule_collider = Object()->Add_Component<CharacterCollider>();
 	m_capsule_collider->Mass(50.0);
@@ -51,13 +53,13 @@ void LocalPlayerCharacter::Update(float dt)
 	move_control(dt);
 	look_control(dt);
 
-	if (Utilities::Get_Time() - m_debug_time > 1.0f)
+	if (Utilities::Get_Time() - m_debug_time > 2.0f)
 	{
 		m_debug_time = Utilities::Get_Time();
-		Logger::LogDebug(LOG_POS("Update"), "Current Pos: (%f, %f, %f), Current Velocity: (%f, %f, %f), Server Pos: (%f, %f, %f)",
-			m_body_trans->Position().x, m_body_trans->Position().y, m_body_trans->Position().z,
-			m_velocity.x, m_velocity.y, m_velocity.z,
-			m_server_loc.x, m_server_loc.y, m_server_loc.z);
+		//Logger::LogDebug(LOG_POS("Update"), "Current Pos: (%f, %f, %f), Current Velocity: (%f, %f, %f), Server Pos: (%f, %f, %f)",
+		//	m_body_trans->Position().x, m_body_trans->Position().y, m_body_trans->Position().z,
+		//	m_velocity.x, m_velocity.y, m_velocity.z,
+		//	m_server_loc.x, m_server_loc.y, m_server_loc.z);
 	}
 }
 
@@ -71,6 +73,7 @@ void LocalPlayerCharacter::jump_control(float dt)
 		m_capsule_collider->Get_Controller()->onGround()) 
 	{
 		m_capsule_collider->Get_Controller()->jump(btVector3(0, m_jump_power, 0));
+		SendPlayerEvent(OpCodes::Player_Events::Jump, Protocal_Tcp);
 		//m_capsule_collider->RigidBody()->applyCentralImpulse(btVector3(0, m_jump_force, 0));
 	}
 }
@@ -84,27 +87,27 @@ void LocalPlayerCharacter::move_control(float dt)
 	glm::vec3 forward = glm::normalize(glm::vec3(dir_forward.x, 0, dir_forward.z));
 	glm::vec3 right = -glm::normalize(glm::vec3(dir_right.x, 0, dir_right.z));
 
-	bool do_move = false;
+	m_do_move = false;
 	glm::vec3 move_vec = glm::vec3(0, 0, 0);
 	if (Input::GetKey(input::KeyCode::W)) {
 		//Logger::LogDebug(LOG_POS("move_control"), "move forward");
-		do_move = true;
+		m_do_move = true;
 		move_vec += forward;
 	}
 	if (Input::GetKey(input::KeyCode::S)) {
-		do_move = true;
+		m_do_move = true;
 		move_vec -= forward;
 	}
 	if (Input::GetKey(input::KeyCode::A)) {
-		do_move = true;
+		m_do_move = true;
 		move_vec += right;
 	}
 	if (Input::GetKey(input::KeyCode::D)) {
-		do_move = true;
+		m_do_move = true;
 		move_vec -= right;
 	}
 	
-	if (do_move) {
+	if (m_do_move) {
 		glm::vec3 tr_move_vec = glm::vec3(move_vec.x, 0, move_vec.z);
 
 		if (m_capsule_collider->Get_Controller()->onGround())
@@ -117,26 +120,77 @@ void LocalPlayerCharacter::move_control(float dt)
 		m_capsule_collider->Get_Controller()->setWalkDirection(btVector3(0, 0, 0));
 	}
 
-	m_location = m_body_trans->Position();
+	btVector3 pos = m_capsule_collider->Get_Controller()->getGhostObject()->getWorldTransform().getOrigin();
+	m_location = glm::fvec3(pos.x(), pos.y(), pos.z());
 
-	btVector3 pos = m_capsule_collider->Get_Controller()->getLinearVelocity();
-	m_velocity = glm::fvec3(pos.x(), pos.y(), pos.z());// (m_location - m_old_location) / dt;
+	btVector3 vel = m_capsule_collider->Get_Controller()->getLinearVelocity();
+	m_velocity = glm::fvec3(vel.x(), vel.y(), vel.z());// (m_location - m_old_location) / dt;
 
 	m_old_location = m_location;
 
 
 	double curr_time = Utilities::Get_Time();
-	if (curr_time - m_last_send_move > MOVE_SEND_TIMEOUT)
+	if (curr_time - m_last_send_move >= MOVE_SEND_TIMEOUT)
 	{
+		m_move_send_id++;
+
 		m_last_send_move = Utilities::Get_Time();
 		std::vector<uint8_t> send_data;
-		send_data.push_back((do_move ? 0x01 : 0x00));
+		send_data.push_back((m_do_move ? 0x01 : 0x00));
 		send_data = BufferUtils::AppendFloat(send_data, move_vec.x);
 		send_data = BufferUtils::AppendFloat(send_data, move_vec.z);
 		// TODO: heading
+		send_data = BufferUtils::Append_UInt64(send_data, m_move_send_id);
+		
+		m_net_trip_times[m_move_send_id] = Utilities::Get_Time();
 
 		SendPlayerEvent(OpCodes::Player_Events::Process_Move, send_data, Protocal_Udp);
 		//Logger::LogDebug(LOG_POS("move_control"), "Send Move state");
+	}
+
+	
+	if (m_received_server_pos && m_do_move)
+	{
+		glm::vec3 pred_server_pos = (m_server_loc + glm::vec3(0, 0.0f, 0)) + (m_velocity * (float)m_move_trip_time);
+
+		if (m_do_move)
+		{
+			glm::vec3 new_pos = glm::mix(m_location, pred_server_pos, dt * 2);
+			btVector3 bt_new_pos = btVector3(new_pos.x, new_pos.y, new_pos.z);
+			m_capsule_collider->Get_Controller()->warp(bt_new_pos);
+			m_body_trans->Position(new_pos);
+			m_cam_trans->Position(new_pos + cam_offset);
+			m_location = new_pos;
+			return;
+		}
+
+
+		// Start the process of moving back they player if they desync.
+		if (!m_moving_player_back)
+		{
+			if (glm::distance(m_location, pred_server_pos) > 0.5f)
+			{
+				m_moving_player_back = true;
+				move_dt = 1.0;
+				Logger::LogDebug(LOG_POS("move_control"), "Player location desynced with server... syncing postion.");
+				return;
+			}
+		}
+		else
+		{
+			move_dt += dt;
+			glm::vec3 new_pos = glm::mix(m_location, pred_server_pos, move_dt);
+			btVector3 bt_new_pos = btVector3(new_pos.x, new_pos.y, new_pos.z);
+			m_capsule_collider->Get_Controller()->warp(bt_new_pos);
+			m_body_trans->Position(new_pos);
+			m_cam_trans->Position(new_pos + cam_offset);
+			m_location = new_pos;
+
+			if (glm::distance(m_location, pred_server_pos) < 0.1f) {
+				m_moving_player_back = false;
+				Logger::LogDebug(LOG_POS("move_control"), "Stop syncing position now.");
+			}
+		}
 	}
 
 	//Graphics::DrawDebugRay(m_body_trans->Position(), forward * 5.0f, glm::vec3(1, 0, 0));
@@ -159,11 +213,23 @@ void LocalPlayerCharacter::OnOrientationSync(Data data)
 	float loc_z = *((float*)data_buf.data());
 	data_buf = BufferUtils::RemoveFront(Remove_Float, data_buf);
 
+	uint64_t move_id = *((uint64_t*)data_buf.data());
+	data_buf = BufferUtils::RemoveFront(Remove_UInt64, data_buf);
+
 	glm::vec3 player_loc = glm::vec3(loc_x, loc_y, loc_z);
 
-	Logger::LogDebug(LOG_POS("OnOrientationSync"), "(%f, %f, %f)",
-		player_loc.x, player_loc.y, player_loc.z);
+	//Logger::LogDebug(LOG_POS("OnOrientationSync"), "(%f, %f, %f). recv queue size: %i",
+	//	player_loc.x, player_loc.y, player_loc.z, GameClient::Instance()->Net_Client()->UDP_Recv_Q_Size());
 	m_server_loc = player_loc;
+
+	if (m_net_trip_times.contains(move_id))
+	{
+		double m_sent_time = m_net_trip_times[move_id];
+		m_move_trip_time = Utilities::Get_Time() - m_sent_time;
+		m_net_trip_times.erase(move_id);
+		m_received_server_pos = true;
+		//Logger::LogDebug(LOG_POS("OnOrientationSync"), "Approx Trip Time: %f", m_move_trip_time);
+	}
 
 
 }
@@ -176,7 +242,7 @@ void LocalPlayerCharacter::look_control(float dt)
 		float mouse_y = Input::Get_Input_Y();
 		update_rotation(dt, mouse_x, mouse_y);
 	}
-	m_cam_trans->Position(m_body_trans->Position() + cam_offset);
+	m_cam_trans->Position(m_location + cam_offset);
 }
 
 void LocalPlayerCharacter::init_geometry()

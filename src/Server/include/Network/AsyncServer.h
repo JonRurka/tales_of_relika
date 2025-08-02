@@ -74,6 +74,8 @@ public:
 
 	glm::uvec2 Get_UDP_Sends();
 
+	int Async_Command_Queue_Size();
+
 	void Receive_UDP(std::vector<uint8_t> data, boost::asio::ip::address endpoint);
 
 	void Receive_UDP(uint8_t* data, uint16_t size, boost::asio::ip::address endpoint);

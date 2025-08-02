@@ -13,6 +13,7 @@ typedef unsigned int Remove;
 #define Remove_IS_SERVER	1
 #define Remove_UDP_ID		2
 #define Remove_Float		sizeof(float)
+#define Remove_UInt64		sizeof(uint64_t)
 
 class BufferUtils {
 public:
@@ -71,6 +72,19 @@ public:
 	static std::vector<uint8_t> AppendFloat(std::vector<uint8_t> data, float val)
 	{
 		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(float));
+		return Add(data, val_data);
+	}
+
+	static std::vector<uint8_t> AppendByte(std::vector<uint8_t> data, uint8_t val)
+	{
+		std::vector<uint8_t> val_data;
+		val_data.push_back(val);
+		return Add(data, val_data);
+	}
+
+	static std::vector<uint8_t> Append_UInt64(std::vector<uint8_t> data, uint64_t val)
+	{
+		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(uint64_t));
 		return Add(data, val_data);
 	}
 

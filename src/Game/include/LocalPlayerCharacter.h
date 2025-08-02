@@ -51,6 +51,14 @@ private:
 	glm::vec3 m_location;
 	glm::vec3 m_velocity;
 	glm::vec3 m_server_loc;
+	bool m_do_move{ false };
+	uint64_t m_move_send_id{ 0 };
+
+	std::unordered_map<uint64_t, double> m_net_trip_times;
+	double m_move_trip_time{ 0 };
+	bool m_received_server_pos{ false };
+	bool m_moving_player_back{ false };
+	float move_dt{ 0 };
 
 	Transform* m_body_trans{ nullptr };
 

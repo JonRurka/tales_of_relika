@@ -70,6 +70,27 @@ void udp_connection::start_send()
 	m_numDoSends++;
 }
 
+void udp_connection::send_messages()
+{
+	std::queue<Send_Message> messages;
+
+	m_send_lock.lock();
+	while (!m_send_messages.empty())
+	{
+		messages.push(m_send_messages.front());
+		m_send_messages.pop();
+	}
+	m_send_lock.unlock();
+
+	while (!messages.empty())
+	{
+		Send_Message msg = messages.front();
+		messages.pop();
+		m_socket_.send_to(boost::asio::buffer(msg.sending), m_client_endpoint);
+	}
+
+}
+
 void udp_connection::handle_send()
 {
 	m_sends_semaphore_1.release();
@@ -94,7 +115,7 @@ void udp_connection::handle_receive(const boost::system::error_code& error, size
 			return;
 		}
 
-		Logger::LogError(LOG_POS("handle_receive"), "UDP Receive Error (" + std::to_string(error.value()) + "): " + error.what());
+		//Logger::LogError(LOG_POS("handle_receive"), "UDP Receive Error (" + std::to_string(error.value()) + "): " + error.what());
 		start_receive();
 		return;
 	}

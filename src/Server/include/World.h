@@ -74,6 +74,8 @@ public:
 
 	WorldPhysics* Physics() { return m_world_physics; }
 
+	int Command_Queue_Size();
+
 	static void Run(World* world);
 
 	static void Register_Lua_Functions(sol::state lua);
@@ -98,8 +100,8 @@ private:
 	std::map<uint16_t, uint32_t> m_player_short_ids;
 
 	bool m_running{ false };
-	uint64_t m_last_orientation_update{ 0 };
-	uint64_t m_last_frame{ 0 };
+	double m_last_orientation_update{ 0 };
+	double m_last_frame{ 0 };
 
 	uint8_t* m_orientation_send_buffer = nullptr;
 	int m_orientation_send_buffer_size = 0;

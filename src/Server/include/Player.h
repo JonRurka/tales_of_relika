@@ -16,6 +16,7 @@
 #define DEFAULT_RADIUS (0.5f)
 #define DEFAULT_HEIGHT (1.5f)
 #define DEFAULT_MASS (50.0f)
+#define JUMP_POWER_DEFAULT (6.0)
 
 class World;
 class WorldTerrain;
@@ -273,6 +274,8 @@ private:
 	PlayerGameData m_game_data{};
 	std::unordered_map<uint64_t, PlayerWorldProfile> m_world_profiles;
 
+	uint64_t m_last_move_send_id{ 0 };
+
 	PlayerMoveState m_move_state{};
 
 	std::mutex m_player_mutex;
@@ -312,12 +315,16 @@ private:
 	btVector3 m_localInertia{ btVector3(0.0f, 0.0f, 0.0f) };
 	float m_mass{ DEFAULT_MASS };
 
+	float m_jump_power{ JUMP_POWER_DEFAULT };
+
 	bool m_trigger_save{ false };
 
 
 	double m_debug_timer{ 0 };
 
 	void process_controll_event(PlayerEvent p_event);
+
+	void process_jump_event(PlayerEvent p_event);
 
 	void move_control(float dt);
 

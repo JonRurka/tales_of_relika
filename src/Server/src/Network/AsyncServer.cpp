@@ -249,6 +249,14 @@ glm::uvec2 AsyncServer::Get_UDP_Sends()
     //return glm::uvec2(m_udp_server->GetNumSendRequests(), m_udp_server->GetNumSends());
 }
 
+int AsyncServer::Async_Command_Queue_Size()
+{
+    m_async_command_queue_lock.lock();
+    int size = m_async_command_queue.size();
+    m_async_command_queue_lock.unlock();
+    return size;
+}
+
 void AsyncServer::Receive_UDP(std::vector<uint8_t> buffer, boost::asio::ip::address endpoint)
 {
     if (buffer.size() >= 3)

@@ -75,6 +75,14 @@ public:
 		return m_numDoSends;
 	}
 
+	int Send_Q_Size()
+	{
+		m_send_lock.lock();
+		int size = m_send_messages.size();
+		m_send_lock.unlock();
+		return size;
+	}
+
 	void Send(udp::endpoint remote_endpoint, uint8_t* sending, size_t len);
 
 	void Send(udp::endpoint remote_endpoint, std::vector<uint8_t> sending);
@@ -106,13 +114,18 @@ private:
 	static void RunSend(udp_connection* srv) {
 		while (srv->m_running) {
 			//Logger::Log("Run send");
-			srv->start_send();
-			srv->m_sends_semaphore_1.acquire();
+			//srv->start_send();
+			//srv->m_sends_semaphore_1.acquire();
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			srv->send_messages();
+
 		}
 	}
 
 	void start_send();
 
+	void send_messages();
+		
 	void handle_send();
 
 

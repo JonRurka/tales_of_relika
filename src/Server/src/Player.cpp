@@ -6,6 +6,7 @@
 #include "WorldTerrain.h"
 #include "WorldPhysics.h"
 #include "ServerTerrainChunk.h"
+#include "SocketUser.h"
 
 #include "BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "BulletDynamics/Character/btKinematicCharacterController.h"
@@ -165,8 +166,7 @@ void Player::Add_Player_Event(PlayerEvent p_event)
 		break;
 
 	case OpCodes::Player_Events::Jump:
-		// Just forward command to be re-broadcast by match, if applicable.
-		Forward_Player_Event(p_event);
+		process_jump_event(p_event);
 		break;
 	}
 }
@@ -197,13 +197,16 @@ void Player::SyncNearbyOrientations()
 
 void Player::SyncOwnOrientation()
 {
-	Logger::LogDebug(LOG_POS("SyncOwnOrientation"), "(%f, %f, %f)",
-		m_location.x, m_location.y, m_location.z);
+	//m_location = glm::vec3(1, 2, 3);
 
+	
+	//Logger::LogDebug(LOG_POS("SyncOwnOrientation"), "(%f, %f, %f). Send Q size: %i",
+	//	m_location.x, m_location.y, m_location.z, UDP_Send_Q_Size());
 	std::vector<uint8_t> send_buff;
 	send_buff = BufferUtils::AppendFloat(send_buff, m_location.x);
 	send_buff = BufferUtils::AppendFloat(send_buff, m_location.y);
 	send_buff = BufferUtils::AppendFloat(send_buff, m_location.z);
+	send_buff = BufferUtils::Append_UInt64(send_buff, m_last_move_send_id);
 
 	//uint8_t* m_orientation_send_buffer = new uint8_t[OrientationSize()];
 	//Serialize_Orientation(m_orientation_send_buffer);
@@ -274,11 +277,25 @@ void Player::process_controll_event(PlayerEvent p_event)
 	float move_z = *((float*)data.data());
 	data = BufferUtils::RemoveFront(Remove_Float, data);
 
+	uint64_t move_id = *((uint64_t*)data.data());
+	data = BufferUtils::RemoveFront(Remove_UInt64, data);
+
+	m_last_move_send_id = move_id;
+
 	m_move_state.Do_Move = do_move;
 	m_move_state.Move_Dir = glm::vec2(move_x, move_z);
 
-	Logger::LogDebug(LOG_POS("process_controll_event"), "Receive Move state - Do Move: %i, Move Dir: (%f, %f)",
-		(do_move ? 1 : 0), move_x, move_z);
+	//Logger::LogDebug(LOG_POS("process_controll_event"), "Server UDP Send Q Size: %i", UDP_Send_Q_Size());
+	// AsyncServer::GetInstance()->Async_Command_Queue_Size()
+
+	//Logger::LogDebug(LOG_POS("process_controll_event"), "Receive Move state - Do Move: %i, Move Dir: (%f, %f)",
+	//	(do_move ? 1 : 0), move_x, move_z);
+}
+
+void Player::process_jump_event(PlayerEvent p_event)
+{
+	m_charCon->jump(btVector3(0, m_jump_power, 0));
+	Forward_Player_Event(p_event);
 }
 
 void Player::move_control(float dt) 
@@ -311,11 +328,14 @@ void Player::move_control(float dt)
 
 	if (Utilities::Get_Time() - m_debug_timer > 1.0f)
 	{
+		//if (m_move_state.Do_Move)
+		//	Logger::LogDebug(LOG_POS("move_control"), "SERVER MOVING");
+
 		m_debug_timer = Utilities::Get_Time();
 
-		Logger::LogDebug(LOG_POS("move_control"), "Current Pos: (%f, %f, %f), Velocity: (%f, %f, %f)",
-			m_location.x, m_location.y, m_location.z, 
-			m_velocity.x, m_velocity.y, m_velocity.z);
+		//Logger::LogDebug(LOG_POS("move_control"), "Current Pos: (%f, %f, %f), Velocity: (%f, %f, %f)",
+		//	m_location.x, m_location.y, m_location.z, 
+		//	m_velocity.x, m_velocity.y, m_velocity.z);
 	}
 }
 

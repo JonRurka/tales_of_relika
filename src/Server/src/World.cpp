@@ -16,7 +16,7 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
-#define ORIENTATION_SEND_RATE ((1 / 20.0) * 1000) // MS
+#define ORIENTATION_SEND_RATE ((1.0 / 20.0)) // Seconds
 #define INITIAL_CHUNK_SIM_RADIUS 4
 #define INITIAL_CHUNK_SIM_DEPTH 4
 
@@ -152,6 +152,14 @@ void World::WorldMutexUnlock()
 	m_world_mtx.unlock();
 }
 
+int World::Command_Queue_Size()
+{
+	m_command_queue_lock.lock();
+	int size = m_command_queue.size();
+	m_command_queue_lock.unlock();
+	return size;
+}
+
 void World::Run(World* world)
 {
 	world->async_init();
@@ -168,8 +176,8 @@ void World::Register_Lua_Functions(sol::state lua)
 void World::async_init()
 {
 	m_running = true;
-	m_last_orientation_update = Server_Main::GetEpoch();
-	m_last_frame = Server_Main::GetEpoch();
+	m_last_orientation_update = Utilities::Get_Time();
+	m_last_frame = Utilities::Get_Time();
 
 	m_world_physics = new WorldPhysics();
 	m_world_physics->Init();
@@ -302,8 +310,8 @@ void World::GameLoop()
 	while (m_running) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-		uint64_t now = Server_Main::GetEpoch();
-		float delta_time = (now - m_last_frame) / 1000.0;
+		double now = Utilities::Get_Time();
+		float delta_time = (now - m_last_frame);
 		m_last_frame = now;
 
 		AsynUpdate(delta_time);
@@ -335,9 +343,9 @@ void World::UpdatePlayers(float dt)
 
 void World::SendOrientationUpdates()
 {
-	uint64_t now = Server_Main::GetEpoch();
-
+	double now = Utilities::Get_Time();
 	if ((now - m_last_orientation_update) > ORIENTATION_SEND_RATE) {
+		m_last_orientation_update = now;
 
 		std::vector<Player::pointer> current_players = GetPlayers();
 
@@ -495,7 +503,7 @@ void World::test_set_spawn_point()
 	WorldPhysics::RayHit hit = m_world_physics->Raycast(glm::fvec3(m_spawn_point.x, 200, m_spawn_point.z), glm::vec3(0, -400, 0));
 	if (hit.did_hit) 
 	{
-		m_spawn_point = hit.hit_point + glm::vec3(0, 50, 0);
+		m_spawn_point = hit.hit_point + glm::vec3(0, 6, 0);
 		m_spawn_point_set = true;
 		Logger::LogInfo(LOG_POS("test_set_spawn_point"), "Found new Spawn Point: (%f, %f, %f)",
 			m_spawn_point.x, m_spawn_point.y, m_spawn_point.z);
