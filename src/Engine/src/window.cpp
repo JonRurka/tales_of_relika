@@ -11,7 +11,7 @@
 #include <Engine.h>
 
 
-
+#define GLFW_HEADLESS true
 
 #ifdef WIN32
 #include <GLFW/glfw3native.h>
@@ -127,6 +127,7 @@ namespace {
 GLFWwindow* window::Create_Window(const char* title, int width, int height, void* user_obj)
 {
     m_instance = this;
+    m_headless = GLFW_HEADLESS;
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
