@@ -139,7 +139,8 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    if (m_headless)
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
     refresh_ui_scale();
 
@@ -190,8 +191,11 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
     load_module();
 
 #if WIN32
-    m_cur_context = glfwGetWGLContext(m_window);
-    m_cur_display = GetDC(glfwGetWin32Window(m_window));
+    if (!m_headless)
+    {
+        m_cur_context = glfwGetWGLContext(m_window);
+        m_cur_display = GetDC(glfwGetWin32Window(m_window));
+    }
 #else
     m_cur_context = glfwGetGLXContext(m_window);
     m_cur_display = glfwGetX11Display();
@@ -202,7 +206,14 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
 
 void window::refresh_ui_scale()
 {
-    m_main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
+    if (!m_headless)
+    {
+        m_main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
+    }
+    else
+    {
+        m_main_scale = 1.0;
+    }
 }
 
 void window::set_title(std::string title)

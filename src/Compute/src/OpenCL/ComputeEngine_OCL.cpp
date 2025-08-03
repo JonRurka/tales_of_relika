@@ -373,9 +373,9 @@ ComputeContext::ComputeContext(OpenCL_Device_Info device)
 
     cl_context_properties properties[7];
 
-    bool support_gl_sharing = device.enable_context_sharing && window::Has_Window();
+    m_support_gl_sharing = device.enable_context_sharing && window::Has_Window();
 
-    if (support_gl_sharing)
+    if (m_support_gl_sharing)
     {
 #if WIN32
         HGLRC cur_context = (HGLRC)window::Get_Context();
@@ -452,7 +452,7 @@ ComputeContext::ComputeContext(OpenCL_Device_Info device)
     //CL_DEVICE_PREFERRED_INTEROP_USER_SYNC
     clGetDeviceInfo(deviceID, CL_DEVICE_PREFERRED_INTEROP_USER_SYNC, sizeof(cl_bool), &manual_sync, 0);
     //Logger::LogDebug(LOG_POS("ComputeContext"), "Requires manual sync: %i\n", (int)manual_sync);
-    m_manual_sync = (manual_sync | FORCE_MANUAL_SYNC) && support_gl_sharing;
+    m_manual_sync = (manual_sync | FORCE_MANUAL_SYNC) && m_support_gl_sharing;
 
     cl_ulong local_size;
     clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &local_size, 0);
@@ -820,6 +820,8 @@ ComputeBuffer::ComputeBuffer(ComputeContext* context_obj, cl_context contexts, c
 
    cl_int err;
 
+   external &= context_obj->Supports_GL_Sharing();
+
    //cl::BufferGL
 
    buffer_staging = clCreateBuffer(context, type_staging, mSize, NULL, &err);
@@ -1049,6 +1051,9 @@ void ComputeBuffer::Dispose()
 
 void ComputeBuffer::FlushExternal(int size)
 {
+    if (!mContextObj->Supports_GL_Sharing())
+        return;
+
     bool manual_sync = mContextObj->Supports_Manual_Sync();
 
     if (size < 0) {

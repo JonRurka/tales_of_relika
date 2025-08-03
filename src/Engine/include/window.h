@@ -4,6 +4,8 @@
 
 #include <string>
 
+#define GLFW_HEADLESS true
+
 struct GLFWwindow;
 
 class window
@@ -38,6 +40,8 @@ public:
 			return false;
 		if (m_instance->m_window == nullptr)
 			return false;
+		if (m_instance->m_headless)
+			return false;
 		return true;
 	}
 
@@ -46,6 +50,8 @@ private:
 
 	void* m_cur_context{ nullptr };
 	void* m_cur_display{ nullptr };
+
+	bool m_headless{ GLFW_HEADLESS };
 
 	float m_main_scale{ 0 };
 	static window* m_instance;

@@ -181,6 +181,7 @@ namespace DynamicCompute {
 
                 cl_event m_wait_event{ NULL };
                 bool m_manual_sync{ false };
+                bool m_support_gl_sharing{ false };
 
                 bool mInitialized{ false };
                 bool mDestroyed{ false };
@@ -196,6 +197,8 @@ namespace DynamicCompute {
                 }
 
                 bool Supports_Manual_Sync() { return m_manual_sync; }
+
+                bool Supports_GL_Sharing() { return m_support_gl_sharing; }
 
                 void Set_Wait_Event(cl_event val) { m_wait_event = val; }
                 cl_event Get_Wait_Event() { return m_wait_event; }
