@@ -423,6 +423,8 @@ double Input::get_input_x(std::string device)
 	else if (device == "scroll") {
 		return m_scroll_dx;
 	}
+	else
+		return 0;
 }
 
 double Input::get_input_y(std::string device)
@@ -433,6 +435,8 @@ double Input::get_input_y(std::string device)
 	else if (device == "scroll") {
 		return m_scroll_dy;
 	}
+	else
+		return 0;
 }
 
 glm::vec2 Input::get_mouse_pos()
