@@ -316,6 +316,14 @@ void Shader::Init_Lights()
     m_lights_initialized = true;
 }
 
+void Shader::Dispose()
+{
+    m_shaders.erase(m_ID);
+    m_shaders_map.erase(m_name);
+    m_renderers.erase(m_ID);
+    glDeleteProgram(m_ID);
+}
+
 void Shader::setBool(const std::string& name, bool value)
 {
     setBool(get_uniform_location(name), value);
@@ -494,6 +502,12 @@ Shader* Shader::Create(std::string name, const std::string vertex_name, const st
     }
 
     return shader;
+}
+
+void Shader::Remove(Shader* shader)
+{
+    shader->Dispose();
+    delete shader;
 }
 
 Shader* Shader::Get_Shader(unsigned int id)

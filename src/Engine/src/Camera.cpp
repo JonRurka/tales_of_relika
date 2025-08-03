@@ -25,6 +25,8 @@
 #define SKYBOX_VIEW_LOC			11
 
 Camera* Camera::m_active_camera{nullptr};
+Shader* Camera::m_cubemap_shader{ nullptr };
+Mesh* Camera::m_cubemap_mesh{ nullptr };
 
 
 namespace {
@@ -72,11 +74,16 @@ void Camera::Load(json data)
 
 void Camera::OnDestroy()
 {
+	Activate(false);
+
+	destroy_framebuffer();
+	destroy_skybox();
 }
 
 void Camera::Set_Skybox(Cubemap* value)
 {
-	if (m_cubemap_mesh == nullptr) {
+	if (m_cubemap_mesh == nullptr) 
+	{
 		std::vector<glm::vec4> skyboxVertices = {
 			// positions          
 			glm::vec4(-1.0f,  1.0f, -1.0f, 0.0f),
@@ -124,6 +131,9 @@ void Camera::Set_Skybox(Cubemap* value)
 		m_cubemap_mesh = new Mesh();
 		m_cubemap_mesh->Vertices(skyboxVertices);
 		m_cubemap_mesh->Activate();
+	}
+	if (m_cubemap_shader == nullptr)
+	{
 		m_cubemap_shader = Shader::Create("skybox", SKYBOX_VERT_SHADER, SKYBOX_FRAG_SHADER);
 		if (m_cubemap_shader == nullptr || !m_cubemap_shader->Initialized()) {
 			Logger::LogError(LOG_POS("Set_Skybox"), "Failed to create skybox shader.");
@@ -131,6 +141,7 @@ void Camera::Set_Skybox(Cubemap* value)
 		}
 	}
 	m_cubemap = value;
+	m_has_skybox = true;
 	//Logger::LogDebug(LOG_POS("Set_Skybox"), "Skybox set successfully.");
 }
 
@@ -179,7 +190,7 @@ void Camera::Activate(bool active)
 {
 	if ((m_isActive && active) ||
 		(!m_isActive && !active))
-		return;
+		return; // No change.
 
 	if (active && !m_isActive) {
 		m_isActive = true;
@@ -192,6 +203,7 @@ void Camera::Activate(bool active)
 	}
 	else if (!active && m_isActive) {
 		m_isActive = false;
+		m_active_camera = nullptr;
 	}
 }
 
@@ -207,6 +219,30 @@ void Camera::create_framebuffer()
 	{
 		Logger::LogError(LOG_POS("create_framebuffer"), "Failed to create framebuffer.");
 	}
+}
+
+void Camera::destroy_framebuffer()
+{
+	if (m_framebuffer != nullptr)
+	{
+		m_framebuffer->Dispose();
+		delete m_framebuffer;
+		m_framebuffer = nullptr;
+	}
+}
+
+void Camera::destroy_skybox()
+{
+	if (!m_has_skybox)
+		return;
+
+	m_cubemap->Dispose();
+	delete m_cubemap;
+	m_cubemap = nullptr;
+
+
+
+	m_has_skybox = false;
 }
 
 void Camera::update_view_matrix()
@@ -301,4 +337,21 @@ void Camera::render(float dt)
 	render_skybox(dt);
 
 	m_framebuffer->Use(false);
+}
+
+void Camera::StaticDestroy()
+{
+
+	if (m_cubemap_mesh != nullptr)
+	{
+		m_cubemap_mesh->Dispose();
+		delete m_cubemap_mesh;
+		m_cubemap_mesh = nullptr;
+	}
+
+	if (m_cubemap_shader != nullptr)
+	{
+		Shader::Remove(m_cubemap_shader);
+	}
+
 }

@@ -10,6 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+class Engine;
 class WorldObject;
 class Transform;
 class Framebuffer;
@@ -22,6 +23,7 @@ class GPUSort;
 class Camera : public Component
 {
 	friend class WorldObject;
+	friend class Engine;
 public:
 
 	float FOV() { return m_FOV; }
@@ -78,8 +80,9 @@ private:
 	glm::vec4 m_clear_color{glm::ivec4(0.0f, 0.0f, 0.0f, 1.0f)};
 
 	Cubemap* m_cubemap{nullptr};
-	Mesh* m_cubemap_mesh{ nullptr };
-	Shader* m_cubemap_shader{ nullptr };
+	static Mesh* m_cubemap_mesh;
+	static Shader* m_cubemap_shader;
+	bool m_has_skybox{ false };
 
 	Framebuffer* m_framebuffer{nullptr};
 
@@ -90,6 +93,9 @@ private:
 	static Camera* m_active_camera;
 
 	void create_framebuffer();
+	void destroy_framebuffer();
+
+	void destroy_skybox();
 
 	void update_view_matrix();
 	void update_projection_matrix();
@@ -98,6 +104,9 @@ private:
 	void render_opaque(float dt);
 	void render_transparent(float dt);
 	void render(float dt);
+
+	// Called by the engine on shutdown.
+	static void StaticDestroy();
 
 
 	inline static const std::string LOG_LOC{ "CAMERA" };

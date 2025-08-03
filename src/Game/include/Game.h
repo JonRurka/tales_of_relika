@@ -8,6 +8,11 @@ class Game : public Engine
 {
 public:
 
+	static Game* Instance() { return m_instance; }
+
+	static void OpenMainMenu() { m_instance->m_main_menu_scene->Activate(true); }
+	static void OpenVoxelWorld(){ m_instance->m_voxel_world_secen->Activate(true); }
+
 protected:
 
 	void Init() override;
@@ -16,7 +21,12 @@ protected:
 
 private:
 
+	static Game* m_instance;
+
 	Material_Types* m_material_types{nullptr};
+
+	Scene* m_main_menu_scene{ nullptr };
+	Scene* m_voxel_world_secen{ nullptr };
 
 	void init_shaders();
 

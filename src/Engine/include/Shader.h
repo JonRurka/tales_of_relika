@@ -50,6 +50,8 @@ public:
 
     void Init_Lights();
 
+    void Dispose();
+
 
     // utility uniform functions
     void setBool(const std::string& name, bool value);
@@ -80,6 +82,7 @@ public:
 
 
     static Shader* Create(std::string name, const std::string vertex_name, const std::string fragment_name);
+    static void Remove(Shader* shader);
     static Shader* Get_Shader(unsigned int id);
     static Shader* Get_Shader(std::string name);
     static std::vector<unsigned int> Get_Shader_ID_List();

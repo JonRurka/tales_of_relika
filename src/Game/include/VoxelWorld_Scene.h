@@ -14,6 +14,11 @@ class LocalPlayerCharacter;
 class Item_Loader;
 class Item_Type;
 
+namespace Rml {
+	class Context;
+	class ElementDocument;
+}
+
 class VoxelWorld_Scene : public Scene {
 public:
 
@@ -28,6 +33,8 @@ public:
 		game_client->OnWorldPlayerDataResult(data);
 	}
 	void OnWorldPlayerDataResult(Data data);
+
+	bool Game_Ready();
 
 protected:
 	void Init() override;
@@ -44,6 +51,9 @@ private:
 	bool m_init_data_requested{ false };
 
 	double m_connected_time{ 0 };
+
+	Rml::ElementDocument* m_loading_screen{ nullptr };
+	bool m_loading_hidden{ false };
 
 	WorldObject* light_obj_dir{ nullptr };
 	Light* light_comp_dir{ nullptr };
@@ -69,6 +79,8 @@ private:
 
 	WorldObject* net_player_manager_obj{ nullptr };
 	NetPlayerManager* net_player_manager{ nullptr };
+
+	void startup_squence();
 
 	void setup_camera();
 

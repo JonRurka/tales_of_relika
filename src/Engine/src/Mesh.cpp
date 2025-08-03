@@ -270,6 +270,11 @@ void Mesh::Draw(GLenum mode)
 void Mesh::Dispose()
 {
 	delete[] raw_vert_data;
+
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
+	
 }
 
 void Mesh::sync_vertices(Vert_Update_Mode mode)

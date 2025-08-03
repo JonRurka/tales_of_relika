@@ -21,12 +21,18 @@
 
 #include "Standard_Material.h"
 
+#include <RmlUi/Core.h>
+#include "UI_Engine.h"
+
 #define SERVER_START_WAIT_TIME (4.0f)
 #define SERVER_DATA_REQUEST_WAIT_TIME (2.0f)
 
 void VoxelWorld_Scene::Init()
 {
 	m_remote_connection = false;
+
+	m_loading_screen = UI_Engine::Instance()->Load_Document_Resource("loading", Game_Resources::UI::Documents::HUD::LOADING);
+	m_loading_screen->Show();
 
 	setup_camera();
 	setup_lights();
@@ -44,28 +50,7 @@ void VoxelWorld_Scene::Init()
 
 void VoxelWorld_Scene::Update(float dt)
 {
-	if (!m_server_started) {
-
-		double cur_time = Utilities::Get_Time();
-		if (cur_time - m_start_time > SERVER_START_WAIT_TIME)
-		{
-			setup_game_client();
-			m_server_started = true;
-		}
-
-	}
-
-	if (m_client_connected) {
-		if (!m_init_data_requested) {
-			if (Utilities::Get_Time() - m_connected_time > SERVER_DATA_REQUEST_WAIT_TIME) {
-				m_init_data_requested = true;
-				Logger::LogInfo(LOG_POS("Update"), "Requesting world player data...");
-				game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
-			}
-		}
-	}
-
-
+	startup_squence();
 
 	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()));
 	//Logger::LogDebug(LOG_POS("Update"), "update");
@@ -130,6 +115,57 @@ void VoxelWorld_Scene::OnWorldPlayerDataResult(Data data)
 	setup_net_player_manager();
 
 	world_gen_controller->Start();
+}
+
+bool VoxelWorld_Scene::Game_Ready()
+{
+	if (!m_server_started)
+		return false;
+	
+	if (!m_client_connected)
+		return false;
+
+	if (world_gen_controller == nullptr)
+		return false;
+
+	if (!world_gen_controller->Terrain_Ready())
+		return false;
+
+	return true;
+}
+
+void VoxelWorld_Scene::startup_squence()
+{
+	if (!m_server_started) {
+
+		double cur_time = Utilities::Get_Time();
+		if (cur_time - m_start_time > SERVER_START_WAIT_TIME)
+		{
+			setup_game_client();
+			m_server_started = true;
+		}
+
+	}
+
+	if (m_client_connected) {
+		if (!m_init_data_requested) {
+			if (Utilities::Get_Time() - m_connected_time > SERVER_DATA_REQUEST_WAIT_TIME) {
+				m_init_data_requested = true;
+				Logger::LogInfo(LOG_POS("Update"), "Requesting world player data...");
+				game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
+			}
+		}
+	}
+
+	if (!m_loading_hidden)
+	{
+		if (Game_Ready())
+		{
+			m_loading_screen->Hide();
+			m_loading_hidden = true;
+		}
+	}
+
 }
 
 void VoxelWorld_Scene::setup_camera()

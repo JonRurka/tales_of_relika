@@ -162,5 +162,5 @@ private:
 	void test_set_spawn_point();
 
 
-	inline static const std::string LOG_LOC{ "WORLD" };
+	inline static const std::string LOG_LOC{ "SERVER_WORLD" };
 };

@@ -54,6 +54,7 @@ public:
 		T * Load_Scene(std::string name)
 	{
 		T* scene = new T();
+		initialize_scene(static_cast<Scene*>(scene), name);
 		//Initialize_Scene(static_cast<Scene*>(scene), name);
 		return scene;
 	}
@@ -97,8 +98,8 @@ private:
 
 	static Engine* m_instance;
 
+	void initialize_scene(Scene* scene, std::string name);
 
-	void Initialize_Scene(Scene* scene, std::string name);
 	void Initialize_Scene(Scene* scene, json data);
 
 	void initialize();
@@ -107,7 +108,7 @@ private:
 
 	void process_input();
 
+	void cleanup();
 
-
-	const std::string LOG_LOC{ "ENGINE" };
+	inline static const std::string LOG_LOC{ "ENGINE" };
 };

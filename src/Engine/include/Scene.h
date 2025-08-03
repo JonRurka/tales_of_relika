@@ -9,17 +9,21 @@
 
 using json = nlohmann::json;
 
+class Engine;
 class WorldObject;
 class Light;
 
 class Scene
 {
 	friend class Engine;
+	friend class WorldObject;
 public:
 
 	void Activate(bool active);
 
 	void Initialize();
+
+	std::string Name() { return m_name; }
 
 	static void Load_Json_String(std::string json_str);
 
@@ -38,12 +42,20 @@ public:
 protected:
 	virtual void Init() {};
 	virtual void Update(float dt) {};
+	virtual void Deactivate() {};
 
 private:
 	std::vector<WorldObject*> m_objects;
+	std::vector<WorldObject*> m_ambient_light_objects;
 	bool m_active{ false };
+	std::string m_name;
+
+
+	void deactivate();
 
 	void Update_internal(float dt);
+
+	void remove_object_from_scene(WorldObject* obj);
 
 	void load_objects(json objects);
 

@@ -91,13 +91,14 @@ public:
 
 			class MENU {
 			public:
-				inline static const std::string SPLASH = "UI::MENU::splash.rml";
-				inline static const std::string MAIN = "UI::MENU::main.rml";
+				inline static const std::string SPLASH = "UI::Menu::splash.rml";
+				inline static const std::string MAIN = "UI::Menu::main.rml";
 			};
 
 			class HUD {
 			public:
 				inline static const std::string HOT_BAR = "UI::HUD::HotBar.rml";
+				inline static const std::string LOADING = "UI::HUD::loading.rml";
 			};
 		};
 

@@ -94,6 +94,8 @@ void Framebuffer::Dispose()
 {
 	m_active_texture->Dispose();
 	m_active_texture = nullptr;
+	m_default_texture = nullptr;
 
 	glDeleteRenderbuffers(1, &m_renderbuffer_obj);
+	glDeleteFramebuffers(1, &m_framebuffer_obj);
 }

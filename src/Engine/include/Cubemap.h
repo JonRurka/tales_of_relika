@@ -16,6 +16,8 @@ public:
 
 	void Bind();
 
+	void Dispose();
+
 private:
 
 	GLuint m_texture{ 0 };

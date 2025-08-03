@@ -109,6 +109,8 @@ public:
 
 	int Chunk_Radius() { return m_max_chunk_radius; }
 
+	bool Terrain_Ready() { return m_gen_finished; }
+
 	glm::fvec3 Target_Position();
 
 	glm::ivec3 Target_Chunk();

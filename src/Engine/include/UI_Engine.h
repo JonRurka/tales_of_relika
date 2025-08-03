@@ -13,6 +13,18 @@ namespace Rml {
 	class ElementDocument;
 }
 
+#define DEFINE_UI_EVENT(_event_name_, _target_class_, _target_func_) \
+class _event_name_ : public Rml::EventListener						 \
+{																	 \
+public:																 \
+	_event_name_(_target_class_* target) : m_target{ target } {}	 \
+	void ProcessEvent(Rml::Event& event) override {					 \
+		m_target->_target_func_();									 \
+	}																 \
+private:															 \
+	_target_class_* m_target{ nullptr };							 \
+};
+
 class UI_Engine {
 	friend class Graphics;
 public:

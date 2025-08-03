@@ -19,7 +19,15 @@ void Scene::Activate(bool active)
 	m_active = active;
 
 	Engine::Activate_Scene(this);
-	Initialize();
+
+	if (m_active) 
+	{
+		Initialize();
+	}
+	else
+	{
+		deactivate();
+	}
 }
 
 void Scene::Initialize()
@@ -77,6 +85,7 @@ void Scene::create_ambient_light(glm::fvec3 dir)
 	light_comp_dir->Enabled(true);
 	light_obj_dir->Get_Transform()->LookAt(light_pos_dir + dir);
 	light_comp_dir->Strength(0.2f);
+	m_ambient_light_objects.push_back(light_obj_dir);
 }
 
 void Scene::create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color)
@@ -102,6 +111,25 @@ void Scene::create_light_object(WorldObject** obj, Light** light_comp, Light::Li
 }
 
 
+void Scene::deactivate()
+{
+	Deactivate();
+
+	auto objects = m_objects;
+	for (const auto& obj : objects)
+	{
+		obj->Destroy();
+	}
+	m_objects.clear();
+
+	objects = m_ambient_light_objects;
+	for (const auto& obj : objects)
+	{
+		obj->Destroy();
+	}
+	m_ambient_light_objects.clear();
+}
+
 void Scene::Update_internal(float dt)
 {
 	for (const auto& obj : m_objects)
@@ -110,6 +138,11 @@ void Scene::Update_internal(float dt)
 	}
 
 	Update(dt);
+}
+
+void Scene::remove_object_from_scene(WorldObject* obj)
+{
+	Remove_If_Found(m_objects, obj);
 }
 
 void Scene::load_objects(json objects)

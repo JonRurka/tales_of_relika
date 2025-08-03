@@ -1,6 +1,7 @@
 #include "WorldObject.h"
 
 #include "Engine.h"
+#include "Scene.h"
 #include "Transform.h"
 #include "MeshRenderer.h"
 #include "Component.h"
@@ -161,6 +162,8 @@ void WorldObject::Remove_Object(int idx)
 	if (!m_all_objects.contains(idx)) {
 		return;
 	}
+	WorldObject* obj = m_all_objects[idx];
+	obj->scene()->remove_object_from_scene(obj);
 	delete m_all_objects[idx];
 	m_all_objects.erase(idx);
 }

@@ -178,6 +178,8 @@ Rml::ElementDocument* UI_Engine::Load_Document_Resource(std::string name, std::s
 		return nullptr;
 	if (!m_initialized)
 		return nullptr;
+	if (m_documents.contains(name))
+		return m_documents[name];
 
 	if (!Resources::Has_Data_File(resource_name)) {
 		Logger::LogError(LOG_POS("Load_Document_Resource"), "Document asset '%s' not found!", resource_name.c_str());
@@ -221,6 +223,8 @@ Rml::ElementDocument* UI_Engine::Load_Document_File(std::string name, std::strin
 		return nullptr;
 	if (!m_initialized)
 		return nullptr;
+	if (m_documents.contains(name))
+		return m_documents[name];
 	Rml::ElementDocument* document = m_context->LoadDocument(file_path);
 	if (!document) {
 		Logger::LogError(LOG_POS("Load_Document_File"), "Failed to load document file: %s", name.c_str());
@@ -420,3 +424,5 @@ void UI_Engine::WindowContentScaleCallback(GLFWwindow*, float xscale, float)
 		return;
 	RmlGLFW::ProcessContentScaleCallback(m_context, xscale);
 }
+
+

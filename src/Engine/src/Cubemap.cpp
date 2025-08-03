@@ -43,3 +43,9 @@ void Cubemap::Bind()
 	//glActiveTexture(texture_unit);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_texture);
 }
+
+void Cubemap::Dispose()
+{
+	glDeleteTextures(1, &m_texture);
+}
+

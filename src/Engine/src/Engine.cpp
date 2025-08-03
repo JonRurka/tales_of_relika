@@ -8,6 +8,7 @@
 #include "Light.h"
 #include "Input.h"
 #include "Physics.h"
+#include "Camera.h"
 
 #include <queue>
 
@@ -23,9 +24,12 @@ void Engine::Activate_Scene(Scene* value)
 		return;
 
 	if (m_instance->m_active_scene != nullptr) {
+		//Logger::LogInfo(LOG_POS("Activate_Scene"), "Deactivating scene: %s", m_instance->m_active_scene->Name().c_str());
 		m_instance->m_active_scene->Activate(false);
+
 	}
 	m_instance->m_active_scene = value;
+	//Logger::LogInfo(LOG_POS("Activate_Scene"), "Activating scene: %s", m_instance->m_active_scene->Name().c_str());
 	m_instance->m_active_scene->Activate(true);
 }
 
@@ -53,11 +57,10 @@ void Engine::Stop()
 	m_running = false;
 }
 
-void Engine::Initialize_Scene(Scene* scene, std::string name)
+void Engine::initialize_scene(Scene* scene, std::string name)
 {
+	scene->m_name = name;
 	m_scenes[name] = scene;
-	
-
 }
 
 void Engine::Initialize_Scene(Scene* scene, json data)
@@ -136,9 +139,19 @@ void Engine::game_loop()
 		m_avg_deltaTime = time_sum / previous_frame_times.size();
 		m_fps = 1.0f / m_avg_deltaTime;
 	}
+
+	cleanup();
 }
 
 void Engine::process_input()
 {
 	m_input->update(m_deltaTime);
+}
+
+void Engine::cleanup()
+{
+	Camera::StaticDestroy();
+
+
+
 }
