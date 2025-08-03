@@ -74,6 +74,8 @@ void Camera::Load(json data)
 
 void Camera::OnDestroy()
 {
+	Logger::LogDebug(LOG_POS("OnDestroy"), "Camera destroyed.");
+
 	Activate(false);
 
 	destroy_framebuffer();
@@ -200,10 +202,13 @@ void Camera::Activate(bool active)
 		m_active_camera = this;
 		m_active_camera->Resize_Refresh();
 		Graphics::Instance()->Set_Screen_FrameTexture(m_framebuffer->Active_Texture());
+		Logger::LogDebug(LOG_POS("Activate"), "Set new active camera.");
 	}
 	else if (!active && m_isActive) {
 		m_isActive = false;
 		m_active_camera = nullptr;
+		Graphics::Instance()->Set_Screen_FrameTexture(nullptr);
+		Logger::LogDebug(LOG_POS("Activate"), "Camera set inactive.");
 	}
 }
 

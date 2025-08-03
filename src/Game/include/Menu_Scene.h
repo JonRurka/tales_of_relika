@@ -35,6 +35,9 @@ private:
 	WorldObject* m_camera_obj{ nullptr };
 	Camera* m_camera{ nullptr };
 
+	double m_started_time{ 0 };
+	bool m_game_started{ false };
+
 	void OnStartSP_Clicked();
 
 	void add_main_menu_listeners();

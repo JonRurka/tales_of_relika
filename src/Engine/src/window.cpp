@@ -139,6 +139,8 @@ GLFWwindow* window::Create_Window(const char* title, int width, int height, void
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
     refresh_ui_scale();
 
     int scaled_width = (width * m_main_scale);

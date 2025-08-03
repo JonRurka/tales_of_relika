@@ -221,10 +221,21 @@ void Graphics::Set_Screen_FrameTexture(Texture* tex)
 {
 	if (!m_initialized)
 		return;
-	m_screen_shader->use(false);
-	m_screen_shader->Set_Textures({
-		{"screenTexture", tex}
-	});
+
+	if (tex == nullptr)
+	{
+		m_screen_shader->use(false);
+		m_screen_shader->Set_Textures({});
+	}
+	else
+	{
+		m_screen_shader->Set_Textures(
+		{
+			{"screenTexture", tex}
+		});
+	}
+
+	
 }
 
 // events from glfw start
@@ -293,6 +304,7 @@ void Graphics::Register_Resize_Tex(Texture* tex)
 
 void Graphics::Remove_Resize_Tex(Texture* tex)
 {
+	Logger::LogDebug(LOG_POS("Remove_Resize_Tex"), "Remove resize tex");
 	Remove_If_Found(m_resize_textures, tex);
 }
 

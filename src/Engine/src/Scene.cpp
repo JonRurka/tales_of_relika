@@ -118,14 +118,14 @@ void Scene::deactivate()
 	auto objects = m_objects;
 	for (const auto& obj : objects)
 	{
-		obj->Destroy();
+		//obj->Destroy();
 	}
 	m_objects.clear();
 
 	objects = m_ambient_light_objects;
 	for (const auto& obj : objects)
 	{
-		obj->Destroy();
+		//obj->Destroy();
 	}
 	m_ambient_light_objects.clear();
 }

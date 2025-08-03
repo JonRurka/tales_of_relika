@@ -20,16 +20,22 @@ void Menu_Scene::Init()
 
 	UI_Engine::Instance()->Accept_Input(true);
 
+	m_started_time = Utilities::Get_Time();
+
 }
 
 void Menu_Scene::Update(float dt)
 {
-
+	if (!m_game_started && (Utilities::Get_Time() - m_started_time > 1.0f))
+	{
+		m_game_started = true;
+		OnStartSP_Clicked();
+	}
 }
 
 void Menu_Scene::Deactivate()
 {
-	remove_main_menu_listeners();
+	//remove_main_menu_listeners();
 }
 
 
@@ -38,6 +44,7 @@ void Menu_Scene::OnStartSP_Clicked()
 	Logger::LogDebug(LOG_POS("OnStartSP_Clicked"), "Clicked start SP game.");
 	m_main_menu_screen->Hide();
 	UI_Engine::Instance()->Accept_Input(false);
+	m_camera->Activate(false);
 	Game::OpenVoxelWorld();
 }
 

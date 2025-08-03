@@ -44,8 +44,8 @@ void Game::Init()
 	m_main_menu_scene = Load_Scene<Menu_Scene>("main_menu");
 	m_voxel_world_secen = Load_Scene<VoxelWorld_Scene>("VoxelWorld");
 
-	//m_main_menu_scene->Activate(true);
-	m_voxel_world_secen->Activate(true);
+	m_main_menu_scene->Activate(true);
+	//m_voxel_world_secen->Activate(true);
 }
 
 void Game::init_shaders()
