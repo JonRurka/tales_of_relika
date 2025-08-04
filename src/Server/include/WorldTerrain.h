@@ -29,13 +29,13 @@ public:
 
 	struct TerrainMod {
 	public:
-		float ISO;
-		int Type;
-		bool Change_ISO;
-		bool Change_Type;
-		glm::ivec3 Voxel;
+		float ISO{ 0 };
+		int Type{ 0 };
+		bool Change_ISO{ false };
+		bool Change_Type{ false };
+		glm::ivec3 Voxel{glm::ivec3()};
 
-		glm::ivec3 chunk_coord;
+		glm::ivec3 chunk_coord{ glm::ivec3() };
 
 		TerrainMod(glm::ivec3 voxel) {
 			Voxel = voxel;
@@ -43,6 +43,7 @@ public:
 			Type = 0;
 			Change_ISO = false;
 			Change_Type = false;
+			chunk_coord = glm::ivec3();
 		}
 
 		TerrainMod(glm::ivec3 voxel, float iso, int type) {
@@ -51,6 +52,7 @@ public:
 			Type = type;
 			Change_ISO = true;
 			Change_Type = true;
+			chunk_coord = glm::ivec3();
 		}
 
 		TerrainMod(glm::ivec3 voxel, float iso) {
@@ -59,6 +61,7 @@ public:
 			Type = 0;
 			Change_ISO = true;
 			Change_Type = false;
+			chunk_coord = glm::ivec3();
 		}
 
 		TerrainMod(glm::ivec3 voxel, int type) {
@@ -67,6 +70,7 @@ public:
 			Type = type;
 			Change_ISO = false;
 			Change_Type = true;
+			chunk_coord = glm::ivec3();
 		}
 	};
 

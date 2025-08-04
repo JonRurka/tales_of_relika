@@ -284,15 +284,15 @@ namespace input {
 		void update_action(MouseAction new_action) { action = new_action; }
 
 	private:
-		MouseButton button;
-		MouseAction action;
+		MouseButton button{ MouseButton::Unknown};
+		MouseAction action{ MouseAction::Unknown};
 
-		float pos_x;
-		float pos_y;
+		float pos_x{ 0 };
+		float pos_y{ 0 };
 
-		double press_time;
-		int num_frames;
-		bool used;
+		double press_time{ 0 };
+		int num_frames{ 0 };
+		bool used{ false };
 	};
 
 	enum class TouchAction
@@ -330,7 +330,7 @@ namespace input {
 		float get_pos_y() { return pos_y; }
 
 	private:
-		TouchAction action;
+		TouchAction action{ TouchAction::Unknown};
 
 		int32_t pointer_id{ 0 };
 

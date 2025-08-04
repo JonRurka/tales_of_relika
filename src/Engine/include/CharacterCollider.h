@@ -2,8 +2,8 @@
 
 #include "Collider.h"
 
-#define DEFAULT_RADIUS (0.5f)
-#define DEFAULT_HEIGHT (1.5f)
+#define DEFAULT_CAPSUE_RADIUS (0.5f)
+#define DEFAULT_CAPSUE_HEIGHT (1.5f)
 
 class btPairCachingGhostObject;
 class btKinematicCharacterController;
@@ -28,8 +28,8 @@ private:
 
 protected:
 
-	float m_radius{ DEFAULT_RADIUS };
-	float m_height{ DEFAULT_HEIGHT };
+	float m_radius{ DEFAULT_CAPSUE_RADIUS };
+	float m_height{ DEFAULT_CAPSUE_HEIGHT };
 	btPairCachingGhostObject* m_ghostObject;
 	btKinematicCharacterController* m_charCon;
 

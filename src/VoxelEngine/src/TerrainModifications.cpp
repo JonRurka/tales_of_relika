@@ -171,7 +171,7 @@ int TerrainModifications::find_next_index()
 		}
 		m_current_index++;
 		if (m_current_index >= m_max_chunks) {
-			m_current_index == 0;
+			m_current_index = 0;
 		}
 		num_traversed++;
 	} while (num_traversed < m_max_chunks);

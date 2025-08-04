@@ -57,8 +57,8 @@ private:
 
 	static UI_Engine* m_instance;
 
-	SystemInterface_GLFW* m_system_interface;
-	RenderInterface_GL3* m_render_interface;
+	SystemInterface_GLFW* m_system_interface{nullptr};
+	RenderInterface_GL3* m_render_interface{nullptr};
 
 	bool m_context_dimensions_dirty{true};
 	Rml::Context* m_context{nullptr};

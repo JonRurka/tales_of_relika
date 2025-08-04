@@ -15,6 +15,8 @@ void Scene::Activate(bool active)
 {
 	if (active && m_active)
 		return;
+	if (!active && !m_active)
+		return;
 
 	m_active = active;
 

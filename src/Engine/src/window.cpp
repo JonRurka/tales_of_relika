@@ -11,7 +11,7 @@
 #include <Engine.h>
 
 
-#define GLFW_HEADLESS true
+#define GLFW_HEADLESS false
 
 #ifdef WIN32
 #include <GLFW/glfw3native.h>

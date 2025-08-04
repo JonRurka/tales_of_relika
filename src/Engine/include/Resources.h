@@ -32,15 +32,15 @@ public:
 	public:
 		std::string name;
 		std::string path;
-		bool loaded;
-		void* handle;
-		void* data;
-		size_t data_size;
-		int pack_index;
-		int pack_offset;
+		bool loaded{ false };
+		void* handle{ nullptr };
+		void* data{ nullptr };
+		size_t data_size{ 0 };
+		int pack_index{ 0 };
+		int pack_offset{ 0 };
 
 		// shader specific
-		bool use_spirv;
+		bool use_spirv{ false };
 
 		// data specific
 		std::string relative_path;

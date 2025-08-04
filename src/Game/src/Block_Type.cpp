@@ -24,7 +24,7 @@ int Block_Type::GetTileTexture_Callback(int block_id, int tile_id, uint8_t block
 bool Block_Type::CanRender_Callback(int block_id)
 {
     if(block_id < 0 || block_id >= m_num_types) {
-        return -1;
+        return false;
     }
     Block_Type* block_type = m_type_array[block_id];
     if (block_type == nullptr) {
