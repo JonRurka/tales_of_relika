@@ -19,7 +19,59 @@ class Scene
 	friend class WorldObject;
 public:
 
+	struct SceneStartData {
+	public:
+
+		void setFloat(std::string name, float val) {
+			m_float_settings[name] = val;
+		}
+
+		void setInt(std::string name, int val) {
+			m_int_settings[name] = val;
+		}
+
+		void setBool(std::string name, bool val) {
+			m_bool_settings[name] = val;
+		}
+
+		void setString(std::string name, std::string val) {
+			m_string_settings[name] = val;
+		}
+
+
+		float getFloat(std::string name) {
+			if (!m_float_settings.contains(name))
+				return 0;
+			return m_float_settings[name];
+		}
+
+		int getInt(std::string name) {
+			if (!m_int_settings.contains(name))
+				return 0;
+			return m_int_settings[name];
+		}
+
+		bool getBool(std::string name) {
+			if (!m_bool_settings.contains(name))
+				return false;
+			return m_bool_settings[name];
+		}
+
+		std::string getString(std::string name) {
+			if (!m_string_settings.contains(name))
+				return "";
+			return m_string_settings[name];
+		}
+
+	private:
+		std::map<std::string, float> m_float_settings;
+		std::map<std::string, int> m_int_settings;
+		std::map<std::string, std::string> m_string_settings;
+		std::map<std::string, bool> m_bool_settings;
+	};
+
 	void Activate(bool active);
+	void Activate(bool active, SceneStartData data);
 
 	void Initialize();
 
@@ -44,12 +96,15 @@ protected:
 	virtual void Update(float dt) {};
 	virtual void Deactivate() {};
 
+	SceneStartData Start_Data() const { return m_start_data; }
+
 private:
 	std::vector<WorldObject*> m_objects;
 	std::vector<WorldObject*> m_ambient_light_objects;
 	bool m_active{ false };
 	std::string m_name;
 
+	SceneStartData m_start_data{};
 
 	void deactivate();
 

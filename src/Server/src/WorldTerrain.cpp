@@ -12,10 +12,6 @@ namespace {
 	}
 }
 
-WorldTerrain::WorldTerrain()
-{
-}
-
 void WorldTerrain::Init(World* world)
 {
 	m_world = world;

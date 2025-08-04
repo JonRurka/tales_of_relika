@@ -2,6 +2,7 @@
 
 #include "Game_Resources.h"
 #include "Game.h"
+#include "VoxelWorld_Scene.h"
 
 #include <RmlUi/Core.h>
 
@@ -42,10 +43,17 @@ void Menu_Scene::Deactivate()
 void Menu_Scene::OnStartSP_Clicked()
 {
 	Logger::LogDebug(LOG_POS("OnStartSP_Clicked"), "Clicked start SP game.");
+
+	SceneStartData start_data{};
+	start_data.setInt("connection", (int)VoxelWorld_Scene::ConnectMode::Remote);
+	start_data.setString("username", "test_user");
+	start_data.setInt("user_id", 1);
+	start_data.setString("host", "204.12.203.152");
+
 	m_main_menu_screen->Hide();
 	UI_Engine::Instance()->Accept_Input(false);
 	m_camera->Activate(false);
-	Game::OpenVoxelWorld();
+	Game::OpenVoxelWorld(start_data);
 }
 
 void Menu_Scene::add_main_menu_listeners()

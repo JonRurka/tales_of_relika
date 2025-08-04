@@ -7,7 +7,7 @@ using namespace DynamicCompute::Compute;
 IComputeController* DynamicCompute::Compute::ComputeInterface::GetComputeController(Compute_SDK implementation, ControllerInfo info)
 {
 	//printf("SDK 1: %i\n", (int)implementation);
-	return new IComputeController(ComputeInterface_private::GetComputeController((ComputeInterface_private::Compute_SDK)implementation, *((ComputeInterface_private::ControllerInfo*)&info)));
+	return new IComputeController(ComputeInterface_private::GetComputeController((ComputeInterface_private::Compute_SDK)implementation, *(reinterpret_cast<ComputeInterface_private::ControllerInfo*>(&info))));
 }
 
 void ComputeInterface::DisposePlatform(Compute_SDK implementation)

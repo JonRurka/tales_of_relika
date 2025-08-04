@@ -10,8 +10,8 @@ public:
 
 	static Game* GameInstance() { return m_instance; }
 
-	static void OpenMainMenu() { m_instance->m_main_menu_scene->Activate(true); }
-	static void OpenVoxelWorld(){ m_instance->m_voxel_world_secen->Activate(true); }
+	static void OpenMainMenu(Scene::SceneStartData data) { m_instance->m_main_menu_scene->Activate(true, data); }
+	static void OpenVoxelWorld(Scene::SceneStartData data){ m_instance->m_voxel_world_secen->Activate(true, data); }
 
 protected:
 

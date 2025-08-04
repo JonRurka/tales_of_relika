@@ -12,14 +12,19 @@
 GameClient* GameClient::m_instance{nullptr};
 
 
-void GameClient::Init(std::string user_name, int32_t id, bool remote)
+void GameClient::Init(std::string user_name, std::string host, int32_t id, bool remote)
 {
 	m_user_ID = id;
 	m_debug_userName = user_name;
 
 	NetClient::HostType type = remote ? NetClient::HostType::Remote : NetClient::HostType::Local;
 
-	m_client = new NetClient("game_client", type, HOST);
+	if (type == NetClient::HostType::Local)
+	{
+		host = HOST;
+	}
+
+	m_client = new NetClient("game_client", type, host);
 	m_client->SetOnConnectSuccess(GameClient::OnConnect, this);
 	m_client->AddCommand(OpCodes::Client::Identify_Result, GameClient::OnIdentifyResult_cb, this);
 }

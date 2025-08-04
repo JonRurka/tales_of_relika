@@ -13,6 +13,11 @@ using json = nlohmann::json;
 
 void Scene::Activate(bool active)
 {
+	Activate(active, SceneStartData{});
+}
+
+void Scene::Activate(bool active, SceneStartData data)
+{
 	if (active && m_active)
 		return;
 	if (!active && !m_active)
@@ -24,6 +29,7 @@ void Scene::Activate(bool active)
 
 	if (m_active) 
 	{
+		m_start_data = data;
 		Initialize();
 	}
 	else

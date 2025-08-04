@@ -29,7 +29,8 @@
 
 void VoxelWorld_Scene::Init()
 {
-	m_remote_connection = false;
+	VoxelWorld_Scene::ConnectMode connect_type = (VoxelWorld_Scene::ConnectMode)Start_Data().getInt("connection");
+	m_remote_connection = (connect_type == VoxelWorld_Scene::ConnectMode::Remote);
 
 	m_loading_screen = UI_Engine::Instance()->Load_Document_Resource("loading", Game_Resources::UI::Documents::HUD::LOADING);
 	m_loading_screen->Show();
@@ -244,9 +245,17 @@ void VoxelWorld_Scene::setup_client_server()
 
 void VoxelWorld_Scene::setup_game_client()
 {
+
+	std::string username = Start_Data().getString("username");
+	std::string host = Start_Data().getString("host");
+	uint32_t user_id = Start_Data().getInt("user_id");
+
+	if (username == "")
+		username = "test_user";
+
 	game_client_obj = Instantiate("Game_Client");
 	game_client = game_client_obj->Add_Component<GameClient>();
-	game_client->Init("test_user", 1, m_remote_connection);
+	game_client->Init(username, host, user_id, m_remote_connection);
 	game_client->SetOnConnectSuccess(OnGameConnect, this);
 	game_client->Net_Client()->AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
 	game_client->Connect();

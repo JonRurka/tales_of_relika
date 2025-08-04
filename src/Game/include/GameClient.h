@@ -23,7 +23,7 @@ public:
 		return m_instance->m_client;
 	}
 
-	void Init(std::string user_name, int32_t id, bool remote);
+	void Init(std::string user_name, std::string host, int32_t id, bool remote);
 
 	void SetOnConnectSuccess(OnGameConnectActionPtr cb, void* p) {
 		OnGameConnect_delegate = cb;

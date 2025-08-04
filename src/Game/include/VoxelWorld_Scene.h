@@ -22,6 +22,12 @@ namespace Rml {
 class VoxelWorld_Scene : public Scene {
 public:
 
+	enum class ConnectMode : int
+	{
+		Local = 1,
+		Remote = 2
+	};
+
 	static void OnGameConnect(void* obj) {
 		VoxelWorld_Scene* game_client = (VoxelWorld_Scene*)obj;
 		game_client->GameConnected();
