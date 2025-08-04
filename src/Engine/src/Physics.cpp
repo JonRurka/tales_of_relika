@@ -101,7 +101,7 @@ void Physics::Init()
 
 Physics::RayHit Physics::Raycast(glm::vec3 start, glm::vec3 dir)
 {
-	RayHit res;
+	RayHit res{};
 	res.did_hit = false;
 	res.start = start;
 
@@ -137,7 +137,7 @@ Physics::RayHit Physics::Raycast(glm::vec3 start, glm::vec3 dir)
 
 Physics::RayHitList Physics::RaycastAll(glm::vec3 start, glm::vec3 dir)
 {
-	RayHitList res;
+	RayHitList res{};
 	res.did_hit = false;
 
 	if (m_instance == nullptr) {

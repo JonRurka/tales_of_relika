@@ -113,10 +113,10 @@ void ColliderGenerator::process_request(Request* req)
 
 		btIndexedMesh indexedMesh;
 		indexedMesh.m_numTriangles = tris.size() / 3;
-		indexedMesh.m_triangleIndexBase = (unsigned char*)tris.data();
+		indexedMesh.m_triangleIndexBase = reinterpret_cast<unsigned char*>(tris.data());
 		indexedMesh.m_triangleIndexStride = 3 * sizeof(unsigned int);
 		indexedMesh.m_numVertices = vert.size();
-		indexedMesh.m_vertexBase = (unsigned char*)vert3.data();
+		indexedMesh.m_vertexBase = reinterpret_cast<unsigned char*>(vert3.data());
 		indexedMesh.m_vertexStride = sizeof(glm::vec3);
 
 		btTriangleIndexVertexArray* m_opaque_TriangleIndexVertexArray = new btTriangleIndexVertexArray();

@@ -118,7 +118,7 @@ private:
     std::queue<std::vector<uint8_t>> m_tcp_send_queue;
     std::queue<std::vector<uint8_t>> m_udp_send_queue;
 
-    OnConnectActionPtr OnConnect_delegate;
+    OnConnectActionPtr OnConnect_delegate{ nullptr };
     void* OnConnect_obj{ nullptr };
 
 

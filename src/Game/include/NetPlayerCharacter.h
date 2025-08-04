@@ -37,7 +37,7 @@ private:
 	bool m_is_jumping{ false };
 	bool m_is_falling{ false };
 	std::string m_username;
-	uint32_t m_user_id;
+	uint32_t m_user_id{ 0 };
 
 	glm::vec3 m_velocity;
 
@@ -47,9 +47,9 @@ private:
 	glm::vec3 m_new_location; // new location from server
 	glm::quat m_new_rotation; // new rotation from server
 
-	float m_syncDelay;
-	float m_syncTime;
-	double m_last_orientation_update;
+	float m_syncDelay{ 0 };
+	float m_syncTime{ 0 };
+	double m_last_orientation_update{ 0 };
 	glm::vec3 m_current_location; // most recent exact location
 	glm::quat m_current_rotation; // most recent exact location
 
@@ -62,7 +62,7 @@ private:
 	bool VectorIsZero(glm::vec3 vec);
 	glm::vec3 SmoothVelocity(glm::vec3 newVelocity);
 
-	int64_t m_rand_seed;
+	int64_t m_rand_seed{ 0 };
 
 	inline static const std::string LOG_LOC{ "NET_PLAYER_CHARACTER" };
 };

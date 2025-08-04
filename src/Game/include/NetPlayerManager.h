@@ -65,8 +65,8 @@ private:
 
 	static NetPlayerManager* m_instance;
 
-	LocalPlayerCharacter* m_local_player;
-	uint32_t m_local_player_id;
+	LocalPlayerCharacter* m_local_player{ nullptr };
+	uint32_t m_local_player_id{ 0 };
 
 	double m_last_sent_location{ 0.0 };
 	int m_frame_counter{ 0 };

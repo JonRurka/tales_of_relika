@@ -50,10 +50,9 @@ void WorldController::RoutWorldNetCommand(SocketUser& user, Data data)
 	}
 	else 
 	{
-		int player_null = player == nullptr;
-		int world_null = player->Get_Current_World() != nullptr;
-		Logger::LogDebug(LOG_POS("RoutWorldNetCommand"), "World command route failed: user or world null! Player: %i, World: %i",
-			player_null, world_null);
+		//int player_null = player == nullptr;
+		//int world_null = player->Get_Current_World() != nullptr;
+		Logger::LogDebug(LOG_POS("RoutWorldNetCommand"), "World command route failed: user or world null!");
 	}
 
 }

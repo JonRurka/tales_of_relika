@@ -266,7 +266,7 @@ void AsyncServer::Receive_UDP(std::vector<uint8_t> buffer, boost::asio::ip::addr
             //return;
         }
 
-        uint16_t udp_id = *((uint16_t*)buffer.data());
+        uint16_t udp_id = *(reinterpret_cast<uint16_t*>(buffer.data()));
         buffer = BufferUtils::RemoveFront(Remove_UDP_ID, buffer);
 
         uint8_t command = buffer[0];
@@ -295,7 +295,7 @@ void AsyncServer::Receive_UDP(uint8_t* data, uint16_t size, boost::asio::ip::add
 {
     if (size >= 3)
     {
-        uint16_t udp_id = *((uint16_t*)data);
+        uint16_t udp_id = *(reinterpret_cast<uint16_t*>(data));
         uint8_t* buffer = &data[2];
         //uint8_t* buffer = BufferUtils::RemoveFront(Remove_UDP_ID, buffer);
 
@@ -451,7 +451,7 @@ void AsyncServer::System_Cmd(SocketUser& socket_user, Data data)
         //Logger::Log(LOG_POS("System_Cmd"), "Received ping for client: " + socket_user.SessionToken);
         break;
     case 0x04: // set UDP client port
-        uint16_t port = *((uint16_t*)data.Buffer.data());
+        uint16_t port = *(reinterpret_cast<uint16_t*>(data.Buffer.data()));
         socket_user.Set_Client_UDP_Port(port);
         break;
     }

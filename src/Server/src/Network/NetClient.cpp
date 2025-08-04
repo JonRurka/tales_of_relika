@@ -285,7 +285,7 @@ void NetClient::read_socket_tcp()
 
     boost::asio::read(m_socket_tcp, boost::asio::buffer(length_buff, 2));
 
-    uint16_t size = *((uint16_t*)&length_buff);
+    uint16_t size = *(reinterpret_cast<uint16_t*>(&length_buff));
 
     // TODO: garentee this won't fragment
     boost::asio::read(m_socket_tcp, boost::asio::buffer(g_tcp_message, size));
@@ -299,7 +299,7 @@ void NetClient::read_socket_udp()
 {
     m_socket_udp.receive_from(boost::asio::buffer(g_udp_message), m_server_endpoint_udp);
 
-    uint16_t size = *((uint16_t*)g_udp_message);
+    uint16_t size = *(reinterpret_cast<uint16_t*>(g_udp_message));
 
     uint8_t* data_ptr = &g_udp_message[2];
     std::vector<uint8_t> buffer(data_ptr, data_ptr + size);
@@ -414,8 +414,8 @@ void NetClient::SystemCmds_internal(Data data)
     switch (sub_command) {
     case 0x01: // connected.
         if (data.Buffer[0] == 0x01) {
-            m_UDP_ID = *((uint16_t*)(&data.Buffer.data()[1]));
-            uint16_t udp_port = *((uint16_t*)(&data.Buffer.data()[3]));
+            m_UDP_ID = *(reinterpret_cast<uint16_t*>(&data.Buffer.data()[1]));
+            uint16_t udp_port = *(reinterpret_cast<uint16_t*>(&data.Buffer.data()[3]));
             Logger::Log(LOG_POS("SystemCmds_internal"), "Received UDP ID '%d' on port %d", m_UDP_ID, udp_port);
             Start_UDP(udp_port);
             //uint32_t udp_port = (m_client_port_udp);

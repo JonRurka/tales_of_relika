@@ -79,18 +79,18 @@ private:
 	template<typename T>
 	struct shader_value {
 		T value;
-		bool sync;
-		bool bound_update;
+		bool sync{ false };
+		bool bound_update{ false };
 	};
 
 	struct texture_value {
-		Texture* texture;
+		Texture* texture{ nullptr };
 		std::string name;
-		int bind_index;
-		bool do_bind;
+		int bind_index{ 0 };
+		bool do_bind{ false };
 
-		bool sync;
-		bool bound_update;
+		bool sync{ false };
+		bool bound_update{ false };
 	};
 
 	bool m_supports_lighting{ false };

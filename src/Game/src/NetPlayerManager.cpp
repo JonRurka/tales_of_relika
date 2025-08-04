@@ -33,7 +33,7 @@ void NetPlayerManager::OnUpdateOrientations(Data data)
 
 		uint8_t player_inst_id = packet[0];
 
-		float* orientation_buff = (float*)(&packet[1]);
+		float* orientation_buff = reinterpret_cast<float*>(&packet[1]);
 
 		glm::vec3 player_loc = glm::vec3(orientation_buff[0] * 100, orientation_buff[1] * 100, orientation_buff[2] * 100);
 		glm::quat player_rot = glm::quat(orientation_buff[3], orientation_buff[4], orientation_buff[5], orientation_buff[6]);
@@ -205,7 +205,8 @@ void NetPlayerManager::send_player_location()
 		rotation.w
 	};
 
-	std::vector<uint8_t> data = std::vector<uint8_t>((uint8_t*)(or_buf), (uint8_t*)(or_buf + sizeof(or_buf)));
+	uint8_t* buff_ptr = reinterpret_cast<uint8_t*>(or_buf);
+	std::vector<uint8_t> data = std::vector<uint8_t>(buff_ptr, buff_ptr + sizeof(or_buf));
 	data = BufferUtils::AddFirst((uint8_t)OpCodes::Server_World::Update_Orientation, data);
 
 	GameClient::Instance()->Net_Client()->Send(OpCodes::Server::World_Command, data, Protocal_Udp);

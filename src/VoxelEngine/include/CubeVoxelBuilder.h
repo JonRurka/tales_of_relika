@@ -81,8 +81,8 @@ namespace VoxelEngine {
 
 		Static_Settings m_static_settings{};
 		
-		RequestTileTexturePtr m_request_tile_tex_delegate;
-		RequestCanRenderPtr m_can_render_delegate;
+		RequestTileTexturePtr m_request_tile_tex_delegate{nullptr};
+		RequestCanRenderPtr m_can_render_delegate{ nullptr };
 
 		StructureDataStorage* m_structure_data{ nullptr };
 

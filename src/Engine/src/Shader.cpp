@@ -13,6 +13,8 @@
 #include "spirv_cross/spirv_reflect.hpp"
 #include "spirv_cross/spirv_cross_util.hpp"
 
+#include <cstdint>
+
 
 std::unordered_map<unsigned int, std::vector<Renderer*>> Shader::m_renderers;
 std::unordered_map<unsigned int, Shader*> Shader::m_shaders;
@@ -547,7 +549,7 @@ std::vector<std::vector<Renderer*>> Shader::Get_Shader_Renderer_List()
 
 void Shader::load_uniforms(const std::vector<char> spirv_bin)
 {
-    uint32_t* spv_data = (uint32_t*)spirv_bin.data();
+    uint32_t* spv_data = reinterpret_cast<uint32_t*>((char*)spirv_bin.data());
     std::vector<uint32_t> spirv_data(spv_data, spv_data + (spirv_bin.size() / 4));
     spirv_cross::Compiler compiler(spirv_data);
 

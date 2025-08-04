@@ -47,10 +47,10 @@ private:
 
 	static LocalPlayerCharacter* m_instance;
 
-	glm::vec3 m_old_location;
-	glm::vec3 m_location;
-	glm::vec3 m_velocity;
-	glm::vec3 m_server_loc;
+	glm::vec3 m_old_location{ glm::vec3()};
+	glm::vec3 m_location{ glm::vec3() };
+	glm::vec3 m_velocity{ glm::vec3() };
+	glm::vec3 m_server_loc{ glm::vec3() };
 	bool m_do_move{ false };
 	uint64_t m_move_send_id{ 0 };
 
@@ -67,12 +67,12 @@ private:
 	float m_moveSpeed = 10.0f; // movement speed of the character
 	float m_turnSpeed = 180.0f; // turn speed of the character
 	float m_jump_force = 300.0f;
-	Transform* m_cameraTransform; // reference to the camera transform
+	Transform* m_cameraTransform{nullptr}; // reference to the camera transform
 
 	Transform* m_cam_trans{ nullptr };
 	float m_cam_horizontalAngle{ 0 };
 	float m_cam_verticalAngle{ 0 };
-	glm::vec3 m_cam_euler;
+	glm::vec3 m_cam_euler{ glm::vec3() };
 
 	glm::vec3 cam_offset{ CAM_OFFSET_DEFAULT };
 	float m_jump_power{ JUMP_POWER_DEFAULT };
@@ -83,7 +83,7 @@ private:
 	glm::vec3 m_look_dir_right;
 	Standard_Material* m_character_material{ nullptr };
 
-	Character_HUD* m_hud;
+	Character_HUD* m_hud{ nullptr };
 
 	double m_last_send_move{ 0 };
 

@@ -1,5 +1,6 @@
 # Build folder
 build
+tales_of_relica-cppcheck-build-dir
 
 # Prerequisites
 *.d

@@ -434,7 +434,7 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 
 void World::UpdateOrientation_NetCmd(Player& player, Data data)
 {
-	float* loc_buff = (float*)data.Buffer.data();
+	float* loc_buff = reinterpret_cast<float*>(data.Buffer.data());
 	//float* rot_buff = &((float*)data.Buffer.data())[3];
 
 	float loc_x = loc_buff[0];

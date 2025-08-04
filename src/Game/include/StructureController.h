@@ -121,7 +121,7 @@ private:
 	double m_chunkMeterSizeX{ DEFAULT_METER_SIZE };
 	double m_chunkMeterSizeY{ DEFAULT_METER_SIZE };
 	double m_chunkMeterSizeZ{ DEFAULT_METER_SIZE };
-	double m_half;
+	double m_half{ 0 };
 
 	int m_chunk_size_x{ 0 };
 	int m_chunk_size_y{ 0 };

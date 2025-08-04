@@ -33,7 +33,7 @@ public:
 		int Type{ 0 };
 		bool Change_ISO{ false };
 		bool Change_Type{ false };
-		glm::ivec3 Voxel{glm::ivec3()};
+		glm::ivec3 Voxel{ glm::ivec3() };
 
 		glm::ivec3 chunk_coord{ glm::ivec3() };
 
@@ -94,8 +94,6 @@ public:
 
 	static int Hash_Chunk(glm::ivec3 chunk);
 
-	WorldTerrain();
-
 	ServerTerrainChunk* Spawn_Chunk(glm::ivec3 chunk_coord) { return queue_chunk_create(chunk_coord); }
 
 	void Despawn_Chunk(glm::ivec3 chunk_coord) { queue_chunk_delete(chunk_coord); }
@@ -144,13 +142,13 @@ private:
 	HeightmapGenerator* m_heightmap_gen{ nullptr };
 	ChunkSettings settings;
 
-	World* m_world{nullptr};
+	World* m_world{ nullptr };
 
 	double m_voxelsPerMeter{ DEFAULT_VOXELS_PER_METER };
 	double m_chunkMeterSizeX{ DEFAULT_METER_SIZE };
 	double m_chunkMeterSizeY{ DEFAULT_METER_SIZE };
 	double m_chunkMeterSizeZ{ DEFAULT_METER_SIZE };
-	double m_half;
+	double m_half{ 0 };
 
 	int m_chunk_size_x{ 0 };
 	int m_chunk_size_y{ 0 };

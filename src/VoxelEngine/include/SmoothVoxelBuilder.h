@@ -167,16 +167,16 @@ namespace VoxelEngine {
 		const int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
 		const int m_voxel_runtime{ VOXEL_RUNTIME };
 
-		Vulkan_Device_Info m_device_vk;
-		OpenCL_Device_Info m_device_cl;
+		Vulkan_Device_Info m_device_vk{};
+		OpenCL_Device_Info m_device_cl{};
 		ComputeInterface::ControllerInfo m_controllerInfo{};
-		IComputeController* m_controller;
+		IComputeController* m_controller{ nullptr };
 
 		HeightmapGenerator* m_HeightmapGenerator{ nullptr };
 		TerrainModifications* m_Terrain_Modifications{ nullptr };
 		ISO_Sampler* m_ISO_Sampler{ nullptr };
 
-		IComputeProgram::FileType m_type;
+		IComputeProgram::FileType m_type{ IComputeProgram::FileType::Binary_Data};
 
 		// Programs
 

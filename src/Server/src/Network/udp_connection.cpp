@@ -126,7 +126,7 @@ void udp_connection::handle_receive(const boost::system::error_code& error, size
 		return;
 	}
 
-	uint16_t size = *((uint16_t*)m_recv_buff);
+	uint16_t size = *(reinterpret_cast<uint16_t*>(m_recv_buff));
 
 	//uint8_t* tmp = &m_recv_buff[2];
 	//for (int i = 0; i < size; i++) {

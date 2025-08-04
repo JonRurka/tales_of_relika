@@ -61,8 +61,8 @@ void SocketUser::HandleStartConnect_Finished(bool successfull)
 		
 		uint16_t udp_port = EnableUdp();
 
-		uint8_t* udp_buf = (uint8_t*)&udp_id;
-		uint8_t* udp_port_buf = (uint8_t*)&udp_port;
+		uint8_t* udp_buf = reinterpret_cast<uint8_t*>(&udp_id);
+		uint8_t* udp_port_buf = reinterpret_cast<uint8_t*>(&udp_port);
 
 		//user.UdpID = udpid;
 		//AddUdpID(udpid, user.SessionToken);

@@ -113,7 +113,7 @@ void tcp_connection::Handle_Initial_Connect(
 	}
 
 	uint16_t desired_size = 3;// *((uint16_t*)&length_buff);
-	uint16_t actual_size = *((uint16_t*)&length_buff);
+	uint16_t actual_size = *(reinterpret_cast<uint16_t*>(&length_buff));
 
 	uint8_t message[3];
 	boost::asio::read(socket_, boost::asio::buffer(message, desired_size));
@@ -155,7 +155,7 @@ void tcp_connection::handle_read(const boost::system::error_code& err, size_t tr
 		return;
 	}
 
-	uint16_t size = *((uint16_t*)&length_buff);
+	uint16_t size = *(reinterpret_cast<uint16_t*>(&length_buff));
 
 	if (size == 0) {
 		Logger::Log(LOG_POS("handle_read"), "TCP Buffer empty!");
@@ -163,7 +163,7 @@ void tcp_connection::handle_read(const boost::system::error_code& err, size_t tr
 		return;
 	}
 
-	uint8_t* message = new uint8_t[size];
+	
 
 	if (!socket_.is_open()) {
 		Logger::Log(LOG_POS("handle_read"), "TCP Socket closed!");
@@ -171,11 +171,14 @@ void tcp_connection::handle_read(const boost::system::error_code& err, size_t tr
 		return;
 	}
 
+	uint8_t* message = new uint8_t[size];
+
 	//Logger::Log("Received bytes: " + std::to_string(size));
 	try {
 		boost::asio::read(socket_, boost::asio::buffer(message, size));
 	}
 	catch (boost::system::system_error ex) {
+		delete[] message;
 		AsyncServer::GetInstance()->RemovePlayer(socket_user.lock()->SessionToken);
 		return;
 	}

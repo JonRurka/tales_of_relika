@@ -49,7 +49,7 @@ void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 	vbo_buffer = m_controller->NewReadWriteBuffer(elements, STRIDE, true);
 	//Logger::LogDebug(LOG_POS("Init"), "Max vert capacity: %i, Max VBO capacity: %i", elements, elements * STRIDE);
 
-	float* zero_data = new float[elements * STRIDE];
+	//float* zero_data = new float[elements * STRIDE];
 
 	IComputeProgram::BindIndex ind{};
 	ind.GlobalIndex = 0;

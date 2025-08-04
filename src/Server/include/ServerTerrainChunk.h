@@ -19,8 +19,6 @@ class World;
 class ServerTerrainChunk {
 public:
 
-	ServerTerrainChunk();
-
 	void Init(WorldTerrain* controller);
 
 	void Update(float dt);
@@ -44,9 +42,9 @@ private:
 	glm::ivec3 m_chunk_coords;
 	glm::fvec3 m_chunk_world_pos;
 	glm::ivec4 m_counts;
-	WorldTerrain* m_controller;
-	World* m_world;
-	WorldPhysics* m_world_physics;
+	WorldTerrain* m_controller{ nullptr };
+	World* m_world{ nullptr };
+	WorldPhysics* m_world_physics{ nullptr };
 	bool m_assigned{ false };
 	bool m_should_despawn{ false };
 	int m_usages{ 0 };

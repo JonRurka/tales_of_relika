@@ -12,36 +12,30 @@ class SocketUser : public boost::enable_shared_from_this<SocketUser> {
 
 public:
 	std::weak_ptr<IUser> User;
-	bool has_user;
+	bool has_user{ false };
 	std::string SessionToken;
-	int Permission;
-	bool Connected;
-	bool Receiving;
-	bool UdpEnabled;
-	uint16_t UdpID;
-	bool CloseMessage;
+	int Permission{ 0 };
+	bool Connected{ false };
+	bool Receiving{ false };
+	bool UdpEnabled{ false };
+	uint16_t UdpID{ 0 };
+	bool CloseMessage{ false };
 	tcp_connection::pointer tcp_connection_client;
 	udp_connection::pointer udp_connection_client;
 
 	tcp::endpoint TcpEndPoint;
 	udp::endpoint UdpEndPoint;
 
-	uint64_t m_last_ping;
+	uint64_t m_last_ping{ 0 };
 
 private:
-	AsyncServer* _server;
+	AsyncServer* _server{ nullptr };
 	boost::timer timeOutWatch;
-	bool IsAuthenticated;
+	bool IsAuthenticated{ false };
 
 	//udp::socket send_socket_;
 
 public:
-
-	SocketUser() {
-		Connected = false;
-		has_user = false;
-		UdpID = 0;
-	}
 
 	SocketUser(AsyncServer* server, tcp_connection::pointer client);
 

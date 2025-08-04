@@ -53,10 +53,10 @@ private:
 	NetClient* m_client{ nullptr };
 	static GameClient* m_instance;
 
-	OnGameConnectActionPtr OnGameConnect_delegate;
+	OnGameConnectActionPtr OnGameConnect_delegate{ nullptr };
 	void* OnGameConnect_obj{ nullptr };
 
-	int32_t m_local_player_user_id;
+	int32_t m_local_player_user_id{ 0 };
 
 	std::string m_debug_userName;
 	int m_user_ID{ 0 };

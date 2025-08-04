@@ -311,34 +311,34 @@ namespace input {
 	public:
 		TouchInputEvent(int32_t pointer_id, size_t pointer_count, TouchAction action, float pos_x, float pos_y) :
 			InputEvent{ EventSource::Touchscreen },
-			action{ action },
-			pointer_id{ pointer_id },
-			touch_points{ touch_points },
-			pos_x{ pos_x },
-			pos_y{ pos_y }
+			m_action{ action },
+			m_pointer_id{ pointer_id },
+			m_touch_points{ pointer_count },
+			m_pos_x{ pos_x },
+			m_pos_y{ pos_y }
 		{
 		}
 
-		TouchAction get_action() { return action; }
+		TouchAction get_action() { return m_action; }
 
-		int32_t get_pointer_id() { return pointer_id; }
+		int32_t get_pointer_id() { return m_pointer_id; }
 
-		size_t get_touch_points() { return touch_points; }
+		size_t get_touch_points() { return m_touch_points; }
 
-		float get_pos_x() { return pos_x; }
+		float get_pos_x() { return m_pos_x; }
 
-		float get_pos_y() { return pos_y; }
+		float get_pos_y() { return m_pos_y; }
 
 	private:
-		TouchAction action{ TouchAction::Unknown};
+		TouchAction m_action{ TouchAction::Unknown};
 
-		int32_t pointer_id{ 0 };
+		int32_t m_pointer_id{ 0 };
 
-		size_t touch_points{ 0 };
+		size_t m_touch_points{ 0 };
 
-		float pos_x{0};
+		float m_pos_x{0};
 
-		float pos_y{0};
+		float m_pos_y{0};
 	};
 
 	typedef void (*OnWindowErrorActionPtr)(void*, std::string error);

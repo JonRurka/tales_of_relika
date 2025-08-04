@@ -44,8 +44,8 @@ private:
 	glm::ivec3 m_chunk_coords;
 	glm::fvec3 m_chunk_world_pos;
 	glm::ivec4 m_counts;
-	WorldGenController* m_controller;
-	Stitch_VBO* m_vbo_stitch;
+	WorldGenController* m_controller{nullptr};
+	Stitch_VBO* m_vbo_stitch{ nullptr };
 	bool m_assigned{ false };
 	bool m_has_collision{ false };
 	bool m_should_despawn{ false };

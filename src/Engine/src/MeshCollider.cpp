@@ -44,10 +44,10 @@ void MeshCollider::SetMesh(Mesh* mesh)
 	if (index.size() > 0) {
 		btIndexedMesh indexedMesh;
 		indexedMesh.m_numTriangles = mesh->Indices().size() / 3;
-		indexedMesh.m_triangleIndexBase = (unsigned char*)index.data();
+		indexedMesh.m_triangleIndexBase = reinterpret_cast<unsigned char*>(index.data());
 		indexedMesh.m_triangleIndexStride = 3 * sizeof(unsigned int);
 		indexedMesh.m_numVertices = mesh->Vertices().size();
-		indexedMesh.m_vertexBase = (unsigned char*)vert3.data();
+		indexedMesh.m_vertexBase = reinterpret_cast<unsigned char*>(vert3.data());
 		indexedMesh.m_vertexStride = sizeof(glm::vec3);
 
 		mTriangleIndexVertexArray = new btTriangleIndexVertexArray();

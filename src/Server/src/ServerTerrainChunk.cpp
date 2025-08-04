@@ -4,10 +4,6 @@
 #include "World.h"
 #include "ColliderGenerator.h"
 
-ServerTerrainChunk::ServerTerrainChunk()
-{
-}
-
 void ServerTerrainChunk::Init(WorldTerrain* controller)
 {
 	m_controller = controller;

@@ -88,7 +88,7 @@ private:
 
 	GPUSort* m_sort{ nullptr };
 
-	Transform* m_transform;
+	Transform* m_transform{ nullptr };
 
 	static Camera* m_active_camera;
 

@@ -21,21 +21,21 @@ class Physics {
 public:
 
 	struct RayHit {
-		bool did_hit;
-		Collider* collider;
-		glm::vec3 start;
-		glm::vec3 hit_point;
-		glm::vec3 normal;
+		bool did_hit{ false };
+		Collider* collider{ nullptr };
+		glm::vec3 start{glm::vec3()};
+		glm::vec3 hit_point{ glm::vec3() };
+		glm::vec3 normal{ glm::vec3() };
 	};
 
 	struct Hit {
-		glm::vec3 start;
-		glm::vec3 hit_point;
-		glm::vec3 normal;
+		glm::vec3 start{ glm::vec3() };
+		glm::vec3 hit_point{ glm::vec3() };
+		glm::vec3 normal{ glm::vec3() };
 	};
 
 	struct RayHitList {
-		bool did_hit;
+		bool did_hit{ false };
 		std::vector<Hit> hits;
 	};
 

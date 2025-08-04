@@ -46,7 +46,7 @@ private:
 
 	const int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
 
-	Mesh::VertexAttributeList m_attribute_list;
+	Mesh::VertexAttributeList m_attribute_list{};
 
 	glm::vec4* m_vertices{nullptr};
 	glm::vec4* m_normals{ nullptr };
@@ -59,7 +59,7 @@ private:
 	IComputeBuffer* mat_buffer{ nullptr };
 	IComputeBuffer* vbo_buffer{ nullptr };
 
-	OpenCL_Device_Info m_device_cl;
+	OpenCL_Device_Info m_device_cl{};
 	IComputeController* create_controller();
 
 	glm::dvec4 times{ glm::dvec4(0.0) };

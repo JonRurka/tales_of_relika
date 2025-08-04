@@ -209,7 +209,7 @@ void Mesh::Generate_Normals()
 	{
 		//Logger::LogDebug(LOG_POS("Generate_Normals"), "Generate normals without indices.");
 		m_normals.clear();
-		m_normals.reserve(m_num_vertices);
+		m_normals.resize(m_num_vertices);
 		int num_poly = m_num_vertices / 3;
 		for (int i = 0; i < num_poly; i++) {
 			glm::vec3 v1 = m_vertices[(i * 3) + 0];
@@ -224,7 +224,7 @@ void Mesh::Generate_Normals()
 	else {
 		//Logger::LogDebug(LOG_POS("Generate_Normals"), "Generate normals with indices (%i).", (int)m_indices.size());
 		m_normals.clear();
-		m_normals.reserve(m_num_vertices);
+		m_normals.resize(m_num_vertices);
 		for (int i = 0; i < m_indices.size(); i += 3) {
 			glm::vec3 vert1 = m_vertices[m_indices[i + 0]];
 			glm::vec3 vert2 = m_vertices[m_indices[i + 1]];
