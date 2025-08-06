@@ -430,22 +430,25 @@ ComputeContext::ComputeContext(OpenCL_Device_Info device)
 
     Logger::LogInfo(LOG_POS("ComputeContext"), "Picked Device: %s", device.name);
 
-    bool external_supported = false;
+    bool external_ext_supported = false;
     if (checkExtnAvailability(deviceID, CL_GL_SHARING_EXT)) {
         Logger::LogInfo(LOG_POS("ComputeContext"), "CL_GL Extension Found.");
-        external_supported = true;
+        external_ext_supported = true;
     }
     else {
         Logger::LogError(LOG_POS("ComputeContext"), "CL_GL Extension Not Found!!!");
+        external_ext_supported = false;
     }
 
+    bool external_device_support = false;
     Logger::LogDebug(LOG_POS("ComputeContext"), "pre deviceSupportsExternGL()");
     if (deviceSupportsExternGL(deviceID, properties)) {
         Logger::LogInfo(LOG_POS("ComputeContext"), "CL_GL Device Supported.");
-        external_supported = true;
+        external_device_support = true;
     }
     else {
         Logger::LogError(LOG_POS("ComputeContext"), "CL_GL Device NOT Supported!!!");
+        external_device_support = false;
     }
 
     cl_bool manual_sync;
@@ -453,6 +456,7 @@ ComputeContext::ComputeContext(OpenCL_Device_Info device)
     clGetDeviceInfo(deviceID, CL_DEVICE_PREFERRED_INTEROP_USER_SYNC, sizeof(cl_bool), &manual_sync, 0);
     //Logger::LogDebug(LOG_POS("ComputeContext"), "Requires manual sync: %i\n", (int)manual_sync);
     m_manual_sync = (manual_sync | FORCE_MANUAL_SYNC) && m_support_gl_sharing;
+    m_support_gl_sharing &= (external_ext_supported && external_device_support);
 
     cl_ulong local_size;
     clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &local_size, 0);
