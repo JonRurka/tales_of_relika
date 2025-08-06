@@ -8,16 +8,16 @@
 
 void Menu_Scene::Init()
 {
-	setup_camera();
+	//setup_camera();
 
-	m_startup_splash = UI_Engine::Instance()->Load_Document_Resource("splash", Game_Resources::UI::Documents::MENU::SPLASH);
-	m_main_menu_screen = UI_Engine::Instance()->Load_Document_Resource("main_menu", Game_Resources::UI::Documents::MENU::MAIN);
+	//m_startup_splash = UI_Engine::Instance()->Load_Document_Resource("splash", Game_Resources::UI::Documents::MENU::SPLASH);
+	//m_main_menu_screen = UI_Engine::Instance()->Load_Document_Resource("main_menu", Game_Resources::UI::Documents::MENU::MAIN);
 
-	m_start_sp_button_elem = m_main_menu_screen->GetElementById("start_sp_button");
+	//m_start_sp_button_elem = m_main_menu_screen->GetElementById("start_sp_button");
 
-	add_main_menu_listeners();
+	//add_main_menu_listeners();
 
-	m_main_menu_screen->Show();
+	//m_main_menu_screen->Show();
 
 	UI_Engine::Instance()->Accept_Input(true);
 
@@ -50,9 +50,9 @@ void Menu_Scene::OnStartSP_Clicked()
 	start_data.setInt("user_id", 1);
 	start_data.setString("host", "204.12.203.152");
 
-	m_main_menu_screen->Hide();
+	//m_main_menu_screen->Hide();
 	UI_Engine::Instance()->Accept_Input(false);
-	m_camera->Activate(false);
+	//m_camera->Activate(false);
 	Game::OpenVoxelWorld(start_data);
 }
 

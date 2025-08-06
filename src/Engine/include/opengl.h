@@ -1,5 +1,8 @@
 #pragma once
 
+#define GL_MAJOR 4
+#define GL_MINOR 5
+
 #include "glad.h"
 
 #if WIN32

@@ -40,6 +40,7 @@ void Scene::Activate(bool active, SceneStartData data)
 
 void Scene::Initialize()
 {
+	Logger::LogInfo(LOG_POS("Initialize"), "Initializing scene %s.", m_name.c_str());
 	Init();
 }
 
@@ -121,6 +122,7 @@ void Scene::create_light_object(WorldObject** obj, Light** light_comp, Light::Li
 
 void Scene::deactivate()
 {
+	Logger::LogInfo(LOG_POS("deactivate"), "Deactivating scene %s.", m_name.c_str());
 	Deactivate();
 
 	auto objects = m_objects;
