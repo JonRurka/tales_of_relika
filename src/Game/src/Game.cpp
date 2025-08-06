@@ -44,8 +44,14 @@ void Game::Init()
 	m_main_menu_scene = Load_Scene<Menu_Scene>("main_menu");
 	m_voxel_world_secen = Load_Scene<VoxelWorld_Scene>("VoxelWorld");
 
-	m_main_menu_scene->Activate(true);
-	//m_voxel_world_secen->Activate(true);
+	//m_main_menu_scene->Activate(true);
+	
+	Scene::SceneStartData start_data{};
+	start_data.setInt("connection", (int)VoxelWorld_Scene::ConnectMode::Remote);
+	start_data.setString("username", "test_user");
+	start_data.setInt("user_id", 1);
+	start_data.setString("host", "204.12.203.152");
+	m_voxel_world_secen->Activate(true, start_data);
 }
 
 void Game::init_shaders()
