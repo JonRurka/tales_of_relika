@@ -4,12 +4,11 @@
 #define USE_LIBNOISE
 #include "voxel_lib_core.inc"
 
-#include "block_types.inc"
-
 #define USE_HEIGHTMAP 1
 #define USE_MATERIALS 0
 #define GEN_CRATER_MAP 0
 
+#define INCLUDE_COMBINE_ISO
 #include "../../Samplers/sampler.inc"
 
 #define SURFACE_TYPE_FLOOR 1

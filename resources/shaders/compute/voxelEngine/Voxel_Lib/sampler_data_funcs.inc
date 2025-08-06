@@ -63,7 +63,7 @@ float height_sample_5(int x, int y, int column_idx, STRUCT Settings s, int n_ind
 	return val;
 }
 
-
+#ifdef INCLUDE_COMBINE_ISO
 STRUCT IsoSample iso_sample_4(STRUCT Settings s, ivec3 p, fvec3 world_pos, int n_index){
     float iso = iso_sample_3D_2(world_pos, s);
     //float height = height_sample_3(world_pos.x, world_pos.z, s);
@@ -72,5 +72,6 @@ STRUCT IsoSample iso_sample_4(STRUCT Settings s, ivec3 p, fvec3 world_pos, int n
 
     return Combine_ISO(s, p, world_pos, iso, height, mods);
 }
+#endif
 
 #endif // _SAMPLER_DATA_FUNC_

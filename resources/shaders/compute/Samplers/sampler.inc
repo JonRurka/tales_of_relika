@@ -1,6 +1,9 @@
 #ifndef _SAMPLER_INC_
 #define _SAMPLER_INC_
 
+#ifdef INCLUDE_COMBINE_ISO
+#include "block_types.inc"
+#endif
 
 struct Settings{
 	int column_index;
@@ -52,6 +55,7 @@ struct IsoNormalSample{
 #include "samplers/Terrain_Sampler.inc"
 //#include "samplers/Sphere_Sampler.inc"
 
+#ifdef INCLUDE_COMBINE_ISO
 STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, fvec4 edit)
 {
 	
@@ -111,6 +115,6 @@ STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos
 	return sample_res;
 
 }
-
+#endif
 
 #endif // _SAMPLER_INC_
