@@ -43,8 +43,6 @@
 #define LINE_VERT_SHADER "graphics::engine::line::line.vert"
 #define LINE_FRAG_SHADER "graphics::engine::line::line.frag"
 
-Graphics* Graphics::m_instance{ nullptr };
-
 unsigned int Graphics::CreateBufferGL(int size, const void* data, unsigned int usage)
 {
 	
@@ -56,10 +54,8 @@ unsigned int Graphics::CreateBufferGL(int size, const void* data, unsigned int u
 	return ret_val;
 }
 
-void Graphics::Initialize()
+void Graphics::Init()
 {
-	m_instance = this;
-
 	m_width = DEFAULT_SCREEN_WIDTH;
 	m_height = DEFAULT_SCREEN_HEIGHT;
 
@@ -86,8 +82,9 @@ void Graphics::Initialize()
 	ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 	ImGui_ImplOpenGL3_Init(glsl_version);
 
-	m_UI = new UI_Engine();
-	bool ui_init_success = m_UI->Init();
+	//m_UI = new UI_Engine();
+	bool ui_init_success = UI_Engine::Instance().Init();
+
 	Logger::LogDebug(LOG_POS("Initialize"), "UI Init");
 	if (!ui_init_success) {
 		Logger::LogError(LOG_POS("Initialize"), "Failed to initialize Rml UI Engine!");
@@ -217,7 +214,7 @@ void Graphics::Viewport(int x, int y, int width, int height)
 	//	x, y, width, height);
 }
 
-void Graphics::Set_Screen_FrameTexture(Texture* tex)
+void Graphics::Set_Screen_FrameTexture(std::shared_ptr<Texture> tex)
 {
 	if (!m_initialized)
 		return;
@@ -242,9 +239,9 @@ void Graphics::Set_Screen_FrameTexture(Texture* tex)
 
 void Graphics::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	bool propogated = UI_Engine::Instance()->KeyCallback(window, key, scancode, action, mods);
+	bool propogated = UI_Engine::Instance().KeyCallback(window, key, scancode, action, mods);
 	if (propogated)
-		Input::Instance()->key_callback(window, key, scancode, action, mods);
+		Input::Instance().key_callback(window, key, scancode, action, mods);
 }
 
 void Graphics::OnWindowResize(GLFWwindow* window, int width, int height)
@@ -269,7 +266,7 @@ void Graphics::OnWindowResize(GLFWwindow* window, int width, int height)
 
 	Camera::Get_Active()->Resize_Refresh();
 
-	UI_Engine::Instance()->FramebufferSizeCallback(window, width, height);
+	UI_Engine::Instance().FramebufferSizeCallback(window, width, height);
 
 	//Logger::LogDebug(LOG_POS("OnWindowResize"), "##### WINDOW RESIZE STOP #####\n");
 }
@@ -278,21 +275,21 @@ void Graphics::OnWindowResize(GLFWwindow* window, int width, int height)
 
 void Graphics::cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	UI_Engine::Instance()->CursorPosCallback(window, xpos, ypos);
-	Input::Instance()->cursor_position_callback(window, xpos, ypos);
+	UI_Engine::Instance().CursorPosCallback(window, xpos, ypos);
+	Input::Instance().cursor_position_callback(window, xpos, ypos);
 }
 
 void Graphics::scroll_callback(GLFWwindow* p_window, double xoffset, double yoffset)
 {
-	Input::Instance()->scroll_callback(p_window, xoffset, yoffset);
-	UI_Engine::Instance()->ScrollCallback(p_window, xoffset, yoffset);
+	Input::Instance().scroll_callback(p_window, xoffset, yoffset);
+	UI_Engine::Instance().ScrollCallback(p_window, xoffset, yoffset);
 }
 
 void Graphics::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-	bool propogated = UI_Engine::Instance()->MouseButtonCallback(window, button, action, mods);
+	bool propogated = UI_Engine::Instance().MouseButtonCallback(window, button, action, mods);
 	if (propogated)
-		Input::Instance()->mouse_button_callback(window, button, action, mods);
+		Input::Instance().mouse_button_callback(window, button, action, mods);
 }
 
 // events from glfw end

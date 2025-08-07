@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <memory>
 
 #include <nlohmann/json.hpp>
 
@@ -26,37 +27,28 @@ public:
 	static Engine* Instance() { return m_instance; }
 
 	static bool Running() { return m_instance->m_running; }
+	
+	static Scene& Active_Scene();
+	static std::weak_ptr<Scene> Active_Scene_Ptr();
 
-	static Scene* Active_Scene() { return m_instance->m_active_scene; }
-	static void Activate_Scene(Scene* value);
+	static void Activate_Scene(Scene& value);
+	static void Activate_Scene(std::weak_ptr<Scene> value);
+	static void Activate_Scene(std::shared_ptr<Scene> value);
 	static void Activate_Scene(std::string value);
 
 	static float Run_Time();
 
 	static float FPS() { return m_instance->m_fps; }
 
-	static Graphics* graphics() { return m_instance->m_graphics; }
-
-	static Resources* resources() { return m_instance->m_resources;}
-
-	template<typename T,
-		typename = std::enable_if_t<std::is_base_of<Resources, T>::value>>
-		T * Init_Resources()
-	{
-		T* res = new T();
-		m_resources = static_cast<Resources*>(res);
-		return res;
-	}
-
 
 	template<typename T,
 		typename = std::enable_if_t<std::is_base_of<Scene, T>::value>>
-		T * Load_Scene(std::string name)
+		std::weak_ptr<Scene> * Load_Scene(std::string name)
 	{
-		T* scene = new T();
-		initialize_scene(static_cast<Scene*>(scene), name);
+		std::shared_ptr<T> scene = std::make_shared<T>();
+		initialize_scene(std::static_pointer_cast<Scene>(scene), name);
 		//Initialize_Scene(static_cast<Scene*>(scene), name);
-		return scene;
+		return std::static_pointer_cast<Scene>(scene);
 	}
 
 	/*template<typename T,
@@ -81,24 +73,21 @@ protected:
 	virtual void Update(float dt) = 0;
 
 private:
-	std::unordered_map<std::string, Scene*> m_scenes;
+	std::unordered_map<std::string, std::shared_ptr<Scene>> m_scenes;
 	bool m_running{ false };
 	float m_deltaTime{ 0 };
 	float m_avg_deltaTime{ 0 };
 	float m_fps{ 0 };
 
 	
-	Input* m_input{ nullptr };
-	Scene* m_active_scene{ nullptr };
-	Graphics* m_graphics{nullptr};
-	Physics* m_physics{nullptr};
-	Resources* m_resources{ nullptr };
+	std::weak_ptr<Scene> m_active_scene;
+	bool m_has_active_scene{ false };
 
 	float m_start_time{ 0 };
 
 	static Engine* m_instance;
 
-	void initialize_scene(Scene* scene, std::string name);
+	void initialize_scene(std::shared_ptr<Scene> scene, std::string name);
 
 	void Initialize_Scene(Scene* scene, json data);
 

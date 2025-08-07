@@ -4,8 +4,10 @@
 #include "Logger.h"
 
 
-Transform::Transform(WorldObject* obj)
+Transform::Transform(std::weak_ptr<WorldObject> obj)
 {
+	assert(!obj.expired());
+
 	m_object = obj;
 	scale_mat = glm::mat4(1.0f);
 	trans_mat = glm::mat4(1.0f);
@@ -13,11 +15,18 @@ Transform::Transform(WorldObject* obj)
 	set_model_mat();
 }
 
+Transform::~Transform()
+{
+	Destroy();
+}
+
 void Transform::Translate(glm::vec3 value)
 {
+	assert(!m_object.expired());
+
 	if (m_verbos) {
 		Logger::LogDebug(LOG_POS("Translate"), "Translate transform for '%s': (%f, %f, %f)", 
-			m_object->Name().c_str(), value.x, value.y, value.z);
+			m_object.lock()->Name().c_str(), value.x, value.y, value.z);
 	}
 	trans_mat = glm::translate(trans_mat, value);
 	set_model_mat();
@@ -26,19 +35,23 @@ void Transform::Translate(glm::vec3 value)
 
 void Transform::Translate(float x, float y, float z)
 {
+	assert(!m_object.expired());
 	Translate(glm::vec3(x, y, z));
 }
 
 void Transform::Rotate(glm::vec3 value)
 {
+	assert(!m_object.expired());
 	Rotate(value.x, value.y, value.z);
 }
 
 void Transform::Rotate(float x, float y, float z)
 {
+	assert(!m_object.expired());
+
 	if (m_verbos) {
 		Logger::LogDebug(LOG_POS("Rotate"), "Rotate transform for '%s': (%f, %f, %f)",
-			m_object->Name().c_str(), x, y, z);
+			m_object.lock()->Name().c_str(), x, y, z);
 	}
 
 	m_rotation = m_rotation *
@@ -55,14 +68,17 @@ void Transform::Rotate(float x, float y, float z)
 
 void Transform::Rotation(glm::vec3 value)
 {
+	assert(!m_object.expired());
 	Rotation(value.x, value.y, value.z);
 }
 
 void Transform::Rotation(float x, float y, float z)
 {
+	assert(!m_object.expired());
+
 	if (m_verbos) {
 		Logger::LogDebug(LOG_POS("Rotate"), "Rotate transform for '%s': (%f, %f, %f)",
-			m_object->Name().c_str(), x, y, z);
+			m_object.lock()->Name().c_str(), x, y, z);
 	}
 
 	m_rotation = 
@@ -77,9 +93,11 @@ void Transform::Rotation(float x, float y, float z)
 
 void Transform::Scale(glm::vec3 value)
 {
+	assert(!m_object.expired());
+
 	if (m_verbos) {
 		Logger::LogDebug(LOG_POS("Scale"), "Scale transform for '%s': (%f, %f, %f)",
-			m_object->Name().c_str(), value.x, value.y, value.z);
+			m_object.lock()->Name().c_str(), value.x, value.y, value.z);
 	}
 
 	scale_mat = glm::scale(scale_mat, value);
@@ -89,24 +107,28 @@ void Transform::Scale(glm::vec3 value)
 
 void Transform::Scale(float x, float y, float z)
 {
+	assert(!m_object.expired());
 	Scale(glm::vec3(x, y, z));
 }
 
 glm::vec3 Transform::Local_To_World_Point(glm::vec3 value)
 {
+	assert(!m_object.expired());
 	return model * glm::vec4(value, 1.0f);
 }
 
 glm::vec3 Transform::Local_To_World_Direction(glm::vec3 value)
 {
+	assert(!m_object.expired());
 	return glm::normalize(model * glm::vec4(value, 0.0f));
 }
 
 void Transform::LookAt(glm::vec3 point)
 {
+	assert(!m_object.expired());
 	if (m_verbos) {
 		Logger::LogDebug(LOG_POS("LookAt"), "Transform LookAt for '%s': (%f, %f, %f)",
-			m_object->Name().c_str(), point.x, point.y, point.z);
+			m_object.lock()->Name().c_str(), point.x, point.y, point.z);
 	}
 
 	m_rotation = glm::quatLookAt(-glm::normalize(m_position - point), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -131,6 +153,7 @@ void Transform::Update(float dt)
 
 void Transform::set_position(glm::vec3 pos)
 {
+	assert(!m_object.expired());
 	//printf("pos in: %f, %f, %f \n", pos.x, pos.y, pos.z);
 	trans_mat = glm::mat4(1.0f);
 	trans_mat = glm::translate(trans_mat, glm::vec3(pos.x, pos.y, pos.z));
@@ -145,14 +168,17 @@ void Transform::Destroy()
 
 void Transform::set_model_mat(bool update_parent)
 {
+	assert(!m_object.expired());
+	WorldObject& obj = *m_object.lock();
+
 	rot_mat = glm::toMat4(m_rotation);
-	WorldObject* parent = m_object->Parent();
-	if (parent != nullptr) {
-		Transform* parent_trans = parent->Get_Transform();
+	if (obj.Has_Parent()) {
+		WorldObject& parent = *obj.Parent().lock();
+		Transform& parent_trans = parent.Get_Transform();
 		if (update_parent) {
-			parent_trans->set_model_mat();
+			parent_trans.set_model_mat();
 		}
-		model = parent_trans->Get_Model_Matrix4() * trans_mat * rot_mat * scale_mat;
+		model = parent_trans.Get_Model_Matrix4() * trans_mat * rot_mat * scale_mat;
 	}
 	else {
 		model = trans_mat * rot_mat * scale_mat;
@@ -164,8 +190,9 @@ void Transform::set_model_mat(bool update_parent)
 	m_right = m_rotation * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
 	m_up = m_rotation * glm::vec4(1.0f, 1.0f, 0.0f, 0.0f);
 
-	for (const auto& child : m_object->Children())
+	for (const auto& child : obj.Children())
 	{
-		child->Get_Transform()->set_model_mat(false);
+		assert(!child.expired());
+		child.lock()->Get_Transform().set_model_mat(false);
 	}
 }

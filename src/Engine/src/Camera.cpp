@@ -24,9 +24,9 @@
 #define SKYBOX_PROJECTION_LOC	10
 #define SKYBOX_VIEW_LOC			11
 
-Camera* Camera::m_active_camera{nullptr};
-Shader* Camera::m_cubemap_shader{ nullptr };
-Mesh* Camera::m_cubemap_mesh{ nullptr };
+std::weak_ptr<Camera> Camera::m_active_camera;
+std::shared_ptr<Shader> Camera::m_cubemap_shader{ nullptr };
+std::shared_ptr<Mesh> Camera::m_cubemap_mesh{ nullptr };
 
 
 namespace {
@@ -47,11 +47,11 @@ namespace {
 void Camera::Init()
 {
 	Type_Name("Camera");
-	m_transform = Object()->Get_Transform();
+	//m_transform = Object().Get_Transform();
 	update_projection_matrix();
 	update_view_matrix();
 	create_framebuffer();
-	if (Get_Active() == nullptr) {
+	if (m_active_camera.expired()) {
 		Activate(true);
 	}
 	//m_sort = new GPUSort(1024);
@@ -82,7 +82,7 @@ void Camera::OnDestroy()
 	destroy_skybox();
 }
 
-void Camera::Set_Skybox(Cubemap* value)
+void Camera::Set_Skybox(std::shared_ptr<Cubemap> value)
 {
 	if (m_cubemap_mesh == nullptr) 
 	{
@@ -130,7 +130,7 @@ void Camera::Set_Skybox(Cubemap* value)
 			glm::vec4(-1.0f, -1.0f,  1.0f, 0.0f),
 			glm::vec4( 1.0f, -1.0f,  1.0f, 0.0f)
 		};
-		m_cubemap_mesh = new Mesh();
+		m_cubemap_mesh = std::make_shared<Mesh>();
 		m_cubemap_mesh->Vertices(skyboxVertices);
 		m_cubemap_mesh->Activate();
 	}
@@ -183,9 +183,9 @@ Texture* Camera::FrameTexture()
 	return m_framebuffer->Active_Texture();
 }
 
-Camera* Camera::Get_Active()
+Camera& Camera::Get_Active()
 {
-	return m_active_camera;
+	return *m_active_camera.lock();
 }
 
 void Camera::Activate(bool active)
@@ -196,18 +196,18 @@ void Camera::Activate(bool active)
 
 	if (active && !m_isActive) {
 		m_isActive = true;
-		if (m_active_camera) {
-			m_active_camera->Activate(false);
+		if (!m_active_camera.expired()) {
+			m_active_camera.lock()->Activate(false);
 		}
-		m_active_camera = this;
-		m_active_camera->Resize_Refresh();
-		Graphics::Instance()->Set_Screen_FrameTexture(m_framebuffer->Active_Texture());
+		m_active_camera = std::dynamic_pointer_cast<Camera>(shared_from_this());
+		m_active_camera.lock()->Resize_Refresh();
+		Graphics::Instance().Set_Screen_FrameTexture(m_framebuffer->Active_Texture());
 		Logger::LogDebug(LOG_POS("Activate"), "Set new active camera.");
 	}
 	else if (!active && m_isActive) {
 		m_isActive = false;
-		m_active_camera = nullptr;
-		Graphics::Instance()->Set_Screen_FrameTexture(nullptr);
+		m_active_camera.reset();
+		Graphics::Instance().Set_Screen_FrameTexture(nullptr);
 		Logger::LogDebug(LOG_POS("Activate"), "Camera set inactive.");
 	}
 }
@@ -219,7 +219,7 @@ void Camera::Resize_Refresh()
 
 void Camera::create_framebuffer()
 {
-	m_framebuffer = new Framebuffer();
+	m_framebuffer = std::shared_ptr<Framebuffer>();
 	if (!m_framebuffer->Complete())
 	{
 		Logger::LogError(LOG_POS("create_framebuffer"), "Failed to create framebuffer.");
@@ -252,8 +252,8 @@ void Camera::destroy_skybox()
 
 void Camera::update_view_matrix()
 {
-	glm::vec3 front_global = m_transform->Local_To_World_Direction(cameraFront);
-	glm::vec3 cam_pos = m_transform->Position();
+	glm::vec3 front_global = Object().Get_Transform().Local_To_World_Direction(cameraFront);
+	glm::vec3 cam_pos = Object().Get_Transform().Position();
 	m_view = glm::lookAt(cam_pos, cam_pos + front_global, cameraUp);
 	//printf("update view matrix: %f, %f, %f\n", cam_pos.x, cam_pos.y, cam_pos.z);
 }
@@ -296,7 +296,7 @@ void Camera::render_opaque(float dt)
 	//alpha_renderers.reserve(Object()->scene()->Objects().size());
 
 	alpha_object_idx.clear();
-	alpha_object_idx.reserve(Object()->scene()->Objects().size());
+	alpha_object_idx.reserve(Object().scene().Objects().size());
 	
 	int i = 0;
 	std::vector<unsigned int> shader_ids = Shader::Get_Shader_ID_List();
@@ -309,7 +309,7 @@ void Camera::render_opaque(float dt)
 		for (const auto& rend : renderers) {
 			if (rend->Transparent()) {
 				alpha_renderers.push_back(rend);
-				float dist = glm::distance(Object()->Get_Transform()->Position(), rend->worldObject()->Get_Transform()->Position());
+				float dist = glm::distance(Object().Get_Transform().Position(), rend->worldObject()->Get_Transform()->Position());
 				glm::vec4 a_map = glm::vec4((float)i++, dist, 0.0f, 0.0f);
 				alpha_object_idx.push_back(a_map);
 				continue;
@@ -356,7 +356,7 @@ void Camera::StaticDestroy()
 
 	if (m_cubemap_shader != nullptr)
 	{
-		Shader::Remove(m_cubemap_shader);
+		//Shader::Remove(m_cubemap_shader);
 	}
 
 }

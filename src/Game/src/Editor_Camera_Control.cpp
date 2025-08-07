@@ -4,7 +4,7 @@
 
 void Editor_Camera_Control::Init()
 {
-	trans = Object()->Get_Transform();
+	trans = Object().Get_Transform();
 	Input::Mouse_Sensitivity(50);
 
 	m_euler = trans->EulerAngles();

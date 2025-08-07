@@ -122,8 +122,8 @@ void MeshCollider::OnRefresh()
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), myMotionState, m_shape, m_localInertia);
 	set_rigidbody(new btRigidBody(rbInfo));
 
-	Transform* obj_trans = Object()->Get_Transform();
-	btTransform bt_trans = get_bt_rigid_transform();
+	//Transform* obj_trans = Object().Get_Transform();
+	//btTransform bt_trans = get_bt_rigid_transform();
 	//Logger::LogDebug(LOG_POS("OnRefresh"), "Rigid Position:(%f, %f, %f), Obj Position:(%f, %f, %f)",
 	//	bt_trans.getOrigin().x(), bt_trans.getOrigin().y(), bt_trans.getOrigin().z(),
 	//	obj_trans->Position().x, obj_trans->Position().y, obj_trans->Position().z);

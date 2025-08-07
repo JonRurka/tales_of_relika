@@ -8,6 +8,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <map>
+#include <memory>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -20,7 +21,7 @@ class Renderer;
 class MeshRenderer;
 class Texture;
 
-class Material
+class Material : public std::enable_shared_from_this<Material>
 {
 	friend class Renderer;
 	friend class MeshRenderer;
@@ -33,18 +34,22 @@ public:
 
 	std::string Name() { return m_name; }
 
-	void Set_Shader(Shader* shader);
+	void Set_Shader(std::shared_ptr<Shader> shader);
 
-	Shader* Get_Shader() { return m_shader; }
+	Shader& Get_Shader() { return *m_shader; }
 
-	void Set_World_Object(WorldObject* object);
+	std::shared_ptr<Shader> Get_Shader_Ptr() { return m_shader; }
 
-	WorldObject* Get_World_Object() { return m_object; }
+	bool Has_Shader() { return m_has_shader; }
+
+	void Set_World_Object(std::weak_ptr<WorldObject> object);
+
+	std::weak_ptr<WorldObject> Get_World_Object() { return m_object; }
 
 	void Transparent(bool value);
 	bool Transparent() { return m_is_transparent; }
 
-	bool Is_Bound() { return m_object != nullptr; }
+	bool Is_Bound();
 
 	void Supports_Lighting(bool value);
 
@@ -52,7 +57,7 @@ public:
 
 	void Internal_Update(float dt, bool force = false);
 
-	virtual Material* Copy() { return nullptr; }
+	virtual std::shared_ptr<Material> Copy() { return nullptr; }
 	virtual void Update(float dt) {};
 
 	// utility uniform functions
@@ -69,7 +74,8 @@ public:
 	void setTexture(const std::string& name, Texture* value, bool set_source = true);
 	void RegisterTexture(std::string name);
 
-	void Register_Renderer_Material(Renderer* rend, Material* mat);
+	void Register_Renderer_Material(std::weak_ptr<Material> mat);
+	void Remove_Renderer_Material(std::weak_ptr<Material> mat);
 
 protected:
 	void Name(std::string name) { m_name = name; }
@@ -95,13 +101,16 @@ private:
 
 	bool m_supports_lighting{ false };
 
-	Shader* m_shader{nullptr};
-	WorldObject* m_object{ nullptr };
-	Material* m_source_material{ nullptr };
+	std::shared_ptr<Shader> m_shader{nullptr};
+	bool m_has_shader{ false };
+
+	std::weak_ptr<WorldObject> m_object;
+	std::weak_ptr<Material> m_source_material;
 	std::string m_name;
 	bool m_is_transparent{ false };
 
-	std::unordered_map<Renderer*, Material*> m_registered_materials;
+	//std::unordered_map<Renderer*, Material*> m_registered_materials;
+	std::vector<std::weak_ptr<Material>> m_registered_materials;
 
 	std::unordered_map<std::string, shader_value<bool>> m_bools;
 	std::unordered_map<std::string, shader_value<int>> m_ints;

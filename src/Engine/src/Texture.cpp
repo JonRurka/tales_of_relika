@@ -213,7 +213,7 @@ Texture::Texture(const int width, const int height, bool auto_resize)
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	if (auto_resize) {
-		Graphics::Instance()->Register_Resize_Tex(this);
+		Graphics::Instance().Register_Resize_Tex(this);
 	}
 }
 
@@ -262,7 +262,7 @@ void Texture::Wrap(Wrap_Mode value)
 void Texture::Dispose()
 {
 	if (m_resizable) {
-		Graphics::Instance()->Remove_Resize_Tex(this);
+		Graphics::Instance().Remove_Resize_Tex(this);
 	}
 
 	glDeleteTextures(1, &m_texture);

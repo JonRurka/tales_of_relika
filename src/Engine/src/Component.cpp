@@ -9,8 +9,15 @@
 #include "MeshRenderer.h"
 #include "Scene.h"
 
+WorldObject& Component::Object()
+{
+    assert(!m_object.expired());
+    return *m_object.lock();
+}
+
 Component* Component::Load_Component(WorldObject* obj, json data)
 {
+    /*
     Component* res = nullptr;
 
     std::string type;
@@ -31,20 +38,18 @@ Component* Component::Load_Component(WorldObject* obj, json data)
     }
 
 
-    return res;
+    return res;*/
 }
 
 void Component::Destroy()
 {
     OnDestroy();
-
-
 }
 
-WorldObject* Component::Instantiate() {
-    return Object()->scene()->Instantiate();
+std::weak_ptr<WorldObject> Component::Instantiate() {
+    return Object().scene().Instantiate();
 }
 
-WorldObject* Component::Instantiate(std::string name) {
-    return Object()->scene()->Instantiate(name);
+std::weak_ptr<WorldObject> Component::Instantiate(std::string name) {
+    return Object().scene().Instantiate(name);
 }

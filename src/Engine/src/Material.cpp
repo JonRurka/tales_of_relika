@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include "Texture.h"
 #include "Resources.h"
+#include "Utilities.h"
 
 #define Update_Uniforms(func, u_map, force)			\
 do {												\
@@ -18,25 +19,27 @@ do {												\
 
 #define Mat_Set(func, name, val)						\
 do {													\
-	for (const auto& pair : m_registered_materials) {	\
-		pair.second->func(name, value);					\
+	for (const auto& mat : m_registered_materials) {	\
+		assert(!mat.expired());							\
+		mat.lock()->func(name, value);					\
 	}													\
 } while (false)
 
-void Material::Set_Shader(Shader* shader)
+void Material::Set_Shader(std::shared_ptr<Shader> shader)
 {
-	if (shader == nullptr ||
-		!shader->Initialized()) {
+	if (shader == nullptr || !shader->Initialized()) {
 		Logger::LogError(LOG_POS("Set_Shader"), "Material '%s' set to invalid shader.", Name().c_str());
 		return;
 	}
 
 	m_shader = shader;
-	m_shader->Register_Material(this);
+	m_shader->Register_Material(shared_from_this());
+	m_has_shader = true;
 }
 
-void Material::Set_World_Object(WorldObject* object)
+void Material::Set_World_Object(std::weak_ptr<WorldObject> object)
 {
+	assert(!object.expired());
 	m_object = object;
 }
 
@@ -44,9 +47,10 @@ void Material::Transparent(bool value)
 { 
 	m_is_transparent = value;
 	if (!Is_Bound()) {
-		for (const auto& pair : m_registered_materials)
+		for (const auto& mat : m_registered_materials)
 		{
-			pair.second->Transparent(value);
+			assert(!mat.expired());
+			mat.lock()->Transparent(value);
 		}
 	}
 }
@@ -120,15 +124,16 @@ void Material::setTexture(const std::string& name, Texture* value, bool set_sour
 	}
 
 	if (Is_Bound() && set_source) {
-		m_source_material->setTexture(name, value);
+		m_source_material.lock()->setTexture(name, value);
 	//	m_tex[name] = m_source_material->m_tex[name];
 	}
 
 	m_tex[name].do_bind = true;
 	m_tex[name].texture = value;
 
-	for (const auto& pair : m_registered_materials) {
-		pair.second->setTexture(name, value, false);
+	for (const auto& mat : m_registered_materials) {
+		assert(!mat.expired());
+		mat.lock()->setTexture(name, value, false);
 	}
 	
 	//m_tex[name].sync = true;
@@ -148,7 +153,8 @@ void Material::RegisterTexture(std::string name)
 {
 	if (Is_Bound())
 	{
-		m_source_material->RegisterTexture(name);
+		assert(!m_source_material.expired());
+		m_source_material.lock()->RegisterTexture(name);
 		return;
 	}
 	texture_value val;
@@ -171,9 +177,21 @@ void Material::RegisterTexture(std::string name)
 
 
 
-void Material::Register_Renderer_Material(Renderer* rend, Material* mat)
+void Material::Register_Renderer_Material(std::weak_ptr<Material> mat)
 {
-	m_registered_materials[rend] = mat;
+	m_registered_materials.push_back(mat);
+}
+
+void Material::Remove_Renderer_Material(std::weak_ptr<Material> mat)
+{
+	Remove_If_Found(m_registered_materials, mat);
+}
+
+
+
+bool Material::Is_Bound()
+{
+	return !m_object.expired();
 }
 
 void Material::Supports_Lighting(bool value)

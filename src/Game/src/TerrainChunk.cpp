@@ -20,7 +20,7 @@ void TerrainChunk::Init(WorldGenController* controller, Stitch_VBO* vbo_stitch)
 	m_vbo_stitch = vbo_stitch;
 
 	int max_vert = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
-	m_voxel_opaque_mesh = new Mesh(max_vert * Stitch_VBO::Stride());
+	m_voxel_opaque_mesh = new Mesh(max_vert * Stitch_VBO::Byte_Stride());
 
 	m_opaque_chunk_obj = Instantiate("Cached Voxel Chunk - Opaque");
 	m_opaque_chunk_obj->Get_Transform()->Set_Verbos(false);

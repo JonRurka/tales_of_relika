@@ -7,8 +7,6 @@ using namespace input;
 
 #define REPEAT_TIMER 0.1f
 
-Input* Input::m_instance{nullptr};
-
 namespace {
 	inline std::unordered_map<int, KeyCode> create_key_lookup()
 	{
@@ -176,9 +174,8 @@ namespace {
 
 }
 
-Input::Input() 
+void Input::Init()
 {
-	m_instance = this;
 	m_key_lookup = create_key_lookup();
 }
 
@@ -407,12 +404,12 @@ bool Input::get_mouse_key_up(input::MouseButton key)
 
 void Input::set_mouse_visibility(bool visible)
 {
-	Graphics::Instance()->set_mouse_visibility(visible);
+	Graphics::Instance().set_mouse_visibility(visible);
 }
 
 bool Input::get_mouse_visibility()
 {
-	return Graphics::Instance()->get_mouse_visibility();
+	return Graphics::Instance().get_mouse_visibility();
 }
 
 double Input::get_input_x(std::string device)

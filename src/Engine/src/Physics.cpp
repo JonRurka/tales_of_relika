@@ -5,8 +5,6 @@
 
 #define UPDATE_INTERVAL (1.f / 60.f)
 
-Physics* Physics::m_instance{nullptr};
-
 namespace {
 	btVector3 to_bt_vector(glm::vec3 value) {
 		return btVector3(value.x, value.y, value.z);
@@ -26,30 +24,6 @@ namespace {
 		groundBody->getMotionState()->setWorldTransform(predictedTrans);
 
 	}
-}
-
-Physics::Physics() 
-{
-	m_instance = this;
-
-	///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
-	m_collisionConfiguration = new btDefaultCollisionConfiguration();
-
-	///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
-	m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
-
-	///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
-	m_overlappingPairCache = new btDbvtBroadphase();
-
-	///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
-	m_solver = new btSequentialImpulseConstraintSolver;
-
-	m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_overlappingPairCache, m_solver, m_collisionConfiguration);
-	m_dynamicsWorld->setGravity(btVector3(0, -10, 0));
-
-	m_last_update = Utilities::Get_Time();
-
-	Logger::LogInfo(LOG_POS("INIT"), "Physics Initialized.");
 }
 
 void Physics::update_internal(float dt)
@@ -95,7 +69,26 @@ void Physics::remove_rigidbody(btRigidBody* body)
 
 void Physics::Init()
 {
-	m_instance = new Physics();
+	///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
+	m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
+
+	///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
+	m_dispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
+
+	///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
+	m_overlappingPairCache = std::make_unique<btDbvtBroadphase>();
+
+	///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
+	m_solver = std::make_unique<btSequentialImpulseConstraintSolver>();
+
+	m_dynamicsWorld = std::make_unique<btDiscreteDynamicsWorld>(m_dispatcher.get(), m_overlappingPairCache.get(), m_solver.get(), m_collisionConfiguration.get());
+	m_dynamicsWorld->setGravity(btVector3(0, -10, 0));
+
+	m_last_update = Utilities::Get_Time();
+
+	Logger::LogInfo(LOG_POS("INIT"), "Physics Initialized.");
+
+	m_initialied = true;
 }
 
 
@@ -105,7 +98,7 @@ Physics::RayHit Physics::Raycast(glm::vec3 start, glm::vec3 dir)
 	res.did_hit = false;
 	res.start = start;
 
-	if (m_instance == nullptr) {
+	if (!Instance().m_initialied) {
 		return res;
 	}
 
@@ -115,7 +108,7 @@ Physics::RayHit Physics::Raycast(glm::vec3 start, glm::vec3 dir)
 	btCollisionWorld::ClosestRayResultCallback closestResults(from, to);
 	//closestResults.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
 
-	m_instance->m_dynamicsWorld->rayTest(from, to, closestResults);
+	Instance().m_dynamicsWorld->rayTest(from, to, closestResults);
 	if (closestResults.hasHit())
 	{
 		btVector3 hit_point = from.lerp(to, closestResults.m_closestHitFraction);
@@ -140,7 +133,7 @@ Physics::RayHitList Physics::RaycastAll(glm::vec3 start, glm::vec3 dir)
 	RayHitList res{};
 	res.did_hit = false;
 
-	if (m_instance == nullptr) {
+	if (!Instance().m_initialied) {
 		return res;
 	}
 
@@ -154,7 +147,7 @@ Physics::RayHitList Physics::RaycastAll(glm::vec3 start, glm::vec3 dir)
 	//allResults.m_flags |= btTriangleRaycastCallback::kF_UseSubSimplexConvexCastRaytest;
 	allResults.m_flags |= btTriangleRaycastCallback::kF_UseSubSimplexConvexCastRaytest;
 
-	m_instance->m_dynamicsWorld->rayTest(from, to, allResults);
+	Instance().m_dynamicsWorld->rayTest(from, to, allResults);
 
 	res.hits.reserve(allResults.m_hitFractions.size());
 

@@ -1,18 +1,20 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 class WorldObject;
 
-class Component
+class Component : public std::enable_shared_from_this<Component>
 {
 	friend class WorldObject;
 public:
 
-	WorldObject* Object() { return m_object; }
+	WorldObject& Object();
+	std::weak_ptr<WorldObject> Object_Ptr() { return m_object; }
 
 	std::string Type_Name() { return m_type_name; }
 
@@ -26,11 +28,11 @@ public:
 
 private:
 
-	void Object(WorldObject* value) { m_object = value; }
+	void Object(std::weak_ptr<WorldObject> value) { m_object = value; }
 
 	void Component_Index(int idx) { m_comp_idx = idx; }
 
-	WorldObject* m_object{nullptr};
+	std::weak_ptr<WorldObject> m_object;
 	int m_comp_idx{ 0 };
 	std::string m_type_name{"Custom_Component"};
 
@@ -39,9 +41,9 @@ protected:
 	virtual void Update(float dt) = 0;
 	virtual void OnDestroy() {};
 
-	WorldObject* Instantiate();
+	std::weak_ptr<WorldObject> Instantiate();
 
-	WorldObject* Instantiate(std::string name);
+	std::weak_ptr<WorldObject> Instantiate(std::string name);
 
 	void Type_Name(std::string value) { m_type_name = value; }
 };

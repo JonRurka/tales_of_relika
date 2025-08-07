@@ -2,9 +2,12 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 
 #include "opengl.h"
 #include "Renderer.h"
+
+#include "Shader.h"
 
 class Mesh;
 class Shader;
@@ -17,24 +20,26 @@ class MeshRenderer : public Renderer
 	friend class WorldObject;
 public:
 
-	void Set_Shader(Shader* shader);
+	~MeshRenderer();
 
-	Shader* Get_Shader(Shader* shader) { return m_shader; }
+	void Set_Shader(std::shared_ptr<Shader> shader);
 
-	void Set_Material(Material* material);
+	Shader& Get_Shader() { return *m_shader; }
 
-	Material* Get_Material() { return m_bound_material; }
+	void Set_Material(std::shared_ptr<Material> material);
 
-	Mesh* Get_Mesh() { return m_mesh; };
+	Material& Get_Material() { return *m_bound_material; }
 
-	void Set_Mesh(Mesh* value, bool activate_mesh = true);
+	Mesh& Get_Mesh() { return *m_mesh; };
+
+	void Set_Mesh(std::shared_ptr<Mesh> value, bool activate_mesh = true);
 
 	void Use();
 
 	void Draw(float dt) override;
 
 private:
-	MeshRenderer(WorldObject* obj);
+	MeshRenderer(std::weak_ptr<WorldObject> obj);
 
 	void Update(float dt);
 
@@ -42,11 +47,11 @@ private:
 
 	//void Destroy();
 
-	WorldObject* m_object{ nullptr };
-	Mesh* m_mesh{ nullptr };
-	Shader* m_shader{ nullptr };
-	Material* m_source_material{ nullptr };
-	Material* m_bound_material{ nullptr };
+	std::weak_ptr<WorldObject> m_object;
+	std::shared_ptr<Mesh> m_mesh{ nullptr };
+	std::shared_ptr<Shader> m_shader{ nullptr };
+	std::shared_ptr<Material> m_source_material{ nullptr };
+	std::shared_ptr<Material> m_bound_material{ nullptr };
 
 	bool has_default_mesh = true;
 	bool has_shader = false;

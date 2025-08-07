@@ -297,7 +297,7 @@ void Voxel_Test_Scene::Init()
 	std::vector<Mesh*> chunk_col_meshes;
 
 	for (int i = 0; i < num_chunks; i++) {
-		Mesh* voxel_mesh_test = new Mesh(max_vert * Stitch_VBO::Stride());
+		Mesh* voxel_mesh_test = new Mesh(max_vert * Stitch_VBO::Byte_Stride());
 		chunk_meshes.push_back(voxel_mesh_test);
 
 		glm::ivec4 chunk_loc = glm::ivec4(i, 0, 0, 0);

@@ -20,13 +20,6 @@
 #include <span>
 #include <vector>
 
-UI_Engine* UI_Engine::m_instance{nullptr};
-
-UI_Engine::UI_Engine()
-{
-	m_instance = this;
-}
-
 bool UI_Engine::Init()
 {
 	// Load the OpenGL functions.
@@ -39,7 +32,7 @@ bool UI_Engine::Init()
 	m_system_interface = new SystemInterface_GLFW();
 	m_render_interface = new RenderInterface_GL3();
 
-	GLFWwindow* window = Graphics::Instance()->Get_GLFW_Window();
+	GLFWwindow* window = Graphics::Instance().Get_GLFW_Window();
 
 	m_system_interface->SetWindow(window);
 	//m_system_interface->LogMessage(Rml::Log::LT_INFO, renderer_message);
@@ -47,12 +40,12 @@ bool UI_Engine::Init()
 	m_system_interface->LogMessage(Rml::Log::LT_INFO, renderer_message);
 
 	glfwSetCharCallback(window, [](GLFWwindow* p_window, unsigned int codepoint) {
-		m_instance->CharCallback(p_window, codepoint);
+		Instance().CharCallback(p_window, codepoint);
 	});
 
 	// TODO: Make event in window class and Graphics class for this instead.
 	glfwSetCursorEnterCallback(window, [](GLFWwindow* p_window, int entered) { 
-		m_instance->CursorEnterCallback(p_window, entered);
+		Instance().CursorEnterCallback(p_window, entered);
 	});
 
 	// TODO: Make event in window class and Graphics class for this instead.
@@ -61,7 +54,7 @@ bool UI_Engine::Init()
 	//});
 
 	glfwSetWindowContentScaleCallback(window, [](GLFWwindow* p_window, float xscale, float yscale) { 
-		m_instance->WindowContentScaleCallback(p_window, xscale, yscale);
+		Instance().WindowContentScaleCallback(p_window, xscale, yscale);
 	});
 
 	int width = Graphics::Width();
@@ -277,7 +270,7 @@ void UI_Engine::Update()
 	{
 		m_context_dimensions_dirty = false;
 
-		GLFWwindow* window = Graphics::Instance()->Get_GLFW_Window();
+		GLFWwindow* window = Graphics::Instance().Get_GLFW_Window();
 
 		Rml::Vector2i window_size;
 		float dp_ratio = 1.f;
@@ -321,7 +314,7 @@ bool UI_Engine::KeyCallback(GLFWwindow*, int glfw_key, int, int glfw_action, int
 
 	m_glfw_active_modifiers = glfw_mods;
 
-	GLFWwindow* window = Graphics::Instance()->Get_GLFW_Window();
+	GLFWwindow* window = Graphics::Instance().Get_GLFW_Window();
 
 	bool res = false;
 

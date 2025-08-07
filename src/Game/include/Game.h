@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "game_engine.h"
 
 class Material_Types;
@@ -10,8 +12,8 @@ public:
 
 	static Game* GameInstance() { return m_instance; }
 
-	static void OpenMainMenu(Scene::SceneStartData data) { m_instance->m_main_menu_scene->Activate(true, data); }
-	static void OpenVoxelWorld(Scene::SceneStartData data){ m_instance->m_voxel_world_secen->Activate(true, data); }
+	static void OpenMainMenu(Scene::SceneStartData data);
+	static void OpenVoxelWorld(Scene::SceneStartData data);
 
 protected:
 
@@ -25,8 +27,8 @@ private:
 
 	Material_Types* m_material_types{nullptr};
 
-	Scene* m_main_menu_scene{ nullptr };
-	Scene* m_voxel_world_secen{ nullptr };
+	std::weak_ptr<Scene> m_main_menu_scene;
+	std::weak_ptr<Scene> m_voxel_world_secen;
 
 	void init_shaders();
 

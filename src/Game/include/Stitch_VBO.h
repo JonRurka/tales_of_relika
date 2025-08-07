@@ -33,7 +33,8 @@ public:
 
 	unsigned int* Triangle_Data() { return m_triangles; }
 
-	static int Stride();
+	static int Byte_Stride();
+	static int Float_Stride();
 
 	static Mesh::VertexAttributeList Get_Vertex_Attributes();
 

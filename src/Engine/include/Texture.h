@@ -88,7 +88,7 @@ private:
 	unsigned char* m_raw_data{nullptr};
 	size_t m_data_size{ 0 };
 
-	std::vector<Framebuffer*> m_linked_framebuffers;
+	std::vector<std::weak_ptr<Framebuffer>> m_linked_framebuffers;
 
 	inline static const std::string LOG_LOC{ "TEXTURE" };
 };

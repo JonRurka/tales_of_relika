@@ -198,7 +198,8 @@ void Server_Main::Init()
 	m_running = true;
 
 	if (m_options.Type == Server_Type::Remote) {
-		m_server_resources = new Resources();
+		//m_server_resources = new Resources();
+		Resources::Instance().Init();
 
 		m_material_types = new Material_Types();
 		m_material_types->Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);

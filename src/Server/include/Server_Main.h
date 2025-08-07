@@ -70,8 +70,6 @@ private:
 
 	LuaEngine* m_lua_engine{ nullptr };
 
-	Resources* m_server_resources{ nullptr };
-
 	Material_Types* m_material_types{nullptr};
 
 	ColliderGenerator* m_collider_generator{ nullptr };

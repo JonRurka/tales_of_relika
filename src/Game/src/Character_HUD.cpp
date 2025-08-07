@@ -36,7 +36,7 @@ void Character_HUD::Init(Camera* camera)
 {
 	m_camera = camera;
 
-	m_hotbar_doc = UI_Engine::Instance()->Load_Document_Resource("hot_bar", Game_Resources::UI::Documents::HUD::HOT_BAR);
+	m_hotbar_doc = UI_Engine::Instance().Load_Document_Resource("hot_bar", Game_Resources::UI::Documents::HUD::HOT_BAR);
 	m_hotbar_doc->Show();
 
 	Set_HotBar_Tile_ID(0, 4);

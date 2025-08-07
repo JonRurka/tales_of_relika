@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <memory>
 #include <nlohmann/json.hpp>
 
 #include "Light.h"
@@ -13,11 +14,14 @@ class Engine;
 class WorldObject;
 class Light;
 
-class Scene
+class Scene : public std::enable_shared_from_this<Scene>
 {
 	friend class Engine;
 	friend class WorldObject;
 public:
+
+	typedef std::shared_ptr<Scene> Shared;
+	typedef std::weak_ptr<Scene> Weak;
 
 	struct SceneStartData {
 	public:
@@ -83,11 +87,11 @@ public:
 
 	static void Load_File(std::string file);
 
-	WorldObject* Instantiate();
+	std::weak_ptr<WorldObject> Instantiate();
 
-	WorldObject* Instantiate(std::string name);
+	std::weak_ptr<WorldObject> Instantiate(std::string name);
 
-	std::vector<WorldObject*> Objects() { return m_objects; }
+	std::vector<std::shared_ptr<WorldObject>> Objects();
 
 	void Create_Ambient_Lights();
 
@@ -99,8 +103,9 @@ protected:
 	SceneStartData Start_Data() const { return m_start_data; }
 
 private:
-	std::vector<WorldObject*> m_objects;
-	std::vector<WorldObject*> m_ambient_light_objects;
+	int m_next_idx{ 0 };
+	std::unordered_map<int, std::shared_ptr<WorldObject>> m_objects;
+	std::vector<std::weak_ptr<WorldObject>> m_ambient_light_objects;
 	bool m_active{ false };
 	std::string m_name;
 
@@ -110,11 +115,11 @@ private:
 
 	void Update_internal(float dt);
 
-	void remove_object_from_scene(WorldObject* obj);
+	void remove_object_from_scene(int id);
 
 	void load_objects(json objects);
 
-	void create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color);
+	void create_light_object(std::weak_ptr<WorldObject>* obj, std::weak_ptr<Light>* light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color);
 	void create_ambient_light(glm::fvec3 dir);
 
 	inline static const std::string LOG_LOC{ "SCENE" };

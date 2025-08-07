@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -39,47 +40,52 @@ public:
 		std::vector<Hit> hits;
 	};
 
-	static void Init();
+	static Physics& Instance()
+	{
+		static Physics inst;
+		return inst;
+	}
+
+	void Init();
 
 	static RayHit		Raycast(glm::vec3 from, glm::vec3 dir);
 	static RayHitList	RaycastAll(glm::vec3 from, glm::vec3 dir);
 
-	static btBroadphaseInterface* Get_Broadphase() { return m_instance->m_overlappingPairCache; }
+	static btBroadphaseInterface& Get_Broadphase() { return *Instance().m_overlappingPairCache; }
 
-	static btDiscreteDynamicsWorld* GetDynamicWorld() { return m_instance->m_dynamicsWorld; }
+	static btDiscreteDynamicsWorld& GetDynamicWorld() { return *Instance().m_dynamicsWorld; }
 
-	static void Gravity(float val) { m_instance->m_gravity = val; }
-	static float Gravity() { return m_instance->m_gravity; }
+	static void Gravity(float val) { Instance().m_gravity = val; }
+	static float Gravity() { return Instance().m_gravity; }
 	
 private:
-	Physics();
+	Physics() = default;
 
-	btDefaultCollisionConfiguration* m_collisionConfiguration{ nullptr };
-	btCollisionDispatcher* m_dispatcher{ nullptr };
-	btBroadphaseInterface* m_overlappingPairCache{ nullptr };
-	btSequentialImpulseConstraintSolver* m_solver{ nullptr };
-	btDiscreteDynamicsWorld* m_dynamicsWorld{ nullptr };
+	std::unique_ptr<btDefaultCollisionConfiguration> m_collisionConfiguration{ nullptr };
+	std::unique_ptr<btCollisionDispatcher> m_dispatcher{ nullptr };
+	std::unique_ptr<btBroadphaseInterface> m_overlappingPairCache{ nullptr };
+	std::unique_ptr<btSequentialImpulseConstraintSolver> m_solver{ nullptr };
+	std::unique_ptr<btDiscreteDynamicsWorld> m_dynamicsWorld{ nullptr };
 
 	double m_last_update{ 0 };
 	float m_gravity{ DEFAULT_GRAVITY };
+	bool m_initialied{ false };
 
 	//keep track of the shapes, we release memory at exit.
 	//make sure to re-use collision shapes among rigid bodies whenever possible!
 	btAlignedObjectArray<btCollisionShape*> m_collisionShapes_box;
 
-	static Physics* m_instance;
-
 	void update_internal(float dt);
 
-	static void Add_Box_Shape(btCollisionShape* shape) { return m_instance->add_box_shape(shape); }
+	static void Add_Box_Shape(btCollisionShape* shape) { return Instance().add_box_shape(shape); }
 	void add_box_shape(btCollisionShape* shape);
 
-	static void Add_Rigidbody(btRigidBody* body) { m_instance->add_rigidbody(body); }
+	static void Add_Rigidbody(btRigidBody* body) { Instance().add_rigidbody(body); }
 	void add_rigidbody(btRigidBody* body);
 
 	//static void Add_Object();
 
-	static void Remove_Rigidbody(btRigidBody* body) { m_instance->remove_rigidbody(body); }
+	static void Remove_Rigidbody(btRigidBody* body) { Instance().remove_rigidbody(body); }
 	void remove_rigidbody(btRigidBody* body);
 
 	inline static const std::string LOG_LOC{ "PHYSICS" };

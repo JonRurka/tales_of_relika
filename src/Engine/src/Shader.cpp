@@ -16,9 +16,9 @@
 #include <cstdint>
 
 
-std::unordered_map<unsigned int, std::vector<Renderer*>> Shader::m_renderers;
-std::unordered_map<unsigned int, Shader*> Shader::m_shaders;
-std::unordered_map<std::string, Shader*> Shader::m_shaders_map;
+std::unordered_map<unsigned int, std::vector<std::weak_ptr<Renderer>>> Shader::m_renderers;
+std::unordered_map<unsigned int, std::shared_ptr<Shader>> Shader::m_shaders;
+std::unordered_map<std::string, std::shared_ptr<Shader>> Shader::m_shaders_map;
 
 Shader::Shader(std::string name, const std::string vertexPath, const std::string fragmentPath)
 {
@@ -110,9 +110,8 @@ Shader::Shader(std::string name, const std::string vertexPath, const std::string
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    m_shaders[m_ID] = this;
-    m_shaders_map[name] = this;
-    m_renderers[m_ID] = std::vector<Renderer*>();
+    
+    m_renderers[m_ID] = std::vector<std::weak_ptr<Renderer>>();
     m_initialized = true;
 }
 
@@ -183,9 +182,7 @@ Shader::Shader(std::string name, const char* vertex_source, const char* fragment
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
-    m_shaders[m_ID] = this;
-    m_shaders_map[name] = this;
-    m_renderers[m_ID] = std::vector<Renderer*>();
+    m_renderers[m_ID] = std::vector<std::weak_ptr<Renderer>>();
     m_initialized = true;
 
     Logger::LogDebug(LOG_POS("NEW::PROGRAM"), "%s: CREATED GLSL SHADER SUCCESSFULLY", name.c_str());
@@ -279,9 +276,7 @@ Shader::Shader(std::string name, const std::vector<char> vertex_bin, const std::
     load_uniforms(vertex_bin);
     load_uniforms(fragment_bin);
 
-    m_shaders[m_ID] = this;
-    m_shaders_map[name] = this;
-    m_renderers[m_ID] = std::vector<Renderer*>();
+    m_renderers[m_ID] = std::vector<std::weak_ptr<Renderer>>();
     m_initialized = true;
     m_is_spirv = true;
 
@@ -290,6 +285,11 @@ Shader::Shader(std::string name, const std::vector<char> vertex_bin, const std::
 
 void Shader::use(bool update_camera)
 {
+    if (!m_initialized) {
+        assert(false);
+        return;
+    }
+
     glUseProgram(m_ID);
     if (update_camera)
     {
@@ -304,7 +304,8 @@ void Shader::Init_Lights()
 {
     //GLuint uniformBlockIndexLights = glGetUniformBlockIndex(shaderLightingPass.Program, "LightBlock");
     //glUniformBlockBinding(shaderLightingPass.Program, uniformBlockIndexLights, 0);
-
+    if (!m_initialized)
+        return;
     if (m_lights_initialized)
         return;
 
@@ -320,10 +321,20 @@ void Shader::Init_Lights()
 
 void Shader::Dispose()
 {
+    if (!m_initialized)
+        return;
+
     m_shaders.erase(m_ID);
     m_shaders_map.erase(m_name);
     m_renderers.erase(m_ID);
     glDeleteProgram(m_ID);
+    m_source_materials.clear();
+    m_initialized = false;
+}
+
+void Shader::DisposeAll()
+{
+    
 }
 
 void Shader::setBool(const std::string& name, bool value)
@@ -424,6 +435,8 @@ void Shader::Set_Textures(std::vector<Texture*> textures)
 
 void Shader::Set_Textures(std::vector<Bound_Texture> textures)
 {
+    if (!m_initialized)
+        return;
     use();
     m_textures = textures;
     if (m_is_spirv)
@@ -436,30 +449,41 @@ void Shader::Set_Textures(std::vector<Bound_Texture> textures)
 
 void Shader::Bind_Textures()
 {
+    if (!m_initialized)
+        return;
     for (int i = 0; i < m_textures.size(); i++) {
         m_textures[i].texture->Bind(GL_TEXTURE0 + i);
     }
 }
 
-void Shader::Register_Renderer(MeshRenderer* rend)
+void Shader::Register_Renderer(std::weak_ptr<MeshRenderer> rend)
 {
-    m_renderers[m_ID].push_back(rend);
+    if (!m_initialized)
+        return;
+    assert(!rend.expired());
+    m_renderers[m_ID].push_back(std::static_pointer_cast<Renderer>(rend.lock()));
 }
 
-void Shader::Register_Material(Material* mat)
+void Shader::Register_Material(std::weak_ptr<Material> mat)
 {
+    if (!m_initialized)
+        return;
+    assert(!mat.expired());
     m_source_materials.push_back(mat);
 }
 
 void Shader::Update_Source_Materials(float dt)
 {
+    if (!m_initialized)
+        return;
     for (const auto& mat : m_source_materials)
     {
-        mat->Internal_Update(dt);
+        assert(!mat.expired());
+        mat.lock()->Internal_Update(dt);
     }
 }
 
-Shader* Shader::Create(std::string name, const std::string vertex_name, const std::string fragment_name)
+std::shared_ptr<Shader> Shader::Create(std::string name, const std::string vertex_name, const std::string fragment_name)
 {
     if (!Resources::Has_Shader(vertex_name)) {
         Logger::LogError("SHADER::CREATE", "Failed to create shader '%s' - Could not load vertex shader: %s", name.c_str(), vertex_name.c_str());
@@ -480,11 +504,11 @@ Shader* Shader::Create(std::string name, const std::string vertex_name, const st
     }
 
     bool use_spirv = vertex_asset.use_spirv;
-    Shader* shader = nullptr;
+    std::shared_ptr<Shader> shader = nullptr;
     std::vector<char> vertex_bin = Resources::Get_Shader_bin(vertex_name);
     std::vector<char> fragment_bin = Resources::Get_Shader_bin(fragment_name);
     if (use_spirv) {
-        shader = new Shader(name, vertex_bin, fragment_bin);
+        shader = std::make_shared<Shader>(name, vertex_bin, fragment_bin);
     }
     else{
         //std::string vertex_path = Resources::Get_Shader_File(vertex_name);
@@ -496,8 +520,10 @@ Shader* Shader::Create(std::string name, const std::string vertex_name, const st
         if (fragment_name == "graphics::standard::standard.frag") {
             //Logger::LogDebug(LOG_POS("Create"), f_str.c_str());
         }
-        shader = new Shader(name, v_str.c_str(), f_str.c_str());
+        shader = std::make_shared<Shader>(name, v_str.c_str(), f_str.c_str());
     }
+    m_shaders[shader->m_ID] = shader;
+    m_shaders_map[name] = shader;
       
     if (!shader->Initialized()) {
         Logger::LogError(LOG_POS("CREATE"), "Failed to create shader '%s'", name.c_str());
@@ -506,18 +532,17 @@ Shader* Shader::Create(std::string name, const std::string vertex_name, const st
     return shader;
 }
 
-void Shader::Remove(Shader* shader)
+void Shader::Remove(std::shared_ptr<Shader> shader)
 {
     shader->Dispose();
-    delete shader;
 }
 
-Shader* Shader::Get_Shader(unsigned int id)
+std::shared_ptr<Shader> Shader::Get_Shader(unsigned int id)
 {
     return m_shaders[id];
 }
 
-Shader* Shader::Get_Shader(std::string name)
+std::shared_ptr<Shader> Shader::Get_Shader(std::string name)
 {
     return m_shaders_map[name];
 }
@@ -532,14 +557,14 @@ std::vector<unsigned int> Shader::Get_Shader_ID_List()
     return keys;
 }
 
-std::vector<Renderer*> Shader::Get_Shader_Renderer_List(unsigned int id)
+std::vector<std::weak_ptr<Renderer>> Shader::Get_Shader_Renderer_List(unsigned int id)
 {
     return m_renderers[id];
 }
 
-std::vector<std::vector<Renderer*>> Shader::Get_Shader_Renderer_List()
+std::vector<std::vector<std::weak_ptr<Renderer>>> Shader::Get_Shader_Renderer_List()
 {
-    std::vector<std::vector<Renderer*>> all_renderers;
+    std::vector<std::vector<std::weak_ptr<Renderer>>> all_renderers;
     all_renderers.reserve(m_renderers.size());
     for (const auto& pair : m_renderers) {
         all_renderers.push_back(pair.second);
@@ -549,6 +574,8 @@ std::vector<std::vector<Renderer*>> Shader::Get_Shader_Renderer_List()
 
 void Shader::load_uniforms(const std::vector<char> spirv_bin)
 {
+    if (!m_initialized)
+        return;
     uint32_t* spv_data = reinterpret_cast<uint32_t*>((char*)spirv_bin.data());
     std::vector<uint32_t> spirv_data(spv_data, spv_data + (spirv_bin.size() / 4));
     spirv_cross::Compiler compiler(spirv_data);
@@ -581,6 +608,8 @@ void Shader::load_uniforms(const std::vector<char> spirv_bin)
 
 int Shader::get_uniform_location(std::string name)
 {
+    if (!m_initialized)
+        return 0;
     if (m_is_spirv) {
         if (!m_uniform_map.contains(name)) {
             Logger::LogError(LOG_POS("get_uniform_location"), "%s: spirv Uniform variable not found: %s", m_name.c_str(), name.c_str());

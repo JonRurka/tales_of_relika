@@ -29,7 +29,11 @@ class UI_Engine {
 	friend class Graphics;
 public:
 
-	UI_Engine();
+	static UI_Engine& Instance() 
+	{ 
+		static UI_Engine inst;
+		return inst; 
+	}
 
 	bool Init();
 
@@ -51,11 +55,7 @@ public:
 
 	void Shutdown();
 
-	static UI_Engine* Instance() { return m_instance; }
-
 private:
-
-	static UI_Engine* m_instance;
 
 	SystemInterface_GLFW* m_system_interface{nullptr};
 	RenderInterface_GL3* m_render_interface{nullptr};
@@ -71,6 +71,8 @@ private:
 	std::string m_ui_data_root;
 
 	std::unordered_map<std::string, Rml::ElementDocument*> m_documents;
+
+	UI_Engine() = default;
 
 	bool KeyCallback(GLFWwindow* window, int glfw_key, int scancode, int glfw_action, int glfw_mods);
 

@@ -19,7 +19,7 @@ void Menu_Scene::Init()
 
 	//m_main_menu_screen->Show();
 
-	UI_Engine::Instance()->Accept_Input(true);
+	UI_Engine::Instance().Accept_Input(true);
 
 	m_started_time = Utilities::Get_Time();
 
@@ -51,7 +51,7 @@ void Menu_Scene::OnStartSP_Clicked()
 	start_data.setString("host", "204.12.203.152");
 
 	//m_main_menu_screen->Hide();
-	UI_Engine::Instance()->Accept_Input(false);
+	UI_Engine::Instance().Accept_Input(false);
 	//m_camera->Activate(false);
 	Game::OpenVoxelWorld(start_data);
 }

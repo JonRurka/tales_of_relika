@@ -43,7 +43,7 @@ void CharacterCollider::Update(float dt)
 	btVector3 pos = t.getOrigin();
 	btQuaternion  quat = t.getRotation();
 
-	Object()->Get_Transform()->Position(glm::fvec3(pos.x(), pos.y(), pos.z()));
+	Object().Get_Transform().Position(glm::fvec3(pos.x(), pos.y(), pos.z()));
 	//Object()->Get_Transform()->Rotation(glm::quat(quat.x(), quat.y(), quat.z(), quat.w()));
 
 	//Logger::LogDebug(LOG_POS("Update"), "(%f, %f, %f)",
@@ -82,15 +82,15 @@ void CharacterCollider::OnRefresh()
 
 	m_ghostObject = new btPairCachingGhostObject();
 	m_ghostObject->setWorldTransform(create_bt_transform());
-	Physics::Get_Broadphase()->getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
+	Physics::Get_Broadphase().getOverlappingPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
 	m_ghostObject->setCollisionShape(m_shape);
 	m_ghostObject->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
 
 	m_charCon = new btKinematicCharacterController(m_ghostObject, (btCapsuleShapeZ*)m_shape, 0.05f, btVector3(0, 1, 0));
 	m_charCon->setGravity(btVector3(0, Physics::Gravity(), 0));
 
-	Physics::GetDynamicWorld()->addCollisionObject(m_ghostObject, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::AllFilter);
-	Physics::GetDynamicWorld()->addAction(m_charCon);
+	Physics::GetDynamicWorld().addCollisionObject(m_ghostObject, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::AllFilter);
+	Physics::GetDynamicWorld().addAction(m_charCon);
 
 	Logger::LogDebug(LOG_POS("OnRefresh"), "Created character collider components.");
 }

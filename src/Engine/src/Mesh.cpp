@@ -83,7 +83,7 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size)
 	//Logger::LogDebug(LOG_POS("Load"), "Load elements: %i", size / (sizeof(float) * 4));
 
 	//m_num_vertices = size / (sizeof(float) * 11);
-	m_num_vertices = size / m_attrib_list.m_stride;
+	m_num_vertices = size / m_attrib_list.m_byte_stride;
 	m_virtual_mesh = true;
 	//Logger::LogDebug(LOG_POS("Load"), "Loading %i Vertices.", (int)m_num_vertices);
 	//Logger::LogDebug(LOG_POS("Load"), "Load buffer size: %i", (int)size);
@@ -127,7 +127,7 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size)
 
 	m_attrib_list.process();
 
-	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, m_attrib_list.m_stride);
+	glVertexArrayVertexBuffer(VAO, 0, VBO, 0, m_attrib_list.m_byte_stride);
 	glCheckError();
 
 	glBindVertexArray(0);
@@ -135,19 +135,19 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size)
 
 }
 
-void Mesh::Set_Raw_Vertex_Data(float* data, size_t size, bool delete_old)
+void Mesh::Set_Raw_Vertex_Data(std::vector<float> data, bool delete_old)
 {
 	if (delete_old)
-		delete[] raw_vert_data;
+		raw_vert_data.clear();
 	raw_vert_data = data;
-	m_num_vertices = size / stride;
+	m_num_vertices = raw_vert_data.size() / m_attrib_list.m_float_stride;
 	m_virtual_mesh = true;
 	//Logger::LogDebug(LOG_POS("Set_Raw_Vertex_Data"), "Raw Vertices Set: %i", m_num_vertices);
 
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, size, raw_vert_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, raw_vert_data.size() * sizeof(float), raw_vert_data.data(), GL_STATIC_DRAW);
 
 	m_attrib_list.process();
 
@@ -269,8 +269,6 @@ void Mesh::Draw(GLenum mode)
 
 void Mesh::Dispose()
 {
-	delete[] raw_vert_data;
-
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
@@ -288,8 +286,8 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 	unsigned int num_elements = m_vertices.size();
 
 	if (m_num_vertices != num_elements) {
-		delete[] raw_vert_data;
-		raw_vert_data = new float[num_elements * stride];
+		raw_vert_data.clear();
+		raw_vert_data.resize(num_elements * m_float_stride);
 		mode = Vert_Update_Mode::ALL;
 		m_has_verts = true;
 		//Logger::LogDebug(LOG_POS("sync_vertices"), "Resize Raw Data: %i -> %i", m_num_vertices, num_elements);
@@ -347,33 +345,37 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 	}
 
 	for (int i = 0; i < num_elements; i++) {
-		float* vert_ptr = raw_vert_data + ((stride * i) + 0);
-		float* norm_ptr = raw_vert_data + ((stride * i) + 3);
-		float* color_ptr = raw_vert_data + ((stride * i) + 6);
-		float* tex_ptr = raw_vert_data + ((stride * i) + 9);
+		int vert_i = ((m_float_stride * i) + 0);
+		int norm_i = ((m_float_stride * i) + 3);
+		int color_i = ((m_float_stride * i) + 6);
+		int tex_i = ((m_float_stride * i) + 9);
+		//float* vert_ptr = raw_vert_data.data() + ((m_float_stride * i) + 0);
+		//float* norm_ptr = raw_vert_data.data() + ((m_float_stride * i) + 3);
+		//float* color_ptr = raw_vert_data.data() + ((m_float_stride * i) + 6);
+		//float* tex_ptr = raw_vert_data.data() + ((m_float_stride * i) + 9);
 
 		if (mode == Vert_Update_Mode::VERTICES ||
 			mode == Vert_Update_Mode::ALL)
 		{
-			vert_ptr[0] = m_vertices[i].x;
-			vert_ptr[1] = m_vertices[i].y;
-			vert_ptr[2] = m_vertices[i].z;
+			raw_vert_data[vert_i + 0] = m_vertices[i].x;
+			raw_vert_data[vert_i + 1] = m_vertices[i].y;
+			raw_vert_data[vert_i + 2] = m_vertices[i].z;
 		}
 
 		if (mode == Vert_Update_Mode::NORMALS ||
 			mode == Vert_Update_Mode::ALL)
 		{
 			if (!normals_empty) {
-				norm_ptr[0] = m_normals[i].x;
-				norm_ptr[1] = m_normals[i].y;
-				norm_ptr[2] = m_normals[i].z;
+				raw_vert_data[norm_i + 0] = m_normals[i].x;
+				raw_vert_data[norm_i + 1] = m_normals[i].y;
+				raw_vert_data[norm_i + 2] = m_normals[i].z;
 			}
 			else {
 				glm::vec3 n_vert = m_vertices[i];
 				glm::vec3 default_normal = glm::normalize(n_vert - glm::vec3(0.0f));
-				norm_ptr[0] = default_normal.x;
-				norm_ptr[1] = default_normal.y;
-				norm_ptr[2] = default_normal.z;
+				raw_vert_data[norm_i + 0] = default_normal.x;
+				raw_vert_data[norm_i + 1] = default_normal.y;
+				raw_vert_data[norm_i + 2] = default_normal.z;
 			}
 		}
 
@@ -381,26 +383,26 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 			mode == Vert_Update_Mode::ALL)
 		{
 			if (!colors_empty) {
-				color_ptr[0] = m_colors[i].x;
-				color_ptr[1] = m_colors[i].y;
-				color_ptr[2] = m_colors[i].z;
+				raw_vert_data[color_i + 0] = m_colors[i].x;
+				raw_vert_data[color_i + 1] = m_colors[i].y;
+				raw_vert_data[color_i + 2] = m_colors[i].z;
 			}
 			else {
-				color_ptr[0] = 1;
-				color_ptr[1] = 1;
-				color_ptr[2] = 1;
+				raw_vert_data[color_i + 0] = 1;
+				raw_vert_data[color_i + 1] = 1;
+				raw_vert_data[color_i + 2] = 1;
 			}
 		}
 
 		if (mode == Vert_Update_Mode::TEXCORDS ||
 			mode == Vert_Update_Mode::ALL) {
 			if (!texcoord_empty) {
-				tex_ptr[0] = m_texcoords[i].x;
-				tex_ptr[1] = m_texcoords[i].y;
+				raw_vert_data[tex_i + 0] = m_texcoords[i].x;
+				raw_vert_data[tex_i + 1] = m_texcoords[i].y;
 			}
 			else {
-				tex_ptr[0] = 0;
-				tex_ptr[1] = 0;
+				raw_vert_data[tex_i + 0] = 0;
+				raw_vert_data[tex_i + 1] = 0;
 			}
 		}
 	}
@@ -408,7 +410,7 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 	
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, num_elements * sizeof(float) * stride, raw_vert_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, raw_vert_data.size() * sizeof(float), raw_vert_data.data(), GL_STATIC_DRAW);
 	/*
 	// position attribute
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
@@ -442,7 +444,7 @@ void Mesh::VertexAttributeList::process()
 	for (const auto& attrib : m_attributes)
 	{
 		//Logger::LogDebug(LOG_POS("VertexAttributeList::process"), "VBO: (%i, %i, %i)", attrib_ptr, attrib.x, attrib.y);
-		glVertexAttribPointer(attrib_ptr, attrib.x, GL_FLOAT, GL_FALSE, m_stride, (void*)attrib.y);
+		glVertexAttribPointer(attrib_ptr, attrib.x, GL_FLOAT, GL_FALSE, m_byte_stride, (void*)attrib.y);
 		glEnableVertexAttribArray(attrib_ptr);
 		attrib_ptr++;
 	}

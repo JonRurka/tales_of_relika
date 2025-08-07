@@ -18,24 +18,54 @@
 
 Engine* Engine::m_instance{nullptr};
 
-void Engine::Activate_Scene(Scene* value)
+void Engine::Activate_Scene(Scene& value)
 {
-	if (m_instance->m_active_scene == value)
-		return;
+	Activate_Scene(value.Name());
+}
 
-	if (m_instance->m_active_scene != nullptr) {
-		//Logger::LogInfo(LOG_POS("Activate_Scene"), "Deactivating scene: %s", m_instance->m_active_scene->Name().c_str());
-		m_instance->m_active_scene->Activate(false);
+void Engine::Activate_Scene(std::weak_ptr<Scene> value)
+{
+	assert(!value.expired());
+	Activate_Scene(value.lock()->Name());
+}
 
-	}
-	m_instance->m_active_scene = value;
-	//Logger::LogInfo(LOG_POS("Activate_Scene"), "Activating scene: %s", m_instance->m_active_scene->Name().c_str());
-	m_instance->m_active_scene->Activate(true);
+void Engine::Activate_Scene(std::shared_ptr<Scene> value)
+{
+	Activate_Scene(value->Name());
 }
 
 void Engine::Activate_Scene(std::string value)
 {
-	Activate_Scene(m_instance->m_scenes[value]);
+	assert(m_instance->m_scenes.contains(value));
+
+	std::weak_ptr<Scene> scene_val = m_instance->m_scenes[value];
+	//Activate_Scene(m_instance->m_scenes[value]);
+
+	if (m_instance->m_has_active_scene && m_instance->m_active_scene.lock()->Name() == value)
+		return;
+
+	if (m_instance->m_has_active_scene) {
+		//Logger::LogInfo(LOG_POS("Activate_Scene"), "Deactivating scene: %s", m_instance->m_active_scene->Name().c_str());
+		m_instance->m_active_scene.lock()->Activate(false);
+
+	}
+
+	//Logger::LogInfo(LOG_POS("Activate_Scene"), "Activating scene: %s", m_instance->m_active_scene->Name().c_str());
+	m_instance->m_active_scene = scene_val;
+	m_instance->m_active_scene.lock()->Activate(true);
+	m_instance->m_has_active_scene = true;
+}
+
+Scene& Engine::Active_Scene()
+{
+	assert(m_instance->m_has_active_scene);
+	return *m_instance->m_active_scene.lock();
+}
+
+std::weak_ptr<Scene> Engine::Active_Scene_Ptr()
+{
+	assert(m_instance->m_has_active_scene);
+	return m_instance->m_active_scene;
 }
 
 float Engine::Run_Time()
@@ -57,7 +87,7 @@ void Engine::Stop()
 	m_running = false;
 }
 
-void Engine::initialize_scene(Scene* scene, std::string name)
+void Engine::initialize_scene(std::shared_ptr<Scene> scene, std::string name)
 {
 	scene->m_name = name;
 	m_scenes[name] = scene;
@@ -65,9 +95,9 @@ void Engine::initialize_scene(Scene* scene, std::string name)
 
 void Engine::Initialize_Scene(Scene* scene, json data)
 {
-	std::string name;
-	data["name"].get_to(name);
-	m_scenes[name] = scene;
+	//std::string name;
+	//data["name"].get_to(name);
+	//m_scenes[name] = scene;
 
 
 }
@@ -78,15 +108,13 @@ void Engine::initialize()
 	m_instance = this;
 	m_running = true;
 	m_start_time = Utilities::Get_Time();
-	Init_Resources<Resources>();
+	
+	Resources::Instance().Init();
+	Input::Instance().Init();
+	Graphics::Instance().Init();
+	Physics::Instance().Init();
 
-	m_input = new Input();
-
-	m_graphics = new Graphics();
-	m_graphics->Initialize();
-	m_graphics->Clear_Color(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
-
-	m_physics = new Physics();
+	Graphics::Instance().Clear_Color(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
 
 	Init();
 }
@@ -97,28 +125,28 @@ void Engine::game_loop()
 	previous_frame_times.reserve(10);
 
 	float lastFrame = (float)Utilities::Get_Time();
-	while (m_running && !m_graphics->Window_Should_Close())
+	while (m_running && !Graphics::Instance().Window_Should_Close())
 	{
 		
 		process_input();
-		m_physics->update_internal(m_deltaTime);
+		Physics::Instance().update_internal(m_deltaTime);
 
-		if (m_graphics->Render_ImgUI()) {
+		if (Graphics::Instance().Render_ImgUI()) {
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
 		}
 
-		if (Active_Scene() != nullptr)
+		if (m_has_active_scene)
 		{
-			Active_Scene()->Update_internal(m_deltaTime);
+			Active_Scene().Update_internal(m_deltaTime);
 		}
 
 		Update(m_deltaTime);
 
 
 		Light::Update_Lights(m_deltaTime);
-		m_graphics->Update(m_deltaTime);
+		Graphics::Instance().Update(m_deltaTime);
 
 		Logger::Update();
 
@@ -145,7 +173,7 @@ void Engine::game_loop()
 
 void Engine::process_input()
 {
-	m_input->update(m_deltaTime);
+	Input::Instance().update(m_deltaTime);
 }
 
 void Engine::cleanup()

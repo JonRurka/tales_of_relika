@@ -32,7 +32,7 @@ void VoxelWorld_Scene::Init()
 	VoxelWorld_Scene::ConnectMode connect_type = (VoxelWorld_Scene::ConnectMode)Start_Data().getInt("connection");
 	m_remote_connection = (connect_type == VoxelWorld_Scene::ConnectMode::Remote);
 
-	m_loading_screen = UI_Engine::Instance()->Load_Document_Resource("loading", Game_Resources::UI::Documents::HUD::LOADING);
+	m_loading_screen = UI_Engine::Instance().Load_Document_Resource("loading", Game_Resources::UI::Documents::HUD::LOADING);
 	m_loading_screen->Show();
 
 	setup_camera();

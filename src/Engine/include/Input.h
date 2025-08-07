@@ -15,45 +15,51 @@ class Input {
 	friend class Engine;
 	friend class Graphics;
 public:
-	static Input* Instance() { return m_instance; }
+	static Input& Instance() 
+	{ 
+		static Input input;
+		return input;
+	}
+
+	void Init();
 
 	static bool GetKeyDown(input::KeyCode key) {
-		return m_instance->get_key_down(key);
+		return Instance().get_key_down(key);
 
 	}
 	static bool GetKey(input::KeyCode key) {
-		return m_instance->get_key(key);
+		return Instance().get_key(key);
 	}
 	static bool GetKeyUp(input::KeyCode key) {
-		return m_instance->get_key_up(key);
+		return Instance().get_key_up(key);
 	}
 	static bool GetMouseKeyDown(input::MouseButton key) {
-		return m_instance->get_mouse_key_down(key);
+		return Instance().get_mouse_key_down(key);
 
 	}
 	static bool GetMouseKey(input::MouseButton key) {
-		return m_instance->get_mouse_key(key);
+		return Instance().get_mouse_key(key);
 	}
 	static bool GetMouseKeyUp(input::MouseButton key) {
-		return m_instance->get_mouse_key_up(key);
+		return Instance().get_mouse_key_up(key);
 	}
-	static void Set_Mouse_Visibility(bool visible) { m_instance->set_mouse_visibility(visible); }
-	static bool Get_Mouse_Visibility() { return m_instance->get_mouse_visibility(); }
-	static double Get_Input_X(std::string device = "") { return m_instance->get_input_x(device); }
-	static double Get_Input_Y(std::string device = "") { return m_instance->get_input_y(device); }
+	static void Set_Mouse_Visibility(bool visible) { Instance().set_mouse_visibility(visible); }
+	static bool Get_Mouse_Visibility() { return Instance().get_mouse_visibility(); }
+	static double Get_Input_X(std::string device = "") { return Instance().get_input_x(device); }
+	static double Get_Input_Y(std::string device = "") { return Instance().get_input_y(device); }
 
 
 
 
-	static glm::vec2 Get_Mouse_Position() { return m_instance->get_mouse_pos(); }
+	static glm::vec2 Get_Mouse_Position() { return Instance().get_mouse_pos(); }
 
-	static void Mouse_Sensitivity(double value) { m_instance->m_mouse_sensitivity = value; }
+	static void Mouse_Sensitivity(double value) { Instance().m_mouse_sensitivity = value; }
 
 
 private:
-	Input();
+	Input() = default;
 
-	static Input* m_instance;
+	//static Input* m_instance;
 
 	std::unordered_map<int, input::KeyCode> m_key_lookup;
 

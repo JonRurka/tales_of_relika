@@ -8,7 +8,8 @@
 #include <chrono>
 
 #define VBO_ELEMENTS 3
-#define STRIDE (VBO_ELEMENTS * sizeof(float) * 4)
+#define FLOAT_STRIDE (VBO_ELEMENTS * 4)
+#define BYTE_STRIDE (FLOAT_STRIDE * 4)
 #define DEBUG_DRAW_NORMALS false
 
 void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
@@ -22,7 +23,7 @@ void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 	m_vertices = new glm::vec4[Max_Verts];
 	m_normals = new glm::vec4[Max_Verts];
 	m_triangles = new unsigned int[Max_Verts];
-	m_raw_vert_data = new float[Max_Verts * m_attribute_list.Stride()];
+	m_raw_vert_data = new float[Max_Verts * m_attribute_list.Float_Stride()];
 
 	compute_triangles();
 
@@ -46,7 +47,7 @@ void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 	normal_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
 	mat_buffer = m_controller->NewReadWriteBuffer(elements, sizeof(float) * 4);
 	//Logger::LogDebug(LOG_POS("Init"), "Create Extern VBO");
-	vbo_buffer = m_controller->NewReadWriteBuffer(elements, STRIDE, true);
+	vbo_buffer = m_controller->NewReadWriteBuffer(elements, BYTE_STRIDE, true);
 	//Logger::LogDebug(LOG_POS("Init"), "Max vert capacity: %i, Max VBO capacity: %i", elements, elements * STRIDE);
 
 	//float* zero_data = new float[elements * STRIDE];
@@ -138,7 +139,7 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 
 		//Logger::LogDebug(LOG_POS("Process"), "Process Vert size: %i, Process VBO size: %i", count.x, count.x * STRIDE);
 		
-		int vbo_size = count.x * STRIDE;
+		int vbo_size = count.x * BYTE_STRIDE;
 
 		start = std::chrono::high_resolution_clock::now();
 		//Output_VBO_Buffer()->FlushExternal(vbo_size);
@@ -197,7 +198,7 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		//mesh->Indices(tris);
 		//mesh->Normals(normals);
 
-		int vbo_size = count.x * STRIDE;
+		int vbo_size = count.x * BYTE_STRIDE;
 
 		start = std::chrono::high_resolution_clock::now();
 		mesh->Set_Vertex_Attributes(m_attribute_list);
@@ -212,7 +213,8 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 				m_raw_vert_data[(j + 8)], m_raw_vert_data[j + 9], m_raw_vert_data[j + 10], m_raw_vert_data[j + 11]);
 		}*/
 
-		mesh->Set_Raw_Vertex_Data(m_raw_vert_data, vbo_size, false);
+		std::vector<float> raw_data(m_raw_vert_data, m_raw_vert_data + (count.x * FLOAT_STRIDE));
+		mesh->Set_Raw_Vertex_Data(raw_data, false);
 		mesh->Activate();
 		end = std::chrono::high_resolution_clock::now();
 		auto load_mesh_duration = std::chrono::duration<double>(end - start).count() * 1000;
@@ -229,14 +231,19 @@ void Stitch_VBO::Reset()
 	times = glm::dvec4(0.0);
 }
 
-int Stitch_VBO::Stride()
+int Stitch_VBO::Byte_Stride()
 {
-	return STRIDE;
+
+}
+
+int Stitch_VBO::Float_Stride()
+{
+
 }
 
 Mesh::VertexAttributeList Stitch_VBO::Get_Vertex_Attributes()
 {
-	Mesh::VertexAttributeList res(STRIDE);
+	Mesh::VertexAttributeList res(FLOAT_STRIDE);
 	res.add_attribute(4, 0);
 	res.add_attribute(4, (4 * sizeof(float)));
 	res.add_attribute(4, (8 * sizeof(float)));

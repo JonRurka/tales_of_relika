@@ -31,20 +31,24 @@ public:
 		bool transparency_enabled{ false };
 	};
 
-	static Graphics* Instance() { return m_instance; }
+	static Graphics& Instance() 
+	{ 
+		static Graphics graphics;
+		return graphics; 
+	}
 
-	static int Width() { return m_instance->m_width; }
-	static int Height() { return m_instance->m_height; }
+	static int Width() { return Instance().m_width; }
+	static int Height() { return Instance().m_height; }
 
 
-	static void DrawDebugRay(glm::vec3 start, glm::vec3 dir, glm::vec3 color, float duration = 0.0f) { m_instance->draw_debug_ray(start, dir, color, duration); }
-	static void DrawDebugLine(glm::vec3 start, glm::vec3 stop, glm::vec3 color, float duration = 0.0f) { m_instance->draw_debug_line(start, stop, color, duration); }
+	static void DrawDebugRay(glm::vec3 start, glm::vec3 dir, glm::vec3 color, float duration = 0.0f) { Instance().draw_debug_ray(start, dir, color, duration); }
+	static void DrawDebugLine(glm::vec3 start, glm::vec3 stop, glm::vec3 color, float duration = 0.0f) { Instance().draw_debug_line(start, stop, color, duration); }
 
-	static void Update_Window_Title(std::string title) { m_instance->update_window_title(title); }
+	static void Update_Window_Title(std::string title) { Instance().update_window_title(title); }
 
 	static unsigned int CreateBufferGL(int size, const void* data, unsigned int usage);
 
-	void Initialize();
+	void Init();
 	void Update(float dt);
 
 	bool Window_Should_Close();
@@ -57,13 +61,13 @@ public:
 
 	GLFWwindow* Get_GLFW_Window() { return m_window; }
 
-	static ImGuiIO& ImGUI_IO() { return m_instance->m_io; }
+	static ImGuiIO& ImGUI_IO() { return Instance().m_io; }
 
-	static UI_Engine* UI() { return m_instance->m_UI; }
+	static UI_Engine* UI() { return Instance().m_UI; }
 
 	const Render_Options Active_Options() { return m_active_options; }
 
-	void Set_Screen_FrameTexture(Texture* tex);
+	void Set_Screen_FrameTexture(std::shared_ptr<Texture> tex);
 	
 
 	void OnWindowResize(GLFWwindow* window, int width, int height);
@@ -98,7 +102,7 @@ private:
 	window w;
 	int m_width{ 0 };
 	int m_height{ 0 };
-	static Graphics* m_instance;
+	//static Graphics* m_instance;
 
 	ImGuiIO m_io;
 	UI_Engine* m_UI{ nullptr };
@@ -119,6 +123,8 @@ private:
 	glm::vec4 m_clear_color{ glm::vec4(0.2f, 0.3f, 0.3f, 1.0f) };
 
 	std::vector<DebugLines> m_debug_lines;
+	 
+	Graphics() = default;
 
 	void draw_debug_ray(glm::vec3 start, glm::vec3 dir, glm::vec3 color, float duration = 0.0f);
 	void draw_debug_line(glm::vec3 start, glm::vec3 stop, glm::vec3 color, float duration = 0.0f);

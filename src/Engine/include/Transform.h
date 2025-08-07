@@ -18,6 +18,8 @@ class Transform
 	friend class WorldObject;
 public:
 
+	~Transform();
+
 	void Translate(glm::vec3 value);
 
 	void Translate(float x, float y, float z);
@@ -69,7 +71,7 @@ public:
 
 private:
 
-	Transform(WorldObject* obj);
+	Transform(std::weak_ptr<WorldObject> obj);
 
 	void Update(float dt);
 
@@ -92,7 +94,7 @@ private:
 
 	bool m_verbos{ false };
 
-	WorldObject* m_object{nullptr};
+	std::weak_ptr<WorldObject> m_object;
 
 	void set_model_mat(bool update_parent = true);
 

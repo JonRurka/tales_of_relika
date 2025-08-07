@@ -8,6 +8,10 @@ class Texture;
 class Shader;
 class Model;
 
+#define LOAD_MODE_FS 1
+#define LOAD_MODE_BIN 2
+#define LOAD_MODE LOAD_MODE_BIN
+
 class Resources {
 public:
 
@@ -45,31 +49,44 @@ public:
 		// data specific
 		std::string relative_path;
 	};
-	
-	Resources();
-	
-	Resources(Resources::LoadMode mode);
 
-	static void Load_Shader(std::string name) { m_instance->load_shader(name); }
-	static void Load_Shader(std::vector<std::string> names) { m_instance->load_shader(names); }
+	void Init() {
+		Resources::LoadMode mode;
+		if (LOAD_MODE == LOAD_MODE_FS) {
+			mode = LoadMode::Filesystem;
+		}
+		else if (LOAD_MODE == LOAD_MODE_BIN) {
+			mode = LoadMode::Binary;
+		}
+		Init(mode);
+	}
+	void Init(Resources::LoadMode mode);
 
-	static void Load_Texture(std::string name, bool flip = true) { m_instance->load_texture(name, flip); }
-	static void Load_Texture(std::vector<std::string> names, bool flip = true){ m_instance->load_texture(names, flip);}
+	static Resources& Instance() {
+		static Resources inst;
+		return inst;
+	}
 
-	static void Load_Model(std::string name) { m_instance->load_model(name); }
-	static void Load_Model(std::vector<std::string> names){ m_instance->load_model(names);}
+	static void Load_Shader(std::string name) { Instance().load_shader(name); }
+	static void Load_Shader(std::vector<std::string> names) { Instance().load_shader(names); }
 
-	static void Load_Data_File(std::string name) { m_instance->load_data_file(name); }
-	static void Load_Data_File(std::vector<std::string> names) { m_instance->load_data_file(names); }
+	static void Load_Texture(std::string name, bool flip = true) { Instance().load_texture(name, flip); }
+	static void Load_Texture(std::vector<std::string> names, bool flip = true){ Instance().load_texture(names, flip);}
 
-	static Texture* Get_Texture(std::string name) { return m_instance->get_texture(name); }
-	static std::string Get_Shader_File(std::string name){ return m_instance->get_shader_file(name);}
-	static std::vector<char> Get_Shader_bin(std::string name) { return m_instance->get_shader_bin(name); }
-	static void Modify_Shader_Bin(std::string name, std::vector<char> data) { return m_instance->modify_shader_bin(name, data); }
-	static Model* Get_Model(std::string name) { return m_instance->get_model(name); }
+	static void Load_Model(std::string name) { Instance().load_model(name); }
+	static void Load_Model(std::vector<std::string> names){ Instance().load_model(names);}
 
-	static std::string Get_Data_File_String(std::string name) { return m_instance->get_data_file_string(name); }
-	static std::vector<char> Get_Data_File_Bin(std::string name) { return m_instance->get_data_file_bin(name); }
+	static void Load_Data_File(std::string name) { Instance().load_data_file(name); }
+	static void Load_Data_File(std::vector<std::string> names) { Instance().load_data_file(names); }
+
+	static Texture* Get_Texture(std::string name) { return Instance().get_texture(name); }
+	static std::string Get_Shader_File(std::string name){ return Instance().get_shader_file(name);}
+	static std::vector<char> Get_Shader_bin(std::string name) { return Instance().get_shader_bin(name); }
+	static void Modify_Shader_Bin(std::string name, std::vector<char> data) { return Instance().modify_shader_bin(name, data); }
+	static Model* Get_Model(std::string name) { return Instance().get_model(name); }
+
+	static std::string Get_Data_File_String(std::string name) { return Instance().get_data_file_string(name); }
+	static std::vector<char> Get_Data_File_Bin(std::string name) { return Instance().get_data_file_bin(name); }
 
 	static std::vector<std::string> Get_Data_Resource_List();
 	static std::vector<std::string> Get_Data_Resource_List(std::string extension);
@@ -78,32 +95,32 @@ public:
 		if (!Has_Texture(name))
 			return Asset();
 		Load_Texture(name);
-		return m_instance->m_texture_assets[name];
+		return Instance().m_texture_assets[name];
 	}
 
 	static Asset Get_Shader_Asset(std::string name) {
 		if (!Has_Shader(name))
 			return Asset();
 		Load_Shader(name);
-		return m_instance->m_shader_assets[name];
+		return Instance().m_shader_assets[name];
 	}
 
 	static Asset Get_Model_Asset(std::string name) {
 		if (!Has_Model(name))
 			return Asset();
 		Load_Model(name);
-		return m_instance->m_models_assets[name];
+		return Instance().m_models_assets[name];
 	}
 
 	static Asset Get_Data_Asset(std::string name, bool load = true);
 	
-	static bool Has_Texture(std::string name) { return m_instance->has_texture(name); }
+	static bool Has_Texture(std::string name) { return Instance().has_texture(name); }
 
-	static bool Has_Shader(std::string name) { return m_instance->has_shader(name); }
+	static bool Has_Shader(std::string name) { return Instance().has_shader(name); }
 
-	static bool Has_Model(std::string name) { return m_instance->has_model(name); }
+	static bool Has_Model(std::string name) { return Instance().has_model(name); }
 
-	static bool Has_Data_File(std::string name) { return m_instance->has_data_file(name); }
+	static bool Has_Data_File(std::string name) { return Instance().has_data_file(name); }
 
 	static std::string Get_Resources_Director();
 
@@ -111,7 +128,7 @@ public:
 
 private:
 
-	LoadMode m_mode;
+	LoadMode m_mode{ LoadMode::Binary};
 
 	const std::vector<std::string> m_external_sections = {
 		"ui"
@@ -129,7 +146,9 @@ private:
 	std::unordered_map<std::string, Asset> m_models_assets;
 	std::unordered_map<std::string, Asset> m_data_assets;
 
-	static Resources* m_instance;
+	//static Resources* m_instance;
+
+	Resources() = default;
 
 	static void get_assets_recursively(std::string basePath, std::vector<Asset>& assets, std::string rel_path = "");
 

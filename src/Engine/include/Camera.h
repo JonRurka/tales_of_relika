@@ -50,7 +50,7 @@ public:
 	glm::vec4 Clear_Color() { return m_clear_color; }
 	void Clear_Color(glm::vec4 value) { m_clear_color = value; }
 
-	void Set_Skybox(Cubemap* value);
+	void Set_Skybox(std::shared_ptr<Cubemap> value);
 
 	void ScreenPointToRay(glm::vec2 pos, glm::vec3& out_start, glm::vec3& out_dir);
 
@@ -59,7 +59,7 @@ public:
 	glm::mat4 Projection_Matrix() { return m_projection; }
 	glm::mat4 View_Matrix() { return m_view; }
 
-	static Camera* Get_Active();
+	static Camera& Get_Active();
 	
 	void Activate(bool active);
 
@@ -79,18 +79,18 @@ private:
 	bool m_isActive{ false };
 	glm::vec4 m_clear_color{glm::ivec4(0.0f, 0.0f, 0.0f, 1.0f)};
 
-	Cubemap* m_cubemap{nullptr};
-	static Mesh* m_cubemap_mesh;
-	static Shader* m_cubemap_shader;
+	std::shared_ptr<Cubemap> m_cubemap{nullptr};
+	static std::shared_ptr<Mesh> m_cubemap_mesh;
+	static std::shared_ptr<Shader> m_cubemap_shader;
 	bool m_has_skybox{ false };
 
-	Framebuffer* m_framebuffer{nullptr};
+	std::shared_ptr<Framebuffer> m_framebuffer{nullptr};
 
 	GPUSort* m_sort{ nullptr };
 
-	Transform* m_transform{ nullptr };
+	//Transform* m_transform{ nullptr };
 
-	static Camera* m_active_camera;
+	static std::weak_ptr<Camera> m_active_camera;
 
 	void create_framebuffer();
 	void destroy_framebuffer();

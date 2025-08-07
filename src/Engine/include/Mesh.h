@@ -24,11 +24,11 @@ public:
 		friend class Mesh;
 	public:
 
-		VertexAttributeList() : m_stride{ 11 }
+		VertexAttributeList() : m_float_stride{ 11 }, m_byte_stride{11 * sizeof(float)}
 		{
 		}
 
-		VertexAttributeList(int stride) : m_stride{ stride }
+		VertexAttributeList(int stride) : m_float_stride{ stride }, m_byte_stride{ stride * sizeof(float) }
 		{
 		}
 
@@ -45,22 +45,29 @@ public:
 			return res;
 		}
 
-		int Stride() { return m_stride; }
+		int Byte_Stride() { return m_byte_stride; }
+		int Float_Stride() { return m_float_stride; }
 
 	private:
 		std::vector<glm::ivec4> m_attributes;
-		int m_stride{ 0 };
+		int m_byte_stride{ 0 };
+		int m_float_stride{ 0 };
 
 		void process();
 	};
 
 	Mesh();
 	Mesh(size_t size);
+	~Mesh()
+	{
+		Dispose();
+	}
 
 	void Set_Vertex_Attributes(VertexAttributeList list)
 	{
 		m_attrib_list = list;
-		stride = m_attrib_list.m_stride;
+		m_float_stride = m_attrib_list.m_float_stride;
+		m_byte_stride = m_attrib_list.m_byte_stride;
 	}
 
 	void Name(std::string value) { m_name = value; }
@@ -123,9 +130,9 @@ public:
 
 	GLuint Get_VAO() { return VAO; }
 
-	void Set_Raw_Vertex_Data(float* data, size_t size, bool delete_old = true);
+	void Set_Raw_Vertex_Data(std::vector<float> data, bool delete_old = true);
 
-	float* Get_Raw_Vertex_Data() { return raw_vert_data; }
+	std::vector<float> Get_Raw_Vertex_Data() { return raw_vert_data; }
 
 	void Recenter();
 
@@ -158,7 +165,9 @@ private:
 	glm::vec3 m_min;
 	glm::vec3 m_max;
 
-	size_t stride {11};
+	// Number of floats, not bytes
+	size_t m_float_stride {11};
+	size_t m_byte_stride{ 11 * sizeof(float) };
 
 	enum class Vert_Update_Mode {
 		VERTICES,
@@ -185,7 +194,7 @@ private:
 
 	bool m_has_verts{ false };
 
-	float* raw_vert_data { nullptr };
+	std::vector<float> raw_vert_data;
 
 	inline static const std::string LOG_LOC{ "MESH" };
 };

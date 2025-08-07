@@ -28,17 +28,13 @@ namespace fs = std::filesystem;
 
 using nlohmann::json;
 
-#define LOAD_MODE_FS 1
-#define LOAD_MODE_BIN 2
+
 
 #define LOAD_SHADERS true
 #define LOAD_TEXTURES true
 #define LOAD_MODELS true
 #define LOAD_DATA_FILES true
 
-#define LOAD_MODE LOAD_MODE_BIN
-
-Resources* Resources::m_instance{nullptr};
 
 namespace {
     std::string pad_int(int value, int width) {
@@ -91,18 +87,9 @@ namespace {
     }
 }
 
-
-Resources::Resources()
+void Resources::Init(Resources::LoadMode mode)
 {
-    m_instance = this;
-
-    if (LOAD_MODE == LOAD_MODE_FS) {
-        m_mode = LoadMode::Filesystem;
-    }
-    else if (LOAD_MODE == LOAD_MODE_BIN) {
-        m_mode = LoadMode::Binary;
-    }
-
+    m_mode = mode;
 
     switch (m_mode) {
     case LoadMode::Filesystem:
@@ -119,20 +106,14 @@ Resources::Resources()
         break;
     }
 
-    
     Logger::LogInfo(LOG_POS("NEW"), "Resources Initialized.");
-}
-
-Resources::Resources(Resources::LoadMode mode) : Resources()
-{
-	m_mode = mode;
 }
 
 std::vector<std::string> Resources::Get_Data_Resource_List()
 {
     std::vector<std::string> res;
-    res.reserve(m_instance->m_data_assets.size());
-    for (const auto& pair : m_instance->m_data_assets)
+    res.reserve(Instance().m_data_assets.size());
+    for (const auto& pair : Instance().m_data_assets)
     {
         res.push_back(pair.first);
     }
@@ -142,8 +123,8 @@ std::vector<std::string> Resources::Get_Data_Resource_List()
 std::vector<std::string> Resources::Get_Data_Resource_List(std::string extension)
 {
     std::vector<std::string> res;
-    res.reserve(m_instance->m_data_assets.size());
-    for (const auto& pair : m_instance->m_data_assets)
+    res.reserve(Instance().m_data_assets.size());
+    for (const auto& pair : Instance().m_data_assets)
     {
         if (Utilities::getFileExtension(pair.first) == extension) {
             res.push_back(pair.first);
@@ -443,7 +424,7 @@ Resources::Asset Resources::Get_Data_Asset(std::string name, bool load)
     }
     if (load)
         Load_Data_File(name);
-    return m_instance->m_data_assets[Utilities::toLowerCase(name)];
+    return Instance().m_data_assets[Utilities::toLowerCase(name)];
 }
 
 std::string Resources::Get_Resources_Director()

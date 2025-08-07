@@ -15,6 +15,18 @@
 
 Game* Game::m_instance{ nullptr };
 
+void Game::OpenMainMenu(Scene::SceneStartData data)
+{
+	if (!m_instance->m_main_menu_scene.expired())
+		m_instance->m_main_menu_scene.lock()->Activate(true, data);
+}
+
+void Game::OpenVoxelWorld(Scene::SceneStartData data)
+{
+	if (!m_instance->m_voxel_world_secen.expired())
+		m_instance->m_voxel_world_secen.lock()->Activate(true, data);
+}
+
 void Game::Init()
 {
 	m_instance = this;
@@ -30,7 +42,7 @@ void Game::Init()
 	init_shaders();
 	
 	
-	UI_Engine::Instance()->Load_Font(Resources::Engine_UI_Assets::DEFAULT_FONT);
+	UI_Engine::Instance().Load_Font(Resources::Engine_UI_Assets::DEFAULT_FONT);
 	//UI_Engine::Instance()->Load_Document_Resource("demo", Game_Resources::UI::Documents::DEMO);
 	//UI_Engine::Instance()->Load_Document_File("demo", "test.rml");
 	//UI_Engine::Instance()->Load_Document_Resource("hot_bar", Game_Resources::UI::Documents::HUD::HOT_BAR);
@@ -51,7 +63,7 @@ void Game::Init()
 	start_data.setString("username", "test_user");
 	start_data.setInt("user_id", 1);
 	start_data.setString("host", "204.12.203.152");
-	m_voxel_world_secen->Activate(true, start_data);
+	m_voxel_world_secen.lock()->Activate(true, start_data);
 }
 
 void Game::init_shaders()
