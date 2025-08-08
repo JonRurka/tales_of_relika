@@ -14,6 +14,8 @@ class TerrainModifications;
 
 class ISO_Sampler {
 public:
+	typedef std::shared_ptr<ISO_Sampler> Shared;
+	typedef std::weak_ptr<ISO_Sampler> Weak;
 
 	struct Voxel_Location {
 		glm::ivec4 chunk;
@@ -24,7 +26,7 @@ public:
 	ISO_Sampler(IComputeController* controller,
 		int size_x, int size_y, int size_z,
 		std::string extension, IComputeProgram::FileType type,
-		HeightmapGenerator* heightmap_gen, TerrainModifications* terrain_mods);
+		std::shared_ptr<HeightmapGenerator> heightmap_gen, std::shared_ptr<TerrainModifications> terrain_mods);
 
 	void Finalize(IComputeBuffer* static_settings);
 
@@ -38,8 +40,8 @@ private:
 
 	IComputeController* m_controller{ nullptr };
 
-	HeightmapGenerator* m_heightmap_gen{ nullptr };
-	TerrainModifications* m_terrain_mods{ nullptr };
+	HeightmapGenerator::Shared m_heightmap_gen;
+	TerrainModifications::Shared m_terrain_mods;
 
 
 	int m_size_x, m_size_z;

@@ -22,16 +22,16 @@ void LocalPlayerCharacter::Init()
 {
 	m_instance = this;
 
-	m_body_trans = Object()->Get_Transform();
+	m_body_trans = Object().Get_Transform_Ptr();
 	//m_body_trans->Position(glm::vec3(100, 50, 100));
 
-	m_location = m_body_trans->Position();
+	m_location = m_body_trans.lock()->Position();
 	m_old_location = m_location;
 	
 
-	m_capsule_collider = Object()->Add_Component<CharacterCollider>();
-	m_capsule_collider->Mass(50.0);
-	m_capsule_collider->Activate();
+	m_capsule_collider = Object().Add_Component<CharacterCollider>();
+	m_capsule_collider.lock()->Mass(50.0);
+	m_capsule_collider.lock()->Activate();
 	
 	//m_capsule_collider->RigidBody()->setAngularFactor(btVector3(1.0f, 1.0f, 1.0f));
 
@@ -69,10 +69,12 @@ void LocalPlayerCharacter::OnDestroy()
 
 void LocalPlayerCharacter::jump_control(float dt)
 {
+	assert(!m_capsule_collider.expired());
+
 	if (Input::GetKeyDown(KeyCode::Space) && 
-		m_capsule_collider->Get_Controller()->onGround()) 
+		m_capsule_collider.lock()->Get_Controller().onGround())
 	{
-		m_capsule_collider->Get_Controller()->jump(btVector3(0, m_jump_power, 0));
+		m_capsule_collider.lock()->Get_Controller().jump(btVector3(0, m_jump_power, 0));
 		SendPlayerEvent(OpCodes::Player_Events::Jump, Protocal_Tcp);
 		//m_capsule_collider->RigidBody()->applyCentralImpulse(btVector3(0, m_jump_force, 0));
 	}
@@ -80,9 +82,13 @@ void LocalPlayerCharacter::jump_control(float dt)
 
 void LocalPlayerCharacter::move_control(float dt)
 {
+	assert(!m_cam_trans.expired());
+	assert(!m_capsule_collider.expired());
 
-	glm::vec3 dir_forward = m_cam_trans->Forward();
-	glm::vec3 dir_right = m_cam_trans->Right();
+	CharacterCollider& char_col = *m_capsule_collider.lock().get();
+
+	glm::vec3 dir_forward = m_cam_trans.lock()->Forward();
+	glm::vec3 dir_right = m_cam_trans.lock()->Right();
 
 	glm::vec3 forward = glm::normalize(glm::vec3(dir_forward.x, 0, dir_forward.z));
 	glm::vec3 right = -glm::normalize(glm::vec3(dir_right.x, 0, dir_right.z));
@@ -110,20 +116,20 @@ void LocalPlayerCharacter::move_control(float dt)
 	if (m_do_move) {
 		glm::vec3 tr_move_vec = glm::vec3(move_vec.x, 0, move_vec.z);
 
-		if (m_capsule_collider->Get_Controller()->onGround())
-			m_capsule_collider->Get_Controller()->setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
+		if (char_col.Get_Controller().onGround())
+			char_col.Get_Controller().setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
 		else
-			m_capsule_collider->Get_Controller()->setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
+			char_col.Get_Controller().setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
 
 	}
 	else {
-		m_capsule_collider->Get_Controller()->setWalkDirection(btVector3(0, 0, 0));
+		char_col.Get_Controller().setWalkDirection(btVector3(0, 0, 0));
 	}
 
-	btVector3 pos = m_capsule_collider->Get_Controller()->getGhostObject()->getWorldTransform().getOrigin();
+	btVector3 pos = char_col.Get_Controller().getGhostObject()->getWorldTransform().getOrigin();
 	m_location = glm::fvec3(pos.x(), pos.y(), pos.z());
 
-	btVector3 vel = m_capsule_collider->Get_Controller()->getLinearVelocity();
+	btVector3 vel = char_col.Get_Controller().getLinearVelocity();
 	m_velocity = glm::fvec3(vel.x(), vel.y(), vel.z());// (m_location - m_old_location) / dt;
 
 	m_old_location = m_location;
@@ -157,9 +163,9 @@ void LocalPlayerCharacter::move_control(float dt)
 		{
 			glm::vec3 new_pos = glm::mix(m_location, pred_server_pos, dt * 2);
 			btVector3 bt_new_pos = btVector3(new_pos.x, new_pos.y, new_pos.z);
-			m_capsule_collider->Get_Controller()->warp(bt_new_pos);
-			m_body_trans->Position(new_pos);
-			m_cam_trans->Position(new_pos + cam_offset);
+			char_col.Get_Controller().warp(bt_new_pos);
+			m_body_trans.lock()->Position(new_pos);
+			m_cam_trans.lock()->Position(new_pos + cam_offset);
 			m_location = new_pos;
 			return;
 		}
@@ -181,9 +187,9 @@ void LocalPlayerCharacter::move_control(float dt)
 			move_dt += dt;
 			glm::vec3 new_pos = glm::mix(m_location, pred_server_pos, move_dt);
 			btVector3 bt_new_pos = btVector3(new_pos.x, new_pos.y, new_pos.z);
-			m_capsule_collider->Get_Controller()->warp(bt_new_pos);
-			m_body_trans->Position(new_pos);
-			m_cam_trans->Position(new_pos + cam_offset);
+			char_col.Get_Controller().warp(bt_new_pos);
+			m_body_trans.lock()->Position(new_pos);
+			m_cam_trans.lock()->Position(new_pos + cam_offset);
 			m_location = new_pos;
 
 			if (glm::distance(m_location, pred_server_pos) < 0.1f) {
@@ -236,18 +242,20 @@ void LocalPlayerCharacter::OnOrientationSync(Data data)
 
 void LocalPlayerCharacter::look_control(float dt)
 {
+	assert(!m_cam_trans.expired());
+
 	if (m_mouse_hidden)
 	{
 		float mouse_x = Input::Get_Input_X();
 		float mouse_y = Input::Get_Input_Y();
 		update_rotation(dt, mouse_x, mouse_y);
 	}
-	m_cam_trans->Position(m_location + cam_offset);
+	m_cam_trans.lock()->Position(m_location + cam_offset);
 }
 
 void LocalPlayerCharacter::init_geometry()
 {
-	m_character_material = new Standard_Material();
+	m_character_material = std::make_shared<Standard_Material>();
 	m_character_material->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	m_character_material->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_character_material->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));
@@ -262,7 +270,7 @@ void LocalPlayerCharacter::init_geometry()
 	std::vector<glm::vec4> floor_cube_colors;
 	floor_cube_colors.assign(Primitives::Capsule_Vertices.size(), cube_color);
 
-	Mesh* cube_mesh = new Mesh();
+	Mesh::Shared cube_mesh = Mesh::Create();
 	cube_mesh->Vertices(Primitives::Capsule_Vertices);
 	cube_mesh->Normals(Primitives::Capsule_Normals);
 	cube_mesh->Colors(floor_cube_colors);
@@ -270,29 +278,32 @@ void LocalPlayerCharacter::init_geometry()
 	//cube_mesh->TexCoords(floor_tex_coords);
 	//cube_mesh->Activate();
 
-	//Object()->Get_MeshRenderer()->Set_Mesh(cube_mesh);
+	Object().Get_MeshRenderer().Set_Mesh(cube_mesh);
 	//Object()->Get_MeshRenderer()->Set_Material(m_character_material);
 	//Object()->Get_Transform()->Scale(1, 1.25, 1);
 }
 
 
-void LocalPlayerCharacter::Set_Camera_Object(WorldObject* cam_object)
+void LocalPlayerCharacter::Set_Camera_Object(WorldObject::Weak cam_object)
 {
+	assert(!m_body_trans.expired());
+	assert(!cam_object.expired());
+
 	Logger::LogDebug(LOG_POS("Set_Camera_Object"), "Set camera");
 	Input::Set_Mouse_Visibility(false);
 	m_mouse_hidden = true;
 
 	//cam_object->Parent(Object());
-	cam_object->Get_Transform()->Position(m_body_trans->Position() + cam_offset);
+	cam_object.lock()->Get_Transform().Position(m_body_trans.lock()->Position() + cam_offset);
 
-	m_cam_trans = cam_object->Get_Transform();
+	m_cam_trans = cam_object.lock()->Get_Transform_Ptr();
 	Input::Mouse_Sensitivity(50);
 
-	m_cam_euler = m_cam_trans->EulerAngles();
+	m_cam_euler = m_cam_trans.lock()->EulerAngles();
 	update_rotation(0, 0, 0);
 
-	m_hud = cam_object->Add_Component<Character_HUD>();
-	m_hud->Init(Camera::Get_Active());
+	m_hud = cam_object.lock()->Add_Component<Character_HUD>();
+	m_hud.lock()->Init(Camera::Get_Active_Ptr());
 }
 
 void LocalPlayerCharacter::SendJumpEvent()
@@ -323,6 +334,8 @@ void LocalPlayerCharacter::update_rotation(float dt, float mouse_x, float mouse_
 {
 	// https://community.khronos.org/t/preventing-camera-from-being-upside-down/72838/3
 
+	assert(!m_cam_trans.expired());
+
 	m_cam_euler.y += -mouse_x * dt; // horizontal
 	m_cam_euler.x += -mouse_y * dt; // vertical
 
@@ -347,6 +360,6 @@ void LocalPlayerCharacter::update_rotation(float dt, float mouse_x, float mouse_
 
 	glm::quat new_rot = glm::quatLookAt(currentViewingDirection, glm::vec3(0.0f, 1.0f, 0.0f));
 
-	m_cam_trans->Rotation(new_rot);
+	m_cam_trans.lock()->Rotation(new_rot);
 
 }

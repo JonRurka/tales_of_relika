@@ -8,6 +8,9 @@ class Graphics;
 class Renderer : public std::enable_shared_from_this<Renderer>
 {
 public:
+	typedef std::shared_ptr<Renderer> Shared;
+	typedef std::weak_ptr<Renderer> Weak;
+
 	virtual void Draw(float dt) = 0;
 
 	void Destroy()

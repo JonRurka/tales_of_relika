@@ -52,11 +52,11 @@ namespace VoxelEngine {
 
 		IComputeController* Get_Compute_Controller();
 
-		HeightmapGenerator* Get_Heightmap_Generator() { return m_HeightmapGenerator; }
+		HeightmapGenerator::Shared Get_Heightmap_Generator() { return m_HeightmapGenerator; }
 
-		TerrainModifications* Get_Terrain_Modifications() { return m_Terrain_Modifications; }
+		TerrainModifications::Shared Get_Terrain_Modifications() { return m_Terrain_Modifications; }
 
-		ISO_Sampler* Get_ISO_Sampler() { return m_ISO_Sampler; }
+		ISO_Sampler::Shared Get_ISO_Sampler() { return m_ISO_Sampler; }
 
 		//void SetBlock(int x, int y, int z, Block block);
 
@@ -172,9 +172,9 @@ namespace VoxelEngine {
 		ComputeInterface::ControllerInfo m_controllerInfo{};
 		IComputeController* m_controller{ nullptr };
 
-		HeightmapGenerator* m_HeightmapGenerator{ nullptr };
-		TerrainModifications* m_Terrain_Modifications{ nullptr };
-		ISO_Sampler* m_ISO_Sampler{ nullptr };
+		HeightmapGenerator::Shared m_HeightmapGenerator;
+		TerrainModifications::Shared m_Terrain_Modifications;
+		ISO_Sampler::Shared m_ISO_Sampler;
 
 		IComputeProgram::FileType m_type{ IComputeProgram::FileType::Binary_Data};
 

@@ -5,11 +5,8 @@
 #include "ini.h"
 #include "INIReader.h"
 
-Item_Loader* Item_Loader::m_instance{nullptr};
 
-Item_Loader::Item_Loader() {
-    m_instance = this;
-}
+
 
 void Item_Loader::Load_Items(std::string resource_file_name)
 {

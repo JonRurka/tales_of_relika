@@ -7,14 +7,18 @@
 
 class Cubemap {
 public:
+	typedef std::shared_ptr<Cubemap> Shared;
+	typedef std::weak_ptr<Cubemap> Weak;
 
-	Cubemap();
+	Cubemap() = delete;
 
 	Cubemap(std::vector<std::string> face_path, bool flip = true);
 
 	~Cubemap() {
 		Dispose();
 	}
+
+	static Shared Create(std::vector<std::string> face_path, bool flip = true);
 
 	GLuint Tex() { return m_texture; }
 

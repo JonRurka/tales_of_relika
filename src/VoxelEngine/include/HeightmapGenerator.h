@@ -12,6 +12,8 @@ using namespace VoxelEngine;
 
 class HeightmapGenerator {
 public:
+	typedef std::shared_ptr<HeightmapGenerator> Shared;
+	typedef std::weak_ptr<HeightmapGenerator> Weak;
 
 	HeightmapGenerator(
 		IComputeController* controller,

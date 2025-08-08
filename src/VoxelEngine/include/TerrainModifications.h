@@ -9,6 +9,8 @@ using namespace DynamicCompute::Compute;
 
 class TerrainModifications {
 public:
+	typedef std::shared_ptr<TerrainModifications> Shared;
+	typedef std::weak_ptr<TerrainModifications> Weak;
 	   
 	TerrainModifications(
 		IComputeController* controller,

@@ -6,6 +6,8 @@ class Server_Main;
 
 class Client_Server : public Component {
 public:
+	typedef std::shared_ptr<Client_Server> Shared;
+	typedef std::weak_ptr<Client_Server> Weak;
 
 	void Initialize_Server();
 

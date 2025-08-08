@@ -43,7 +43,7 @@ public:
 
 	template<typename T,
 		typename = std::enable_if_t<std::is_base_of<Scene, T>::value>>
-		std::weak_ptr<Scene> * Load_Scene(std::string name)
+		std::weak_ptr<Scene> Load_Scene(std::string name)
 	{
 		std::shared_ptr<T> scene = std::make_shared<T>();
 		initialize_scene(std::static_pointer_cast<Scene>(scene), name);

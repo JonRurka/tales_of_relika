@@ -10,6 +10,8 @@ class Texture;
 class Framebuffer : public std::enable_shared_from_this<Framebuffer>
 {
 public:
+	typedef std::shared_ptr<Framebuffer> Shared;
+	typedef std::weak_ptr<Framebuffer> Weak;
 
 	Framebuffer();
 	~Framebuffer() {

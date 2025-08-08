@@ -18,6 +18,8 @@ class Transform
 {
 	friend class WorldObject;
 public:
+	typedef std::shared_ptr<Transform> Shared;
+	typedef std::weak_ptr<Transform> Weak;
 
 	Transform(std::weak_ptr<WorldObject> obj);
 	~Transform();

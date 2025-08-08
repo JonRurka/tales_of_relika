@@ -102,6 +102,8 @@ void VoxelWorld_Scene::GameConnected()
 
 void VoxelWorld_Scene::OnWorldPlayerDataResult(Data data)
 {
+	assert(!world_gen_controller.expired());
+
 	Logger::LogInfo(LOG_POS("OnWorldPlayerDataResult"), "Received world player data.");
 
 	std::string data_json_str = HashHelper::BytesToString(data.Buffer);
@@ -115,7 +117,7 @@ void VoxelWorld_Scene::OnWorldPlayerDataResult(Data data)
 	setup_local_player(player_data);
 	setup_net_player_manager();
 
-	world_gen_controller->Start();
+	world_gen_controller.lock()->Start();
 }
 
 bool VoxelWorld_Scene::Game_Ready()
@@ -126,10 +128,10 @@ bool VoxelWorld_Scene::Game_Ready()
 	if (!m_client_connected)
 		return false;
 
-	if (world_gen_controller == nullptr)
+	if (world_gen_controller.expired())
 		return false;
 
-	if (!world_gen_controller->Terrain_Ready())
+	if (!world_gen_controller.lock()->Terrain_Ready())
 		return false;
 
 	return true;
@@ -153,7 +155,7 @@ void VoxelWorld_Scene::startup_squence()
 			if (Utilities::Get_Time() - m_connected_time > SERVER_DATA_REQUEST_WAIT_TIME) {
 				m_init_data_requested = true;
 				Logger::LogInfo(LOG_POS("Update"), "Requesting world player data...");
-				game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
+				game_client.lock()->Send_World(OpCodes::Server_World::Request_World_Player_Data);
 			}
 		}
 	}
@@ -181,18 +183,18 @@ void VoxelWorld_Scene::setup_camera()
 		Game_Resources::Textures::SKYBOX_FRONT,
 		Game_Resources::Textures::SKYBOX_BACK
 	};
-	Cubemap* skybox_cubmap = new Cubemap(faces, false);
+	m_skybox_cubmap = Cubemap::Create(faces, false);
 	Camera_obj = Instantiate("camera");
 	//Camera_obj->Get_Transform()->Position(glm::vec3(0, 5, 6));
-	Camera_obj->Get_Transform()->Position(glm::vec3(0, 10, -50));
-	Camera_obj->Get_Transform()->LookAt(glm::vec3(0.0f, 10.0f, 100.0f));
-	camera = Camera_obj->Add_Component<Camera>();
-	camera->Clear_Color(glm::vec4(1.0, 1.0, 0.0, 1.0));
+	Camera_obj.lock()->Get_Transform().Position(glm::vec3(0, 10, -50));
+	Camera_obj.lock()->Get_Transform().LookAt(glm::vec3(0.0f, 10.0f, 100.0f));
+	camera = Camera_obj.lock()->Add_Component<Camera>();
+	camera.lock()->Clear_Color(glm::vec4(1.0, 1.0, 0.0, 1.0));
 	//Editor_Camera_Control* cam_control = Camera_obj->Add_Component<Editor_Camera_Control>();
 	//cam_control->Speed(10.0f);
 	//camera->Clear_Color(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	//camera->FOV(90.0f);
-	camera->Set_Skybox(skybox_cubmap);
+	camera.lock()->Set_Skybox(m_skybox_cubmap);
 
 	//Character_HUD* hud = Camera_obj->Add_Component<Character_HUD>();
 	//hud->Init(camera);
@@ -213,33 +215,40 @@ void VoxelWorld_Scene::setup_lights()
 {
 	Create_Ambient_Lights();
 	
-	// Create Sun Directional light
 	glm::vec4 light_color_dir = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	glm::vec3 light_pos_dir = glm::vec3(0.0f, 0.0f, 100.0f);
-	create_light_object(&light_obj_dir, &light_comp_dir, Light::Light_Type::DIRECTIONAL, light_pos_dir, 1, light_color_dir);
-	light_comp_dir->Enabled(true);
-	light_obj_dir->Get_Transform()->LookAt(glm::vec3(10.0f, -50.0f, -20.0f));
-	light_comp_dir->Strength(0.9f);
+
+	light_obj_dir = Instantiate("light");
+	light_obj_dir.lock()->Get_Transform().Translate(light_pos_dir);
+
+	light_comp_dir = light_obj_dir.lock()->Add_Component<Light>();
+	light_comp_dir.lock()->Type(Light::Light_Type::DIRECTIONAL);
+	light_comp_dir.lock()->Color(light_color_dir);
+	light_comp_dir.lock()->Strength(2.0f);
+	light_comp_dir.lock()->Linear_Coefficient(0.027f);
+	light_comp_dir.lock()->Quadratic_Coefficient(0.0028f);
+	light_comp_dir.lock()->CutOff(glm::cos(glm::radians(12.5f)));
+	light_comp_dir.lock()->OuterCutOff(glm::cos(glm::radians(15.5f)));
 }
 
 void VoxelWorld_Scene::setup_chunk_gen(json world_data)
 {
 	world_gen_controller_obj = Instantiate("World_Gen_Controller");
-	world_gen_controller = world_gen_controller_obj->Add_Component<WorldGenController>();
+	world_gen_controller = world_gen_controller_obj.lock()->Add_Component<WorldGenController>();
 }
 
 void VoxelWorld_Scene::setup_structure_controller(json world_data)
 {
 	structure_controller_obj = Instantiate("Structure_Controller");
-	structure_controller = structure_controller_obj->Add_Component<StructureController>();
+	structure_controller = structure_controller_obj.lock()->Add_Component<StructureController>();
 }
 
 void VoxelWorld_Scene::setup_client_server()
 {
 	client_server_obj = Instantiate("Client_Server");
-	client_server = client_server_obj->Add_Component<Client_Server>();
+	client_server = client_server_obj.lock()->Add_Component<Client_Server>();
 	if (!m_remote_connection) {
-		client_server->Initialize_Server();
+		client_server.lock()->Initialize_Server();
 	}
 }
 
@@ -254,18 +263,17 @@ void VoxelWorld_Scene::setup_game_client()
 		username = "test_user";
 
 	game_client_obj = Instantiate("Game_Client");
-	game_client = game_client_obj->Add_Component<GameClient>();
-	game_client->Init(username, host, user_id, m_remote_connection);
-	game_client->SetOnConnectSuccess(OnGameConnect, this);
-	game_client->Net_Client()->AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
-	game_client->Connect();
+	game_client = game_client_obj.lock()->Add_Component<GameClient>();
+	game_client.lock()->Init(username, host, user_id, m_remote_connection);
+	game_client.lock()->SetOnConnectSuccess(OnGameConnect, this);
+	game_client.lock()->Net_Client()->AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
+	game_client.lock()->Connect();
 	Logger::LogInfo(LOG_POS("setup_game_client"), "Connecting to game server...");
 }
 
 void VoxelWorld_Scene::setup_local_player(json player_data)
 {
-	m_item_loader = new Item_Loader();
-	m_item_loader->Load_Items(Game_Resources::Data_Files::ITEM_TYPES);
+	Item_Loader::Instance().Load_Items(Game_Resources::Data_Files::ITEM_TYPES);
 	Item_Type::Init();
 
 	json location_obj = player_data["location"];
@@ -278,18 +286,18 @@ void VoxelWorld_Scene::setup_local_player(json player_data)
 		loc.x, loc.y, loc.z);
 
 	local_player_character_obj = Instantiate("Local_Character");
-	local_player_character_obj->Get_Transform()->Position(loc);
-	local_player_character = local_player_character_obj->Add_Component<LocalPlayerCharacter>();
-	local_player_character->Set_Camera_Object(Camera_obj);
+	local_player_character_obj.lock()->Get_Transform().Position(loc);
+	local_player_character = local_player_character_obj.lock()->Add_Component<LocalPlayerCharacter>();
+	local_player_character.lock()->Set_Camera_Object(Camera_obj);
 
-	world_gen_controller->SetTarget(local_player_character_obj->Get_Transform());
+	world_gen_controller.lock()->SetTarget(local_player_character_obj.lock()->Get_Transform());
 }
 
 void VoxelWorld_Scene::setup_net_player_manager()
 {
 	net_player_manager_obj = Instantiate("Net_Player_Manager");
-	net_player_manager = net_player_manager_obj->Add_Component<NetPlayerManager>();
-	net_player_manager->RegisterLocalPlayer(local_player_character);
+	net_player_manager = net_player_manager_obj.lock()->Add_Component<NetPlayerManager>();
+	net_player_manager.lock()->RegisterLocalPlayer(local_player_character);
 
 }
 
@@ -431,7 +439,7 @@ void VoxelWorld_Scene::create_test_items()
 	std::vector<glm::vec4> floor_cube_colors;
 	floor_cube_colors.assign(floor_vertices.size(), cube_color);
 
-	Standard_Material* standard_mat = new Standard_Material();
+	Standard_Material::Shared standard_mat = std::make_shared<Standard_Material>();
 	standard_mat->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	standard_mat->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	standard_mat->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));
@@ -442,7 +450,7 @@ void VoxelWorld_Scene::create_test_items()
 	standard_mat->setTexture("material_diffuse", Game_Resources::Textures::CONTAINER_DIFFUSE);
 	standard_mat->setTexture("material_specular", Game_Resources::Textures::CONTAINER_SPECULAR);
 
-	Mesh* cube_mesh = new Mesh();
+	Mesh::Shared cube_mesh = Mesh::Create();
 	cube_mesh->Vertices(floor_vertices);
 	cube_mesh->Normals(floor_normals);
 	cube_mesh->Colors(floor_cube_colors);
@@ -451,17 +459,17 @@ void VoxelWorld_Scene::create_test_items()
 
 	btVector3 min, max;
 
-	WorldObject* floor_obj = Instantiate("floor");
-	floor_obj->Get_MeshRenderer()->Set_Mesh(cube_mesh);
-	floor_obj->Get_MeshRenderer()->Set_Material(standard_mat);
-	floor_obj->Get_Transform()->Translate(16.0f, 0.0f, 16.0f);
-	floor_obj->Get_Transform()->Scale(glm::vec3(32.0f, 1.0f, 32.0f));
-	BoxCollider* col = floor_obj->Add_Component<BoxCollider>();
-	col->Size(glm::vec3(16.0f, 0.5f, 16.0f));
-	col->Mass(0.0f);
-	col->Activate();
-	col->RigidBody()->forceActivationState(DISABLE_DEACTIVATION);
-	col->RigidBody()->getAabb(min, max);
+	WorldObject::Weak floor_obj = Instantiate("floor");
+	floor_obj.lock()->Get_MeshRenderer().Set_Mesh(cube_mesh);
+	floor_obj.lock()->Get_MeshRenderer().Set_Material(standard_mat);
+	floor_obj.lock()->Get_Transform().Translate(16.0f, 0.0f, 16.0f);
+	floor_obj.lock()->Get_Transform().Scale(glm::vec3(32.0f, 1.0f, 32.0f));
+	BoxCollider::Weak col = floor_obj.lock()->Add_Component<BoxCollider>();
+	col.lock()->Size(glm::vec3(16.0f, 0.5f, 16.0f));
+	col.lock()->Mass(0.0f);
+	col.lock()->Activate();
+	col.lock()->RigidBody().forceActivationState(DISABLE_DEACTIVATION);
+	col.lock()->RigidBody().getAabb(min, max);
 	//col->RigidBody()->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_STATIC_OBJECT);
 	//col->RigidBody()->setUserIndex(-1);
 
@@ -470,24 +478,4 @@ void VoxelWorld_Scene::create_test_items()
 
 }
 
-void VoxelWorld_Scene::create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color)
-{
-	*obj = Instantiate("light"); //new WorldObject("light");
-	WorldObject* w_obj = *obj;
-	//light_obj->Get_MeshRenderer()->Set_Shader(m_light_shader); // m_light_shader
-	//w_obj->Get_MeshRenderer()->Set_Material(light_material);
-	//w_obj->Get_MeshRenderer()->Set_Mesh(light_mesh);
-	//((Light_Material*)w_obj->Get_MeshRenderer()->Get_Material())->Light_Color(color);
-	w_obj->Get_Transform()->Translate(pos);
-	w_obj->Get_Transform()->Scale(glm::vec3(scale, scale, scale));
 
-	*light_comp = w_obj->Add_Component<Light>();
-	Light* l_comp = *light_comp;
-	l_comp->Type(type);
-	l_comp->Color(color);
-	l_comp->Strength(2.0f);
-	l_comp->Linear_Coefficient(0.027f);
-	l_comp->Quadratic_Coefficient(0.0028f);
-	l_comp->CutOff(glm::cos(glm::radians(12.5f)));
-	l_comp->OuterCutOff(glm::cos(glm::radians(15.5f)));
-}

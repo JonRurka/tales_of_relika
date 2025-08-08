@@ -14,8 +14,10 @@ namespace Rml {
 class Character_HUD : public Component {
 
 public:
+	typedef std::shared_ptr<Character_HUD> Shared;
+	typedef std::weak_ptr<Character_HUD> Weak;
 
-	void Init(Camera* camera);
+	void Init(Camera::Weak camera);
 
 	void HotBar_Visible(bool visible);
 
@@ -32,15 +34,15 @@ protected:
 
 private:
 
-	Camera* m_camera{ nullptr };
-	ISO_Sampler* m_iso_sampler{ nullptr };
+	Camera::Weak m_camera;
+	ISO_Sampler::Shared m_iso_sampler;
 	double m_edit_timer{0};
 
 	bool show_demo_window = true;
 	bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-	Rml::ElementDocument* m_hotbar_doc{ nullptr };
+	ElementDocument m_hotbar_doc;
 	int m_last_active_hotbar_tile{ -1 };
 
 	int m_iter_hotbar_tile{ 0 };

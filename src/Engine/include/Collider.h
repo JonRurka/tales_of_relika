@@ -8,6 +8,8 @@
 class Collider : public Component 
 {
 public:
+	typedef std::shared_ptr<Collider> Shared;
+	typedef std::weak_ptr<Collider> Weak;
 
 	void Mass(float val) 
 	{ 

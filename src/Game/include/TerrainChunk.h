@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game_engine.h"
-
+#include "Stitch_VBO.h"
 
 class Opaque_Chunk_Material;
 class Stitch_VBO;
@@ -17,8 +17,10 @@ class TerrainChunk : public Component
 {
 	friend class WorldGenController;
 public:
+	typedef std::shared_ptr<TerrainChunk> Shared;
+	typedef std::weak_ptr<TerrainChunk> Weak;
 
-	void Init(WorldGenController* controller, Stitch_VBO* vbo_stitch);
+	void Init(WorldGenController::Weak controller, Stitch_VBO::Shared vbo_stitch);
 
 	void Assign(glm::ivec3 chunk_coord);
 
@@ -44,16 +46,17 @@ private:
 	glm::ivec3 m_chunk_coords;
 	glm::fvec3 m_chunk_world_pos;
 	glm::ivec4 m_counts;
-	WorldGenController* m_controller{nullptr};
-	Stitch_VBO* m_vbo_stitch{ nullptr };
+	WorldGenController::Weak m_controller;
+	Stitch_VBO::Shared m_vbo_stitch;
 	bool m_assigned{ false };
 	bool m_has_collision{ false };
 	bool m_should_despawn{ false };
 
-	WorldObject* m_opaque_chunk_obj{nullptr};
-	Mesh* m_voxel_opaque_mesh{ nullptr };
-	MeshCollider* m_mesh_collider{ nullptr };
-	Mesh* m_collision_mesh{ nullptr };
+	WorldObject::Weak m_opaque_chunk_obj;
+	Mesh::Shared m_voxel_opaque_mesh;
+
+	MeshCollider::Weak m_mesh_collider;
+	Mesh::Shared m_collision_mesh;
 
 	void VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float iso, bool Type_changed, int type);
 

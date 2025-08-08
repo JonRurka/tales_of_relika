@@ -32,7 +32,7 @@ namespace {
 	};
 }
 
-void Character_HUD::Init(Camera* camera)
+void Character_HUD::Init(Camera::Weak camera)
 {
 	m_camera = camera;
 
@@ -45,6 +45,8 @@ void Character_HUD::Init(Camera* camera)
 	m_iter_hotbar_tile = 0;
 
 	m_hot_bar_items = std::vector<Inventory_Item>(10, Inventory_Item());
+
+	m_iso_sampler = WorldGenController::Instance()->Get_ISO_Sampler();
 }
 
 void Character_HUD::HotBar_Visible(bool visible)
@@ -107,6 +109,7 @@ void Character_HUD::Init()
 
 void Character_HUD::Update(float dt)
 {
+	assert(!m_camera.expired());
 	/*bool can_place = false;
 	double cur_time = Utilities::Get_Time();
 	if (cur_time - m_edit_timer > 1.0f) {
@@ -140,7 +143,7 @@ void Character_HUD::Update(float dt)
 
 	glm::vec3 ray_start;
 	glm::vec3 ray_dir;
-	m_camera->ScreenPointToRay(mouse_pos, ray_start, ray_dir);
+	m_camera.lock()->ScreenPointToRay(mouse_pos, ray_start, ray_dir);
 	Physics::RayHit hit = Physics::Raycast(ray_start, ray_dir * 100.0f);
 	if (hit.did_hit) {
 		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -287,7 +290,7 @@ void Character_HUD::right_click_structure(glm::vec3 hit_point, glm::vec3 normal,
 
 glm::ivec3 Character_HUD::get_closest_voxel(glm::ivec3 src_voxel, glm::fvec3 world_pos, bool inside)
 {
-	ISO_Sampler* iso_sampler = WorldGenController::Instance()->Get_ISO_Sampler();
+	
 
 	glm::ivec3 chunk = WorldGenController::VoxelToChunk(src_voxel);
 	glm::ivec3 src_local = WorldGenController::GlobalToLocalChunkCoord(chunk, src_voxel);
@@ -305,7 +308,7 @@ glm::ivec3 Character_HUD::get_closest_voxel(glm::ivec3 src_voxel, glm::fvec3 wor
 		grid_world.push_back(WorldGenController::VoxelToWorld(v));
 	}
 
-	std::vector<float> iso_vals = iso_sampler->Get_ISO(chunk, grid_local);
+	std::vector<float> iso_vals = m_iso_sampler->Get_ISO(chunk, grid_local);
 
 	int closest_voxel_idx = -1;
 	float shortest_dist = 1000.0; 
@@ -344,9 +347,9 @@ glm::ivec3 Character_HUD::get_closest_voxel(glm::ivec3 src_voxel, glm::fvec3 wor
 
 std::vector<glm::ivec4> Character_HUD::get_surrounding_voxels(glm::ivec3 src_voxel, bool inside)
 {
-	const int SIZE = 3 * 3 * 3;
 
-	ISO_Sampler* iso_sampler = WorldGenController::Instance()->Get_ISO_Sampler();
+
+	const int SIZE = 3 * 3 * 3;
 
 	glm::ivec3 chunk = WorldGenController::VoxelToChunk(src_voxel);
 	glm::ivec3 src_local = WorldGenController::GlobalToLocalChunkCoord(chunk, src_voxel);
@@ -381,7 +384,7 @@ std::vector<glm::ivec4> Character_HUD::get_surrounding_voxels(glm::ivec3 src_vox
 		glm::ivec3 ch_coord = pair.second;
 
 		auto v_list = voxels_map[ch_hash];
-		std::vector<float> iso_vals = iso_sampler->Get_ISO(chunk, v_list);
+		std::vector<float> iso_vals = m_iso_sampler->Get_ISO(chunk, v_list);
 		for (int i = 0; i < iso_vals.size(); ++i) {
 
 			bool include = false;

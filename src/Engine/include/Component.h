@@ -12,6 +12,8 @@ class Component : public std::enable_shared_from_this<Component>
 {
 	friend class WorldObject;
 public:
+	typedef std::shared_ptr<Component> Shared;
+	typedef std::weak_ptr<Component> Weak;
 
 	WorldObject& Object();
 	std::weak_ptr<WorldObject> Object_Ptr() { return m_object; }

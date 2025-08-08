@@ -19,7 +19,8 @@ struct aiMaterial;
 class Model
 {
 public:
-
+	typedef std::shared_ptr<Model> Shared;
+	typedef std::weak_ptr<Model> Weak;
 	
 
 	static std::shared_ptr<Model> Load(std::string file);

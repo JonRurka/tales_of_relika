@@ -69,43 +69,43 @@ void Game::Init()
 void Game::init_shaders()
 {
 	// Load Standard Shader.
-	Shader* std_shader = Shader::Create(
+	m_std_shader = Shader::Create(
 		"standard", 
 		Game_Resources::Shaders::Graphics::STANDARD_VERT, 
 		Game_Resources::Shaders::Graphics::STANDARD_FRAG
 	);
-	if (std_shader == nullptr || !std_shader->Initialized())
+	if (m_std_shader == nullptr || !m_std_shader->Initialized())
 	{
 		Logger::LogFatal(LOG_POS("init_shaders"), "Failed to load standard shader.");
 		return;
 	}
-	std_shader->Init_Lights();
+	m_std_shader->Init_Lights();
 
 	// Load Terrain Chunk Shader.
-	Shader* opaque_chunk_shader = Shader::Create(
+	m_opaque_chunk_shader = Shader::Create(
 		"opaque_chunk_material", 
 		Game_Resources::Shaders::Graphics::Voxel::CHUNK_OPAQUE_VERT,
 		Game_Resources::Shaders::Graphics::Voxel::CHUNK_OPAQUE_FRAG
 	);
-	if (opaque_chunk_shader == nullptr || !opaque_chunk_shader->Initialized())
+	if (m_opaque_chunk_shader == nullptr || !m_opaque_chunk_shader->Initialized())
 	{
 		Logger::LogFatal(LOG_POS("init_shaders"), "Failed to load opaque chunk shader.");
 		return;
 	}
-	opaque_chunk_shader->Init_Lights();
+	m_opaque_chunk_shader->Init_Lights();
 
 	// Load Structure Chunk Shader.
-	Shader* opaque_structure_chunk_shader = Shader::Create(
+	m_opaque_structure_chunk_shader = Shader::Create(
 		"opaque_structure_chunk_material",
 		Game_Resources::Shaders::Graphics::Voxel::CHUNK_STRUCTURE_OPAQUE_VERT,
 		Game_Resources::Shaders::Graphics::Voxel::CHUNK_STRUCTURE_OPAQUE_FRAG
 	);
-	if (opaque_structure_chunk_shader == nullptr || !opaque_structure_chunk_shader->Initialized())
+	if (m_opaque_structure_chunk_shader == nullptr || !m_opaque_structure_chunk_shader->Initialized())
 	{
 		Logger::LogFatal(LOG_POS("init_shaders"), "Failed to load opaque chunk shader.");
 		return;
 	}
-	opaque_structure_chunk_shader->Init_Lights();
+	m_opaque_structure_chunk_shader->Init_Lights();
 
 	/*std_shader->Set_Textures({
 		{"material.diffuse",Resources::Get_Texture(Game_Resources::Textures::CONTAINER_DIFFUSE)},
@@ -116,9 +116,9 @@ void Game::init_shaders()
 void Game::init_block_types()
 {
 	// TODO: This should be loaded from VoxelWorld_Scene after server connect and before terrain gen.
-	m_material_types = new Material_Types();
-	m_material_types->Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
-	m_material_types->Initialize_Materials();
+	m_material_types = Material_Types();
+	m_material_types.Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
+	m_material_types.Initialize_Materials();
 	Material_Processor::Add<Uniform_Material_Processor>();
 	Block_Type::Init();
 }

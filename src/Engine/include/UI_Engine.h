@@ -27,6 +27,8 @@ private:															 \
 	_target_class_* m_target{ nullptr };							 \
 };
 
+typedef std::shared_ptr<Rml::ElementDocument> ElementDocument;
+
 class UI_Engine {
 	friend class Graphics;
 public:

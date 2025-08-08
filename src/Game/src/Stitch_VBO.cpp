@@ -12,7 +12,7 @@
 #define BYTE_STRIDE (FLOAT_STRIDE * 4)
 #define DEBUG_DRAW_NORMALS false
 
-void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
+void Stitch_VBO::Init(IVoxelBuilder_private::Shared builder, int elements)
 {
 	v_builder = builder;
 	m_controller = builder->Get_Compute_Controller();
@@ -22,7 +22,6 @@ void Stitch_VBO::Init(IVoxelBuilder_private* builder, int elements)
 
 	m_vertices = new glm::vec4[Max_Verts];
 	m_normals = new glm::vec4[Max_Verts];
-	m_triangles = new unsigned int[Max_Verts];
 	m_raw_vert_data = new float[Max_Verts * m_attribute_list.Float_Stride()];
 
 	compute_triangles();
@@ -82,7 +81,7 @@ void Stitch_VBO::Stitch(int elements)
 	//Logger::LogDebug(LOG_POS("Stitch"), "Executed Kernel");
 }
 
-void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
+void Stitch_VBO::Process(Mesh& mesh, glm::ivec4 count, bool gpu_copy)
 {
 	if (count.x > (int)Utilities::Vertex_Limit_Mode::Chunk_Max) {
 		Logger::LogError(LOG_POS("Process"), "Chunk size of %i is greate that chunk max of %i",
@@ -147,8 +146,8 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		auto flush_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
 		start = std::chrono::high_resolution_clock::now();
-		mesh->Set_Vertex_Attributes(m_attribute_list);
-		mesh->Load(Output_VBO_Buffer(), vbo_size);
+		mesh.Set_Vertex_Attributes(m_attribute_list);
+		mesh.Load(Output_VBO_Buffer(), vbo_size);
 		end = std::chrono::high_resolution_clock::now();
 		auto load_mesh_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
@@ -201,7 +200,7 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		int vbo_size = count.x * BYTE_STRIDE;
 
 		start = std::chrono::high_resolution_clock::now();
-		mesh->Set_Vertex_Attributes(m_attribute_list);
+		mesh.Set_Vertex_Attributes(m_attribute_list);
 		Output_VBO_Buffer()->GetData(m_raw_vert_data, vbo_size);
 
 		/*Logger::LogDebug(LOG_POS("Process"), "Sync %i elements", count.x);
@@ -214,8 +213,8 @@ void Stitch_VBO::Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy)
 		}*/
 
 		std::vector<float> raw_data(m_raw_vert_data, m_raw_vert_data + (count.x * FLOAT_STRIDE));
-		mesh->Set_Raw_Vertex_Data(raw_data, false);
-		mesh->Activate();
+		mesh.Set_Raw_Vertex_Data(raw_data, false);
+		mesh.Activate();
 		end = std::chrono::high_resolution_clock::now();
 		auto load_mesh_duration = std::chrono::duration<double>(end - start).count() * 1000;
 
@@ -267,6 +266,8 @@ IComputeController* Stitch_VBO::create_controller()
 
 void Stitch_VBO::compute_triangles()
 {
+	m_triangles.clear();
+	m_triangles.resize(Max_Verts);
 	bool m_invert_tris = false;
 	for (int i = 0; i < Max_Verts; i += 3) {
 		unsigned int tris_start = i;

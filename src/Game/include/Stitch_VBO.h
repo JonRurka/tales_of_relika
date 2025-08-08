@@ -20,10 +20,12 @@ using namespace VoxelEngine;
 
 class Stitch_VBO {
 public:
+	typedef std::shared_ptr<Stitch_VBO> Shared;
+	typedef std::weak_ptr<Stitch_VBO> Weak;
 
-	void Init(IVoxelBuilder_private* builder, int elements);
+	void Init(IVoxelBuilder_private::Shared builder, int elements);
 	void Stitch(int elements);
-	void Process(Mesh* mesh, glm::ivec4 count, bool gpu_copy);
+	void Process(Mesh& mesh, glm::ivec4 count, bool gpu_copy);
 	void Reset();
 
 	IComputeBuffer* Input_Vertex_Buffer() { return vertex_buffer; }
@@ -31,7 +33,7 @@ public:
 	IComputeBuffer* Input_Mat_Buffer() { return mat_buffer; }
 	IComputeBuffer* Output_VBO_Buffer() { return vbo_buffer; }
 
-	unsigned int* Triangle_Data() { return m_triangles; }
+	std::vector<unsigned int> Triangle_Data() { return m_triangles; }
 
 	static int Byte_Stride();
 	static int Float_Stride();
@@ -43,7 +45,7 @@ private:
 	int m_elements{ 0 };
 	IComputeController* m_controller{nullptr};
 	IComputeProgram* m_program{ nullptr };
-	IVoxelBuilder_private* v_builder{ nullptr };
+	IVoxelBuilder_private::Shared v_builder;
 
 	const int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
 
@@ -52,7 +54,7 @@ private:
 	glm::vec4* m_vertices{nullptr};
 	glm::vec4* m_normals{ nullptr };
 	glm::vec4* m_mats{ nullptr };
-	unsigned int* m_triangles{ nullptr };
+	std::vector<unsigned int> m_triangles;
 	float* m_raw_vert_data{nullptr};
 
 	IComputeBuffer* vertex_buffer{ nullptr };

@@ -7,6 +7,9 @@
 #include "shared_structures.h"
 #include "IVoxelBuilder.h"
 #include "SmoothVoxelBuilder.h"
+#include "Stitch_VBO.h"
+#include "Opaque_Chunk_Material.h"
+#include "TerrainChunk.h"
 
 #include <unordered_map>
 #include <vector>
@@ -33,6 +36,8 @@ class ISO_Sampler;
 class WorldGenController : public Component
 {
 public:
+	typedef std::shared_ptr<WorldGenController> Shared;
+	typedef std::weak_ptr<WorldGenController> Weak;
 
 	struct TerrainMod {
 	public:
@@ -89,11 +94,11 @@ public:
 
 	bool Chunk_Exists(glm::ivec3 chunk_coord) { return chunk_exists(chunk_coord); };
 
-	TerrainChunk* Get_Chunk(glm::ivec3 chunk_coord);
+	TerrainChunk::Weak Get_Chunk(glm::ivec3 chunk_coord);
 
-	Opaque_Chunk_Material* Get_Chunk_Material() { return m_chunk_opaque_mat; }
+	Opaque_Chunk_Material::Shared Get_Chunk_Material() { return m_chunk_opaque_mat; }
 
-	ISO_Sampler* Get_ISO_Sampler();
+	ISO_Sampler::Shared Get_ISO_Sampler();
 
 	bool Finished_Initial_Generation() { return m_gen_finished; }
 
@@ -144,8 +149,8 @@ private:
 
 	struct ChunkRef {
 		glm::ivec3 chunk_coord;
-		WorldObject* chunk_obj;
-		TerrainChunk* chunk_comp;
+		WorldObject::Weak chunk_obj;
+		TerrainChunk::Weak chunk_comp;
 	};
 
 	struct TerrainModEntry {
@@ -154,14 +159,14 @@ private:
 		glm::ivec3 chunk;		
 	};
 
-	Transform* mTarget{nullptr};
+	Transform::Weak mTarget;
 
 	static WorldGenController* m_Instance;
 
-	IVoxelBuilder_private* m_builder{ nullptr };
-	TerrainModifications* m_terrain_mods{ nullptr };
+	IVoxelBuilder_private::Shared m_builder{ nullptr };
+	TerrainModifications::Shared m_terrain_mods{ nullptr };
 	ChunkSettings settings;
-	Stitch_VBO* vbo_stitch{ nullptr };
+	Stitch_VBO::Shared vbo_stitch;
 
 	double m_voxelsPerMeter{ DEFAULT_VOXELS_PER_METER };
 	double m_chunkMeterSizeX{ DEFAULT_METER_SIZE };
@@ -204,9 +209,9 @@ private:
 
 	std::queue<TerrainModEntry> m_terrain_change_queue;
 
-	Opaque_Chunk_Material* m_chunk_opaque_mat{ nullptr };
+	Opaque_Chunk_Material::Shared m_chunk_opaque_mat;
 
-	Texture* m_diffuse_texture_array{nullptr};
+	Texture::Shared m_diffuse_texture_array;
 
 	ChunkRef get_chunk(glm::ivec3 coord);
 

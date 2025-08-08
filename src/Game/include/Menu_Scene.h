@@ -32,8 +32,8 @@ private:
 	Rml::Element* m_start_sp_button_elem{ nullptr };
 	Start_SP_Click_Event* m_start_sp_event_listener{ nullptr };
 
-	WorldObject* m_camera_obj{ nullptr };
-	Camera* m_camera{ nullptr };
+	WorldObject::Weak m_camera_obj;
+	Camera::Weak m_camera;
 
 	double m_started_time{ 0 };
 	bool m_game_started{ false };

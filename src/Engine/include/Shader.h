@@ -27,6 +27,8 @@ class Shader : public std::enable_shared_from_this<Shader>
 {
     friend class Light;
 public:
+    typedef std::shared_ptr<Shader> Shared;
+    typedef std::weak_ptr<Shader> Weak;
 
     struct Bound_Texture {
         std::string name;

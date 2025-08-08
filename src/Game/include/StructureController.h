@@ -30,6 +30,8 @@ using namespace VoxelEngine;
 class StructureController : public Component {
 
 public:
+	typedef std::shared_ptr<StructureController> Shared;
+	typedef std::weak_ptr<StructureController> Weak;
 
 	struct StructureMod {
 	public:

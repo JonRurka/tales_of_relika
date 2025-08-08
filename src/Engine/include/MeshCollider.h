@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Collider.h"
+#include "Mesh.h"
 
 #define DEFAULT_SIZE (1.0f)
 
@@ -8,8 +9,10 @@ class Mesh;
 
 class MeshCollider : public Collider {
 public:
+	typedef std::shared_ptr<MeshCollider> Shared;
+	typedef std::weak_ptr<MeshCollider> Weak;
 
-	void SetMesh(Mesh* mesh);
+	void SetMesh(Mesh::Shared mesh);
 
 private:
 

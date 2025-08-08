@@ -14,6 +14,8 @@ namespace VoxelEngine {
 
 	class IVoxelBuilder_private {
 	public:
+		typedef std::shared_ptr<IVoxelBuilder_private> Shared;
+		typedef std::weak_ptr<IVoxelBuilder_private> Weak;
 
 		virtual void Init(ChunkSettings* settings) = 0;
 

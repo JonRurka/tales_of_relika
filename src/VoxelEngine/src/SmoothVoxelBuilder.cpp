@@ -427,19 +427,19 @@ void SmoothVoxelBuilder::InitializeComputePrograms()
     //m_program_smoothrender_stitch = new VoxelComputeProgram(m_controller, PROGRAM_SMOOTH_RENDER_STITCH, 1);
     m_program_smoothrender_stitch_async = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_SMOOTH_RENDER_STITCH_ASYNC + EXT, m_WorkGroups, m_type);
 
-    m_HeightmapGenerator = new HeightmapGenerator(
+    m_HeightmapGenerator = std::make_shared<HeightmapGenerator>(
         m_controller,
         m_static_settings.ChunkSize.x, m_static_settings.ChunkSize.z,
         MAX_COLUMNS, EXT, m_type
     );
 
-    m_Terrain_Modifications = new TerrainModifications(
+    m_Terrain_Modifications = std::make_shared<TerrainModifications>(
         m_controller,
         m_static_settings.ChunkSize.x, m_static_settings.ChunkSize.y, m_static_settings.ChunkSize.z,
         MAX_MODIFICATION_CHUNKS
     );
 
-    m_ISO_Sampler = new ISO_Sampler(
+    m_ISO_Sampler = std::make_shared<ISO_Sampler>(
         m_controller,
         m_static_settings.ChunkSize.x, m_static_settings.ChunkSize.y, m_static_settings.ChunkSize.z,
         EXT, m_type,

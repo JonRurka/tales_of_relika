@@ -27,6 +27,8 @@ class Camera : public Component
 	friend class WorldObject;
 	friend class Engine;
 public:
+	typedef std::shared_ptr<Camera> Shared;
+	typedef std::weak_ptr<Camera> Weak;
 
 	float FOV() { return m_FOV; }
 	void FOV(float value) 
@@ -62,6 +64,7 @@ public:
 	glm::mat4 View_Matrix() { return m_view; }
 
 	static Camera& Get_Active();
+	static Camera::Weak Get_Active_Ptr() { return m_active_camera; }
 
 	static bool Has_Active_Camera();
 	

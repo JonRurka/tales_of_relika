@@ -36,7 +36,7 @@ void WorldGenController::Init()
 
 	Logger::LogInfo(LOG_POS("Init"), "Initialized");
 
-	mTarget = Object()->Get_Transform(); // TODO: Get player transform.
+	mTarget = Object().Get_Transform_Ptr(); // TODO: Get player transform.
 
 	m_half = 0;// ((1 / m_voxelsPerMeter) / 2.0);
 
@@ -47,7 +47,7 @@ void WorldGenController::Init()
 	m_max_cached_chunks = m_max_cached_columns * m_chunks_depth;
 
 
-	m_chunk_opaque_mat = new Opaque_Chunk_Material(); 
+	m_chunk_opaque_mat = std::make_shared<Opaque_Chunk_Material>(); 
 	//m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
 	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance()->Terrain_Diffuse_Texture_Array());
 	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance()->Terrain_Normal_Texture_Array());
@@ -82,12 +82,14 @@ void WorldGenController::Start()
 	//Logger::LogDebug(LOG_POS("Start"), "The queue is %i long", m_create_queue.size());
 }
 
-TerrainChunk* WorldGenController::Get_Chunk(glm::ivec3 chunk_coord)
+TerrainChunk::Weak WorldGenController::Get_Chunk(glm::ivec3 chunk_coord)
 {
-	return get_chunk(chunk_coord).chunk_comp;
+	ChunkRef c_ref = get_chunk(chunk_coord);
+	assert(!c_ref.chunk_comp.expired());
+	return c_ref.chunk_comp;
 }
 
-ISO_Sampler* WorldGenController::Get_ISO_Sampler()
+ISO_Sampler::Shared WorldGenController::Get_ISO_Sampler()
 {
 	return ((SmoothVoxelBuilder*)m_builder)->Get_ISO_Sampler();
 }
@@ -114,7 +116,9 @@ void WorldGenController::Modify_Voxel_ISO(glm::ivec3 voxel, float iso)
 	}
 	//Logger::LogDebug(LOG_POS("Modify_Voxel_ISO"), "We can modify the voxel");
 
-	get_chunk(chunk).chunk_comp->VoxelChanged(voxel_local, true, iso, false, 0);
+	ChunkRef c_ref = get_chunk(chunk);
+	assert(!c_ref.chunk_comp.expired());
+	c_ref.chunk_comp.lock()->VoxelChanged(voxel_local, true, iso, false, 0);
 
 	TerrainMod mod(voxel_local, iso);
 	Modify_Voxel(chunk, mod);
@@ -129,7 +133,9 @@ void WorldGenController::Modify_Voxel_Type(glm::ivec3 voxel, int type)
 		return;
 	}
 
-	get_chunk(chunk).chunk_comp->VoxelChanged(voxel_local, false, 0, true, type);
+	ChunkRef c_ref = get_chunk(chunk);
+	assert(!c_ref.chunk_comp.expired());
+	c_ref.chunk_comp.lock()->VoxelChanged(voxel_local, false, 0, true, type);
 
 	TerrainMod mod(voxel_local, type);
 	Modify_Voxel(chunk, mod);
@@ -283,7 +289,8 @@ void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, std::vect
 
 glm::fvec3 WorldGenController::Target_Position()
 {
-	return mTarget->Position();
+	assert(!mTarget.expired());
+	return mTarget.lock()->Position();
 }
 
 glm::ivec3 WorldGenController::Target_Chunk()
@@ -315,14 +322,14 @@ void WorldGenController::initialize_voxel_engine()
 	m_chunk_size_y = m_chunkMeterSizeY * m_voxelsPerMeter;
 	m_chunk_size_z = m_chunkMeterSizeZ * m_voxelsPerMeter;
 
-	m_builder = new SmoothVoxelBuilder();
+	m_builder = std::make_shared<SmoothVoxelBuilder>();
 	m_builder->Init(&settings);
 
-	m_terrain_mods = ((SmoothVoxelBuilder*)m_builder)->Get_Terrain_Modifications();
+	m_terrain_mods = (std::dynamic_pointer_cast<SmoothVoxelBuilder>(m_builder))->Get_Terrain_Modifications();
 
 	int max_vert = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
 
-	vbo_stitch = new Stitch_VBO();
+	vbo_stitch = std::make_shared<Stitch_VBO>();
 	vbo_stitch->Init(m_builder, max_vert);
 }
 
@@ -385,7 +392,7 @@ void WorldGenController::process_deletions()
 		}
 
 		ChunkRef chunk = get_chunk(chunk_coord);
-		chunk.chunk_comp->Unassign();
+		chunk.chunk_comp.lock()->Unassign();
 		remove_chunk(chunk_coord);
 		m_cached_chunks.push(chunk);
 	}
@@ -426,7 +433,10 @@ bool WorldGenController::process_batch()
 	bool has_full_chunks = false;
 	for (int i = 0; i < num_additions; i++) {
 		int num_verts = counts[i].x;
-		batch[i].chunk_comp->Process_Mesh_Update(counts[i]);
+
+		assert(!batch[i].chunk_comp.expired());
+		batch[i].chunk_comp.lock()->Process_Mesh_Update(counts[i]);
+
 		if (num_verts > 0) {
 			m_num_filled_init_chunks++;
 			has_full_chunks = true;
@@ -488,17 +498,19 @@ void WorldGenController::process_modifications()
 		glm::dvec4 render_times = m_builder->Render(&render_options);
 		std::vector<glm::ivec4> counts = m_builder->GetSize();
 
-		get_chunk(chunk).chunk_comp->Process_Mesh_Update(counts[0]);
+		ChunkRef c_ref = get_chunk(chunk);
+		assert(!c_ref.chunk_comp.expired());
+		c_ref.chunk_comp.lock()->Process_Mesh_Update(counts[0]);
 	}
 }
 
 WorldGenController::ChunkRef WorldGenController::create_chunk_object()
 {
-	WorldObject* obj = Instantiate("Cached Voxel Chunk");
-	obj->Get_Transform()->Set_Verbos(false);
-	obj->Get_Transform()->Position(glm::vec3(0.0, 1000.0, 0.0));
-	TerrainChunk* comp = obj->Add_Component<TerrainChunk>();
-	comp->Init(this, vbo_stitch);
+	WorldObject::Weak obj = Instantiate("Cached Voxel Chunk");
+	obj.lock()->Get_Transform().Set_Verbos(false);
+	obj.lock()->Get_Transform().Position(glm::vec3(0.0, 1000.0, 0.0));
+	TerrainChunk::Weak comp = obj.lock()->Add_Component<TerrainChunk>();
+	comp.lock()->Init(std::dynamic_pointer_cast<WorldGenController>(shared_from_this()), vbo_stitch);
 
 	ChunkRef chk{};
 	chk.chunk_obj = obj;
@@ -514,13 +526,9 @@ void WorldGenController::generate_circular()
 {
 	double start = Utilities::Get_Time();
 
-	if (mTarget == nullptr) {
-		Logger::LogError(LOG_POS("generate_circular"), "Cannot generate chunks with null target.");
-		return;
-	}
+	assert(!mTarget.expired());
 
-
-	glm::ivec3 target_chunk_pos = worldPosToChunkCoord(mTarget->Position());
+	glm::ivec3 target_chunk_pos = worldPosToChunkCoord(mTarget.lock()->Position());
 
 	std::vector<glm::ivec3> cols = get_columns_in_radius(target_chunk_pos.x, target_chunk_pos.z, m_max_chunk_radius);
 
@@ -572,7 +580,10 @@ bool WorldGenController::queue_chunk_create(glm::ivec3 chunk_coord)
 	ChunkRef chunk = m_cached_chunks.front();
 	m_cached_chunks.pop();
 
-	chunk.chunk_comp->Assign(chunk_coord);
+	assert(!chunk.chunk_obj.expired());
+	assert(!chunk.chunk_comp.expired());
+
+	chunk.chunk_comp.lock()->Assign(chunk_coord);
 	chunk.chunk_coord = chunk_coord;
 
 	m_chunk_map[hash] = chunk;

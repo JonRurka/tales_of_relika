@@ -14,21 +14,21 @@ void TerrainChunk::Init()
 
 }
 
-void TerrainChunk::Init(WorldGenController* controller, Stitch_VBO* vbo_stitch)
+void TerrainChunk::Init(WorldGenController::Weak controller, Stitch_VBO::Shared vbo_stitch)
 {
 	m_controller = controller;
 	m_vbo_stitch = vbo_stitch;
 
 	int max_vert = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
-	m_voxel_opaque_mesh = new Mesh(max_vert * Stitch_VBO::Byte_Stride());
+	m_voxel_opaque_mesh = Mesh::Create(max_vert * Stitch_VBO::Byte_Stride());
 
 	m_opaque_chunk_obj = Instantiate("Cached Voxel Chunk - Opaque");
-	m_opaque_chunk_obj->Get_Transform()->Set_Verbos(false);
+	m_opaque_chunk_obj.lock()->Get_Transform().Set_Verbos(false);
 	//obj->Get_MeshRenderer()->Transparent(true);
-	m_opaque_chunk_obj->Get_Transform()->Position(glm::vec3(0.0, 1000.0, 0.0));
-	m_opaque_chunk_obj->Get_MeshRenderer()->Set_Material(controller->Get_Chunk_Material());
-	m_opaque_chunk_obj->Get_MeshRenderer()->Set_Mesh(m_voxel_opaque_mesh);
-	m_opaque_chunk_obj->Add_Component<MeshCollider>();
+	m_opaque_chunk_obj.lock()->Get_Transform().Position(glm::vec3(0.0, 1000.0, 0.0));
+	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Set_Material(std::static_pointer_cast<Material>(controller.lock()->Get_Chunk_Material()));
+	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Set_Mesh(m_voxel_opaque_mesh);
+	m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
 
 	//Logger::LogDebug(LOG_POS("Init"), "New chunk initialied. (%i, %i, %i)", 
 	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
@@ -36,16 +36,18 @@ void TerrainChunk::Init(WorldGenController* controller, Stitch_VBO* vbo_stitch)
 
 void TerrainChunk::Assign(glm::ivec3 chunk_coord)
 {
+	assert(!m_opaque_chunk_obj.expired());
+
 	m_assigned = true;
 
 	m_chunk_coords = chunk_coord;
-	Object()->Name("Voxel Chunk (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
-	m_opaque_chunk_obj->Name("Voxel Chunk - Opaque (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
+	Object().Name("Voxel Chunk (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
+	m_opaque_chunk_obj.lock()->Name("Voxel Chunk - Opaque (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
 
 	m_chunk_world_pos = WorldGenController::ChunkCoordToWorldPos(chunk_coord);
 
-	Object()->Get_Transform()->Position(m_chunk_world_pos);
-	m_opaque_chunk_obj->Get_Transform()->Position(m_chunk_world_pos);
+	Object().Get_Transform().Position(m_chunk_world_pos);
+	m_opaque_chunk_obj.lock()->Get_Transform().Position(m_chunk_world_pos);
 
 	if (DRAW_DEBUG_BOX)
 		draw_debug_cube();
@@ -59,13 +61,15 @@ void TerrainChunk::Unassign()
 	if (!m_assigned)
 		return;
 
+	assert(!m_opaque_chunk_obj.expired());
+
 	m_assigned = false;
 
-	Object()->Name("Cached Voxel Chunk");
-	m_opaque_chunk_obj->Name("Cached Voxel Chunk - Opaque");
+	Object().Name("Cached Voxel Chunk");
+	m_opaque_chunk_obj.lock()->Name("Cached Voxel Chunk - Opaque");
 
-	Object()->Get_Transform()->Position(glm::vec3(0.0, 1000.0, 0.0));
-	m_opaque_chunk_obj->Get_Transform()->Position(glm::vec3(0.0, 1000.0, 0.0));
+	Object().Get_Transform().Position(glm::vec3(0.0, 1000.0, 0.0));
+	m_opaque_chunk_obj.lock()->Get_Transform().Position(glm::vec3(0.0, 1000.0, 0.0));
 }
 
 void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts)
@@ -80,10 +84,10 @@ void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts)
 
 	//Logger::LogDebug(LOG_POS("Process_Mesh_Update"), "Process update.");
 
-	m_vbo_stitch->Process(m_voxel_opaque_mesh, counts, false);
+	m_vbo_stitch->Process(*m_voxel_opaque_mesh.get(), counts, false);
 
 	IComputeBuffer* vert_buffer = m_vbo_stitch->Input_Vertex_Buffer();
-	update_collision_mesh(vert_buffer, m_vbo_stitch->Triangle_Data(), counts.x);
+	update_collision_mesh(vert_buffer, m_vbo_stitch->Triangle_Data().data(), counts.x);
 }
 
 void TerrainChunk::Modify_Point_ISO(glm::ivec3 local_voxel, float iso)
@@ -91,8 +95,9 @@ void TerrainChunk::Modify_Point_ISO(glm::ivec3 local_voxel, float iso)
 	if (!m_assigned) {
 		return;
 	}
+	assert(!m_controller.expired());
 	WorldGenController::TerrainMod mod(local_voxel, iso);
-	m_controller->Submit_Terrain_Modification(m_chunk_coords, mod);
+	m_controller.lock()->Submit_Terrain_Modification(m_chunk_coords, mod);
 }
 
 void TerrainChunk::Modify_Point_Type(glm::ivec3 local_voxel, int type)
@@ -100,8 +105,9 @@ void TerrainChunk::Modify_Point_Type(glm::ivec3 local_voxel, int type)
 	if (!m_assigned) {
 		return;
 	}
+	assert(!m_controller.expired());
 	WorldGenController::TerrainMod mod(local_voxel, type);
-	m_controller->Submit_Terrain_Modification(m_chunk_coords, mod);
+	m_controller.lock()->Submit_Terrain_Modification(m_chunk_coords, mod);
 }
 
 bool TerrainChunk::Collision_Enabled()
@@ -109,8 +115,8 @@ bool TerrainChunk::Collision_Enabled()
 	if (!m_assigned) {
 		return false;
 	}
-
-	glm::ivec3 target = m_controller->Target_Chunk();
+	assert(!m_controller.expired());
+	glm::ivec3 target = m_controller.lock()->Target_Chunk();
 	float chunk_dist = glm::distance(glm::vec3(m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z), glm::vec3(target.x, target.y, target.z));
 	if (chunk_dist <= COLLISION_DISTANCE) {
 		//Logger::LogDebug(LOG_POS("Collision_Enabled"), "(%i, %i, %i) - (%i, %i, %i): %f",
@@ -125,7 +131,8 @@ void TerrainChunk::Refresh()
 	if (!m_assigned) {
 		return;
 	}
-	m_controller->Refresh_Chunk(m_chunk_coords);
+	assert(!m_controller.expired());
+	m_controller.lock()->Refresh_Chunk(m_chunk_coords);
 }
 
 void TerrainChunk::Update(float dt)
@@ -133,8 +140,9 @@ void TerrainChunk::Update(float dt)
 	if (!m_assigned) {
 		return;
 	}
+	assert(!m_controller.expired());
 
-	if (!m_controller->Finished_Initial_Generation()) {
+	if (!m_controller.lock()->Finished_Initial_Generation()) {
 		return;
 	}
 
@@ -165,16 +173,18 @@ void TerrainChunk::VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float 
 
 bool TerrainChunk::test_despawn()
 {
-	glm::vec3 target_pos = m_controller->Target_Position();
+	assert(!m_controller.expired());
+
+	glm::vec3 target_pos = m_controller.lock()->Target_Position();
 	glm::ivec3 target_chunk = WorldGenController::WorldPosToChunkCoord(target_pos);
 
 	glm::fvec2 target_chunk_f = glm::fvec2(target_chunk.x, target_chunk.z);
 	glm::fvec2 chunk_coord_f = glm::fvec2(m_chunk_coords.x, m_chunk_coords.z);
 
 	float dist = glm::distance(target_chunk_f, chunk_coord_f);
-	if (dist > m_controller->Chunk_Radius()) 
+	if (dist > m_controller.lock()->Chunk_Radius())
 	{
-		m_controller->Despawn_Chunk(m_chunk_coords);
+		m_controller.lock()->Despawn_Chunk(m_chunk_coords);
 		return true;
 	}
 
@@ -231,9 +241,9 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 	bool collision_enabled = Collision_Enabled();
 	if (!collision_enabled) {
 
-		if (m_mesh_collider != nullptr) {
-			m_mesh_collider->Destroy();
-			m_mesh_collider = nullptr;
+		if (!m_mesh_collider.expired()) {
+			m_mesh_collider.lock()->Destroy();
+			m_mesh_collider.reset();
 			m_has_collision = false;
 			Logger::LogInfo(LOG_POS("update_collision_mesh"), "Collision removed for chunk (%i, %i, %i)",
 				m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
@@ -241,8 +251,9 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 		return;
 	}
 
-	if (m_mesh_collider == nullptr) {
-		m_mesh_collider = m_opaque_chunk_obj->Add_Component<MeshCollider>();
+	if (m_mesh_collider.expired()) {
+		assert(!m_opaque_chunk_obj.expired());
+		m_mesh_collider = m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
 	}
 
 	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Set Collider (%i): (%i, %i, %i)",
@@ -264,15 +275,15 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 
 	btVector3 min, max;
 
-	m_collision_mesh = new Mesh();
+	m_collision_mesh = Mesh::Create();
 	//m_collision_mesh->Indices(tris);
 	m_collision_mesh->Vertices(vert);
 	m_collision_mesh->Activate();
-	m_mesh_collider->SetMesh(m_collision_mesh);
-	m_mesh_collider->Mass(0.0f);
-	m_mesh_collider->Activate();
+	m_mesh_collider.lock()->SetMesh(m_collision_mesh);
+	m_mesh_collider.lock()->Mass(0.0f);
+	m_mesh_collider.lock()->Activate();
 	//m_mesh_collider->RigidBody()->forceActivationState(DISABLE_DEACTIVATION);
-	m_mesh_collider->RigidBody()->getAabb(min, max);
+	m_mesh_collider.lock()->RigidBody().getAabb(min, max);
 
 	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
 	//	min.x(), min.y(), min.z(), max.x(), max.y(), max.z());

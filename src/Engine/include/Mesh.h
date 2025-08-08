@@ -1,6 +1,7 @@
 #pragma once
 
 #include "opengl.h"
+#include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -19,6 +20,9 @@ class Mesh
 {
 	friend class Model;
 public:
+
+	typedef std::shared_ptr<Mesh> Shared;
+	typedef std::weak_ptr<Mesh> Weak;
 
 	class VertexAttributeList {
 		friend class Mesh;
@@ -62,6 +66,9 @@ public:
 	{
 		Dispose();
 	}
+
+	static std::shared_ptr<Mesh> Create();
+	static std::shared_ptr<Mesh> Create(size_t size);
 
 	void Set_Vertex_Attributes(VertexAttributeList list)
 	{

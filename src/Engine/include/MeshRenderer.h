@@ -19,6 +19,8 @@ class MeshRenderer : public Renderer
 {
 	friend class WorldObject;
 public:
+	typedef std::shared_ptr<MeshRenderer> Shared;
+	typedef std::weak_ptr<MeshRenderer> Weak;
 
 	MeshRenderer(std::weak_ptr<WorldObject> obj);
 	~MeshRenderer();

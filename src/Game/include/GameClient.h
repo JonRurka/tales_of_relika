@@ -12,6 +12,8 @@ class NetClient;
 
 class GameClient : public Component {
 public:
+	typedef std::shared_ptr<GameClient> Shared;
+	typedef std::weak_ptr<GameClient> Weak;
 	
 	typedef void(*OnGameConnectActionPtr)(void*);
 

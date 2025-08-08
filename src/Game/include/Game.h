@@ -25,10 +25,14 @@ private:
 
 	static Game* m_instance;
 
-	Material_Types* m_material_types{nullptr};
+	Material_Types m_material_types{};
 
 	std::weak_ptr<Scene> m_main_menu_scene;
 	std::weak_ptr<Scene> m_voxel_world_secen;
+
+	std::shared_ptr<Shader> m_std_shader;
+	std::shared_ptr<Shader> m_opaque_chunk_shader;
+	std::shared_ptr<Shader> m_opaque_structure_chunk_shader;
 
 	void init_shaders();
 

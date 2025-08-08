@@ -26,6 +26,8 @@ class Material : public std::enable_shared_from_this<Material>
 	friend class Renderer;
 	friend class MeshRenderer;
 public:
+	typedef std::shared_ptr<Material> Shared;
+	typedef std::weak_ptr<Material> Weak;
 
 	struct Bound_Texture {
 		std::string name;

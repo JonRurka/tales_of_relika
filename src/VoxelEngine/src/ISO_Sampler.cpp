@@ -14,7 +14,7 @@ ISO_Sampler::ISO_Sampler(
 	IComputeController* controller, 
 	int size_x, int size_y, int size_z, 
 	std::string extension, IComputeProgram::FileType type,
-	HeightmapGenerator* heightmap_gen, TerrainModifications* terrain_mods
+	std::shared_ptr<HeightmapGenerator> heightmap_gen, std::shared_ptr<TerrainModifications> terrain_mods
 ) :
 	m_controller{ controller },
 	m_size_x{ size_x }, m_size_z{ size_z },

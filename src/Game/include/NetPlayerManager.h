@@ -12,6 +12,8 @@ class NetPlayerCharacter;
 
 class NetPlayerManager : public Component {
 public:
+	typedef std::shared_ptr<NetPlayerManager> Shared;
+	typedef std::weak_ptr<NetPlayerManager> Weak;
 
 	struct PlayerCreationRequest {
 	public:

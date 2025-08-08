@@ -34,6 +34,8 @@ class Light : public Component
 {
 	friend class Shader;
 public:
+	typedef std::shared_ptr<Light> Shared;
+	typedef std::weak_ptr<Light> Weak;
 
 	enum class Light_Type {
 		DIRECTIONAL = 1,

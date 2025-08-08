@@ -5,6 +5,15 @@
 
 #include "Network/Data.h"
 
+#include "WorldGenController.h"
+#include "StructureController.h"
+#include "Client_Server_Interface.h"
+#include "GameClient.h"
+#include "LocalPlayerCharacter.h"
+#include "NetPlayerManager.h"
+
+#include <memory>
+
 class WorldGenController;
 class StructureController;
 class Client_Server;
@@ -58,33 +67,33 @@ private:
 
 	double m_connected_time{ 0 };
 
-	Rml::ElementDocument* m_loading_screen{ nullptr };
+	ElementDocument m_loading_screen;
 	bool m_loading_hidden{ false };
 
-	WorldObject* light_obj_dir{ nullptr };
-	Light* light_comp_dir{ nullptr };
-	WorldObject* Camera_obj{ nullptr };
-	Camera* camera{ nullptr };
+	Cubemap::Shared m_skybox_cubmap;
 
-	Item_Loader* m_item_loader{ nullptr };
+	WorldObject::Weak light_obj_dir;
+	Light::Weak light_comp_dir;
+	WorldObject::Weak Camera_obj;
+	Camera::Weak camera;
 
-	WorldObject* world_gen_controller_obj{ nullptr };
-	WorldGenController* world_gen_controller{ nullptr };
+	WorldObject::Weak world_gen_controller_obj;
+	WorldGenController::Weak world_gen_controller;
 
-	WorldObject* structure_controller_obj{ nullptr };
-	StructureController* structure_controller{ nullptr };
+	WorldObject::Weak structure_controller_obj;
+	StructureController::Weak structure_controller;
 
-	WorldObject* client_server_obj{ nullptr };
-	Client_Server* client_server{ nullptr };
+	WorldObject::Weak client_server_obj;
+	Client_Server::Weak client_server;
 
-	WorldObject* game_client_obj{ nullptr };
-	GameClient* game_client{ nullptr };
+	WorldObject::Weak game_client_obj;
+	GameClient::Weak game_client;
 
-	WorldObject* local_player_character_obj{ nullptr };
-	LocalPlayerCharacter* local_player_character{ nullptr };
+	WorldObject::Weak local_player_character_obj;
+	LocalPlayerCharacter::Weak local_player_character;
 
-	WorldObject* net_player_manager_obj{ nullptr };
-	NetPlayerManager* net_player_manager{ nullptr };
+	WorldObject::Weak net_player_manager_obj;
+	NetPlayerManager::Weak net_player_manager;
 
 	void startup_squence();
 
@@ -105,8 +114,6 @@ private:
 	void setup_net_player_manager();
 
 	void create_test_items();
-
-	void create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color);
 
 	inline static const std::string LOG_LOC{ "VOXELWORLD_SCENE" };
 };

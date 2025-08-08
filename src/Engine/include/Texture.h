@@ -16,6 +16,8 @@ class Texture : public std::enable_shared_from_this<Texture>
 {
 	friend class Framebuffer;
 public:
+	typedef std::shared_ptr<Texture> Shared;
+	typedef std::weak_ptr<Texture> Weak;
 
 	enum class Dimensions {
 		TEXTURE_2D,

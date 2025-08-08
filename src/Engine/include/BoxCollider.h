@@ -6,6 +6,8 @@
 
 class BoxCollider : public Collider {
 public:
+	typedef std::shared_ptr<BoxCollider> Shared;
+	typedef std::weak_ptr<BoxCollider> Weak;
 
 	void Size(glm::vec3 size);
 

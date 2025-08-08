@@ -10,6 +10,8 @@ class btKinematicCharacterController;
 
 class CharacterCollider : public Collider {
 public:
+	typedef std::shared_ptr<CharacterCollider> Shared;
+	typedef std::weak_ptr<CharacterCollider> Weak;
 
 	void Radius(float radius);
 

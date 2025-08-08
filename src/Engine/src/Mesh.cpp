@@ -74,6 +74,16 @@ Mesh::Mesh(size_t size)
 	m_num_indices = 0;
 }
 
+std::shared_ptr<Mesh> Mesh::Create()
+{
+	return std::make_shared<Mesh>();
+}
+
+std::shared_ptr<Mesh> Mesh::Create(size_t size)
+{
+	return std::make_shared<Mesh>(size);
+}
+
 void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size)
 {
 	if (size < 0) {

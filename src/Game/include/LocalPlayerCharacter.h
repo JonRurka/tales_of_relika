@@ -5,6 +5,9 @@
 #include "Network/OpCodes.h"
 #include "Network/Data.h"
 
+#include "Standard_Material.h"
+#include "Character_HUD.h"
+
 #include <vector>
 
 #define CAM_OFFSET_DEFAULT (glm::vec3(0, 1.2, 0))
@@ -16,14 +19,15 @@ class Character_HUD;
 
 class LocalPlayerCharacter : public Component {
 public:
-
+	typedef std::shared_ptr<LocalPlayerCharacter> Shared;
+	typedef std::weak_ptr<LocalPlayerCharacter> Weak;
 	//struct
 
 	static LocalPlayerCharacter* Get_Instance() {
 		return m_instance;
 	}
 
-	void Set_Camera_Object(WorldObject* cam_object);
+	void Set_Camera_Object(WorldObject::Weak cam_object);
 
 	void SendJumpEvent();
 
@@ -60,16 +64,16 @@ private:
 	bool m_moving_player_back{ false };
 	float move_dt{ 0 };
 
-	Transform* m_body_trans{ nullptr };
+	Transform::Weak m_body_trans;
 
-	CharacterCollider* m_capsule_collider{ nullptr };
+	CharacterCollider::Weak m_capsule_collider;
 
 	float m_moveSpeed = 10.0f; // movement speed of the character
 	float m_turnSpeed = 180.0f; // turn speed of the character
 	float m_jump_force = 300.0f;
-	Transform* m_cameraTransform{nullptr}; // reference to the camera transform
+	Transform::Weak m_cameraTransform; // reference to the camera transform
 
-	Transform* m_cam_trans{ nullptr };
+	Transform::Weak m_cam_trans;
 	float m_cam_horizontalAngle{ 0 };
 	float m_cam_verticalAngle{ 0 };
 	glm::vec3 m_cam_euler{ glm::vec3() };
@@ -81,9 +85,9 @@ private:
 	glm::quat m_body_quat;
 	glm::vec3 m_look_dir_forward;
 	glm::vec3 m_look_dir_right;
-	Standard_Material* m_character_material{ nullptr };
+	Standard_Material::Shared m_character_material;
 
-	Character_HUD* m_hud{ nullptr };
+	Character_HUD::Weak m_hud;
 
 	double m_last_send_move{ 0 };
 
