@@ -29,8 +29,10 @@ public:
 
 	~WorldObject();
 
-	Transform& Get_Transform() { return m_transform; }
-	MeshRenderer& Get_MeshRenderer() { return m_renderer; }
+	Transform& Get_Transform();
+	MeshRenderer& Get_MeshRenderer();
+	std::weak_ptr<Transform> Get_Transform_Ptr() { return m_transform; }
+	std::weak_ptr<MeshRenderer> Get_MeshRenderer_Ptr() { return m_renderer; }
 
 	void Parent(std::weak_ptr<WorldObject> value);
 	bool Has_Parent() { return !m_parent.expired(); }
@@ -66,7 +68,7 @@ public:
 
 	void Destroy();
 
-	static std::weak_ptr<WorldObject> Instantiate(Model* model, Material* mat, std::shared_ptr<WorldObject> parent = nullptr);
+	static std::weak_ptr<WorldObject> Instantiate(std::shared_ptr<Model> model, std::shared_ptr<Material> mat, std::shared_ptr<WorldObject> parent = nullptr);
 
 	static WorldObject* Load(json data);
 
@@ -75,15 +77,16 @@ public:
 private:
 	std::string m_name;
 	std::weak_ptr<Scene> m_scene;
-	Transform m_transform;
-	MeshRenderer m_renderer;
+	std::shared_ptr<Transform> m_transform;
+	std::shared_ptr<MeshRenderer> m_renderer;
 	std::weak_ptr<WorldObject> m_parent;
 	bool m_enabled{ false };
 	int m_object_idx{ 0 };
 	
 	static int m_next_idx;
 
-	std::vector<std::shared_ptr<Component>> m_components;
+	int m_next_comp_idx{ 0 };
+	std::unordered_map<int, std::shared_ptr<Component>> m_components;
 	std::vector<std::weak_ptr<WorldObject>> m_children;
 
 	void Initialize_Component(std::shared_ptr<Component> comp);

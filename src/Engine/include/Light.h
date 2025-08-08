@@ -110,7 +110,7 @@ private:
 	static int m_num_lights;
 	static int curr_index;
 	static std::vector<Shader*> m_light_shaders;
-	static std::unordered_map<int, Light*> m_linked_lights;
+	static std::unordered_map<int, std::weak_ptr<Light>> m_linked_lights;
 	//static std::vector<Light*> m_lights;
 
 	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
@@ -124,7 +124,7 @@ private:
 
 	//static void Bind();
 
-	static Light_Data* Allocate_Light(Light* light, int& id);
+	static Light_Data* Allocate_Light(std::weak_ptr<Light> light, int& id);
 
 	static void Deallocate_Light(int id);
 

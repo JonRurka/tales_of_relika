@@ -10,16 +10,14 @@ void BoxCollider::Init()
 {
 	base_Init();
 
-	m_shape = new btBoxShape(btVector3(btScalar(m_size.x), btScalar(m_size.y), btScalar(m_size.z)));
+	m_shape = std::make_unique<btBoxShape>(btVector3(btScalar(m_size.x), btScalar(m_size.y), btScalar(m_size.z)));
 }
 
 void BoxCollider::Size(glm::vec3 size)
 {
-	if (m_shape != nullptr) {
-		delete m_shape;
-	}
+	m_shape.reset();
 	m_size = size;
-	m_shape = new btBoxShape(btVector3(btScalar(m_size.x), btScalar(m_size.y), btScalar(m_size.z)));
+	m_shape = std::make_unique<btBoxShape>(btVector3(btScalar(m_size.x), btScalar(m_size.y), btScalar(m_size.z)));
 	OnRefresh();
 }
 
@@ -37,8 +35,8 @@ void BoxCollider::OnRefresh()
 	if (!Active())
 		return;
 
-	if (RigidBody() != nullptr) {
-		remove_rigidbody(RigidBody());
+	if (Has_Rigidbody()) {
+		remove_rigidbody();
 	}
 
 	if (Is_Dynamic()) {
@@ -50,7 +48,7 @@ void BoxCollider::OnRefresh()
 
 	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(create_bt_transform());
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), myMotionState, m_shape, m_localInertia);
-	set_rigidbody(new btRigidBody(rbInfo));
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), myMotionState, m_shape.get(), m_localInertia);
+	set_rigidbody(std::make_shared<btRigidBody>(rbInfo));
 	//Logger::LogDebug(LOG_POS("OnRefresh"), "Created rigidbody.");
 }

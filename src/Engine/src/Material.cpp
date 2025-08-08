@@ -6,6 +6,8 @@
 #include "Resources.h"
 #include "Utilities.h"
 
+uint64_t Material::m_next_reg_id{ 0 };
+
 #define Update_Uniforms(func, u_map, force)			\
 do {												\
 	for (const auto& pair : u_map) {				\
@@ -19,9 +21,9 @@ do {												\
 
 #define Mat_Set(func, name, val)						\
 do {													\
-	for (const auto& mat : m_registered_materials) {	\
-		assert(!mat.expired());							\
-		mat.lock()->func(name, value);					\
+	for (const auto& pair : m_registered_materials) {	\
+		assert(!pair.second.expired());							\
+		pair.second.lock()->func(name, value);					\
 	}													\
 } while (false)
 
@@ -47,10 +49,10 @@ void Material::Transparent(bool value)
 { 
 	m_is_transparent = value;
 	if (!Is_Bound()) {
-		for (const auto& mat : m_registered_materials)
+		for (const auto& pair : m_registered_materials)
 		{
-			assert(!mat.expired());
-			mat.lock()->Transparent(value);
+			assert(!pair.second.expired());
+			pair.second.lock()->Transparent(value);
 		}
 	}
 }
@@ -111,11 +113,11 @@ void Material::setTexture(const std::string& name, std::string resource_name)
 		Logger::LogError(LOG_POS("setTexture"), "Texture resource %s does not exist.", resource_name.c_str());
 		return;
 	}
-	Texture* tex = Resources::Get_Texture(resource_name);
+	std::shared_ptr<Texture> tex = Resources::Get_Texture(resource_name);
 	setTexture(name, tex);
 }
 
-void Material::setTexture(const std::string& name, Texture* value, bool set_source)
+void Material::setTexture(const std::string& name, std::shared_ptr<Texture> value, bool set_source)
 {
 	if (m_tex.find(name) == m_tex.end())
 	{
@@ -131,9 +133,9 @@ void Material::setTexture(const std::string& name, Texture* value, bool set_sour
 	m_tex[name].do_bind = true;
 	m_tex[name].texture = value;
 
-	for (const auto& mat : m_registered_materials) {
-		assert(!mat.expired());
-		mat.lock()->setTexture(name, value, false);
+	for (const auto& pair : m_registered_materials) {
+		assert(!pair.second.expired());
+		pair.second.lock()->setTexture(name, value, false);
 	}
 	
 	//m_tex[name].sync = true;
@@ -161,7 +163,7 @@ void Material::RegisterTexture(std::string name)
 	val.name = name;
 	val.bind_index = m_tex.size();
 
-	val.texture = nullptr;
+	val.texture.reset();
 	val.do_bind = false;
 
 	//val.bound_update = false;
@@ -179,12 +181,21 @@ void Material::RegisterTexture(std::string name)
 
 void Material::Register_Renderer_Material(std::weak_ptr<Material> mat)
 {
-	m_registered_materials.push_back(mat);
+	assert(!mat.expired());
+	uint64_t id = m_next_reg_id++;
+	mat.lock()->m_registered_id = id;
+	m_registered_materials[id] = mat;
 }
 
 void Material::Remove_Renderer_Material(std::weak_ptr<Material> mat)
 {
-	Remove_If_Found(m_registered_materials, mat);
+	assert(!mat.expired());
+	uint64_t id = mat.lock()->m_registered_id;
+	if (m_registered_materials.contains(id))
+	{
+		m_registered_materials.erase(id);
+	}
+	//Remove_If_Found(m_registered_materials, mat);
 }
 
 
@@ -214,8 +225,8 @@ void Material::Internal_Update(float dt, bool force)
 	for (const auto& pair : m_tex) {
 		if (pair.second.do_bind || force) {
 			m_shader->setInt(pair.second.name, pair.second.bind_index);
-			if (pair.second.texture != nullptr)
-				pair.second.texture->Bind(GL_TEXTURE0 + pair.second.bind_index);
+			if (!pair.second.texture.expired())
+				pair.second.texture.lock()->Bind(GL_TEXTURE0 + pair.second.bind_index);
 		}
 	}
 

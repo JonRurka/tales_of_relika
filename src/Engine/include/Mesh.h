@@ -24,11 +24,11 @@ public:
 		friend class Mesh;
 	public:
 
-		VertexAttributeList() : m_float_stride{ 11 }, m_byte_stride{11 * sizeof(float)}
+		VertexAttributeList() : m_float_stride{ (size_t)11 }, m_byte_stride{ (size_t)(11 * sizeof(float))}
 		{
 		}
 
-		VertexAttributeList(int stride) : m_float_stride{ stride }, m_byte_stride{ stride * sizeof(float) }
+		VertexAttributeList(int stride) : m_float_stride{ (size_t)stride }, m_byte_stride{ (size_t)(stride * sizeof(float)) }
 		{
 		}
 
@@ -45,13 +45,13 @@ public:
 			return res;
 		}
 
-		int Byte_Stride() { return m_byte_stride; }
-		int Float_Stride() { return m_float_stride; }
+		size_t Byte_Stride() { return m_byte_stride; }
+		size_t Float_Stride() { return m_float_stride; }
 
 	private:
 		std::vector<glm::ivec4> m_attributes;
-		int m_byte_stride{ 0 };
-		int m_float_stride{ 0 };
+		size_t m_byte_stride{ 0 };
+		size_t m_float_stride{ 0 };
 
 		void process();
 	};

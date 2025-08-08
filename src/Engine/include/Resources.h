@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 class Texture;
 class Shader;
@@ -37,7 +38,10 @@ public:
 		std::string name;
 		std::string path;
 		bool loaded{ false };
-		void* handle{ nullptr };
+
+		std::shared_ptr<Texture> tex_handle{ nullptr };
+		std::shared_ptr<Model> model_handle{ nullptr };
+
 		void* data{ nullptr };
 		size_t data_size{ 0 };
 		int pack_index{ 0 };
@@ -79,11 +83,11 @@ public:
 	static void Load_Data_File(std::string name) { Instance().load_data_file(name); }
 	static void Load_Data_File(std::vector<std::string> names) { Instance().load_data_file(names); }
 
-	static Texture* Get_Texture(std::string name) { return Instance().get_texture(name); }
+	static std::shared_ptr<Texture> Get_Texture(std::string name) { return Instance().get_texture(name); }
 	static std::string Get_Shader_File(std::string name){ return Instance().get_shader_file(name);}
 	static std::vector<char> Get_Shader_bin(std::string name) { return Instance().get_shader_bin(name); }
 	static void Modify_Shader_Bin(std::string name, std::vector<char> data) { return Instance().modify_shader_bin(name, data); }
-	static Model* Get_Model(std::string name) { return Instance().get_model(name); }
+	static std::shared_ptr<Model> Get_Model(std::string name) { return Instance().get_model(name); }
 
 	static std::string Get_Data_File_String(std::string name) { return Instance().get_data_file_string(name); }
 	static std::vector<char> Get_Data_File_Bin(std::string name) { return Instance().get_data_file_bin(name); }
@@ -179,14 +183,14 @@ private:
 	void load_data_file(std::string name);
 	void load_data_file(std::vector<std::string> names);
 
-	void load_pack_data(Asset* asset, Resources::PackType type);
+	void load_pack_data(Asset& asset, Resources::PackType type);
 
-	Texture* get_texture(std::string name);
+	std:: shared_ptr<Texture> get_texture(std::string name);
 
 	std::string get_shader_file(std::string name);
 	std::vector<char> get_shader_bin(std::string name);
 	void modify_shader_bin(std::string name, std::vector<char> data);
-	Model* get_model(std::string name);
+	std::shared_ptr<Model> get_model(std::string name);
 
 	std::string get_data_file_string(std::string name);
 	std::vector<char> get_data_file_bin(std::string name);

@@ -9,7 +9,7 @@ public:
 
 	Cube_Material(std::string name);
 
-	Material* Copy() override { return new Cube_Material(Name()); };
+	std::shared_ptr<Material> Copy() override { return std::make_shared<Cube_Material>(Name()); };
 
 	void Update(float dt) override;
 

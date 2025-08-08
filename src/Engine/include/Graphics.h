@@ -6,6 +6,8 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <memory>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -63,8 +65,6 @@ public:
 
 	static ImGuiIO& ImGUI_IO() { return Instance().m_io; }
 
-	static UI_Engine* UI() { return Instance().m_UI; }
-
 	const Render_Options Active_Options() { return m_active_options; }
 
 	void Set_Screen_FrameTexture(std::shared_ptr<Texture> tex);
@@ -80,9 +80,9 @@ public:
 
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/);
 
-	void Register_Resize_Tex(Texture* tex);
+	void Register_Resize_Tex(std::shared_ptr<Texture> tex);
 
-	void Remove_Resize_Tex(Texture* tex);
+	void Remove_Resize_Tex(std::shared_ptr<Texture> tex);
 
 	bool Render_ImgUI();
 
@@ -105,20 +105,19 @@ private:
 	//static Graphics* m_instance;
 
 	ImGuiIO m_io;
-	UI_Engine* m_UI{ nullptr };
 
 	bool m_initialized{ false };
 	bool m_mouse_visible{ true };
 
-	Mesh* m_screen_mesh{nullptr};
-	Shader* m_screen_shader{ nullptr };
+	std::shared_ptr<Mesh> m_screen_mesh{nullptr};
+	std::shared_ptr<Shader> m_screen_shader{ nullptr };
 
-	Mesh* m_line_mesh{ nullptr };
-	Shader* m_line_shader{ nullptr };
+	std::shared_ptr<Mesh> m_line_mesh{ nullptr };
+	std::shared_ptr<Shader> m_line_shader{ nullptr };
 
 	Render_Options m_active_options;
 
-	std::vector<Texture*> m_resize_textures;
+	std::unordered_map<uint64_t, std::weak_ptr<Texture>> m_resize_textures;
 	
 	glm::vec4 m_clear_color{ glm::vec4(0.2f, 0.3f, 0.3f, 1.0f) };
 

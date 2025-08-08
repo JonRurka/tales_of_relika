@@ -13,15 +13,17 @@ public:
 
 private:
 
-	btCollisionShape* m_shape{ nullptr };
-	btTriangleIndexVertexArray* mTriangleIndexVertexArray{ nullptr };
-	btTriangleMesh* m_triangle_mesh{ nullptr };
+	std::unique_ptr<btCollisionShape> m_shape;
+	std::unique_ptr<btTriangleIndexVertexArray> mTriangleIndexVertexArray;
+	std::unique_ptr<btTriangleMesh> m_triangle_mesh;
+
+	std::vector<glm::vec3> vert3;
 
 	inline static const std::string LOG_LOC{ "MESH_COLLIDER" };
 
 protected:
 
-	Mesh* m_mesh{ nullptr };
+	std::shared_ptr<Mesh> m_mesh;
 
 	unsigned int* m_indices{ nullptr };
 	glm::vec3* m_vertices{ nullptr };

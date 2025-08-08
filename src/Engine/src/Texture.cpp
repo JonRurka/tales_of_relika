@@ -8,6 +8,7 @@
 #include "Resources.h"
 #include "Graphics.h"
 
+uint64_t Texture::m_next_id{ 0 };
 
 Texture::Texture(const std::string path, bool flip)
 {
@@ -35,8 +36,10 @@ Texture::Texture(const std::string path, bool flip)
 	stbi_set_flip_vertically_on_load(flip);
 	unsigned char* data = stbi_load(path_ptr, &width, &height, &nrChannels, 0);
 	m_data_size = width * height * nrChannels;
-	m_raw_data = new unsigned char[m_data_size];
-	memcpy(m_raw_data, data, m_data_size);
+
+	//m_raw_data = new unsigned char[m_data_size];
+	//memcpy(m_raw_data, data, m_data_size);
+	m_raw_data = std::vector<unsigned char>(data, data + m_data_size);
 
 	m_width = width;
 	m_height = height;
@@ -66,7 +69,8 @@ Texture::Texture(const std::string path, bool flip)
 	stbi_image_free(data);
 
 	m_initialized = success;
-	m_resizable = false;
+	m_frame_resizable = false;
+	m_id = ++m_next_id;
 }
 
 Texture::Texture(const std::string resource_name, const std::vector<char> file_data, bool flip)
@@ -92,8 +96,10 @@ Texture::Texture(const std::string resource_name, const std::vector<char> file_d
 
 	unsigned char* data = stbi_load_from_memory(stb_file_data, file_data.size(), &width, &height, &nrChannels, 0);
 	m_data_size = width * height * nrChannels;
-	m_raw_data = new unsigned char[m_data_size];
-	memcpy(m_raw_data, data, m_data_size);
+
+	//m_raw_data = new unsigned char[m_data_size];
+	//memcpy(m_raw_data, data, m_data_size);
+	m_raw_data = std::vector<unsigned char>(data, data + m_data_size);
 
 	m_width = width;
 	m_height = height;
@@ -123,16 +129,16 @@ Texture::Texture(const std::string resource_name, const std::vector<char> file_d
 	stbi_image_free(data);
 
 	m_initialized = success;
-	m_resizable = false;
-
+	m_frame_resizable = false;
+	m_id = ++m_next_id;
 }
 
-Texture::Texture(const std::vector<Texture*> textures)
+Texture::Texture(const std::vector<std::shared_ptr<Texture>> textures)
 {
 	m_dim = Dimensions::TEXTURE_2D_ARRAY;
 	m_name = "texture_array";
 	m_path = m_name;
-
+	m_tex_array = textures;
 
 	glGenTextures(1, &m_texture);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, m_texture);
@@ -185,21 +191,22 @@ Texture::Texture(const std::vector<Texture*> textures)
 			m_width, m_height, 1,   //width, height, depth
 			fmt,					//format
 			GL_UNSIGNED_BYTE,       //type
-			textures[layer]->Data());
+			textures[layer]->Data().data());
 
 	}
 
 	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
 	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+	m_id = ++m_next_id;
 }
 
-Texture::Texture(const int width, const int height, bool auto_resize)
+Texture::Texture(const int width, const int height)
 {
 	m_dim = Dimensions::RENDER_TEXTURE_2D;
 	m_width = width;
 	m_height = height;
-	m_resizable = true;
 	m_name = "render_texture";
 
 	glGenTextures(1, &m_texture);
@@ -212,9 +219,13 @@ Texture::Texture(const int width, const int height, bool auto_resize)
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if (auto_resize) {
-		Graphics::Instance().Register_Resize_Tex(this);
-	}
+	m_id = ++m_next_id;
+}
+
+void Texture::Enable_Window_Resize()
+{
+	m_frame_resizable = true;
+	Graphics::Instance().Register_Resize_Tex(shared_from_this());
 }
 
 GLenum Texture::Target_Type()
@@ -261,16 +272,19 @@ void Texture::Wrap(Wrap_Mode value)
 
 void Texture::Dispose()
 {
-	if (m_resizable) {
-		Graphics::Instance().Remove_Resize_Tex(this);
+	if (m_frame_resizable) {
+		Graphics::Instance().Remove_Resize_Tex(shared_from_this());
 	}
+
+	m_raw_data.clear();
+	m_tex_array.clear();
 
 	glDeleteTextures(1, &m_texture);
 }
 
-Texture* Texture::Create_Texture2D_Array(std::vector<std::string> resource_names, bool flip)
+std::shared_ptr<Texture> Texture::Create_Texture2D_Array(std::vector<std::string> resource_names, bool flip)
 {
-	std::vector<Texture*> textures;
+	std::vector<std::shared_ptr<Texture>> textures;
 	textures.reserve(resource_names.size());
 
 	for (const auto& res_name : resource_names) {
@@ -279,18 +293,18 @@ Texture* Texture::Create_Texture2D_Array(std::vector<std::string> resource_names
 			//continue;
 		}
 
-		Texture* tex = Resources::Get_Texture(res_name);
+		std::shared_ptr<Texture> tex = Resources::Get_Texture(res_name);
 		textures.push_back(tex);
 	}
 
-	return new Texture(textures);
+	return std::make_shared<Texture>(textures);
 }
 
 void Texture::Resize(int width, int height)
 {
 	//Logger::LogDebug(LOG_POS("Resize"), "Attempting resize: %i",
 	//	m_resizable ? 1 : 0);
-	if (m_resizable) {
+	if (m_frame_resizable) {
 
 		glDeleteTextures(1, &m_texture);
 
@@ -309,7 +323,8 @@ void Texture::Resize(int width, int height)
 
 		for (const auto& elem : m_linked_framebuffers)
 		{
-			elem->Refresh(false);
+			assert(!elem.second.expired());
+			elem.second.lock()->Refresh(false);
 		}
 	}
 }

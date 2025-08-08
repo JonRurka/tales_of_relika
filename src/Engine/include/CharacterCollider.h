@@ -15,13 +15,13 @@ public:
 
 	void Height(float height);
 
-	btPairCachingGhostObject* Get_Ghost_Object() { return m_ghostObject; }
+	btPairCachingGhostObject& Get_Ghost_Object() { return *m_ghostObject.get(); }
 
-	btKinematicCharacterController* Get_Controller() { return m_charCon; }
+	btKinematicCharacterController& Get_Controller() { return *m_charCon.get(); }
 
 private:
 
-	btCollisionShape* m_shape{ nullptr };
+	std::unique_ptr<btCapsuleShapeZ> m_shape{ nullptr };
 
 
 	inline static const std::string LOG_LOC{ "CHARACTER_COLLIDER" };
@@ -30,8 +30,8 @@ protected:
 
 	float m_radius{ DEFAULT_CAPSUE_RADIUS };
 	float m_height{ DEFAULT_CAPSUE_HEIGHT };
-	btPairCachingGhostObject* m_ghostObject;
-	btKinematicCharacterController* m_charCon;
+	std::unique_ptr<btPairCachingGhostObject> m_ghostObject;
+	std::unique_ptr<btKinematicCharacterController> m_charCon;
 
 	void Init() override;
 	void Update(float dt) override;

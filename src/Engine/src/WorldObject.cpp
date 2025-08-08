@@ -17,8 +17,8 @@ WorldObject::WorldObject(int id, std::weak_ptr<Scene> scene)
 {
 	m_name = DEFAULT_NAME;
 	m_scene = scene;
-	m_transform = Transform(shared_from_this());
-	m_renderer = MeshRenderer(shared_from_this());
+	m_transform = std::make_shared<Transform>(shared_from_this());
+	m_renderer = std::make_shared<MeshRenderer>(shared_from_this());
 	m_object_idx = id;
 	m_enabled = true;
 }
@@ -27,8 +27,8 @@ WorldObject::WorldObject(int id, std::weak_ptr<Scene> scene, std::string name)
 {
 	m_name = name;
 	m_scene = scene;
-	m_transform = Transform(shared_from_this());
-	m_renderer = MeshRenderer(shared_from_this());
+	m_transform = std::make_shared<Transform>(shared_from_this());
+	m_renderer = std::make_shared<MeshRenderer>(shared_from_this());
 	m_object_idx = id;
 	m_enabled = true;
 }
@@ -36,6 +36,16 @@ WorldObject::WorldObject(int id, std::weak_ptr<Scene> scene, std::string name)
 WorldObject::~WorldObject()
 {
 	Destroy();
+}
+
+Transform& WorldObject::Get_Transform()
+{
+	return *m_transform.get();
+}
+
+MeshRenderer& WorldObject::Get_MeshRenderer()
+{
+	return *m_renderer.get();
 }
 
 void WorldObject::Parent(std::weak_ptr<WorldObject> value)
@@ -53,17 +63,17 @@ Scene& WorldObject::scene()
 
 void WorldObject::Translate(float x, float y, float z)
 {
-	m_transform.Translate(x, y, z);
+	m_transform->Translate(x, y, z);
 }
 
 void WorldObject::Rotate(float x, float y, float z)
 {
-	m_transform.Rotate(x, y, z);
+	m_transform->Rotate(x, y, z);
 }
 
 void WorldObject::Scale(float x, float y, float z)
 {
-	m_transform.Scale(x, y, z);
+	m_transform->Scale(x, y, z);
 }
 
 void WorldObject::DoUpdate(float dt)
@@ -74,10 +84,10 @@ void WorldObject::DoUpdate(float dt)
 		return;
 	}
 
-	m_transform.Update(dt);
-	m_renderer.Update(dt);
-	for (const auto& comp : m_components) {
-		comp->Update(dt);
+	m_transform->Update(dt);
+	m_renderer->Update(dt);
+	for (const auto& pair : m_components) {
+		pair.second->Update(dt);
 	}
 }
 
@@ -85,8 +95,8 @@ void WorldObject::Destroy()
 {
 	Enabled(false);
 
-	for (const auto& comp : m_components) {
-		comp->Destroy();
+	for (const auto& pair : m_components) {
+		pair.second->Destroy();
 	}
 	m_components.clear();
 
@@ -99,20 +109,22 @@ void WorldObject::Destroy()
 
 void WorldObject::Initialize_Component(std::shared_ptr<Component> comp)
 {
-	comp->Object(this);
-	m_components.push_back(comp);
-	comp->Component_Index(m_components.size() - 1);
+	m_next_comp_idx++;
+	comp->Object(shared_from_this());
+	m_components[m_next_comp_idx] = comp;
+	comp->Component_Index(m_next_comp_idx);
 	comp->Init();
 }
 
 void WorldObject::Remove_Component(int comp_idx)
 {
-	// TODO: This should probably be a map instead of an ever-growing list.
-	Component* comp = m_components[comp_idx];
-	delete comp;
+	if (!m_components.contains(comp_idx))
+		return;
+	m_components[comp_idx]->Destroy();
+	m_components.erase(comp_idx);
 }
 
-std::weak_ptr<WorldObject> WorldObject::Instantiate(Model* model, Material* mat, std::shared_ptr<WorldObject> parent)
+std::weak_ptr<WorldObject> WorldObject::Instantiate(std::shared_ptr<Model> model, std::shared_ptr<Material> mat, std::shared_ptr<WorldObject> parent)
 {
 	//WorldObject* obj = new WorldObject(Engine::Active_Scene_Ptr(), model->Name());
 	std::shared_ptr<WorldObject> obj = Engine::Active_Scene().Instantiate(model->Name()).lock();
@@ -123,7 +135,7 @@ std::weak_ptr<WorldObject> WorldObject::Instantiate(Model* model, Material* mat,
 
 	if (model->mesh().size() > 0) {
 		obj->Get_MeshRenderer().Set_Material(mat);
-		obj->Get_MeshRenderer().Set_Mesh(std::make_shared<Mesh>(model->mesh()[0])); // TODO: Change this.
+		obj->Get_MeshRenderer().Set_Mesh(model->mesh()[0]); // TODO: Change this.
 	}
 
 	for (int i = 0; i < model->Children().size(); i++)

@@ -2,9 +2,11 @@
 
 #include <string>
 #include <unordered_map>
+#include <memory>
 
-class SystemInterface_GLFW;
-class RenderInterface_GL3;
+#include "RmlUi_Platform_GLFW.h"
+#include "RmlUi_Renderer_GL3.h"
+
 class Graphics;
 struct GLFWwindow;
 
@@ -41,11 +43,11 @@ public:
 
 	bool Document_Exists(std::string name);
 
-	Rml::ElementDocument* Load_Document_Resource(std::string name, std::string resource_name);
+	std::shared_ptr<Rml::ElementDocument> Load_Document_Resource(std::string name, std::string resource_name);
 
-	Rml::ElementDocument* Load_Document_File(std::string name, std::string file_path);
+	std::shared_ptr<Rml::ElementDocument> Load_Document_File(std::string name, std::string file_path);
 
-	Rml::ElementDocument* Get_Document(std::string name);
+	std::shared_ptr<Rml::ElementDocument> Get_Document(std::string name);
 
 	void Accept_Input(bool val) { m_accept_input = true; }
 
@@ -57,8 +59,8 @@ public:
 
 private:
 
-	SystemInterface_GLFW* m_system_interface{nullptr};
-	RenderInterface_GL3* m_render_interface{nullptr};
+	std::unique_ptr<SystemInterface_GLFW> m_system_interface;
+	std::unique_ptr<RenderInterface_GL3> m_render_interface;
 
 	bool m_context_dimensions_dirty{true};
 	Rml::Context* m_context{nullptr};
@@ -70,7 +72,7 @@ private:
 
 	std::string m_ui_data_root;
 
-	std::unordered_map<std::string, Rml::ElementDocument*> m_documents;
+	std::unordered_map<std::string, std::shared_ptr<Rml::ElementDocument>> m_documents;
 
 	UI_Engine() = default;
 

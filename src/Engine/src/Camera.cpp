@@ -178,14 +178,20 @@ void Camera::ScreenPointToRay(glm::vec2 screen_pos, glm::vec3& start, glm::vec3&
 	}
 }
 
-Texture* Camera::FrameTexture()
+Texture& Camera::FrameTexture()
 {
-	return m_framebuffer->Active_Texture();
+	return *m_cam_framebuffer->Active_Texture();
 }
 
 Camera& Camera::Get_Active()
 {
+	assert(Has_Active_Camera());
 	return *m_active_camera.lock();
+}
+
+bool Camera::Has_Active_Camera()
+{
+	return !m_active_camera.expired();
 }
 
 void Camera::Activate(bool active)
@@ -201,7 +207,7 @@ void Camera::Activate(bool active)
 		}
 		m_active_camera = std::dynamic_pointer_cast<Camera>(shared_from_this());
 		m_active_camera.lock()->Resize_Refresh();
-		Graphics::Instance().Set_Screen_FrameTexture(m_framebuffer->Active_Texture());
+		Graphics::Instance().Set_Screen_FrameTexture(m_cam_framebuffer->Active_Texture());
 		Logger::LogDebug(LOG_POS("Activate"), "Set new active camera.");
 	}
 	else if (!active && m_isActive) {
@@ -219,8 +225,8 @@ void Camera::Resize_Refresh()
 
 void Camera::create_framebuffer()
 {
-	m_framebuffer = std::shared_ptr<Framebuffer>();
-	if (!m_framebuffer->Complete())
+	m_cam_framebuffer = std::make_shared<Framebuffer>();
+	if (!m_cam_framebuffer->Complete())
 	{
 		Logger::LogError(LOG_POS("create_framebuffer"), "Failed to create framebuffer.");
 	}
@@ -228,11 +234,9 @@ void Camera::create_framebuffer()
 
 void Camera::destroy_framebuffer()
 {
-	if (m_framebuffer != nullptr)
+	if (m_cam_framebuffer.get() != nullptr)
 	{
-		m_framebuffer->Dispose();
-		delete m_framebuffer;
-		m_framebuffer = nullptr;
+		m_cam_framebuffer->Dispose();
 	}
 }
 
@@ -242,11 +246,6 @@ void Camera::destroy_skybox()
 		return;
 
 	m_cubemap->Dispose();
-	delete m_cubemap;
-	m_cubemap = nullptr;
-
-
-
 	m_has_skybox = false;
 }
 
@@ -265,7 +264,11 @@ void Camera::update_projection_matrix()
 
 void Camera::render_skybox(float dt)
 {
-	if (m_cubemap == nullptr) {
+	if (!m_has_skybox || 
+		m_cubemap == nullptr || 
+		m_cubemap_mesh == nullptr || 
+		m_cubemap_shader == nullptr ||
+		!m_cubemap_shader->Initialized()) {
 		return;
 	}
 
@@ -287,34 +290,35 @@ void Camera::render_skybox(float dt)
 	glDepthFunc(GL_LESS);
 }
 
-std::vector<Renderer*> alpha_renderers;
-std::vector<glm::vec4> alpha_object_idx;
-
 void Camera::render_opaque(float dt)
 {
-	//alpha_renderers.clear();
-	//alpha_renderers.reserve(Object()->scene()->Objects().size());
+	m_alpha_renderers.clear();
+	m_alpha_renderers.reserve(Object().scene().Objects().size());
 
-	alpha_object_idx.clear();
-	alpha_object_idx.reserve(Object().scene().Objects().size());
+	m_alpha_object_idx.clear();
+	m_alpha_object_idx.reserve(Object().scene().Objects().size());
 	
+	glm::vec3 cam_pos = Object().Get_Transform().Position();
+
 	int i = 0;
 	std::vector<unsigned int> shader_ids = Shader::Get_Shader_ID_List();
 	for (const auto& ID : shader_ids) {
-		Shader* shader = Shader::Get_Shader(ID);
-		std::vector<Renderer*> renderers = Shader::Get_Shader_Renderer_List(ID);
+		Shader& shader = *Shader::Get_Shader(ID);
+		std::vector<std::weak_ptr<Renderer>> renderers = Shader::Get_Shader_Renderer_List(ID);
 		if (renderers.size() <= 0)
 			continue;
-		shader->use(true);
+		shader.use(true);
 		for (const auto& rend : renderers) {
-			if (rend->Transparent()) {
-				alpha_renderers.push_back(rend);
-				float dist = glm::distance(Object().Get_Transform().Position(), rend->worldObject()->Get_Transform()->Position());
+			assert(!rend.expired());
+			Renderer& renderer = *rend.lock();
+			if (renderer.Transparent()) {
+				m_alpha_renderers.push_back(rend);
+				float dist = glm::distance(cam_pos, renderer.worldObject().lock()->Get_Transform().Position());
 				glm::vec4 a_map = glm::vec4((float)i++, dist, 0.0f, 0.0f);
-				alpha_object_idx.push_back(a_map);
+				m_alpha_object_idx.push_back(a_map);
 				continue;
 			}
-			rend->Draw(dt);
+			renderer.Draw(dt);
 		}
 
 	}
@@ -322,16 +326,17 @@ void Camera::render_opaque(float dt)
 
 void Camera::render_transparent(float dt)
 {
-	for (const auto& elem : alpha_object_idx) {
+	for (const auto& elem : m_alpha_object_idx) {
 		int i = lround(elem.x);
-		Renderer* rend = alpha_renderers[i];
-		rend->Draw(dt);
+		assert(!m_alpha_renderers[i].expired());
+		Renderer& rend = *m_alpha_renderers[i].lock();
+		rend.Draw(dt);
 	}
 }
 
 void Camera::render(float dt)
 {
-	m_framebuffer->Use(true);
+	m_cam_framebuffer->Use(true);
 
 	glClearColor(m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -341,7 +346,7 @@ void Camera::render(float dt)
 	//render_transparent(dt);
 	render_skybox(dt);
 
-	m_framebuffer->Use(false);
+	m_cam_framebuffer->Use(false);
 }
 
 void Camera::StaticDestroy()
@@ -350,12 +355,13 @@ void Camera::StaticDestroy()
 	if (m_cubemap_mesh != nullptr)
 	{
 		m_cubemap_mesh->Dispose();
-		delete m_cubemap_mesh;
-		m_cubemap_mesh = nullptr;
+		m_cubemap_mesh.reset();
 	}
 
 	if (m_cubemap_shader != nullptr)
 	{
+		m_cubemap_shader->Dispose();
+		m_cubemap_shader.reset();
 		//Shader::Remove(m_cubemap_shader);
 	}
 

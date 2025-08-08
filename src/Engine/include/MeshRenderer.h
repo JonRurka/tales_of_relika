@@ -20,6 +20,7 @@ class MeshRenderer : public Renderer
 	friend class WorldObject;
 public:
 
+	MeshRenderer(std::weak_ptr<WorldObject> obj);
 	~MeshRenderer();
 
 	void Set_Shader(std::shared_ptr<Shader> shader);
@@ -39,7 +40,6 @@ public:
 	void Draw(float dt) override;
 
 private:
-	MeshRenderer(std::weak_ptr<WorldObject> obj);
 
 	void Update(float dt);
 

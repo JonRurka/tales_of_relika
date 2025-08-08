@@ -6,6 +6,7 @@
 #include "dynamic_compute.h"
 
 #include <vector>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -15,6 +16,7 @@ class WorldObject;
 class Transform;
 class Framebuffer;
 class Texture;
+class Renderer;
 class Cubemap;
 class Mesh;
 class Shader;
@@ -54,12 +56,14 @@ public:
 
 	void ScreenPointToRay(glm::vec2 pos, glm::vec3& out_start, glm::vec3& out_dir);
 
-	Texture* FrameTexture();
+	Texture& FrameTexture();
 
 	glm::mat4 Projection_Matrix() { return m_projection; }
 	glm::mat4 View_Matrix() { return m_view; }
 
 	static Camera& Get_Active();
+
+	static bool Has_Active_Camera();
 	
 	void Activate(bool active);
 
@@ -84,7 +88,10 @@ private:
 	static std::shared_ptr<Shader> m_cubemap_shader;
 	bool m_has_skybox{ false };
 
-	std::shared_ptr<Framebuffer> m_framebuffer{nullptr};
+	std::shared_ptr<Framebuffer> m_cam_framebuffer{nullptr};
+
+	std::vector<std::weak_ptr<Renderer>> m_alpha_renderers;
+	std::vector<glm::vec4> m_alpha_object_idx;
 
 	GPUSort* m_sort{ nullptr };
 

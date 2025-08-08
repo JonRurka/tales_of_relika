@@ -39,6 +39,7 @@ Component* Component::Load_Component(WorldObject* obj, json data)
 
 
     return res;*/
+    return nullptr;
 }
 
 void Component::Destroy()

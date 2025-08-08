@@ -9,26 +9,22 @@ void CapsuleCollider::Init()
 {
 	base_Init();
 
-	m_shape = new btCapsuleShape(m_radius, m_height);
+	m_shape = std::make_unique<btCapsuleShape>(m_radius, m_height);
 }
 
 void CapsuleCollider::Radius(float radius)
 {
-	if (m_shape != nullptr) {
-		delete m_shape;
-	}
+	m_shape.reset();
 	m_radius = radius;
-	m_shape = new btCapsuleShape(m_radius, m_height);
+	m_shape = std::make_unique<btCapsuleShape>(m_radius, m_height);
 	OnRefresh();
 }
 
 void CapsuleCollider::Height(float height)
 {
-	if (m_shape != nullptr) {
-		delete m_shape;
-	}
+	m_shape.reset();
 	m_height = height;
-	m_shape = new btCapsuleShape(m_radius, m_height);
+	m_shape = std::make_unique<btCapsuleShape>(m_radius, m_height);
 	OnRefresh();
 }
 
@@ -51,8 +47,8 @@ void CapsuleCollider::OnRefresh()
 	if (!Active())
 		return;
 
-	if (RigidBody() != nullptr) {
-		remove_rigidbody(RigidBody());
+	if (Has_Rigidbody()) {
+		remove_rigidbody();
 	}
 
 	if (Is_Dynamic()) {
@@ -64,6 +60,6 @@ void CapsuleCollider::OnRefresh()
 
 	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(create_bt_transform());
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), myMotionState, m_shape, m_localInertia);
-	set_rigidbody(new btRigidBody(rbInfo));
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), myMotionState, m_shape.get(), m_localInertia);
+	set_rigidbody(std::make_shared<btRigidBody>(rbInfo));
 }

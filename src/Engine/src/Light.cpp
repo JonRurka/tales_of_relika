@@ -34,7 +34,7 @@ Light::Light_Data Light::m_light_data[MAX_LIGHTS];
 int Light::m_num_lights{0};
 int Light::curr_index{0};
 std::vector<Shader*> Light::m_light_shaders;
-std::unordered_map<int, Light*> Light::m_linked_lights;
+std::unordered_map<int, std::weak_ptr<Light>> Light::m_linked_lights;
 //std::vector<Light*> Light::m_lights;
 
 
@@ -54,7 +54,7 @@ void Light::Init()
 	}
 
 
-	m_data = Allocate_Light(this, m_id);
+	m_data = Allocate_Light(std::dynamic_pointer_cast<Light>(shared_from_this()), m_id);
 	//printf("Added light: %i\n", m_id);
 
 	
@@ -143,7 +143,7 @@ void Light::Add_Shader(Shader* value)
 	//printf("Shader added to lights\n");
 }
 
-Light::Light_Data* Light::Allocate_Light(Light* light, int& id)
+Light::Light_Data* Light::Allocate_Light(std::weak_ptr<Light> light, int& id)
 {
 	if (m_num_lights == MAX_LIGHTS) {
 		Logger::LogError(LOG_POS("Allocate_Light"), "Max Lights reached!");
@@ -174,7 +174,7 @@ void Light::Deallocate_Light(int id)
 	{
 		m_light_data[id] = m_light_data[m_num_lights - 1];
 		m_linked_lights[id] = m_linked_lights[m_num_lights - 1];
-		m_linked_lights[id]->m_id = id;
+		m_linked_lights[id].lock()->m_id = id;
 
 		m_linked_lights.erase(m_num_lights - 1);
 		memset(&m_light_data[m_num_lights - 1], 0, sizeof(Light_Data));

@@ -13,7 +13,7 @@
 #include <assimp/postprocess.h>
 
 
-std::unordered_map<size_t, Texture*> Model::m_imported_textures;
+std::unordered_map<size_t, std::shared_ptr<Texture>> Model::m_imported_textures;
 
 namespace {
     std::string tab_str(int num) {
@@ -25,9 +25,7 @@ namespace {
     }
 }
 
-
-
-Model* Model::Load(std::string file)
+std::shared_ptr<Model> Model::Load(std::string file)
 {
     printf("Open model file: %s\n", file.c_str());
     Assimp::Importer import;
@@ -37,7 +35,7 @@ Model* Model::Load(std::string file)
     {
         //std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
         Logger::LogError(LOG_POS("Load"), "%s", import.GetErrorString());
-        return new Model();
+        return nullptr;
     }
 
     std::string directory = file.substr(0, file.find_last_of('/'));
@@ -45,7 +43,7 @@ Model* Model::Load(std::string file)
     return Get_Model(directory, scene->mRootNode, scene);
 }
 
-Model* Model::Load(std::string resource_name, std::vector<char> file_data)
+std::shared_ptr<Model> Model::Load(std::string resource_name, std::vector<char> file_data)
 {
     Assimp::Importer import;
     const aiScene* scene = import.ReadFileFromMemory(file_data.data(), file_data.size(), aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -54,7 +52,7 @@ Model* Model::Load(std::string resource_name, std::vector<char> file_data)
     {
         //std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
         Logger::LogError(LOG_POS("Load"), "%s", import.GetErrorString());
-        return new Model();
+        return std::shared_ptr<Model>();
     }
 
     std::string directory = "";
@@ -80,9 +78,9 @@ std::string Model::To_String(int tabs)
     return str;
 }
 
-Model* Model::Get_Model(std::string directory, aiNode* node, const aiScene* scene)
+std::shared_ptr<Model> Model::Get_Model(std::string directory, aiNode* node, const aiScene* scene)
 {
-    Model* model = new Model();
+    std::shared_ptr<Model> model = std::make_shared<Model>();
 
     std::string name = std::string(node->mName.C_Str());
 
@@ -91,7 +89,7 @@ Model* Model::Get_Model(std::string directory, aiNode* node, const aiScene* scen
     for (int i = 0; i < node->mNumMeshes; i++)
     {
         aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
-        Mesh* g_mesh = Process_Mesh(ai_mesh, scene);
+        std::shared_ptr<Mesh> g_mesh = Process_Mesh(ai_mesh, scene);
         g_mesh->Name(name);
         model->m_mesh.push_back(g_mesh);
         model->Process_Textures(directory, ai_mesh, scene);
@@ -106,7 +104,7 @@ Model* Model::Get_Model(std::string directory, aiNode* node, const aiScene* scen
     return model;
 }
 
-Mesh* Model::Process_Mesh(aiMesh* mesh, const aiScene* scene)
+std::shared_ptr<Mesh> Model::Process_Mesh(aiMesh* mesh, const aiScene* scene)
 {
     std::vector<glm::vec4> vertices;
     std::vector<glm::vec4> normals;
@@ -149,7 +147,7 @@ Mesh* Model::Process_Mesh(aiMesh* mesh, const aiScene* scene)
     }
 
 
-    Mesh* res = new Mesh();
+    std::shared_ptr<Mesh> res = std::make_shared<Mesh>();
     res->Vertices(vertices);
     res->Normals(normals);
     res->TexCoords(texCoords);
@@ -160,17 +158,17 @@ Mesh* Model::Process_Mesh(aiMesh* mesh, const aiScene* scene)
     return res;
 }
 
-std::vector<Texture*> Model::Process_Textures(std::string dir, aiMesh* mesh, const aiScene* scene)
+std::vector<std::shared_ptr<Texture>> Model::Process_Textures(std::string dir, aiMesh* mesh, const aiScene* scene)
 {
     if (dir == "")
-        return std::vector<Texture*>();
+        return std::vector<std::shared_ptr<Texture>>();
 
     if (mesh->mMaterialIndex >= 0)
     {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-        std::vector<Texture*> diffuse_texas = loadMaterialTextures(dir, material, aiTextureType_DIFFUSE);
-        std::vector<Texture*> spec_texas = loadMaterialTextures(dir, material, aiTextureType_SPECULAR);
-        std::vector<Texture*> norm_texas = loadMaterialTextures(dir, material, aiTextureType_NORMALS);
+        std::vector<std::shared_ptr<Texture>> diffuse_texas = loadMaterialTextures(dir, material, aiTextureType_DIFFUSE);
+        std::vector<std::shared_ptr<Texture>> spec_texas = loadMaterialTextures(dir, material, aiTextureType_SPECULAR);
+        std::vector<std::shared_ptr<Texture>> norm_texas = loadMaterialTextures(dir, material, aiTextureType_NORMALS);
 
         m_textures.insert(m_textures.end(), diffuse_texas.begin(), diffuse_texas.end());
         m_textures.insert(m_textures.end(), spec_texas.begin(), spec_texas.end());
@@ -180,14 +178,14 @@ std::vector<Texture*> Model::Process_Textures(std::string dir, aiMesh* mesh, con
     return m_textures;
 }
 
-std::vector<Texture*> Model::loadMaterialTextures(std::string dir, aiMaterial* mat, int type)
+std::vector<std::shared_ptr<Texture>> Model::loadMaterialTextures(std::string dir, aiMaterial* mat, int type)
 {
-    std::vector<Texture*> res;
+    std::vector<std::shared_ptr<Texture>> res;
     for (unsigned int i = 0; i < mat->GetTextureCount((aiTextureType)type); i++)
     {
         aiString str;
         mat->GetTexture((aiTextureType)type, i, &str);
-        Texture* tex = Import_Texture(dir, std::string(str.C_Str()));
+        std::shared_ptr<Texture> tex = Import_Texture(dir, std::string(str.C_Str()));
         if ((aiTextureType)type == aiTextureType_DIFFUSE) {
 
         }
@@ -212,7 +210,7 @@ std::vector<Texture*> Model::loadMaterialTextures(std::string dir, aiMaterial* m
     return res;
 }
 
-Texture* Model::Import_Texture(std::string directory, std::string name)
+std::shared_ptr<Texture> Model::Import_Texture(std::string directory, std::string name)
 {
     std::string full_path = directory + name;
     size_t tex_hash = hash_texture_name(full_path);
@@ -222,7 +220,7 @@ Texture* Model::Import_Texture(std::string directory, std::string name)
         return m_imported_textures[tex_hash];
     }
 
-    Texture* tex = new Texture(full_path);
+    std::shared_ptr<Texture> tex = std::make_shared<Texture>(full_path);
     m_imported_textures[tex_hash] = tex;
     return tex;
 }

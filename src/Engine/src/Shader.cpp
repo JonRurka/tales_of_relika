@@ -17,8 +17,8 @@
 
 
 std::unordered_map<unsigned int, std::vector<std::weak_ptr<Renderer>>> Shader::m_renderers;
-std::unordered_map<unsigned int, std::shared_ptr<Shader>> Shader::m_shaders;
-std::unordered_map<std::string, std::shared_ptr<Shader>> Shader::m_shaders_map;
+std::unordered_map<unsigned int, std::weak_ptr<Shader>> Shader::m_shaders;
+std::unordered_map<std::string, std::weak_ptr<Shader>> Shader::m_shaders_map;
 
 Shader::Shader(std::string name, const std::string vertexPath, const std::string fragmentPath)
 {
@@ -293,9 +293,9 @@ void Shader::use(bool update_camera)
     glUseProgram(m_ID);
     if (update_camera)
     {
-        if (Camera::Get_Active() != nullptr) {
-            setMat4x4("projection_mat", Camera::Get_Active()->Projection_Matrix());
-            setMat4x4("view_mat", Camera::Get_Active()->View_Matrix());
+        if (Camera::Has_Active_Camera()) {
+            setMat4x4("projection_mat", Camera::Get_Active().Projection_Matrix());
+            setMat4x4("view_mat", Camera::Get_Active().View_Matrix());
         }
     }
 }
@@ -452,7 +452,8 @@ void Shader::Bind_Textures()
     if (!m_initialized)
         return;
     for (int i = 0; i < m_textures.size(); i++) {
-        m_textures[i].texture->Bind(GL_TEXTURE0 + i);
+        assert(!m_textures[i].texture.expired());
+        m_textures[i].texture.lock()->Bind(GL_TEXTURE0 + i);
     }
 }
 
@@ -532,19 +533,18 @@ std::shared_ptr<Shader> Shader::Create(std::string name, const std::string verte
     return shader;
 }
 
-void Shader::Remove(std::shared_ptr<Shader> shader)
-{
-    shader->Dispose();
-}
-
 std::shared_ptr<Shader> Shader::Get_Shader(unsigned int id)
 {
-    return m_shaders[id];
+    assert(m_shaders.contains(id));
+    assert(!m_shaders[id].expired());
+    return m_shaders[id].lock();
 }
 
 std::shared_ptr<Shader> Shader::Get_Shader(std::string name)
 {
-    return m_shaders_map[name];
+    assert(m_shaders_map.contains(name));
+    assert(!m_shaders_map[name].expired());
+    return m_shaders_map[name].lock();
 }
 
 std::vector<unsigned int> Shader::Get_Shader_ID_List()

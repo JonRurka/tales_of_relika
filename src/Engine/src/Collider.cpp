@@ -16,14 +16,14 @@ void Collider::base_Update(float dt)
 	}
 
 	if (Is_Dynamic()) {
-		Transform* obj_trans = Object()->Get_Transform();
+		Transform& obj_trans = Object().Get_Transform();
 		btTransform bt_trans = get_bt_rigid_transform();
 
 		btVector3 pos = bt_trans.getOrigin();
 		btQuaternion rot = bt_trans.getRotation();
 
-		obj_trans->Position(glm::vec3(pos.x(), pos.y(), pos.z()));
-		obj_trans->Rotation(glm::quat(rot.x(), rot.y(), rot.z(), rot.w()));
+		obj_trans.Position(glm::vec3(pos.x(), pos.y(), pos.z()));
+		obj_trans.Rotation(glm::quat(rot.x(), rot.y(), rot.z(), rot.w()));
 
 		//Logger::LogDebug(LOG_POS("base_Update"), "'%s' (%f): Updated Position: (%f, %f, %f)", 
 		//	Object()->Name().c_str(), m_mass, pos.x(), pos.y(), pos.z());
@@ -32,9 +32,9 @@ void Collider::base_Update(float dt)
 
 btTransform Collider::create_bt_transform()
 {
-	Transform* trans = Object()->Get_Transform();
-	glm::vec3 pos = trans->Position();
-	glm::quat rot = trans->Rotation();
+	Transform& trans = Object().Get_Transform();
+	glm::vec3 pos = trans.Position();
+	glm::quat rot = trans.Rotation();
 
 	btTransform startTransform;
 	startTransform.setIdentity();
@@ -65,26 +65,25 @@ btTransform Collider::get_bt_rigid_transform()
 	return bt_trans;
 }
 
-void Collider::set_rigidbody(btRigidBody* body)
+void Collider::set_rigidbody(std::shared_ptr<btRigidBody> body)
 {
 	if (m_active) {
 		m_rigidbody = body;
-		Physics::Add_Rigidbody(m_rigidbody);
+		Physics::Add_Rigidbody(m_rigidbody.get());
 		m_rigidbody->setUserPointer(this);
 		//Logger::LogDebug(LOG_POS("set_rigidbody"), "Added regidbody.");
 	}
 }
 
-void Collider::remove_rigidbody(btRigidBody* body)
+void Collider::remove_rigidbody()
 {
-	if (m_active && m_rigidbody != nullptr) {
-		Physics::Remove_Rigidbody(body);
-		m_rigidbody = nullptr;
+	if (m_active && m_rigidbody.get() != nullptr) {
+		Physics::Remove_Rigidbody(m_rigidbody.get());
+		m_rigidbody.reset();
 	}
 }
 
 void Collider::Destroy_Collider()
 {
-
-	
+	remove_rigidbody();
 }

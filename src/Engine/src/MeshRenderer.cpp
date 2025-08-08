@@ -45,15 +45,17 @@ void MeshRenderer::OnDestroy()
 void MeshRenderer::update_model_matrix()
 {
 	assert(!m_object.expired());
+	
+	WorldObject& wobj = *m_object.lock();
 
 	if (m_bound_material) {
-		m_bound_material->Get_Shader().setMat4x4("model_mat", m_object.lock()->Get_Transform().Get_Model_Matrix4());
-		m_bound_material->Get_Shader().setMat3x3("normal_mat", m_object.lock()->Get_Transform().Get_Normal_Matrix3());
+		m_bound_material->Get_Shader().setMat4x4("model_mat", wobj.Get_Transform().Get_Model_Matrix4());
+		m_bound_material->Get_Shader().setMat3x3("normal_mat", wobj.Get_Transform().Get_Normal_Matrix3());
 	}
 	else if (m_shader) {
 		//Use();
-		m_shader->setMat4x4("model_mat", m_object.lock()->Get_Transform().Get_Model_Matrix4());
-		m_shader->setMat3x3("normal_mat", m_object.lock()->Get_Transform().Get_Normal_Matrix3());
+		m_shader->setMat4x4("model_mat", wobj.Get_Transform().Get_Model_Matrix4());
+		m_shader->setMat3x3("normal_mat", wobj.Get_Transform().Get_Normal_Matrix3());
 		//m_shader->setMat4x4("projection", Camera::Get_Active()->Projection_Matrix());
 		//m_shader->setMat4x4("view", Camera::Get_Active()->View_Matrix());
 	}

@@ -7,10 +7,12 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unordered_map>
+#include <memory>
 
 class Framebuffer;
 
-class Texture
+class Texture : public std::enable_shared_from_this<Texture>
 {
 	friend class Framebuffer;
 public:
@@ -37,13 +39,21 @@ public:
 
 	Texture(const std::string resource_name, const std::vector<char> data, bool flip = true);
 
-	Texture(const std::vector<Texture*> textures);
+	Texture(const std::vector<std::shared_ptr<Texture>> textures);
 
-	Texture(const int width, const int height, bool auto_resize = false);
+	Texture(const int width, const int height);
+
+	~Texture()
+	{
+		Dispose();
+	}
+
+	void Enable_Window_Resize();
 
 	GLuint Tex() { return m_texture; }
+	uint64_t Tex_ID() { return m_id; }
 
-	unsigned char* Data() { return m_raw_data; }
+	std::vector<unsigned char>& Data() { return m_raw_data; }
 	size_t Data_Size() { return m_data_size; }
 
 	void type(Type value) { m_type = value; }
@@ -72,7 +82,7 @@ public:
 
 	void Dispose();
 
-	static Texture* Create_Texture2D_Array(std::vector<std::string> resource_names, bool flip = true);
+	static std::shared_ptr<Texture> Create_Texture2D_Array(std::vector<std::string> resource_names, bool flip = true);
 
 private:
 	GLuint m_texture{ 0 };
@@ -84,11 +94,16 @@ private:
 	int m_width{ 0 };
 	int m_height{ 0 };
 	bool m_initialized{ false };
-	bool m_resizable{ false };
-	unsigned char* m_raw_data{nullptr};
+	bool m_frame_resizable{ false };
+	std::vector<unsigned char> m_raw_data;
 	size_t m_data_size{ 0 };
+	uint64_t m_id{ 0 };
 
-	std::vector<std::weak_ptr<Framebuffer>> m_linked_framebuffers;
+	static uint64_t m_next_id;
+
+	std::unordered_map<int, std::weak_ptr<Framebuffer>> m_linked_framebuffers;
+
+	std::vector<std::shared_ptr<Texture>> m_tex_array;
 
 	inline static const std::string LOG_LOC{ "TEXTURE" };
 };

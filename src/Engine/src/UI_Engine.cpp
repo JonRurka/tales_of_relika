@@ -29,8 +29,8 @@ bool UI_Engine::Init()
 		return false;
 	}
 
-	m_system_interface = new SystemInterface_GLFW();
-	m_render_interface = new RenderInterface_GL3();
+	m_system_interface = std::make_unique<SystemInterface_GLFW>();
+	m_render_interface = std::make_unique<RenderInterface_GL3>();
 
 	GLFWwindow* window = Graphics::Instance().Get_GLFW_Window();
 
@@ -68,8 +68,8 @@ bool UI_Engine::Init()
 	glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 
 	// Install the custom interfaces constructed by the backend before initializing RmlUi.
-	Rml::SetSystemInterface(m_system_interface);
-	Rml::SetRenderInterface(m_render_interface);
+	Rml::SetSystemInterface(m_system_interface.get());
+	Rml::SetRenderInterface(m_render_interface.get());
 
 	// The shell overrides the default file interface so that absolute paths in RML/RCSS-documents are relative to the 'Samples' directory.
 	//file_interface = Rml::MakeUnique<ShellFileInterface>(root);
@@ -116,10 +116,8 @@ bool UI_Engine::Init()
 
 void UI_Engine::Load_Font(std::string resource_name)
 {
-	if (!m_context)
-		return;
-	if (!m_initialized)
-		return;
+	assert(m_context);
+	assert(m_initialized);
 
 	if (!Resources::Has_Data_File(resource_name)) {
 		Logger::LogError(LOG_POS("Load_Font"), "Font asset '%s' not found!", resource_name.c_str());
@@ -160,39 +158,30 @@ void UI_Engine::Load_Font(std::string resource_name)
 
 bool UI_Engine::Document_Exists(std::string name)
 {
-	if (!m_context)
-		return false;
-	if (!m_initialized)
-		return false;
+	assert(m_context);
+	assert(m_initialized);
 	return m_documents.contains(name);
 }
 
-Rml::ElementDocument* UI_Engine::Load_Document_Resource(std::string name, std::string resource_name)
+std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_Resource(std::string name, std::string resource_name)
 {
-	if (!m_context)
-		return nullptr;
-	if (!m_initialized)
-		return nullptr;
+	assert(m_context);
+	assert(m_initialized);
+
 	if (m_documents.contains(name))
 		return m_documents[name];
 
-	if (!Resources::Has_Data_File(resource_name)) {
-		Logger::LogError(LOG_POS("Load_Document_Resource"), "Document asset '%s' not found!", resource_name.c_str());
-		return nullptr;
-	}
+	assert(Resources::Has_Data_File(resource_name));
 
 	Resources::Asset asset = Resources::Get_Data_Asset(resource_name);
 	std::string rel_path = asset.relative_path;
 
 	Rml::ElementDocument* document = m_context->LoadDocument(rel_path);
-	if (!document) {
-		Logger::LogError(LOG_POS("Load_Document_File"), "Failed to load document file: %s", name.c_str());
-		return nullptr;
-	}
+	assert(document);
 
-	m_documents[name] = document;
+	m_documents[name] = std::shared_ptr<Rml::ElementDocument>(document);
 	Logger::LogInfo(LOG_POS("Load_Document_File"), "Document file %s loaded.", name.c_str());
-	return document;
+	return m_documents[name];
 	
 
 	/*
@@ -212,26 +201,21 @@ Rml::ElementDocument* UI_Engine::Load_Document_Resource(std::string name, std::s
 	return document;*/
 }
 
-Rml::ElementDocument* UI_Engine::Load_Document_File(std::string name, std::string file_path)
+std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_File(std::string name, std::string file_path)
 {
-	if (!m_context)
-		return nullptr;
-	if (!m_initialized)
-		return nullptr;
+	assert(m_context);
+	assert(m_initialized);
 	if (m_documents.contains(name))
 		return m_documents[name];
 	Rml::ElementDocument* document = m_context->LoadDocument(file_path);
-	if (!document) {
-		Logger::LogError(LOG_POS("Load_Document_File"), "Failed to load document file: %s", name.c_str());
-		return nullptr;
-	}
+	assert(document);
 
-	m_documents[name] = document;
+	m_documents[name] = std::shared_ptr<Rml::ElementDocument>(document);
 	Logger::LogInfo(LOG_POS("Load_Document_File"), "Document file %s loaded", name.c_str());
-	return document;
+	return m_documents[name];
 }
 
-Rml::ElementDocument* UI_Engine::Get_Document(std::string name)
+std::shared_ptr<Rml::ElementDocument> UI_Engine::Get_Document(std::string name)
 {
 	if (!Document_Exists(name)) {
 		return nullptr;
@@ -241,17 +225,12 @@ Rml::ElementDocument* UI_Engine::Get_Document(std::string name)
 
 void UI_Engine::Display(std::string doc_name)
 {
-	if (!m_context)
-		return;
-	if (!m_initialized)
-		return;
+	assert(m_context);
+	assert(m_initialized);
 	if (!Document_Exists(doc_name)) {
 		Logger::LogWarning(LOG_POS("Display"), "Unable to display document '%s'.", doc_name.c_str());
 		return;
 	}
-
-	if (auto el = m_documents[doc_name]->GetElementById("title"))
-		el->SetInnerRML("Bitmap font");
 
 	m_documents[doc_name]->Show();
 	Logger::LogDebug(LOG_POS("Display"), "Display document: %s", doc_name.c_str());
@@ -259,11 +238,8 @@ void UI_Engine::Display(std::string doc_name)
 
 void UI_Engine::Update()
 {
-	if (!m_initialized) {
-		return;
-	}
-	if (!m_context)
-		return;
+	assert(m_context);
+	assert(m_initialized);
 
 	// The initial window size may have been affected by system DPI settings, apply the actual pixel size and dp-ratio to the context.
 	if (m_context_dimensions_dirty)
@@ -297,16 +273,14 @@ void UI_Engine::Update()
 void UI_Engine::Shutdown()
 {
 	RmlGL3::Shutdown();
-	delete m_system_interface;
-	delete m_render_interface;
+	m_system_interface.reset();
+	m_render_interface.reset();
 }
 
 bool UI_Engine::KeyCallback(GLFWwindow*, int glfw_key, int, int glfw_action, int glfw_mods)
 {
-	if (!m_context)
-		return true;
-	if (!m_initialized)
-		return true;
+	assert(m_context);
+	assert(m_initialized);
 
 	if (!m_accept_input) {
 		return true;
@@ -345,37 +319,29 @@ bool UI_Engine::KeyCallback(GLFWwindow*, int glfw_key, int, int glfw_action, int
 
 void UI_Engine::CharCallback(GLFWwindow*, unsigned int codepoint)
 {
-	if (!m_context)
-		return;
-	if (!m_initialized)
-		return;
+	assert(m_context);
+	assert(m_initialized);
 	RmlGLFW::ProcessCharCallback(m_context, codepoint);
 }
 
 void UI_Engine::CursorEnterCallback(GLFWwindow*, int entered)
 {
-	if (!m_context)
-		return;
-	if (!m_initialized)
-		return;
+	assert(m_context);
+	assert(!m_initialized);
 	RmlGLFW::ProcessCursorEnterCallback(m_context, entered);
 }
 
 void UI_Engine::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
-	if (!m_context)
-		return;
-	if (!m_initialized)
-		return;
+	assert(m_context);
+	assert(m_initialized);
 	RmlGLFW::ProcessCursorPosCallback(m_context, window, xpos, ypos, m_glfw_active_modifiers);
 }
 
 bool UI_Engine::MouseButtonCallback(GLFWwindow*, int button, int action, int mods)
 {
-	if (!m_context)
-		return true;
-	if (!m_initialized)
-		return true;
+	assert(m_context);
+	assert(m_initialized);
 
 	if (!m_accept_input) {
 		return true;
@@ -388,10 +354,8 @@ bool UI_Engine::MouseButtonCallback(GLFWwindow*, int button, int action, int mod
 
 bool UI_Engine::ScrollCallback(GLFWwindow*, double, double yoffset)
 {
-	if (!m_context)
-		return true;
-	if (!m_initialized)
-		return true;
+	assert(m_context);
+	assert(m_initialized);
 
 	if (!m_accept_input) {
 		return true;
@@ -403,20 +367,16 @@ bool UI_Engine::ScrollCallback(GLFWwindow*, double, double yoffset)
 
 void UI_Engine::FramebufferSizeCallback(GLFWwindow*, int width, int height)
 {
-	if (!m_context)
-		return;
-	if (!m_initialized)
-		return;
+	assert(m_context);
+	assert(m_initialized);
 	m_render_interface->SetViewport(width, height);
 	RmlGLFW::ProcessFramebufferSizeCallback(m_context, width, height);
 }
 
 void UI_Engine::WindowContentScaleCallback(GLFWwindow*, float xscale, float)
 {
-	if (!m_context)
-		return;
-	if (!m_initialized)
-		return;
+	assert(m_context);
+	assert(m_initialized);
 	RmlGLFW::ProcessContentScaleCallback(m_context, xscale);
 }
 

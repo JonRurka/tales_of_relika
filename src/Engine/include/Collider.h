@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Physics.h"
 #include "Component.h"
 
@@ -29,14 +31,17 @@ public:
 
 	bool Is_Dynamic() { return m_mass > 0.0001f; }
 	
-	btRigidBody* RigidBody() { return m_rigidbody; }
+	btRigidBody& RigidBody() { return *m_rigidbody.get(); }
+	std::weak_ptr<btRigidBody> RigidBody_Ptr() { return m_rigidbody; }
+
+	bool Has_Rigidbody() { return m_rigidbody.get() != nullptr; }
 
 private:
 
 	btScalar m_mass{ 0.0 };
 	bool m_active{ false };
 
-	btRigidBody* m_rigidbody{ nullptr };
+	std::shared_ptr<btRigidBody> m_rigidbody{ nullptr };
 
 	inline static const std::string LOG_LOC{ "COLLIDER" };
 
@@ -50,8 +55,8 @@ protected:
 	btTransform get_bt_rigid_transform();
 
 
-	void set_rigidbody(btRigidBody* body);
-	void remove_rigidbody(btRigidBody* body);
+	void set_rigidbody(std::shared_ptr<btRigidBody> body);
+	void remove_rigidbody();
 
 	virtual void Init() = 0;
 	virtual void Update(float dt) = 0;

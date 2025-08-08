@@ -157,19 +157,19 @@ void Resources::load_texture(std::string name, bool flip)
         return;
     }
 
-    Asset* asset = &m_texture_assets[name];
-    if (asset->loaded)
+    Asset& asset = m_texture_assets[name];
+    if (asset.loaded)
     {
         return;
     }
 
     if (LOAD_MODE == LOAD_MODE_FS)
     {
-        Texture* tex = new Texture(asset->path, flip);
-        asset->handle = tex;
-        asset->data = tex->Data();
+        std::shared_ptr<Texture> tex = std::make_shared<Texture>(asset.path, flip);
+        asset.tex_handle = tex;
+        asset.data = tex->Data().data();
         if (tex->Initialized()) {
-            asset->loaded = true;
+            asset.loaded = true;
         }
         else {
             Logger::LogError(LOG_POS("Get_Texture"), "Failed to load texture: %s \n", name.c_str());
@@ -179,13 +179,13 @@ void Resources::load_texture(std::string name, bool flip)
     else if (LOAD_MODE == LOAD_MODE_BIN) 
     {
         load_pack_data(asset, PackType::Texture_Type);
-        char* data_ptr = (char*)asset->data;
-        size_t data_size = asset->data_size;
-        Texture* tex = new Texture(name, std::vector<char>(data_ptr, data_ptr + data_size), flip);
-        asset->handle = tex;
-        asset->data = tex->Data();
+        char* data_ptr = (char*)asset.data;
+        size_t data_size = asset.data_size;
+        std::shared_ptr<Texture> tex = std::make_shared<Texture>(name, std::vector<char>(data_ptr, data_ptr + data_size), flip);
+        asset.tex_handle = tex;
+        asset.data = tex->Data().data();
         if (tex->Initialized()) {
-            asset->loaded = true;
+            asset.loaded = true;
         }
         else {
             Logger::LogError(LOG_POS("Get_Texture"), "Failed to load texture: %s \n", name.c_str());
@@ -208,17 +208,17 @@ void Resources::load_model(std::string name)
         return;
     }
 
-    Asset* asset = &m_models_assets[name];
-    if (asset->loaded) {
+    Asset& asset = m_models_assets[name];
+    if (asset.loaded) {
         return;
     }
 
     if (LOAD_MODE == LOAD_MODE_FS)
     {
-        Model* model = Model::Load(asset->path);
-        asset->handle = model;
+        std::shared_ptr<Model> model = Model::Load(asset.path);
+        asset.model_handle = model;
         if (model->Initialized()) {
-            asset->loaded = true;
+            asset.loaded = true;
         }
         else {
             Logger::LogError(LOG_POS("load_model"), "Failed to load Model: %s \n", name.c_str());
@@ -227,12 +227,12 @@ void Resources::load_model(std::string name)
     else if (LOAD_MODE == LOAD_MODE_BIN)
     {
         load_pack_data(asset, PackType::Model_Type);
-        char* data_ptr = (char*)asset->data;
-        size_t data_size = asset->data_size;
-        Model* model = Model::Load(name, std::vector<char>(data_ptr, data_ptr + data_size));
-        asset->handle = model;
+        char* data_ptr = (char*)asset.data;
+        size_t data_size = asset.data_size;
+        std::shared_ptr<Model> model = Model::Load(name, std::vector<char>(data_ptr, data_ptr + data_size));
+        asset.model_handle = model;
         if (model->Initialized()) {
-            asset->loaded = true;
+            asset.loaded = true;
         }
         else {
             Logger::LogError(LOG_POS("Load_Model"), "Failed to load Model: %s \n", name.c_str());
@@ -256,8 +256,8 @@ void Resources::load_data_file(std::string name)
     }
 
     name = Utilities::toLowerCase(name);
-    Asset* asset = &m_data_assets[name];
-    if (asset->loaded) {
+    Asset& asset = m_data_assets[name];
+    if (asset.loaded) {
         return;
     }
 
@@ -280,7 +280,7 @@ void Resources::load_data_file(std::vector<std::string> names)
     }
 }
 
-void Resources::load_pack_data(Asset* asset, Resources::PackType type)
+void Resources::load_pack_data(Asset& asset, Resources::PackType type)
 {
     std::string prefix = "";
     switch (type) {
@@ -299,23 +299,23 @@ void Resources::load_pack_data(Asset* asset, Resources::PackType type)
     }
 
     std::string data_dir = Get_Data_Directory();
-    std::string file_name = prefix + pad_int(asset->pack_index, 3) + ".pack";
+    std::string file_name = prefix + pad_int(asset.pack_index, 3) + ".pack";
     std::string file_path = data_dir + file_name;
 
-    asset->data = new char[asset->data_size];
-    Utilities::Read_File_Bytes(file_path, asset->pack_offset, asset->data_size, (char*)asset->data);
+    asset.data = new char[asset.data_size];
+    Utilities::Read_File_Bytes(file_path, asset.pack_offset, asset.data_size, (char*)asset.data);
     
-    unsigned char* compressed_data = (unsigned char*)asset->data;
-    std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(compressed_data, compressed_data + asset->data_size));
+    unsigned char* compressed_data = (unsigned char*)asset.data;
+    std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(compressed_data, compressed_data + asset.data_size));
 
-    delete[] asset->data;
+    delete[] asset.data;
 
-    asset->data = new char[decompressed_data.size()];
-    memcpy(asset->data, decompressed_data.data(), decompressed_data.size());
-    asset->data_size = decompressed_data.size();
+    asset.data = new char[decompressed_data.size()];
+    memcpy(asset.data, decompressed_data.data(), decompressed_data.size());
+    asset.data_size = decompressed_data.size();
 }
 
-Texture* Resources::get_texture(std::string name)
+std::shared_ptr<Texture> Resources::get_texture(std::string name)
 {
     if (!Has_Texture(name)) {
         Logger::LogError(LOG_POS("get_texture"), "Texture not found: %s \n", name.c_str());
@@ -324,7 +324,7 @@ Texture* Resources::get_texture(std::string name)
 
     Load_Texture(name);
 
-    return static_cast<Texture*>(m_texture_assets[name].handle);
+    return m_texture_assets[name].tex_handle;
 }
 
 std::string Resources::get_shader_file(std::string name)
@@ -369,7 +369,7 @@ void Resources::modify_shader_bin(std::string name, std::vector<char> data)
     memcpy(m_shader_assets[name].data, data.data(), data.size());
 }
 
-Model* Resources::get_model(std::string name)
+std::shared_ptr<Model> Resources::get_model(std::string name)
 {
     if (!Has_Model(name)) {
         Logger::LogError(LOG_POS("get_model"), "Model not found: %s \n", name.c_str());
@@ -378,7 +378,7 @@ Model* Resources::get_model(std::string name)
 
     Load_Model(name);
 
-    return static_cast<Model*>(m_models_assets[name].handle);
+    return m_models_assets[name].model_handle;
 }
 
 std::string Resources::get_data_file_string(std::string name)
@@ -481,7 +481,7 @@ void Resources::get_assets_recursively(std::string basePath, std::vector<Asset>&
             asset.name = curr_rel_path + file_name;
             asset.path = basePath + sep() + file_name;
             asset.loaded = false;
-            asset.handle = nullptr;
+            //asset.handle = nullptr;
 
             assets.push_back(asset);
 
@@ -536,7 +536,7 @@ void Resources::get_assets_recursively(std::string basePath, std::vector<Asset>&
             asset.name = rel_path + file_name;
             asset.path = basePath + sep() + file_name;
             asset.loaded = false;
-            asset.handle = nullptr;
+            //asset.handle = nullptr;
 
             assets.push_back(asset);
             //rel_path += std::string(entry->d_name);
@@ -590,7 +590,8 @@ void Resources::get_binary_assets(std::string data_Path, std::vector<Asset>& ass
 
         asset.path = "";
         asset.loaded = false;
-        asset.handle = nullptr;
+        asset.tex_handle.reset();
+        asset.model_handle.reset();
         asset.data = nullptr;
 
         assets.push_back(asset);

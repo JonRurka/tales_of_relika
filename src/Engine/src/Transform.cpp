@@ -169,7 +169,7 @@ void Transform::Destroy()
 void Transform::set_model_mat(bool update_parent)
 {
 	assert(!m_object.expired());
-	WorldObject& obj = *m_object.lock();
+	WorldObject& obj = *m_object.lock().get();
 
 	rot_mat = glm::toMat4(m_rotation);
 	if (obj.Has_Parent()) {

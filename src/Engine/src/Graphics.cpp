@@ -138,7 +138,7 @@ void Graphics::Init()
 
 	Logger::LogDebug(LOG_POS("Initialize"), "Set system quad/line verts");
 
-	m_screen_mesh = new Mesh();
+	m_screen_mesh = std::make_shared<Mesh>();
 	m_screen_mesh->Vertices(quad_verts);
 	m_screen_mesh->TexCoords(quad_tex_coord);
 	m_screen_mesh->Activate();
@@ -154,7 +154,7 @@ void Graphics::Init()
 	Logger::LogDebug(LOG_POS("Initialize"), "Create screen shader");
 
 
-	m_line_mesh = new Mesh();
+	m_line_mesh = std::make_shared<Mesh>();
 	m_line_mesh->Vertices(line_verts);
 	m_line_mesh->Activate();
 
@@ -260,11 +260,12 @@ void Graphics::OnWindowResize(GLFWwindow* window, int width, int height)
 
 	Viewport(0, 0, m_width, m_height);
 
-	for (const auto& tex : m_resize_textures) {
-		tex->Resize(m_width, m_height);
+	for (const auto& pair : m_resize_textures) {
+		assert(!pair.second.expired());
+		pair.second.lock()->Resize(m_width, m_height);
 	}
 
-	Camera::Get_Active()->Resize_Refresh();
+	Camera::Get_Active().Resize_Refresh();
 
 	UI_Engine::Instance().FramebufferSizeCallback(window, width, height);
 
@@ -294,15 +295,20 @@ void Graphics::mouse_button_callback(GLFWwindow* window, int button, int action,
 
 // events from glfw end
 
-void Graphics::Register_Resize_Tex(Texture* tex)
+void Graphics::Register_Resize_Tex(std::shared_ptr<Texture> tex)
 {
-	m_resize_textures.push_back(tex);
+	assert(tex.get() != nullptr);
+	m_resize_textures[tex->Tex_ID()] = tex;
 }
 
-void Graphics::Remove_Resize_Tex(Texture* tex)
+void Graphics::Remove_Resize_Tex(std::shared_ptr<Texture> tex)
 {
+	assert(tex.get() != nullptr);
 	Logger::LogDebug(LOG_POS("Remove_Resize_Tex"), "Remove resize tex");
-	Remove_If_Found(m_resize_textures, tex);
+	if (m_resize_textures.contains(tex->Tex_ID()))
+	{
+		m_resize_textures.erase(tex->Tex_ID());
+	}
 }
 
 bool Graphics::Render_ImgUI()
@@ -400,7 +406,7 @@ void Graphics::render(float dt)
 
 	if (RENDER_GAME_UI)
 	{
-		m_UI->Update();
+		UI_Engine::Instance().Update();
 	}
 
 	if (RENDER_IMGUI) {

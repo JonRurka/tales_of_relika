@@ -12,8 +12,6 @@
 void MeshCollider::Init()
 {
 	base_Init();
-
-	
 }
 
 void MeshCollider::SetMesh(Mesh* mesh)
@@ -39,7 +37,7 @@ void MeshCollider::SetMesh(Mesh* mesh)
 
 	//Logger::Log(LOG_POS("SetMesh"), "Set collision mesh with %i vertices and %i indices.", vert.size(), index.size());
 
-	std::vector<glm::vec3> vert3 = Utilities::vec4_to_vec3_arr(vert);
+	vert3 = Utilities::vec4_to_vec3_arr(vert);
 
 	if (index.size() > 0) {
 		btIndexedMesh indexedMesh;
@@ -50,13 +48,13 @@ void MeshCollider::SetMesh(Mesh* mesh)
 		indexedMesh.m_vertexBase = reinterpret_cast<unsigned char*>(vert3.data());
 		indexedMesh.m_vertexStride = sizeof(glm::vec3);
 
-		mTriangleIndexVertexArray = new btTriangleIndexVertexArray();
+		mTriangleIndexVertexArray = std::make_unique<btTriangleIndexVertexArray>();
 		mTriangleIndexVertexArray->addIndexedMesh(indexedMesh);
 
-		m_shape = new btBvhTriangleMeshShape(mTriangleIndexVertexArray, true, true);
+		m_shape = std::make_unique<btBvhTriangleMeshShape>(mTriangleIndexVertexArray.get(), true, true);
 	}
 	else {
-		m_triangle_mesh = new btTriangleMesh();
+		m_triangle_mesh = std::make_unique<btTriangleMesh>();
 		//m_triangle_mesh->addIndexedMesh(indexedMesh);
 		glm::vec3 col = glm::vec3(0.0, 0.0, 0.0);
 
@@ -79,7 +77,7 @@ void MeshCollider::SetMesh(Mesh* mesh)
 			//col.z += (float)t / (float)(vert.size() / 3);
 
 		}
-		m_shape = new btBvhTriangleMeshShape(m_triangle_mesh, true, true);
+		m_shape = std::make_unique<btBvhTriangleMeshShape>(m_triangle_mesh.get(), true, true);
 	}
 
 
@@ -106,8 +104,8 @@ void MeshCollider::OnRefresh()
 	if (!Active())
 		return;
 
-	if (RigidBody() != nullptr) {
-		remove_rigidbody(RigidBody());
+	if (Has_Rigidbody()) {
+		remove_rigidbody();
 	}
 
 	if (Is_Dynamic()) {
@@ -119,8 +117,8 @@ void MeshCollider::OnRefresh()
 
 	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(create_bt_transform());
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), myMotionState, m_shape, m_localInertia);
-	set_rigidbody(new btRigidBody(rbInfo));
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), myMotionState, m_shape.get(), m_localInertia);
+	set_rigidbody(std::make_shared<btRigidBody>(rbInfo));
 
 	//Transform* obj_trans = Object().Get_Transform();
 	//btTransform bt_trans = get_bt_rigid_transform();
@@ -131,14 +129,13 @@ void MeshCollider::OnRefresh()
 
 void MeshCollider::OnDestroy()
 {
-	if (RigidBody() != nullptr) {
-		remove_rigidbody(RigidBody());
+	if (Has_Rigidbody()) {
+		remove_rigidbody();
 	}
 
-	if (m_triangle_mesh)
-		delete m_triangle_mesh;
-	if (mTriangleIndexVertexArray)
-		delete mTriangleIndexVertexArray;
-
 	Destroy_Collider();
+
+	m_triangle_mesh.reset();
+	mTriangleIndexVertexArray.reset();
+	m_shape.reset();
 }

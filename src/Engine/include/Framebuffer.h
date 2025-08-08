@@ -35,6 +35,10 @@ private:
 	GLuint m_renderbuffer_obj{ 0 };
 	//std::shared_ptr<Texture> m_default_texture{nullptr};
 	std::shared_ptr<Texture> m_active_texture{ nullptr };
+	bool m_initialized{ false };
+	int m_id{ 0 };
+
+	static int m_next_idx;
 
 	inline static const std::string LOG_LOC{ "FRAME_BUFFER" };
 };

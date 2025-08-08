@@ -8,7 +8,7 @@ public:
 
 	Light_Material(std::string name);
 
-	Material* Copy() override { return new Light_Material(Name()); };
+	std::shared_ptr<Material> Copy() override { return std::make_shared<Light_Material>(Name()); };
 
 	void Update(float dt) override;
 

@@ -7,8 +7,11 @@
 
 #include <algorithm>
 
+int Framebuffer::m_next_idx{ 0 };
+
 Framebuffer::Framebuffer()
 {
+	m_id = ++m_next_idx;
 	Refresh();
 }
 
@@ -30,18 +33,23 @@ void Framebuffer::Refresh(bool gen_image)
 			m_active_texture = nullptr;
 		}
 
-		m_active_texture = std::make_shared<Texture>(Graphics::Width(), Graphics::Height(), true);
+		m_active_texture = std::make_shared<Texture>(Graphics::Width(), Graphics::Height());
+		m_active_texture->Enable_Window_Resize();
 		//m_active_texture = m_default_texture;
 	}
 
 	Bind_Texture(*m_active_texture);
 	Init_Depth_Stencil();
+	m_initialized = true;
 }
 
 void Framebuffer::Bind_Texture(Texture& texture)
 {
-	if (m_active_texture != nullptr) {
-		Remove_If_Found(m_active_texture->m_linked_framebuffers, shared_from_this());
+	std::weak_ptr<Framebuffer> this_ptr = shared_from_this();
+
+	if (texture.m_linked_framebuffers.contains(m_id))
+	{
+		texture.m_linked_framebuffers.erase(m_id);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_obj);
@@ -49,7 +57,8 @@ void Framebuffer::Bind_Texture(Texture& texture)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	//m_active_texture = texture;
-	texture.m_linked_framebuffers.push_back(shared_from_this());
+	texture.m_linked_framebuffers[m_id] = this_ptr;
+	
 	//Logger::LogDebug(LOG_POS("Bind_Texture"), "Bind Texture: %i", m_active_texture->m_linked_framebuffers.size());
 }
 
@@ -92,6 +101,12 @@ void Framebuffer::Use(bool active)
 
 void Framebuffer::Dispose()
 {
+	if (!m_initialized)
+		return;
+
+	if (m_active_texture->m_linked_framebuffers.contains(m_id)){
+		m_active_texture->m_linked_framebuffers.erase(m_id);
+	}
 	m_active_texture->Dispose();
 	//m_default_texture = nullptr;
 

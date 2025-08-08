@@ -11,7 +11,7 @@ public:
 
 private:
 
-	btCollisionShape* m_shape{nullptr};
+	std::unique_ptr<btCollisionShape> m_shape{nullptr};
 	
 
 	inline static const std::string LOG_LOC{ "BOX_COLLIDER" };

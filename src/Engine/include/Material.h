@@ -71,7 +71,7 @@ public:
 	void setMat4x4(const std::string& name, glm::mat4 value);
 
 	void setTexture(const std::string& name, std::string resource_name);
-	void setTexture(const std::string& name, Texture* value, bool set_source = true);
+	void setTexture(const std::string& name, std::shared_ptr<Texture> value, bool set_source = true);
 	void RegisterTexture(std::string name);
 
 	void Register_Renderer_Material(std::weak_ptr<Material> mat);
@@ -90,7 +90,7 @@ private:
 	};
 
 	struct texture_value {
-		Texture* texture{ nullptr };
+		std::weak_ptr<Texture> texture;
 		std::string name;
 		int bind_index{ 0 };
 		bool do_bind{ false };
@@ -109,8 +109,11 @@ private:
 	std::string m_name;
 	bool m_is_transparent{ false };
 
+	static uint64_t m_next_reg_id;
+	uint64_t m_registered_id{ 0 };
+
 	//std::unordered_map<Renderer*, Material*> m_registered_materials;
-	std::vector<std::weak_ptr<Material>> m_registered_materials;
+	std::unordered_map<uint64_t, std::weak_ptr<Material>> m_registered_materials;
 
 	std::unordered_map<std::string, shader_value<bool>> m_bools;
 	std::unordered_map<std::string, shader_value<int>> m_ints;

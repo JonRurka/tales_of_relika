@@ -30,8 +30,15 @@ public:
 
     struct Bound_Texture {
         std::string name;
-        Texture* texture;
+        std::weak_ptr<Texture> texture;
     };
+
+    // constructor reads and builds the shader
+    Shader(std::string name, const std::string vertexPath, const std::string fragmentPath);
+
+    Shader(std::string name, const char* vertex_source, const char* fragment_src);
+
+    Shader(std::string name, const std::vector<char> vertex_bin, const std::vector<char> fragment_bin);
 
     ~Shader()
     {
@@ -82,7 +89,6 @@ public:
 
 
     static std::shared_ptr<Shader> Create(std::string name, const std::string vertex_name, const std::string fragment_name);
-    static void Remove(std::shared_ptr<Shader> shader);
     static std::shared_ptr<Shader> Get_Shader(unsigned int id);
     static std::shared_ptr<Shader> Get_Shader(std::string name);
     static std::vector<unsigned int> Get_Shader_ID_List();
@@ -106,20 +112,13 @@ private:
 
     std::unordered_map<std::string, int> m_uniform_map;
 
-    // constructor reads and builds the shader
-    Shader(std::string name, const std::string vertexPath, const std::string fragmentPath);
-
-    Shader(std::string name, const char* vertex_source, const char* fragment_src);
-
-    Shader(std::string name, const std::vector<char> vertex_bin, const std::vector<char> fragment_bin);
-
     void load_uniforms(const std::vector<char> spirv_bin);
 
     int get_uniform_location(std::string name);
 
     static std::unordered_map<unsigned int, std::vector<std::weak_ptr<Renderer>>> m_renderers;
-    static std::unordered_map<unsigned int, std::shared_ptr<Shader>> m_shaders;
-    static std::unordered_map<std::string, std::shared_ptr<Shader>> m_shaders_map;
+    static std::unordered_map<unsigned int, std::weak_ptr<Shader>> m_shaders;
+    static std::unordered_map<std::string, std::weak_ptr<Shader>> m_shaders_map;
 
     inline static const std::string LOG_LOC{ "SHADER" };
 };

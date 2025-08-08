@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
@@ -18,6 +19,7 @@ class Transform
 	friend class WorldObject;
 public:
 
+	Transform(std::weak_ptr<WorldObject> obj);
 	~Transform();
 
 	void Translate(glm::vec3 value);
@@ -70,8 +72,6 @@ public:
 	void Set_Verbos(bool val) { m_verbos = val; }
 
 private:
-
-	Transform(std::weak_ptr<WorldObject> obj);
 
 	void Update(float dt);
 
