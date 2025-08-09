@@ -266,7 +266,7 @@ void VoxelWorld_Scene::setup_game_client()
 	game_client = game_client_obj.lock()->Add_Component<GameClient>();
 	game_client.lock()->Init(username, host, user_id, m_remote_connection);
 	game_client.lock()->SetOnConnectSuccess(OnGameConnect, this);
-	game_client.lock()->Net_Client()->AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
+	game_client.lock()->Net_Client().AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
 	game_client.lock()->Connect();
 	Logger::LogInfo(LOG_POS("setup_game_client"), "Connecting to game server...");
 }

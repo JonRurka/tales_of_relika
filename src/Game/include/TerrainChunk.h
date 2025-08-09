@@ -41,6 +41,8 @@ protected:
 
 	void Update(float dt) override;
 
+	void OnDestroy() override;
+
 private:
 
 	glm::ivec3 m_chunk_coords;
@@ -51,6 +53,7 @@ private:
 	bool m_assigned{ false };
 	bool m_has_collision{ false };
 	bool m_should_despawn{ false };
+	glm::vec4* m_col_vert_data{ nullptr };
 
 	WorldObject::Weak m_opaque_chunk_obj;
 	Mesh::Shared m_voxel_opaque_mesh;

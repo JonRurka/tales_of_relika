@@ -14,7 +14,7 @@ void MeshCollider::Init()
 	base_Init();
 }
 
-void MeshCollider::SetMesh(Mesh* mesh)
+void MeshCollider::SetMesh(Mesh::Shared mesh)
 {
 	//m_mesh = mesh;
 
@@ -127,7 +127,7 @@ void MeshCollider::OnRefresh()
 	//	obj_trans->Position().x, obj_trans->Position().y, obj_trans->Position().z);
 }
 
-void MeshCollider::OnDestroy()
+void MeshCollider::Clear()
 {
 	if (Has_Rigidbody()) {
 		remove_rigidbody();
@@ -138,4 +138,9 @@ void MeshCollider::OnDestroy()
 	m_triangle_mesh.reset();
 	mTriangleIndexVertexArray.reset();
 	m_shape.reset();
+}
+
+void MeshCollider::OnDestroy()
+{
+	Clear();
 }

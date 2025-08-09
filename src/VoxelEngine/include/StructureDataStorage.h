@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -12,6 +13,8 @@
 
 class StructureDataStorage {
 public:
+	typedef std::shared_ptr<StructureDataStorage> Shared;
+	typedef std::weak_ptr<StructureDataStorage> Weak;
 
 	StructureDataStorage(
 		int size_x, int size_Y, int size_z, int max_chunks
@@ -27,9 +30,9 @@ public:
 
 	void Set_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, uint32_t data);
 
-	uint32_t* Get_Data_ptr(glm::ivec3 chunk_coord);
+	const uint32_t* Get_Data_ptr(glm::ivec3 chunk_coord);
 
-	std::vector<uint32_t> Get_Data(glm::ivec3 chunk_coord);
+	std::vector<uint32_t>& Get_Data(glm::ivec3 chunk_coord);
 
 	uint32_t Get_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord);
 
@@ -51,7 +54,7 @@ private:
 
 	int m_total_size{ 0 };
 
-	std::unordered_map<int, uint32_t*> m_chunk_data;
+	std::unordered_map<int, std::vector<uint32_t>> m_chunk_data;
 
 	int chunk_hash(glm::ivec3 chunk_coord);
 

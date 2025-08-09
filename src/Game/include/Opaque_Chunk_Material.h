@@ -7,7 +7,7 @@ public:
 
 	Opaque_Chunk_Material();
 
-	Material* Copy() override { return new Opaque_Chunk_Material(); }
+	Material::Shared Copy() override { return std::make_shared<Opaque_Chunk_Material>(); }
 
 private:
 

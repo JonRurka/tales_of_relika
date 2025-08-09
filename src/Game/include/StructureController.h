@@ -4,11 +4,15 @@
 
 #include "shared_structures.h"
 
+#include "StructureDataStorage.h"
+#include "Opaque_Structure_Chunk_Material.h"
+#include "StructureChunk.h"
 
 #include <unordered_map>
 #include <vector>
 #include <queue>
 #include <thread>
+#include <memory>
 
 #define DEFAULT_METER_SIZE 32.0f
 #define DEFAULT_VOXELS_PER_METER 1.0f
@@ -45,6 +49,7 @@ public:
 			Voxel = voxel;
 			Type = 0;
 			Change_Type = false;
+			chunk_coord = glm::ivec3();
 		}
 
 		StructureMod(glm::ivec3 voxel, uint32_t type);
@@ -62,7 +67,7 @@ public:
 
 	bool Chunk_Exists(glm::ivec3 chunk_coord) { return chunk_exists(chunk_coord); }
 
-	Opaque_Structure_Chunk_Material* Get_Opaque_Chunk_Material() { return m_chunk_opaque_mat; }
+	Opaque_Structure_Chunk_Material::Shared Get_Opaque_Chunk_Material() { return m_chunk_opaque_mat; }
 
 	void Refresh_Chunk(glm::ivec3 chunk);
 	void Modify_Voxel_Type(glm::ivec3 voxel, uint32_t type);
@@ -73,7 +78,7 @@ public:
 	void Submit_Structure_Modification(glm::ivec3 chunk, StructureMod value);
 	void Submit_Structure_Modification(glm::ivec3 chunk, std::vector<StructureMod> values);
 	
-	StructureDataStorage* Get_Data_Storage() { return m_data_storage; }
+	StructureDataStorage::Shared Get_Data_Storage() { return m_data_storage; }
 
 	static glm::ivec3 WorldPosToChunkCoord(glm::fvec3 pos) { return m_Instance->worldPosToChunkCoord(pos); }
 
@@ -104,8 +109,8 @@ private:
 
 	struct ChunkRef {
 		glm::ivec3 chunk_coord;
-		WorldObject* chunk_obj;
-		StructureChunk* chunk_comp;
+		WorldObject::Weak chunk_obj;
+		StructureChunk::Weak chunk_comp;
 	};
 
 	struct ChunkCreationRequest {
@@ -136,11 +141,11 @@ private:
 
 	static StructureController* m_Instance;
 
-	Opaque_Structure_Chunk_Material* m_chunk_opaque_mat{ nullptr };
+	Opaque_Structure_Chunk_Material::Shared m_chunk_opaque_mat;
 
 	ChunkSettings settings;
-	CubeVoxelBuilder* m_builder{ nullptr };
-	StructureDataStorage* m_data_storage{ nullptr };
+	CubeVoxelBuilder::Shared m_builder;
+	StructureDataStorage::Shared m_data_storage;
 
 	std::queue<ChunkRef> m_cached_chunks;
 	std::unordered_map<int, ChunkRef> m_chunk_map;
@@ -154,7 +159,7 @@ private:
 
 	void start();
 
-	static void Run(StructureController* inst);
+	static void Run();
 
 	void run_loop();
 

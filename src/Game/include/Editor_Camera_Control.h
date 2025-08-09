@@ -5,6 +5,8 @@
 class Editor_Camera_Control : public Component
 {
 public:
+	typedef std::shared_ptr<Editor_Camera_Control> Shared;
+	typedef std::weak_ptr<Editor_Camera_Control> Weak;
 
 	float Speed() { return m_move_speed; }
 	void Speed(float val) { m_move_speed = val; }
@@ -16,7 +18,7 @@ protected:
 
 private:
 
-	Transform* trans{ nullptr };
+	Transform::Weak m_trans;
 	float m_horizontalAngle{ 0 };
 	float m_verticalAngle{ 0 };
 	glm::vec3 m_euler;

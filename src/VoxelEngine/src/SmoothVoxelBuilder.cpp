@@ -104,7 +104,7 @@ void SmoothVoxelBuilder::Init(ChunkSettings* settings)
     //int* test = get_null();
     //int test1 = *test;
     //printf("%i\n", test1);
-    Settings p_settings = *settings->GetSettings();
+    Settings& p_settings = settings->GetSettings();
 
     float vpm = p_settings.getFloat("voxelsPerMeter");
 

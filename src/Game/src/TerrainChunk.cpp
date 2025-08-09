@@ -30,6 +30,8 @@ void TerrainChunk::Init(WorldGenController::Weak controller, Stitch_VBO::Shared 
 	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Set_Mesh(m_voxel_opaque_mesh);
 	m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
 
+	m_col_vert_data = new glm::vec4[max_vert];
+
 	//Logger::LogDebug(LOG_POS("Init"), "New chunk initialied. (%i, %i, %i)", 
 	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 }
@@ -39,6 +41,8 @@ void TerrainChunk::Assign(glm::ivec3 chunk_coord)
 	assert(!m_opaque_chunk_obj.expired());
 
 	m_assigned = true;
+	m_should_despawn = false;
+	m_has_collision = false;
 
 	m_chunk_coords = chunk_coord;
 	Object().Name("Voxel Chunk (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
@@ -64,6 +68,12 @@ void TerrainChunk::Unassign()
 	assert(!m_opaque_chunk_obj.expired());
 
 	m_assigned = false;
+
+	if (!m_mesh_collider.expired()) {
+		assert(!m_opaque_chunk_obj.expired());
+		m_mesh_collider.lock()->Clear();
+	}
+	m_has_collision = false;
 
 	Object().Name("Cached Voxel Chunk");
 	m_opaque_chunk_obj.lock()->Name("Cached Voxel Chunk - Opaque");
@@ -165,6 +175,14 @@ void TerrainChunk::Update(float dt)
 
 }
 
+void TerrainChunk::OnDestroy()
+{
+	if (m_col_vert_data != nullptr) {
+		delete[] m_col_vert_data;
+		m_col_vert_data = nullptr;
+	}
+}
+
 void TerrainChunk::VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float iso, bool Type_changed, int type)
 {
 	//Logger::LogDebug(LOG_POS("VoxelChanged"), "Changed voxel.");
@@ -261,11 +279,10 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 
 	//draw_debug_cube();
 
-	glm::vec4* vert_data = new glm::vec4[num_vertices];
-	vert_buffer->GetData(vert_data, num_vertices * sizeof(float) * 4);
+	vert_buffer->GetData(m_col_vert_data, num_vertices * sizeof(float) * 4);
 
 	std::vector<unsigned int> tris(tris_data, tris_data + num_vertices);
-	std::vector<glm::vec4> vert(vert_data, vert_data + num_vertices);
+	std::vector<glm::vec4> vert(m_col_vert_data, m_col_vert_data + num_vertices);
 
 	if (DEBUG_DRAW_VERTICES) {
 		for (int i = 0; i < num_vertices; i++) {

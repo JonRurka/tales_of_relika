@@ -15,16 +15,16 @@ Block Block::Get_Block(glm::ivec3 coord)
     uint32_t type_data = 0;
     if (StructureController::Instance()->Chunk_Exists(chunk))
     {
-        StructureDataStorage* data_store = StructureController::Instance()->Get_Data_Storage();
-        voxel_local.x += data_store->Grid_Offset();
-        voxel_local.y += data_store->Grid_Offset();
-        voxel_local.z += data_store->Grid_Offset();
-        type_data = data_store->Get_Data(chunk, voxel_local);
+        StructureDataStorage& data_store = *StructureController::Instance()->Get_Data_Storage();
+        voxel_local.x += data_store.Grid_Offset();
+        voxel_local.y += data_store.Grid_Offset();
+        voxel_local.z += data_store.Grid_Offset();
+        type_data = data_store.Get_Data(chunk, voxel_local);
     }
 
     uint32_t block_type = CubeVoxelBuilder::Get_Block_Type(type_data);
 
-    Block_Type* block_type_obj = Block_Type::Get_BlockType(block_type);
+    Block_Type::Shared block_type_obj = Block_Type::Get_BlockType(block_type);
 
     return Block(coord, block_type_obj);
 }
@@ -45,9 +45,9 @@ void Block::Set_Type(std::string type_name)
     Set_Type(Block_Type::Get_BlockType(type_name));
 }
 
-void Block::Set_Type(Block_Type* type_object)
+void Block::Set_Type(Block_Type::Shared type_object)
 {
-    if (type_object == nullptr) {
+    if (type_object.get() == nullptr) {
         return;
     }
 

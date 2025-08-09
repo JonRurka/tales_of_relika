@@ -26,7 +26,7 @@ bool StructureDataStorage::Spawn_Chunk(glm::ivec3 chunk_coord)
 	if (Has_Chunk(chunk_coord)) {
 		return false;
 	}
-	m_chunk_data[chunk_hash(chunk_coord)] = new uint32_t[m_total_size];
+	m_chunk_data[chunk_hash(chunk_coord)] = std::vector<uint32_t>(m_total_size, 0);
 	return true;
 }
 
@@ -36,7 +36,6 @@ void StructureDataStorage::Despawn_Chunk(glm::ivec3 chunk_coord)
 		return;
 	}
 	int hash = chunk_hash(chunk_coord);
-	delete[] m_chunk_data[hash];
 	m_chunk_data.erase(hash);
 }
 
@@ -45,8 +44,8 @@ void StructureDataStorage::Set_Data(glm::ivec3 chunk_coord, uint32_t* data)
 	if (!Has_Chunk(chunk_coord)) {
 		return;
 	}
-
-	memcpy(m_chunk_data[chunk_hash(chunk_coord)], data, m_total_size * sizeof(uint32_t));
+	int hash = chunk_hash(chunk_coord);
+	m_chunk_data[hash] = std::vector<uint32_t>(data, data + m_total_size);
 }
 
 void StructureDataStorage::Set_Data(glm::ivec3 chunk_coord, std::vector<uint32_t> data)
@@ -59,10 +58,7 @@ void StructureDataStorage::Set_Data(glm::ivec3 chunk_coord, std::vector<uint32_t
 	}
 
 	int hash = chunk_hash(chunk_coord);
-	void* src_ptr = data.data();
-	void* dst_ptr = m_chunk_data[hash];
-
-	memcpy(dst_ptr, src_ptr, m_total_size * sizeof(uint32_t));
+	m_chunk_data[hash] = data;
 }
 
 void StructureDataStorage::Set_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, uint32_t data)
@@ -78,17 +74,16 @@ void StructureDataStorage::Set_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coo
 
 	int v_idx = C_3D_to_1D(voxel_coord.x, voxel_coord.y, voxel_coord.z, f_size_x, f_size_y);
 	
-	uint32_t* data_ptr = m_chunk_data[chunk_hash(chunk_coord)];
-	data_ptr[v_idx] = data;
+	m_chunk_data[hash][v_idx] = data;
 }
 
-uint32_t* StructureDataStorage::Get_Data_ptr(glm::ivec3 chunk_coord)
+const uint32_t* StructureDataStorage::Get_Data_ptr(glm::ivec3 chunk_coord)
 {
 	if (!Has_Chunk(chunk_coord)) {
 		return nullptr;
 	}
 
-	return m_chunk_data[chunk_hash(chunk_coord)];
+	return m_chunk_data[chunk_hash(chunk_coord)].data();
 }
 
 std::vector<uint32_t> StructureDataStorage::Get_Data(glm::ivec3 chunk_coord)
@@ -96,10 +91,7 @@ std::vector<uint32_t> StructureDataStorage::Get_Data(glm::ivec3 chunk_coord)
 	if (!Has_Chunk(chunk_coord)) {
 		return std::vector<uint32_t>();
 	}
-
-	uint32_t* data = m_chunk_data[chunk_hash(chunk_coord)];
-	size_t size = m_total_size;
-	return std::vector<uint32_t>(data, data + size);
+	return m_chunk_data[chunk_hash(chunk_coord)];
 }
 
 uint32_t StructureDataStorage::Get_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord)
@@ -115,8 +107,7 @@ uint32_t StructureDataStorage::Get_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel
 
 	int v_idx = C_3D_to_1D(voxel_coord.x, voxel_coord.y, voxel_coord.z, f_size_x, f_size_y);
 
-	uint32_t* data_ptr = m_chunk_data[chunk_hash(chunk_coord)];
-	return data_ptr[v_idx];
+	return m_chunk_data[hash][v_idx];
 }
 
 bool StructureDataStorage::Has_Chunk(glm::ivec3 chunk_coord)

@@ -24,9 +24,10 @@ void GameClient::Init(std::string user_name, std::string host, int32_t id, bool 
 		host = HOST;
 	}
 
-	m_client = new NetClient("game_client", type, host);
+	m_client = std::make_unique<NetClient>("game_client", type, host);
 	m_client->SetOnConnectSuccess(GameClient::OnConnect, this);
 	m_client->AddCommand(OpCodes::Client::Identify_Result, GameClient::OnIdentifyResult_cb, this);
+	m_has_client = true;
 }
 
 void GameClient::Connect()

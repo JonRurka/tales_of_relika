@@ -199,7 +199,7 @@ void Test_Scene::Init()
 	std::vector<glm::vec4> cube_colors;
 	cube_colors.assign(vertices.size(), cube_color);
 
-	Mesh* cube_mesh = new Mesh();
+	Mesh::Shared cube_mesh = Mesh::Create();
 	//cube_mesh->Vertices(vertices);
 	//cube_mesh->Normals(normals);
 	cube_mesh->Colors(cube_colors);
@@ -214,7 +214,7 @@ void Test_Scene::Init()
 	in_colors->SetData(cube_colors.data());
 	in_texcoords->SetData(Utilities::vec2_to_vec4_arr(tex_coords).data());
 
-	Mesh* cube_mesh_test = new Mesh();//out_vbo->GetSize()
+	Mesh::Shared cube_mesh_test = Mesh::Create();//out_vbo->GetSize()
 	Logger::LogDebug(LOG_POS("Init"), "Mumber of vertices: %i", (int)vertices.size());
 
 	float start = Utilities::Get_Time();
@@ -227,7 +227,7 @@ void Test_Scene::Init()
 	Logger::LogDebug(LOG_POS("Init"), "Mesh generated in: %f ms", (stop-start) * 1000);
 
 
-	standard_mat = new Standard_Material();
+	standard_mat = std::make_shared<Standard_Material>();
 	standard_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	standard_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	standard_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
@@ -238,7 +238,7 @@ void Test_Scene::Init()
 	standard_mat->setTexture("material.diffuse", Game_Resources::Textures::CONTAINER_DIFFUSE);
 	standard_mat->setTexture("material.specular", Game_Resources::Textures::CONTAINER_SPECULAR);
 
-	floor_mat = new Standard_Material();
+	floor_mat = std::make_shared<Standard_Material>();
 	floor_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	floor_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	floor_mat->SetVec2("material.scale", glm::vec2(100.0f, 100.0f));
@@ -262,42 +262,42 @@ void Test_Scene::Init()
 
 
 	Camera_obj = Instantiate("camera");
-	Camera_obj->Get_Transform()->Position(glm::vec3(0, 5, 6));
-	Camera_obj->Rotate(-25.0f, 0.0f, 0.0f);
-	camera = Camera_obj->Add_Component<Camera>();
+	Camera_obj.lock()->Get_Transform().Position(glm::vec3(0, 5, 6));
+	Camera_obj.lock()->Rotate(-25.0f, 0.0f, 0.0f);
+	camera = Camera_obj.lock()->Add_Component<Camera>();
 	//camera->Clear_Color(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-	camera->FOV(90.0f);
+	camera.lock()->FOV(90.0f);
 	//camera->Set_Skybox(skybox_cubmap);
 
 	glm::vec4 light_color_dir = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	glm::vec3 light_pos_dir = glm::vec3(0.0f, 0.0f, 100.0f);
-	WorldObject* light_obj_dir;
-	Light* light_comp_dir;
-	create_light_object(&light_obj_dir, &light_comp_dir, Light::Light_Type::DIRECTIONAL, light_pos_dir, 1, light_color_dir);
-	light_comp_dir->Enabled(true);
-	light_obj_dir->Get_Transform()->LookAt(glm::vec3(10.0f, -50.0f, -20.0f));
+	WorldObject::Weak light_obj_dir;
+	Light::Weak light_comp_dir;
+	//create_light_object(&light_obj_dir, &light_comp_dir, Light::Light_Type::DIRECTIONAL, light_pos_dir, 1, light_color_dir);
+	light_comp_dir.lock()->Enabled(true);
+	light_obj_dir.lock()->Get_Transform().LookAt(glm::vec3(10.0f, -50.0f, -20.0f));
 
-	std::vector<WorldObject*> objects;
+	std::vector<WorldObject::Weak> objects;
 	for (int i = 0; i < cubePositions.size(); i++) {
-		WorldObject* obj = Instantiate("test_object");
+		WorldObject::Weak obj = Instantiate("test_object");
 
-		obj->Get_MeshRenderer()->Set_Mesh(cube_mesh_test);
+		obj.lock()->Get_MeshRenderer().Set_Mesh(cube_mesh_test);
 
-		obj->Get_MeshRenderer()->Transparent(true);
+		obj.lock()->Get_MeshRenderer().Transparent(true);
 		//obj->Get_MeshRenderer()->Set_Shader(m_shader);
-		obj->Get_MeshRenderer()->Set_Material(standard_mat);
+		obj.lock()->Get_MeshRenderer().Set_Material(standard_mat);
 
-		obj->Get_Transform()->Translate(cubePositions[i].x, cubePositions[i].y, cubePositions[i].z);
+		obj.lock()->Get_Transform().Translate(cubePositions[i].x, cubePositions[i].y, cubePositions[i].z);
 		objects.push_back(obj);
 	}
 
-	WorldObject* floor_obj = Instantiate("test_object");
-	floor_obj->Get_MeshRenderer()->Set_Mesh(cube_mesh);
-	floor_obj->Get_MeshRenderer()->Set_Material(floor_mat);
-	floor_obj->Get_MeshRenderer()->Transparent(true);
-	floor_obj->Get_Transform()->Translate(0.0f, -5.0f, 0.0f);
-	floor_obj->Get_Transform()->Scale(glm::vec3(100.0f, 1.0f, 100.0f));
+	WorldObject::Weak floor_obj = Instantiate("test_object");
+	floor_obj.lock()->Get_MeshRenderer().Set_Mesh(cube_mesh);
+	floor_obj.lock()->Get_MeshRenderer().Set_Material(floor_mat);
+	floor_obj.lock()->Get_MeshRenderer().Transparent(true);
+	floor_obj.lock()->Get_Transform().Translate(0.0f, -5.0f, 0.0f);
+	floor_obj.lock()->Get_Transform().Scale(glm::vec3(100.0f, 1.0f, 100.0f));
 
 
 	
@@ -385,6 +385,7 @@ void Test_Scene::Update(float dt)
 
 void Test_Scene::create_light_object(WorldObject** obj, Light** light_comp, Light::Light_Type type, glm::vec3 pos, float scale, glm::vec4 color)
 {
+	/*
 	*obj = Instantiate("light"); //new WorldObject("light");
 	WorldObject* w_obj = *obj;
 	//light_obj->Get_MeshRenderer()->Set_Shader(m_light_shader); // m_light_shader
@@ -402,7 +403,7 @@ void Test_Scene::create_light_object(WorldObject** obj, Light** light_comp, Ligh
 	l_comp->Linear_Coefficient(0.027f);
 	l_comp->Quadratic_Coefficient(0.0028f);
 	l_comp->CutOff(glm::cos(glm::radians(12.5f)));
-	l_comp->OuterCutOff(glm::cos(glm::radians(15.5f)));
+	l_comp->OuterCutOff(glm::cos(glm::radians(15.5f)));*/
 }
 
 void Test_Scene::Setup_gpu_program(int size)

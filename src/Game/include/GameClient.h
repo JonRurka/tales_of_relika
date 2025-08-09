@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <memory>
 
 #include "game_engine.h"
 
@@ -21,8 +22,12 @@ public:
 		return m_instance;
 	}
 
-	static NetClient* Net_Client() {
-		return m_instance->m_client;
+	static bool Has_Client() {
+		return m_instance->m_has_client;
+	}
+
+	static NetClient& Net_Client() {
+		return *m_instance->m_client.get();
 	}
 
 	void Init(std::string user_name, std::string host, int32_t id, bool remote);
@@ -52,7 +57,8 @@ protected:
 
 private:
 
-	NetClient* m_client{ nullptr };
+	bool m_has_client{ false };
+	std::unique_ptr<NetClient> m_client;
 	static GameClient* m_instance;
 
 	OnGameConnectActionPtr OnGameConnect_delegate{ nullptr };

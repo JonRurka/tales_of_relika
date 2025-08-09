@@ -35,7 +35,7 @@ void LocalPlayerCharacter::Init()
 	
 	//m_capsule_collider->RigidBody()->setAngularFactor(btVector3(1.0f, 1.0f, 1.0f));
 
-	GameClient::Instance()->Net_Client()->AddCommand(OpCodes::Client::Sync_Player_Orientation, OnOrientationSync_cb, this);
+	GameClient::Instance()->Net_Client().AddCommand(OpCodes::Client::Sync_Player_Orientation, OnOrientationSync_cb, this);
 
 	init_geometry();
 
@@ -327,7 +327,12 @@ void LocalPlayerCharacter::SendPlayerEvent(OpCodes::Player_Events event_cmd, std
 
 void LocalPlayerCharacter::Send(OpCodes::Server cmd, std::vector<uint8_t> data, Protocal type)
 {
-	GameClient::Instance()->Net_Client()->Send(cmd, data, type);
+	GameClient::Instance()->Net_Client().Send(cmd, data, type);
+}
+
+LocalPlayerCharacter::Weak LocalPlayerCharacter::get_instance()
+{
+	return std::dynamic_pointer_cast<LocalPlayerCharacter>(shared_from_this());
 }
 
 void LocalPlayerCharacter::update_rotation(float dt, float mouse_x, float mouse_y)

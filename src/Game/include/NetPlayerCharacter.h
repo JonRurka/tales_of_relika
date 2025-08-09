@@ -9,6 +9,8 @@
 
 class NetPlayerCharacter : public Component {
 public:
+	typedef std::shared_ptr<NetPlayerCharacter> Shared;
+	typedef std::weak_ptr<NetPlayerCharacter> Weak;
 
 	void Init(std::string userName, uint32_t user_id, glm::vec3 pos, glm::quat rot);
 

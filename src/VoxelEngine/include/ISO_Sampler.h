@@ -3,6 +3,8 @@
 #include "dynamic_compute.h"
 
 #include "VoxelComputeProgram.h"
+#include "HeightmapGenerator.h"
+#include "TerrainModifications.h"
 
 #include <vector>
 #include <unordered_map>

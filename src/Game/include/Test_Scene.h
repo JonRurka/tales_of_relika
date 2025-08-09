@@ -18,10 +18,10 @@ protected:
 
 private:
 
-	Standard_Material* standard_mat{nullptr};
-	Standard_Material* floor_mat{ nullptr };
-	WorldObject* Camera_obj{ nullptr };
-	Camera* camera{ nullptr };
+	Standard_Material::Shared standard_mat;
+	Standard_Material::Shared floor_mat;
+	WorldObject::Weak Camera_obj;
+	Camera::Weak camera;
 
 	float m_timer{ 0 };
 

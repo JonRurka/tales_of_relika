@@ -23,8 +23,9 @@ public:
 	typedef std::weak_ptr<LocalPlayerCharacter> Weak;
 	//struct
 
-	static LocalPlayerCharacter* Get_Instance() {
-		return m_instance;
+	static LocalPlayerCharacter::Weak Get_Instance() {
+		assert(m_instance != nullptr);
+		return m_instance->get_instance();
 	}
 
 	void Set_Camera_Object(WorldObject::Weak cam_object);
@@ -94,6 +95,8 @@ private:
 	double m_debug_time{ 0 };
 
 	bool m_mouse_hidden{ false };
+
+	Weak get_instance();
 
 	void update_rotation(float dt, float mouse_x, float mouse_y);
 

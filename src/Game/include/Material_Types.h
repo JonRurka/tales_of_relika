@@ -36,8 +36,6 @@ public:
 		std::string Material_Processor_Name;
 	};
 
-	Material_Types();
-
 	void Load_Materials(std::string resource_file_name);
 
 	void Initialize_Materials(bool load_textures = true);
@@ -59,30 +57,34 @@ public:
 	std::vector<Terrain_Material> Get_Terrain_Materials();
 	std::vector<Structure_Material> Get_Structure_Materials();
 
-	Texture* Terrain_Diffuse_Texture_Array() { return m_terrain_diffuse_texture_array; }
-	Texture* Terrain_Normal_Texture_Array() { return m_terrain_normal_texture_array; }
+	Texture::Shared Terrain_Diffuse_Texture_Array() { return m_terrain_diffuse_texture_array; }
+	Texture::Shared Terrain_Normal_Texture_Array() { return m_terrain_normal_texture_array; }
 
-	Texture* Structure_Diffuse_Texture_Array() { return m_structure_diffuse_texture_array; }
-	Texture* Structure_Normal_Texture_Array() { return m_structure_normal_texture_array; }
+	Texture::Shared Structure_Diffuse_Texture_Array() { return m_structure_diffuse_texture_array; }
+	Texture::Shared Structure_Normal_Texture_Array() { return m_structure_normal_texture_array; }
 
 	int Max_ID() { return m_max_id; }
 
-	static Material_Types* Instance() { return m_instance; }
+	static Material_Types& Instance() 
+	{ 
+		static Material_Types inst;
+		return inst; 
+	}
 
 private:
 
-	static Material_Types* m_instance;
+	Material_Types() = default;
 
 	std::unordered_map<int, Terrain_Material> m_terrain_materials;
 	std::unordered_map<std::string, int> m_terrain_mat_to_id;
 	std::unordered_map<int, Structure_Material> m_structure_materials;
 	std::unordered_map<std::string, int> m_structure_mat_to_id;
 
-	Texture* m_terrain_diffuse_texture_array{ nullptr };
-	Texture* m_terrain_normal_texture_array{ nullptr };
+	Texture::Shared m_terrain_diffuse_texture_array;
+	Texture::Shared m_terrain_normal_texture_array;
 
-	Texture* m_structure_diffuse_texture_array{ nullptr };
-	Texture* m_structure_normal_texture_array{ nullptr };
+	Texture::Shared m_structure_diffuse_texture_array;
+	Texture::Shared m_structure_normal_texture_array;
 
 	int m_max_id{ 0 };
 

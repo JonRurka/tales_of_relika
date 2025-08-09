@@ -14,6 +14,8 @@ public:
 
 	void SetMesh(Mesh::Shared mesh);
 
+	void Clear();
+
 private:
 
 	std::unique_ptr<btCollisionShape> m_shape;
@@ -27,9 +29,6 @@ private:
 protected:
 
 	std::shared_ptr<Mesh> m_mesh;
-
-	unsigned int* m_indices{ nullptr };
-	glm::vec3* m_vertices{ nullptr };
 
 	void Init() override;
 	void Update(float dt) override;

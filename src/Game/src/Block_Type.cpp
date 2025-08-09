@@ -3,8 +3,8 @@
 #include "Material_Processor.h"
 #include "Material_Types.h"
 
-std::vector<Block_Type*> Block_Type::m_type_array;
-std::unordered_map<int, Block_Type*> Block_Type::m_types;
+std::vector<std::shared_ptr<Block_Type>> Block_Type::m_type_array;
+std::unordered_map<int, std::shared_ptr<Block_Type>> Block_Type::m_types;
 std::unordered_map<std::string, int> Block_Type::m_name_map;
 int Block_Type::m_num_types{0};
 
@@ -13,12 +13,9 @@ int Block_Type::GetTileTexture_Callback(int block_id, int tile_id, uint8_t block
     if (block_id < 0 || block_id >= m_num_types) {
         return -1;
     }
-    Block_Type* block_type = m_type_array[block_id];
-    if (block_type == nullptr) {
-        // TODO: Probably should throw error.
-        return -1;
-    }
-    return block_type->Get_Tile_Texture(tile_id, block_orientation);
+    assert(m_type_array[block_id].get() != nullptr);
+    Block_Type& block_type = *m_type_array[block_id].get();
+    return block_type.Get_Tile_Texture(tile_id, block_orientation);
 }
 
 bool Block_Type::CanRender_Callback(int block_id)
@@ -26,21 +23,18 @@ bool Block_Type::CanRender_Callback(int block_id)
     if(block_id < 0 || block_id >= m_num_types) {
         return false;
     }
-    Block_Type* block_type = m_type_array[block_id];
-    if (block_type == nullptr) {
-        // TODO: Probably should throw error.
-        return false;
-    }
-    return block_type->Can_Render(block_id);
+    assert(m_type_array[block_id].get() != nullptr);
+    Block_Type& block_type = *m_type_array[block_id].get();
+    return block_type.Can_Render(block_id);
 }
 
 void Block_Type::Init()
 {
-    auto mats = Material_Types::Instance()->Get_Structure_Materials();
-    m_num_types = Material_Types::Instance()->Max_ID() + 1;
+    auto mats = Material_Types::Instance().Get_Structure_Materials();
+    m_num_types = Material_Types::Instance().Max_ID() + 1;
 
     m_type_array.clear();
-    m_type_array = std::vector<Block_Type*>(m_num_types, nullptr);
+    m_type_array.resize(m_num_types);
     
     Material_Types::Structure_Material air_mat{};
     air_mat.ID = 0;
@@ -64,7 +58,7 @@ bool Block_Type::Type_Exists(std::string type)
     return m_name_map.contains(type);
 }
 
-Block_Type* Block_Type::Get_BlockType(int type_id)
+std::shared_ptr<Block_Type> Block_Type::Get_BlockType(int type_id)
 {
     if (!Type_Exists(type_id)) {
         return nullptr;
@@ -72,7 +66,7 @@ Block_Type* Block_Type::Get_BlockType(int type_id)
     return m_types[type_id];
 }
 
-Block_Type* Block_Type::Get_BlockType(std::string type)
+std::shared_ptr<Block_Type> Block_Type::Get_BlockType(std::string type)
 {
     if (!Type_Exists(type)) {
         return nullptr;
@@ -93,7 +87,7 @@ void Block_Type::load_material(Material_Types::Structure_Material mat)
         return;
     }
 
-    Block_Type* block_type = new Block_Type(mat);
+    std::shared_ptr<Block_Type> block_type = std::make_shared<Block_Type>(mat);
     m_type_array[id] = block_type;
     m_types[id] = block_type;
     m_name_map[Utilities::toLowerCase(mat.Material_Name)] = id;

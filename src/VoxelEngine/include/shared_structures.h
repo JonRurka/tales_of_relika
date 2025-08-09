@@ -218,8 +218,8 @@ namespace VoxelEngine {
 	struct ChunkSettings {
 	public:
 
-		Settings* GetSettings() {
-			return &m_settings;
+		Settings& GetSettings() {
+			return m_settings;
 		}
 
 		ChunkSettings() {

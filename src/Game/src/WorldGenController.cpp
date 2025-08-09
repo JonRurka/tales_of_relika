@@ -49,8 +49,8 @@ void WorldGenController::Init()
 
 	m_chunk_opaque_mat = std::make_shared<Opaque_Chunk_Material>(); 
 	//m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
-	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance()->Terrain_Diffuse_Texture_Array());
-	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance()->Terrain_Normal_Texture_Array());
+	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance().Terrain_Diffuse_Texture_Array());
+	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance().Terrain_Normal_Texture_Array());
 	m_chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_chunk_opaque_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
@@ -91,7 +91,7 @@ TerrainChunk::Weak WorldGenController::Get_Chunk(glm::ivec3 chunk_coord)
 
 ISO_Sampler::Shared WorldGenController::Get_ISO_Sampler()
 {
-	return ((SmoothVoxelBuilder*)m_builder)->Get_ISO_Sampler();
+	return (std::dynamic_pointer_cast<SmoothVoxelBuilder>(m_builder))->Get_ISO_Sampler();
 }
 
 void WorldGenController::Refresh_Chunk(glm::ivec3 chunk)

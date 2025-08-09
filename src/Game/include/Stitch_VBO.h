@@ -6,6 +6,7 @@
 #include "SmoothVoxelBuilder.h"
 
 #include <unordered_map>
+#include <memory>
 
 namespace DynamicCompute {
 	namespace Compute {

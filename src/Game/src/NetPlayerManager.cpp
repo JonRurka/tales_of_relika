@@ -13,7 +13,7 @@
 
 NetPlayerManager* NetPlayerManager::m_instance{nullptr};
 
-void NetPlayerManager::RegisterLocalPlayer(LocalPlayerCharacter* local_player)
+void NetPlayerManager::RegisterLocalPlayer(LocalPlayerCharacter::Weak local_player)
 {
 	m_local_player = local_player;
 }
@@ -40,7 +40,8 @@ void NetPlayerManager::OnUpdateOrientations(Data data)
 
 		if (m_net_player_map_InstID.contains(player_inst_id)) {
 			//UE_LOG(NetPlayerManager_Log, Display, TEXT("Received location update 1"));
-			m_net_player_map_InstID[player_inst_id]->Set_Orientation(player_loc, player_rot);
+			assert(!m_net_player_map_InstID[player_inst_id].expired());
+			m_net_player_map_InstID[player_inst_id].lock()->Set_Orientation(player_loc, player_rot);
 		}
 
 	}
@@ -69,7 +70,8 @@ void NetPlayerManager::OnPlayerEvent(Data data)
 		index += data_size + 3;
 
 		if (m_net_player_map_InstID.contains(player_inst_id)) {
-			m_net_player_map_InstID[player_inst_id]->Execute_Player_Event((OpCodes::Player_Events)event_cmd, event_data);
+			assert(!m_net_player_map_InstID[player_inst_id].expired());
+			m_net_player_map_InstID[player_inst_id].lock()->Execute_Player_Event((OpCodes::Player_Events)event_cmd, event_data);
 		}
 	}
 
@@ -79,7 +81,7 @@ void NetPlayerManager::RequestPlayers()
 {
 	std::vector<uint8_t> data;
 	data = BufferUtils::AddFirst((uint8_t)OpCodes::Server_World::Request_Players, data);
-	GameClient::Instance()->Net_Client()->Send(OpCodes::Server::World_Command, data, Protocal_Udp);
+	GameClient::Instance()->Net_Client().Send(OpCodes::Server::World_Command, data, Protocal_Udp);
 }
 
 void NetPlayerManager::SpawnPlayers(Data data)
@@ -141,9 +143,9 @@ void NetPlayerManager::create_player(PlayerCreationRequest player)
 		return; // Don't create local player.
 	}
 
-	WorldObject* obj = Instantiate(player.UserName);
-	NetPlayerCharacter* character = obj->Add_Component<NetPlayerCharacter>();
-	character->Init(player.UserName, player.User_ID, player.Position, player.Rotation);
+	WorldObject::Weak obj = Instantiate(player.UserName);
+	NetPlayerCharacter::Weak character = obj.lock()->Add_Component<NetPlayerCharacter>();
+	character.lock()->Init(player.UserName, player.User_ID, player.Position, player.Rotation);
 
 	if (!m_net_player_map_InstID.contains(player.Instance_ID) &&
 		m_net_player_map_ID.contains(player.User_ID)) {
@@ -177,13 +179,13 @@ void NetPlayerManager::Update(float dt)
 
 void NetPlayerManager::send_player_location()
 {
-	if (LocalPlayerCharacter::Get_Instance() == nullptr) {
+	if (LocalPlayerCharacter::Get_Instance().expired()) {
 		//UE_LOG(NetPlayerManager_Log, Display, TEXT("m_local_player null"));
 		return;
 	}
 
-	if (GameClient::Instance()->Net_Client() == nullptr ||
-		!GameClient::Instance()->Net_Client()->Connected())
+	if (!GameClient::Instance()->Has_Client() ||
+		!GameClient::Instance()->Net_Client().Connected())
 	{
 		//UE_LOG(NetPlayerManager_Log, Display, TEXT("Net Client not connected"));
 		return;
@@ -191,9 +193,10 @@ void NetPlayerManager::send_player_location()
 
 
 	m_local_player = LocalPlayerCharacter::Get_Instance();
+	assert(!m_local_player.expired());
 
-	glm::vec3 location = m_local_player->Object()->Get_Transform()->Position();
-	glm::quat rotation = m_local_player->Object()->Get_Transform()->Rotation();
+	glm::vec3 location = m_local_player.lock()->Object().Get_Transform().Position();
+	glm::quat rotation = m_local_player.lock()->Object().Get_Transform().Rotation();
 
 	float or_buf[7] = {
 		location.x,
@@ -209,11 +212,11 @@ void NetPlayerManager::send_player_location()
 	std::vector<uint8_t> data = std::vector<uint8_t>(buff_ptr, buff_ptr + sizeof(or_buf));
 	data = BufferUtils::AddFirst((uint8_t)OpCodes::Server_World::Update_Orientation, data);
 
-	GameClient::Instance()->Net_Client()->Send(OpCodes::Server::World_Command, data, Protocal_Udp);
+	GameClient::Instance()->Net_Client().Send(OpCodes::Server::World_Command, data, Protocal_Udp);
 }
 
 void NetPlayerManager::add_net_commands()
 {
-	GameClient::Instance()->Net_Client()->AddCommand(OpCodes::Client::Update_Orientations, NetPlayerManager::OnUpdateOrientations_cb, this);
-	GameClient::Instance()->Net_Client()->AddCommand(OpCodes::Client::Player_Events, NetPlayerManager::OnPlayerEvent_cb, this);
+	GameClient::Instance()->Net_Client().AddCommand(OpCodes::Client::Update_Orientations, NetPlayerManager::OnUpdateOrientations_cb, this);
+	GameClient::Instance()->Net_Client().AddCommand(OpCodes::Client::Player_Events, NetPlayerManager::OnPlayerEvent_cb, this);
 }

@@ -2,8 +2,11 @@
 
 #include "game_engine.h"
 
+#include "StructureController.h"
+
 #include <mutex>
 #include <queue>
+#include <memory>
 
 class StructureController;
 namespace VoxelEngine {
@@ -16,14 +19,16 @@ class StructureChunk : public Component
 {
 	friend class StructureController;
 public:
+	typedef std::shared_ptr<StructureChunk> Shared;
+	typedef std::weak_ptr<StructureChunk> Weak;
 
-	void Init(StructureController* controller);
+	void Init(StructureController::Weak controller);
 
 	void Assign(glm::ivec3 chunk_coord);
 
 	void Unassign();
 
-	void Process_Mesh_Update(CubeVoxelBuilder* builder);
+	void Process_Mesh_Update(CubeVoxelBuilder& builder);
 
 	glm::ivec3 Chunk_Coord() {return m_chunk_coords;}
 
@@ -38,7 +43,7 @@ private:
 
 	glm::ivec3 m_chunk_coords;
 	glm::fvec3 m_chunk_world_pos;
-	StructureController* m_controller{ nullptr };
+	StructureController::Weak m_controller;
 	bool m_assigned{ false };
 	bool m_has_collision{ false };
 	bool m_should_despawn{ false };
@@ -61,10 +66,10 @@ private:
 
 	std::queue<Chunk_Mesh_Data> m_chunk_process_queue;
 
-	WorldObject* m_opaque_chunk_obj{ nullptr };
-	Mesh* m_voxel_opaque_mesh{ nullptr };
-	MeshCollider* m_mesh_collider{ nullptr };
-	Mesh* m_collision_mesh{ nullptr };
+	WorldObject::Weak m_opaque_chunk_obj;
+	Mesh::Shared m_voxel_opaque_mesh;
+	MeshCollider::Weak m_mesh_collider;
+	Mesh::Shared m_collision_mesh;
 
 	void VoxelChanged(glm::ivec3 local_voxel, bool Type_changed, uint32_t type);
 

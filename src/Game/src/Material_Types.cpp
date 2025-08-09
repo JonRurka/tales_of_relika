@@ -29,8 +29,6 @@
 #endif
 
 
-Material_Types* Material_Types::m_instance{nullptr};
-
 namespace {
 
     glm::fvec3 Parse_Color(std::string val) {
@@ -79,11 +77,6 @@ namespace {
     }
 }
 
-
-Material_Types::Material_Types()
-{
-    m_instance = this;
-}
 
 void Material_Types::Load_Materials(std::string resource_file_name)
 {

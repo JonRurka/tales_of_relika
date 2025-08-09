@@ -6,24 +6,25 @@
 #include "Mesh.h"
 
 #define VBO_ELEMENTS 3
-#define STRIDE (VBO_ELEMENTS * sizeof(float) * 4)
+#define FLOAT_STRIDE (VBO_ELEMENTS * 4)
+#define BYTE_STRIDE (FLOAT_STRIDE * sizeof(float))
 
 using namespace VoxelEngine;
 
-void StructureChunk::Init(StructureController* controller)
+void StructureChunk::Init(StructureController::Weak controller)
 {
 	m_controller = controller;
 
 	int max_vert = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
-	m_voxel_opaque_mesh = new Mesh(max_vert * STRIDE);
+	m_voxel_opaque_mesh = Mesh::Create(max_vert * BYTE_STRIDE);
 
 	m_opaque_chunk_obj = Instantiate("Cached Voxel Chunk - Opaque");
-	m_opaque_chunk_obj->Get_Transform()->Set_Verbos(false);
+	m_opaque_chunk_obj.lock()->Get_Transform().Set_Verbos(false);
 	//obj->Get_MeshRenderer()->Transparent(true);
-	m_opaque_chunk_obj->Get_Transform()->Position(glm::vec3(0.0, 1000.0, 0.0));
-	m_opaque_chunk_obj->Get_MeshRenderer()->Set_Material(controller->Get_Opaque_Chunk_Material());
-	m_opaque_chunk_obj->Get_MeshRenderer()->Set_Mesh(m_voxel_opaque_mesh, false);
-	m_opaque_chunk_obj->Add_Component<MeshCollider>();
+	m_opaque_chunk_obj.lock()->Get_Transform().Position(glm::vec3(0.0, 1000.0, 0.0));
+	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Set_Material(controller.lock()->Get_Opaque_Chunk_Material());
+	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Set_Mesh(m_voxel_opaque_mesh, false);
+	m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
 }
 
 void StructureChunk::Assign(glm::ivec3 chunk_coord)
@@ -38,6 +39,8 @@ void StructureChunk::Assign(glm::ivec3 chunk_coord)
 	//m_uv = std::vector<glm::vec2>((int)Utilities::Vertex_Limit_Mode::Chunk_Max, glm::vec2());
 	//m_trianges = std::vector<unsigned int>((int)Utilities::Vertex_Limit_Mode::Chunk_Max, 0);
 
+	assert(!m_opaque_chunk_obj.expired());
+
 	m_vertex = std::vector<glm::vec4>();
 	m_normal = std::vector<glm::vec4>();
 	m_uv = std::vector<glm::vec2>();
@@ -49,28 +52,48 @@ void StructureChunk::Assign(glm::ivec3 chunk_coord)
 	m_trianges.reserve((int)Utilities::Vertex_Limit_Mode::Chunk_Max);
 
 	m_assigned = true;
+	m_should_despawn = false;
+	m_has_collision = false;
 
 	m_chunk_coords = chunk_coord;
-	Object()->Name("Structure Chunk (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
-	m_opaque_chunk_obj->Name("Structure Chunk - Opaque (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
+	Object().Name("Structure Chunk (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
+	m_opaque_chunk_obj.lock()->Name("Structure Chunk - Opaque (" + std::to_string(chunk_coord.x) + ", " + std::to_string(chunk_coord.y) + ", " + std::to_string(chunk_coord.z) + ")");
 
 	m_chunk_world_pos = StructureController::ChunkCoordToWorldPos(chunk_coord);
 
-	Object()->Get_Transform()->Position(m_chunk_world_pos);
-	m_opaque_chunk_obj->Get_Transform()->Position(m_chunk_world_pos);
+	Object().Get_Transform().Position(m_chunk_world_pos);
+	m_opaque_chunk_obj.lock()->Get_Transform().Position(m_chunk_world_pos);
 }
 
 void StructureChunk::Unassign()
 {
+	m_assigned = false;
+
+	assert(!m_opaque_chunk_obj.expired());
+
+	m_assigned = false;
+	
+
+	if (!m_mesh_collider.expired()) {
+		assert(!m_opaque_chunk_obj.expired());
+		m_mesh_collider.lock()->Clear();
+	}
+	m_has_collision = false;
+
+	Object().Name("Cached Structure Chunk");
+	m_opaque_chunk_obj.lock()->Name("Cached Structure Chunk - Opaque");
+
+	Object().Get_Transform().Position(glm::vec3(0.0, 1000.0, 0.0));
+	m_opaque_chunk_obj.lock()->Get_Transform().Position(glm::vec3(0.0, 1000.0, 0.0));
 }
 
-void StructureChunk::Process_Mesh_Update(CubeVoxelBuilder* builder)
+void StructureChunk::Process_Mesh_Update(CubeVoxelBuilder& builder)
 {
-	ChunkRenderOptions render_options;
+	ChunkRenderOptions render_options{};
 
 	render_options.locations.push_back(m_chunk_coords);
 
-	glm::dvec4 render_times = builder->Render(&render_options, m_vertex, m_normal, m_uv, m_trianges, m_counts);
+	glm::dvec4 render_times = builder.Render(render_options, m_vertex, m_normal, m_uv, m_trianges, m_counts);
 
 	Chunk_Mesh_Data data{};
 	data.vertices = m_vertex;
@@ -160,27 +183,30 @@ void StructureChunk::update_collision_mesh()
 	}
 	m_update_collision_mesh = false;
 
-	if (m_mesh_collider == nullptr) {
-		m_mesh_collider = m_opaque_chunk_obj->Add_Component<MeshCollider>();
+	if (m_mesh_collider.expired()) {
+		assert(!m_opaque_chunk_obj.expired());
+		m_mesh_collider = m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
 	}
 
 	btVector3 min, max;
 
-	m_collision_mesh = new Mesh();
+	assert(!m_mesh_collider.expired());
+
+	m_collision_mesh = Mesh::Create();
 	//m_collision_mesh->Indices(tris);
 	m_collision_mesh->Vertices(m_voxel_opaque_mesh->Vertices());
 	m_collision_mesh->Activate();
-	m_mesh_collider->SetMesh(m_collision_mesh);
-	m_mesh_collider->Mass(0.0f);
-	m_mesh_collider->Activate();
-	m_mesh_collider->RigidBody()->getAabb(min, max);
+	m_mesh_collider.lock()->SetMesh(m_collision_mesh);
+	m_mesh_collider.lock()->Mass(0.0f);
+	m_mesh_collider.lock()->Activate();
+	m_mesh_collider.lock()->RigidBody().getAabb(min, max);
 	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Collision mesh added.");
 
 }
 
 Mesh::VertexAttributeList StructureChunk::get_vertex_attributes()
 {
-	Mesh::VertexAttributeList res(STRIDE);
+	Mesh::VertexAttributeList res(FLOAT_STRIDE);
 	res.add_attribute(4, 0);
 	res.add_attribute(4, (4 * sizeof(float)));
 	res.add_attribute(4, (8 * sizeof(float)));

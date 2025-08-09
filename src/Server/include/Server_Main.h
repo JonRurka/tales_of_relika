@@ -21,6 +21,8 @@ class ColliderGenerator;
 
 class Server_Main {
 public:
+	typedef std::shared_ptr<Server_Main> Shared;
+	typedef std::weak_ptr<Server_Main> Weak;
 
 	enum class Server_Type {
 		Remote,

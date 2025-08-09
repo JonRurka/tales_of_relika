@@ -4,10 +4,10 @@
 
 void Editor_Camera_Control::Init()
 {
-	trans = Object().Get_Transform();
+	m_trans = Object().Get_Transform_Ptr();
 	Input::Mouse_Sensitivity(50);
 
-	m_euler = trans->EulerAngles();
+	m_euler = m_trans.lock()->EulerAngles();
 	//m_horizontalAngle = euler.y;
 	//m_verticalAngle = euler.x;
 	//Logger::LogDebug(LOG_POS("Init"), "Initial Rotation: ( %f, %f, %f)", euler.x, );
@@ -18,6 +18,9 @@ void Editor_Camera_Control::Init()
 
 void Editor_Camera_Control::Update(float dt)
 {
+	assert(!m_trans.expired());
+	Transform& trans = *m_trans.lock().get();
+
 	bool is_holding_left_mouse = false;
 	if (Input::GetMouseKeyDown(MouseButton::Right)) {
 		Input::Set_Mouse_Visibility(false);
@@ -45,16 +48,16 @@ void Editor_Camera_Control::Update(float dt)
 		}
 
 		if (Input::GetKey(KeyCode::W)) {
-			trans->Translate(trans->Forward() * speed * dt);
+			trans.Translate(trans.Forward() * speed * dt);
 		}
 		if (Input::GetKey(KeyCode::S)) {
-			trans->Translate(-trans->Forward() * speed * dt);
+			trans.Translate(-trans.Forward() * speed * dt);
 		}
 		if (Input::GetKey(KeyCode::A)) {
-			trans->Translate(-trans->Right() * speed * dt);
+			trans.Translate(-trans.Right() * speed * dt);
 		}
 		if (Input::GetKey(KeyCode::D)) {
-			trans->Translate(trans->Right() * speed * dt);
+			trans.Translate(trans.Right() * speed * dt);
 		}
 	}
 
@@ -63,6 +66,9 @@ void Editor_Camera_Control::Update(float dt)
 
 void Editor_Camera_Control::update_rotation(float dt, float mouse_x, float mouse_y)
 {
+	assert(!m_trans.expired());
+	Transform& trans = *m_trans.lock().get();
+
 	// https://community.khronos.org/t/preventing-camera-from-being-upside-down/72838/3
 
 	m_euler.y += -mouse_x * dt; // horizontal
@@ -88,10 +94,10 @@ void Editor_Camera_Control::update_rotation(float dt, float mouse_x, float mouse
 	);
 
 	glm::quat new_rot = glm::quatLookAt(currentViewingDirection, glm::vec3(0.0f, 1.0f, 0.0f));
-	trans->Rotation(new_rot);
+	trans.Rotation(new_rot);
 
 	//Logger::LogDebug(LOG_POS("Init"), "New Rotation: ( %f, %f)", m_horizontalAngle, m_verticalAngle);
-	glm::vec3 dir = trans->Forward();
-	glm::vec3 euler = trans->EulerAngles();
+	glm::vec3 dir = trans.Forward();
+	glm::vec3 euler = trans.EulerAngles();
 	//Logger::LogDebug(LOG_POS("Update"), "New Forward: (%f, %f, %f), Euler: (%f, %f, %f)", dir.x, dir.y, dir.z, euler.x, euler.y, euler.z);
 }

@@ -5,6 +5,8 @@
 #include "Network/OpCodes.h"
 #include "Network/Data.h"
 
+#include "NetPlayerCharacter.h"
+
 #include <unordered_map>
 
 class LocalPlayerCharacter;
@@ -30,7 +32,7 @@ public:
 		int Instance_ID;
 	};
 
-	void RegisterLocalPlayer(LocalPlayerCharacter* local_player);
+	void RegisterLocalPlayer(LocalPlayerCharacter::Weak local_player);
 
 	void SetLocalUserID(uint32_t local_id) {
 		m_local_player_id = local_id;
@@ -67,14 +69,14 @@ private:
 
 	static NetPlayerManager* m_instance;
 
-	LocalPlayerCharacter* m_local_player{ nullptr };
+	LocalPlayerCharacter::Weak m_local_player;
 	uint32_t m_local_player_id{ 0 };
 
 	double m_last_sent_location{ 0.0 };
 	int m_frame_counter{ 0 };
 
-	std::unordered_map<uint8_t, NetPlayerCharacter*> m_net_player_map_InstID;
-	std::unordered_map<uint32_t, NetPlayerCharacter*> m_net_player_map_ID;
+	std::unordered_map<uint8_t, NetPlayerCharacter::Weak> m_net_player_map_InstID;
+	std::unordered_map<uint32_t, NetPlayerCharacter::Weak> m_net_player_map_ID;
 
 	void send_player_location();
 

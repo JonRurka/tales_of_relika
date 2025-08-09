@@ -41,9 +41,9 @@ namespace {
     }
 }
 
-void CubeVoxelBuilder::Init(ChunkSettings* settings)
+void CubeVoxelBuilder::Init(ChunkSettings& settings)
 {
-    Settings p_settings = *settings->GetSettings();
+    Settings& p_settings = settings.GetSettings();
 
     float vpm = p_settings.getFloat("voxelsPerMeter");
 
@@ -54,14 +54,14 @@ void CubeVoxelBuilder::Init(ChunkSettings* settings)
 
     CalculateVariables();
 
-    m_structure_data = new StructureDataStorage(
+    m_structure_data = std::make_shared<StructureDataStorage>(
         m_static_settings.ChunkSize.x, m_static_settings.ChunkSize.y, m_static_settings.ChunkSize.z,
         MAX_STORED_CHUNKS
     );
 }
 
 glm::dvec4 CubeVoxelBuilder::Render(
-    ChunkRenderOptions* options,
+    ChunkRenderOptions& options,
     std::vector<glm::vec4>& out_vertex,
     std::vector<glm::vec4>& out_normal,
     std::vector<glm::vec2>& out_uv,
@@ -88,13 +88,13 @@ glm::dvec4 CubeVoxelBuilder::Render(
     //out_data.out_trianges = out_trianges;
     //out_data.out_counts = counts;
 
-    glm::ivec3 chunk = options->locations[0];
+    glm::ivec3 chunk = options.locations[0];
 
     if (!m_structure_data->Has_Chunk(chunk)) {
         return glm::dvec4();
     }
 
-    uint32_t* data = m_structure_data->Get_Data_ptr(chunk);
+    const std::vector<uint32_t>& data = m_structure_data->Get_Data(chunk);
 
     for (int x = 0; x < m_static_settings.ChunkSize.x; ++x) 
     {
@@ -128,7 +128,7 @@ void CubeVoxelBuilder::CalculateVariables()
     m_static_settings.skipDist[0] = 1 / (float)m_static_settings.VoxelsPerMeter.x;
 }
 
-void CubeVoxelBuilder::process_block(uint32_t* data, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+void CubeVoxelBuilder::process_block(const std::vector<uint32_t>& data, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
 {
     int v_idx = C_3D_to_1D(voxel_coord.x + GRID_OFFSET, voxel_coord.y + GRID_OFFSET, voxel_coord.z + GRID_OFFSET, m_static_settings.ChunkSize.x + GRID_PADDING, m_static_settings.ChunkSize.y + GRID_PADDING);
     uint32_t raw_block_data = data[v_idx];
@@ -150,7 +150,7 @@ void CubeVoxelBuilder::process_block(uint32_t* data, glm::ivec3 chunk_coord, glm
 
 }
 
-void CubeVoxelBuilder::process_tile(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, int tile_index, Out_Data& out_data)
+void CubeVoxelBuilder::process_tile(const std::vector<uint32_t>& data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, int tile_index, Out_Data& out_data)
 {
     int x = voxel_coord.x;
     int y = voxel_coord.y;
@@ -262,7 +262,7 @@ void CubeVoxelBuilder::process_tile(uint32_t* data, glm::ivec2 block_info, glm::
 
 }
 
-void CubeVoxelBuilder::process_tile_x_plus(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+void CubeVoxelBuilder::process_tile_x_plus(const std::vector<uint32_t>& data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
 {
     int x = voxel_coord.x;
     int y = voxel_coord.y;
@@ -336,7 +336,7 @@ void CubeVoxelBuilder::process_tile_x_plus(uint32_t* data, glm::ivec2 block_info
     //Logger::LogDebug(LOG_POS("process_tile"), "Render Tile: %i", out_data.out_counts.x);
 }
 
-void CubeVoxelBuilder::process_tile_x_neg(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+void CubeVoxelBuilder::process_tile_x_neg(const std::vector<uint32_t>& data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
 {
     int x = voxel_coord.x;
     int y = voxel_coord.y;
@@ -403,7 +403,7 @@ void CubeVoxelBuilder::process_tile_x_neg(uint32_t* data, glm::ivec2 block_info,
     //Logger::LogDebug(LOG_POS("process_tile"), "Render Tile: %i", out_data.out_counts.x);
 }
 
-void CubeVoxelBuilder::process_tile_y_plus(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+void CubeVoxelBuilder::process_tile_y_plus(const std::vector<uint32_t>& data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
 {
     int x = voxel_coord.x;
     int y = voxel_coord.y;
@@ -470,7 +470,7 @@ void CubeVoxelBuilder::process_tile_y_plus(uint32_t* data, glm::ivec2 block_info
     //Logger::LogDebug(LOG_POS("process_tile"), "Render Tile: %i", out_data.out_counts.x);
 }
 
-void CubeVoxelBuilder::process_tile_y_neg(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+void CubeVoxelBuilder::process_tile_y_neg(const std::vector<uint32_t>& data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
 {
     int x = voxel_coord.x;
     int y = voxel_coord.y;
@@ -537,7 +537,7 @@ void CubeVoxelBuilder::process_tile_y_neg(uint32_t* data, glm::ivec2 block_info,
     //Logger::LogDebug(LOG_POS("process_tile"), "Render Tile: %i", out_data.out_counts.x);
 }
 
-void CubeVoxelBuilder::process_tile_z_plus(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+void CubeVoxelBuilder::process_tile_z_plus(const std::vector<uint32_t>& data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
 {
     int x = voxel_coord.x;
     int y = voxel_coord.y;
@@ -604,7 +604,7 @@ void CubeVoxelBuilder::process_tile_z_plus(uint32_t* data, glm::ivec2 block_info
     //Logger::LogDebug(LOG_POS("process_tile"), "Render Tile: %i", out_data.out_counts.x);
 }
 
-void CubeVoxelBuilder::process_tile_z_neg(uint32_t* data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
+void CubeVoxelBuilder::process_tile_z_neg(const std::vector<uint32_t>& data, glm::ivec2 block_info, glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, Out_Data& out_data)
 {
     int x = voxel_coord.x;
     int y = voxel_coord.y;
@@ -671,7 +671,7 @@ void CubeVoxelBuilder::process_tile_z_neg(uint32_t* data, glm::ivec2 block_info,
     //Logger::LogDebug(LOG_POS("process_tile"), "Render Tile: %i", out_data.out_counts.x);
 }
 
-bool CubeVoxelBuilder::neighboor_filed(uint32_t* data, glm::ivec3 this_voxel, glm::ivec3 neightboor_offset)
+bool CubeVoxelBuilder::neighboor_filed(const std::vector<uint32_t>& data, glm::ivec3 this_voxel, glm::ivec3 neightboor_offset)
 {
     glm::ivec3 other_voxel = this_voxel + neightboor_offset;
     int v_idx = C_3D_to_1D(other_voxel.x + GRID_OFFSET, other_voxel.y + GRID_OFFSET, other_voxel.z + GRID_OFFSET, m_static_settings.ChunkSize.x + GRID_PADDING, m_static_settings.ChunkSize.y + GRID_PADDING);
@@ -681,7 +681,7 @@ bool CubeVoxelBuilder::neighboor_filed(uint32_t* data, glm::ivec3 this_voxel, gl
 }
 
 
-uint32_t VoxelEngine::CubeVoxelBuilder::New_Block_Data(uint32_t type, uint8_t orientation)
+uint32_t CubeVoxelBuilder::New_Block_Data(uint32_t type, uint8_t orientation)
 {
     uint32_t data = 0;
     Set_Block_Type(data, type);

@@ -13,11 +13,17 @@ void Client_Server::Init()
 	Server_Main::Options options;
 	options.Type = Server_Main::Server_Type::Local;
 	options.Async = true;
-	m_server = new Server_Main(options);
+	m_server = std::make_unique<Server_Main>(options);
 }
 
 void Client_Server::Update(float dt)
 {
 
 
+}
+
+void Client_Server::OnDestroy()
+{
+	m_server->Dispose();
+	m_server.reset();
 }

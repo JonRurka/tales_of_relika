@@ -2,17 +2,17 @@
 
 #include "Item_Loader.h"
 
-std::unordered_map<int, Item_Type*> Item_Type::m_types;
-std::unordered_map<std::string, Item_Type*> Item_Type::m_name_map;
+std::unordered_map<int, Item_Type::Shared> Item_Type::m_types;
+std::unordered_map<std::string, Item_Type::Shared> Item_Type::m_name_map;
 
-Item_Type* Item_Type::Empty()
+Item_Type::Shared Item_Type::Empty()
 {
     return m_types[0];
 }
 
 void Item_Type::Init()
 {
-	auto data = Item_Loader::Instance()->Get_Item_Data();
+	auto data = Item_Loader::Instance().Get_Item_Data();
 
 	m_types.clear();
     m_name_map.clear();
@@ -38,7 +38,7 @@ bool Item_Type::Type_Exists(std::string type)
     return m_name_map.contains(type);
 }
 
-Item_Type* Item_Type::Get_ItemType(int type_id) 
+Item_Type::Shared Item_Type::Get_ItemType(int type_id) 
 {
     if (!Type_Exists(type_id)) {
         return nullptr;
@@ -46,7 +46,7 @@ Item_Type* Item_Type::Get_ItemType(int type_id)
     return m_types[type_id];
 }
 
-Item_Type* Item_Type::Get_ItemType(std::string type) 
+Item_Type::Shared Item_Type::Get_ItemType(std::string type) 
 {
     if (!Type_Exists(type)) {
         return nullptr;
@@ -63,7 +63,7 @@ void Item_Type::load_item(Item_Loader::Item_Data data)
         return;
     }
 
-    Item_Type* block_type = new Item_Type(data);
+    Item_Type::Shared block_type = std::make_shared<Item_Type>(data);
     m_types[id] = block_type;
     m_name_map[Utilities::toLowerCase(data.Item_Name)] = block_type;
 }

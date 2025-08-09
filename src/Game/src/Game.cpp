@@ -116,9 +116,8 @@ void Game::init_shaders()
 void Game::init_block_types()
 {
 	// TODO: This should be loaded from VoxelWorld_Scene after server connect and before terrain gen.
-	m_material_types = Material_Types();
-	m_material_types.Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
-	m_material_types.Initialize_Materials();
+	Material_Types::Instance().Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
+	Material_Types::Instance().Initialize_Materials();
 	Material_Processor::Add<Uniform_Material_Processor>();
 	Block_Type::Init();
 }
