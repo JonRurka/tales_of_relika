@@ -40,6 +40,8 @@ using namespace DynamicCompute::Compute::OCL;
 #define FORCE_MANUAL_SYNC false
 #define KERNEL_DIRECT_EXTERNAL_WRITE true
 
+#define PRINT_CL_INFO false
+
 #define CL_GL_DYNAMIC_DRAW 0x88E8
 #define CL_GL_STATIC_COPY 0x88E6
 #define CL_GL_DYNAMIC_COPY 0x88EA
@@ -436,7 +438,7 @@ ComputeContext::ComputeContext(OpenCL_Device_Info device)
         external_ext_supported = true;
     }
     else {
-        Logger::LogError(LOG_POS("ComputeContext"), "CL_GL Extension Not Found!!!");
+        Logger::LogInfo(LOG_POS("ComputeContext"), "CL_GL Extension Not Found!!!");
         external_ext_supported = false;
     }
 
@@ -447,7 +449,7 @@ ComputeContext::ComputeContext(OpenCL_Device_Info device)
         external_device_support = true;
     }
     else {
-        Logger::LogError(LOG_POS("ComputeContext"), "CL_GL Device NOT Supported!!!");
+        Logger::LogInfo(LOG_POS("ComputeContext"), "CL_GL Device NOT Supported!!!");
         external_device_support = false;
     }
 
@@ -479,14 +481,17 @@ ComputeContext::ComputeContext(OpenCL_Device_Info device)
     char driver_version[100];
     memset(driver_version, 0, 100);
     clGetDeviceInfo(deviceID, CL_DRIVER_VERSION, sizeof(driver_version), &driver_version, NULL);
-    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCL Driver Version: %s", driver_version);
-    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl Platform Version: %s", ComputeEngine::Get_CL_Version().c_str());
-    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max local memory: %i bytes", (int)local_size);
-    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max const memory: %i bytes", (int)const_size);
 
-    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max compute units: %i", (int)comp_units);
-    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max work item sizes: (%i, %i, %i)", (int)work_items[0], (int)work_items[1], (int)work_items[2]);
-    Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max group size: %i", (int)work_group_size);
+    if (PRINT_CL_INFO) {
+        Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCL Driver Version: %s", driver_version);
+        Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl Platform Version: %s", ComputeEngine::Get_CL_Version().c_str());
+        Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max local memory: %i bytes", (int)local_size);
+        Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max const memory: %i bytes", (int)const_size);
+
+        Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max compute units: %i", (int)comp_units);
+        Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max work item sizes: (%i, %i, %i)", (int)work_items[0], (int)work_items[1], (int)work_items[2]);
+        Logger::LogInfo(LOG_POS("ComputeContext"), "OpenCl max group size: %i", (int)work_group_size);
+    }
 
     context = clCreateContext(properties, 1, &deviceID, NULL, NULL, &err);
     if (err != CL_SUCCESS) {
