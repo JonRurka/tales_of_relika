@@ -31,6 +31,8 @@ public:
 	static Scene& Active_Scene();
 	static std::weak_ptr<Scene> Active_Scene_Ptr();
 
+	static std::shared_ptr<Scene> Get_Scene_Ptr(std::string name);
+
 	static void Activate_Scene(Scene& value);
 	static void Activate_Scene(std::weak_ptr<Scene> value);
 	static void Activate_Scene(std::shared_ptr<Scene> value);
@@ -43,10 +45,12 @@ public:
 
 	template<typename T,
 		typename = std::enable_if_t<std::is_base_of<Scene, T>::value>>
-		std::weak_ptr<Scene> Load_Scene(std::string name)
+		std::shared_ptr<Scene> Load_Scene(std::string name)
 	{
 		std::shared_ptr<T> scene = std::make_shared<T>();
-		initialize_scene(std::static_pointer_cast<Scene>(scene), name);
+		scene->m_name = name;
+		m_scenes[name] = scene;
+		//initialize_scene(std::static_pointer_cast<Scene>(scene), name);
 		//Initialize_Scene(static_cast<Scene*>(scene), name);
 		return std::static_pointer_cast<Scene>(scene);
 	}

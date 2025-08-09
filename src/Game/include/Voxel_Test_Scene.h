@@ -8,12 +8,11 @@
 #include "shared_structures.h"
 #include "IVoxelBuilder.h"
 #include "SmoothVoxelBuilder.h"
+#include "Opaque_Chunk_Material.h"
+#include "Standard_Material.h"
 
 using namespace VoxelEngine;
 using namespace DynamicCompute::Compute;
-
-class Standard_Material;
-class Opaque_Chunk_Material;
 
 class Voxel_Test_Scene : public Scene {
 public:

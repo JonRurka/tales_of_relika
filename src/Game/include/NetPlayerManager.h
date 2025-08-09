@@ -6,11 +6,9 @@
 #include "Network/Data.h"
 
 #include "NetPlayerCharacter.h"
+#include "LocalPlayerCharacter.h"
 
 #include <unordered_map>
-
-class LocalPlayerCharacter;
-class NetPlayerCharacter;
 
 class NetPlayerManager : public Component {
 public:

@@ -43,7 +43,7 @@ public:
 
 	Texture(const std::vector<std::shared_ptr<Texture>> textures);
 
-	Texture(const int width, const int height);
+	Texture(const int width, const int height, std::string name = "render_texture");
 
 	~Texture()
 	{

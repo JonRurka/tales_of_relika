@@ -21,6 +21,7 @@ class Scene;
 class WorldObject : public std::enable_shared_from_this<WorldObject>
 {
 	friend class Component;
+	friend class Scene;
 public:
 	typedef std::shared_ptr<WorldObject> Shared;
 	typedef std::weak_ptr<WorldObject> Weak;
@@ -90,6 +91,8 @@ private:
 	int m_next_comp_idx{ 0 };
 	std::unordered_map<int, std::shared_ptr<Component>> m_components;
 	std::vector<std::weak_ptr<WorldObject>> m_children;
+
+	void scene_init();
 
 	void Initialize_Component(std::shared_ptr<Component> comp);
 

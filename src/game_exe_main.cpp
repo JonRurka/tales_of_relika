@@ -5,6 +5,8 @@
 int main()
 {
 	Logger::Set_Direct(true);
+	Logger::Set_Crashing_Errors(true);
+	Logger::Set_Crashing_Warnings(true);
 
 	Game game;
 	return game.Run();

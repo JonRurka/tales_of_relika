@@ -38,12 +38,12 @@ public:
 
 	bool Can_Render(int block_id);
 
+	Block_Type(Material_Types::Structure_Material m);
+
 private:
 
 	Material_Processor::Shared m_material_processor;
 	Material_Types::Structure_Material m_material_type_info{};
-
-	Block_Type(Material_Types::Structure_Material m);
 
 
 	static std::vector<std::shared_ptr<Block_Type>> m_type_array;

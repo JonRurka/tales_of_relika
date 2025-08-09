@@ -139,6 +139,7 @@ Texture::Texture(const std::vector<std::shared_ptr<Texture>> textures)
 	m_name = "texture_array";
 	m_path = m_name;
 	m_tex_array = textures;
+	bool success = true;
 
 	glGenTextures(1, &m_texture);
 	glBindTexture(GL_TEXTURE_2D_ARRAY, m_texture);
@@ -200,14 +201,15 @@ Texture::Texture(const std::vector<std::shared_ptr<Texture>> textures)
 	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
 	m_id = ++m_next_id;
+	m_initialized = success;
 }
 
-Texture::Texture(const int width, const int height)
+Texture::Texture(const int width, const int height, std::string name)
 {
 	m_dim = Dimensions::RENDER_TEXTURE_2D;
 	m_width = width;
 	m_height = height;
-	m_name = "render_texture";
+	m_name = name;
 
 	glGenTextures(1, &m_texture);
 	glBindTexture(GL_TEXTURE_2D, m_texture);
@@ -220,16 +222,21 @@ Texture::Texture(const int width, const int height)
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	m_id = ++m_next_id;
+	m_initialized = true;
 }
 
 void Texture::Enable_Window_Resize()
 {
+	assert(m_initialized);
+
 	m_frame_resizable = true;
 	Graphics::Instance().Register_Resize_Tex(shared_from_this());
 }
 
 GLenum Texture::Target_Type()
 {
+	assert(m_initialized);
+
 	GLenum type = GL_TEXTURE_2D;
 
 	switch (m_dim) {
@@ -249,6 +256,8 @@ GLenum Texture::Target_Type()
 
 void Texture::Wrap(Wrap_Mode value)
 {
+	assert(m_initialized);
+
 	glBindTexture(Target_Type(), m_texture);
 	GLint mode;
 	switch (value) {
@@ -272,6 +281,9 @@ void Texture::Wrap(Wrap_Mode value)
 
 void Texture::Dispose()
 {
+	if (!m_initialized)
+		return;
+
 	if (m_frame_resizable) {
 		Graphics::Instance().Remove_Resize_Tex(shared_from_this());
 	}
@@ -280,6 +292,8 @@ void Texture::Dispose()
 	m_tex_array.clear();
 
 	glDeleteTextures(1, &m_texture);
+
+	m_initialized = false;
 }
 
 std::shared_ptr<Texture> Texture::Create_Texture2D_Array(std::vector<std::string> resource_names, bool flip)
@@ -302,6 +316,7 @@ std::shared_ptr<Texture> Texture::Create_Texture2D_Array(std::vector<std::string
 
 void Texture::Resize(int width, int height)
 {
+	assert(m_initialized);
 	//Logger::LogDebug(LOG_POS("Resize"), "Attempting resize: %i",
 	//	m_resizable ? 1 : 0);
 	if (m_frame_resizable) {
@@ -331,6 +346,7 @@ void Texture::Resize(int width, int height)
 
 void Texture::Bind(GLenum texture_unit)
 {
+	assert(m_initialized);
 	//Logger::LogDebug(LOG_POS("Bind"), "%s: Bound texture to %i", m_name.c_str(), texture_unit);
 	glActiveTexture(texture_unit);
 	glBindTexture(Target_Type(), m_texture);
@@ -338,6 +354,7 @@ void Texture::Bind(GLenum texture_unit)
 
 void Texture::Bind()
 {
+	assert(m_initialized);
 	glBindTexture(Target_Type(), m_texture);
 }
 

@@ -260,17 +260,23 @@ void Mesh::Draw(GLenum mode)
 		
 		//printf("Process mesh: %s, verts: %i, indices: %i\n", m_name.c_str(), (int)m_num_vertices, (int)m_num_indices);
 
-		glDrawElements(mode, m_num_indices, GL_UNSIGNED_INT, 0);
+		if (m_num_indices >= 3) {
+			glDrawElements(mode, m_num_indices, GL_UNSIGNED_INT, 0);
+		}
 	}
 	else {
 		//printf("Process mesh: %s, verts: %i, indices: %i\n", m_name.c_str(), (int)m_num_vertices, (int)m_num_indices);
 		
 		
 		if (mode == GL_LINES) {
-			glDrawArrays(mode, 0, m_num_vertices / 2);
+			if (m_num_vertices >= 2) {
+				glDrawArrays(mode, 0, m_num_vertices / 2);
+			}
 		}
 		else {
-			glDrawArrays(mode, 0, m_num_vertices);
+			if (m_num_vertices >= 3) {
+				glDrawArrays(mode, 0, m_num_vertices);
+			}
 		}
 	}
 

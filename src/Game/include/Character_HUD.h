@@ -3,8 +3,7 @@
 #include "game_engine.h"
 
 #include "Inventory_Item.h"
-
-class ISO_Sampler;
+#include "ISO_Sampler.h"
 
 namespace Rml {
 	class Context;

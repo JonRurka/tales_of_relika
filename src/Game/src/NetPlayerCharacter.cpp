@@ -18,8 +18,8 @@ void NetPlayerCharacter::Update(float dt)
 	m_current_location = glm::mix(m_sync_from_location, m_new_location, delta);
 	m_current_rotation = glm::slerp(m_sync_from_rotation, m_new_rotation, delta);
 
-	Object()->Get_Transform()->Position(m_current_location);
-	Object()->Get_Transform()->Rotation(m_current_rotation);
+	Object().Get_Transform().Position(m_current_location);
+	Object().Get_Transform().Rotation(m_current_rotation);
 
 
 
@@ -38,8 +38,8 @@ void NetPlayerCharacter::Init(std::string userName, uint32_t user_id, glm::vec3 
 	m_current_rotation = rot;
 	m_old_location = pos;
 	m_old_rotation = rot;
-	Object()->Get_Transform()->Position(pos);
-	Object()->Get_Transform()->Rotation(rot);
+	Object().Get_Transform().Position(pos);
+	Object().Get_Transform().Rotation(rot);
 }
 
 void NetPlayerCharacter::Set_Orientation(glm::vec3 loc, glm::quat rot)

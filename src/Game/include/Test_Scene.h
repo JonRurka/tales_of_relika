@@ -3,6 +3,8 @@
 #include "game_engine.h"
 #include "dynamic_compute.h"
 
+#include "Standard_Material.h"
+
 using namespace DynamicCompute::Compute;
 
 class Standard_Material;

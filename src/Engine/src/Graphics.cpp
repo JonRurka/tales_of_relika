@@ -27,11 +27,11 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#define RENDER_IMGUI true
+#define RENDER_IMGUI false
 #define RENDER_DEBUG_LINES true
 #define RENDER_GAME_UI true
 #define RENDER_GAME_SCREEN true
-#define RENDER_AXIS_GIZMO true
+#define RENDER_AXIS_GIZMO false
 
 
 #define DEFAULT_SCREEN_WIDTH 800
@@ -146,7 +146,7 @@ void Graphics::Init()
 	Logger::LogDebug(LOG_POS("Initialize"), "Create screen mesh");
 
 	m_screen_shader = Shader::Create("screen_shader", SCREEN_VERT_SHADER, SCREEN_FRAG_SHADER);
-	if (m_screen_shader == nullptr || !m_screen_shader->Initialized()) {
+	if (m_screen_shader.get() == nullptr || !m_screen_shader->Initialized()) {
 		Logger::LogFatal(LOG_POS("Initialize"), "Failed to create screen shader.");
 		return;
 	}
@@ -219,13 +219,14 @@ void Graphics::Set_Screen_FrameTexture(std::shared_ptr<Texture> tex)
 	if (!m_initialized)
 		return;
 
-	if (tex == nullptr)
+	if (tex.get() == nullptr)
 	{
 		m_screen_shader->use(false);
 		m_screen_shader->Set_Textures({});
 	}
 	else
 	{
+		Logger::LogDebug(LOG_POS("Set_Screen_FrameTexture"), "Screen frame texture set.");
 		m_screen_shader->Set_Textures(
 		{
 			{"screenTexture", tex}
@@ -339,7 +340,8 @@ void Graphics::render(float dt)
 	//ImGui::ShowDemoWindow();
 
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+
+	glClearColor(1.0f, 0.0f, 1.0f, 1.0f); // Purple
 	glClear(GL_COLOR_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
 
@@ -347,9 +349,12 @@ void Graphics::render(float dt)
 
 	if (RENDER_GAME_SCREEN) 
 	{
+		assert(m_screen_shader.get() != nullptr);
 		m_screen_shader->use(false);
 		m_screen_shader->Bind_Textures();
+		assert(m_screen_mesh->Num_Vertices() == 6);
 		m_screen_mesh->Draw();
+		//Logger::LogDebug(LOG_POS("success"), "Render screen shader.");
 	}
 
 	if (RENDER_AXIS_GIZMO){

@@ -79,18 +79,13 @@ void StructureDataStorage::Set_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coo
 
 const uint32_t* StructureDataStorage::Get_Data_ptr(glm::ivec3 chunk_coord)
 {
-	if (!Has_Chunk(chunk_coord)) {
-		return nullptr;
-	}
-
+	assert(Has_Chunk(chunk_coord));
 	return m_chunk_data[chunk_hash(chunk_coord)].data();
 }
 
-std::vector<uint32_t> StructureDataStorage::Get_Data(glm::ivec3 chunk_coord)
+std::vector<uint32_t>& StructureDataStorage::Get_Data(glm::ivec3 chunk_coord)
 {
-	if (!Has_Chunk(chunk_coord)) {
-		return std::vector<uint32_t>();
-	}
+	assert(Has_Chunk(chunk_coord));
 	return m_chunk_data[chunk_hash(chunk_coord)];
 }
 

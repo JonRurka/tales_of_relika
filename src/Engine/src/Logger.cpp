@@ -51,6 +51,7 @@ void Logger::LogFatal(std::string source, const std::string format, ...)
 	va_end(args);
 	std::string message = std::string(buffer);
 	Log(Level::Fatal, source, message);
+	assert(false);
 }
 
 void Logger::LogError(std::string source, const std::string format, ...)
@@ -62,6 +63,10 @@ void Logger::LogError(std::string source, const std::string format, ...)
 	va_end(args);
 	std::string message = std::string(buffer);
 	Log(Level::Error, source, message);
+	if (m_crash_on_error)
+	{
+		assert(false);
+	}
 }
 
 void Logger::LogWarning(std::string source, const std::string format, ...)
@@ -73,6 +78,10 @@ void Logger::LogWarning(std::string source, const std::string format, ...)
 	va_end(args);
 	std::string message = std::string(buffer);
 	Log(Level::Warning, source, message);
+	if (m_crash_on_warning)
+	{
+		assert(false);
+	}
 }
 
 void Logger::LogInfo(std::string source, const std::string format, ...)
@@ -157,21 +166,18 @@ void Logger::Update()
 				break;
 			case Logger::Level::Warning:
 				type_str = "WARNING";
+				if (m_crash_on_warning) halt = true;
 				break;
 			case Logger::Level::Error:
 				type_str = "ERROR";
+				if (m_crash_on_error) halt = true;
 				break;
 			case Logger::Level::Fatal:
 				type_str = "FATAL_ERROR";
-				halt = true;
 				break;
 		}
 
 		printf("%s::%s: %s\n", type_str.c_str(), entry.source.c_str(), entry.message.c_str());
-		if (halt) {
-			printf("HALT TRIGGERED: Stopping engine...\n");
-			Engine::Instance()->Stop();
-		}
 	}
 }
 

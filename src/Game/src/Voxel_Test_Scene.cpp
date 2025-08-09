@@ -203,6 +203,7 @@ void Voxel_Test_Scene::Init()
 	});
 
 	standard_mat = std::make_shared<Standard_Material>();
+	standard_mat->Set_Shader(Shader::Get_Shader("standard"));
 	standard_mat->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	standard_mat->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	standard_mat->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));
@@ -214,6 +215,7 @@ void Voxel_Test_Scene::Init()
 	standard_mat->setTexture("material_specular", Game_Resources::Textures::CONTAINER_SPECULAR);
 
 	chunk_opaque_mat = std::make_shared<Opaque_Chunk_Material>();
+	chunk_opaque_mat->Set_Shader(Shader::Get_Shader("opaque_chunk_material"));
 	chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
 	chunk_opaque_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	chunk_opaque_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));

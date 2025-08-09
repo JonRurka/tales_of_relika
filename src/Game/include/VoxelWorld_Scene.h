@@ -51,6 +51,8 @@ public:
 
 	bool Game_Ready();
 
+	VoxelWorld_Scene();
+
 protected:
 	void Init() override;
 

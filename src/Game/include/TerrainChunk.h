@@ -3,6 +3,8 @@
 #include "game_engine.h"
 #include "Stitch_VBO.h"
 
+#include <memory>
+
 class Opaque_Chunk_Material;
 class Stitch_VBO;
 class WorldGenController;
@@ -20,7 +22,7 @@ public:
 	typedef std::shared_ptr<TerrainChunk> Shared;
 	typedef std::weak_ptr<TerrainChunk> Weak;
 
-	void Init(WorldGenController::Weak controller, Stitch_VBO::Shared vbo_stitch);
+	void Init(std::weak_ptr<WorldGenController> controller, Stitch_VBO::Shared vbo_stitch);
 
 	void Assign(glm::ivec3 chunk_coord);
 
@@ -48,7 +50,7 @@ private:
 	glm::ivec3 m_chunk_coords;
 	glm::fvec3 m_chunk_world_pos;
 	glm::ivec4 m_counts;
-	WorldGenController::Weak m_controller;
+	std::weak_ptr<WorldGenController> m_controller;
 	Stitch_VBO::Shared m_vbo_stitch;
 	bool m_assigned{ false };
 	bool m_has_collision{ false };

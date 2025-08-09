@@ -62,6 +62,12 @@ Scene& Engine::Active_Scene()
 	return *m_instance->m_active_scene.lock();
 }
 
+std::shared_ptr<Scene> Engine::Get_Scene_Ptr(std::string name)
+{
+	assert(m_instance->m_scenes.contains(name));
+	return m_instance->m_scenes[name];
+}
+
 std::weak_ptr<Scene> Engine::Active_Scene_Ptr()
 {
 	assert(m_instance->m_has_active_scene);

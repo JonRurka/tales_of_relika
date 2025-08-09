@@ -56,6 +56,9 @@ void Game::Init()
 	m_main_menu_scene = Load_Scene<Menu_Scene>("main_menu");
 	m_voxel_world_secen = Load_Scene<VoxelWorld_Scene>("VoxelWorld");
 
+	assert(!m_main_menu_scene.expired());
+	assert(!m_voxel_world_secen.expired());
+
 	//m_main_menu_scene->Activate(true);
 	
 	Scene::SceneStartData start_data{};

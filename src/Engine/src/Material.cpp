@@ -22,14 +22,14 @@ do {												\
 #define Mat_Set(func, name, val)						\
 do {													\
 	for (const auto& pair : m_registered_materials) {	\
-		assert(!pair.second.expired());							\
-		pair.second.lock()->func(name, value);					\
+		assert(!pair.second.expired());					\
+		pair.second.lock()->func(name, value);			\
 	}													\
 } while (false)
 
 void Material::Set_Shader(std::shared_ptr<Shader> shader)
 {
-	if (shader == nullptr || !shader->Initialized()) {
+	if (shader.get() == nullptr || !shader->Initialized()) {
 		Logger::LogError(LOG_POS("Set_Shader"), "Material '%s' set to invalid shader.", Name().c_str());
 		return;
 	}

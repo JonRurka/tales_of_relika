@@ -14,7 +14,7 @@ void TerrainChunk::Init()
 
 }
 
-void TerrainChunk::Init(WorldGenController::Weak controller, Stitch_VBO::Shared vbo_stitch)
+void TerrainChunk::Init(std::weak_ptr<WorldGenController> controller, Stitch_VBO::Shared vbo_stitch)
 {
 	m_controller = controller;
 	m_vbo_stitch = vbo_stitch;

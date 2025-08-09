@@ -20,14 +20,14 @@ VoxelEngine::ChunkProcessor_private::ChunkProcessor_private(ChunkProcessorSettin
 
 	m_processor_settings = processor_settings;
 
-	settings.GetSettings()->setString("programDir", std::string(processor_settings.ProgramDirectory));
-	settings.GetSettings()->setFloat("voxelsPerMeter", processor_settings.voxelsPerMeter);
-	settings.GetSettings()->setInt("chunkMeterSizeX", processor_settings.chunkMeterSizeX);
-	settings.GetSettings()->setInt("chunkMeterSizeY", processor_settings.chunkMeterSizeY);
-	settings.GetSettings()->setInt("chunkMeterSizeZ", processor_settings.chunkMeterSizeZ);
-	settings.GetSettings()->setInt("TotalBatchGroups", processor_settings.TotalBatchGroups);
-	settings.GetSettings()->setInt("BatchesPerGroup", processor_settings.BatchesPerGroup);
-	settings.GetSettings()->setInt("InvertTrianges", processor_settings.InvertTrianges ? 1 : 0);
+	settings.GetSettings().setString("programDir", std::string(processor_settings.ProgramDirectory));
+	settings.GetSettings().setFloat("voxelsPerMeter", processor_settings.voxelsPerMeter);
+	settings.GetSettings().setInt("chunkMeterSizeX", processor_settings.chunkMeterSizeX);
+	settings.GetSettings().setInt("chunkMeterSizeY", processor_settings.chunkMeterSizeY);
+	settings.GetSettings().setInt("chunkMeterSizeZ", processor_settings.chunkMeterSizeZ);
+	settings.GetSettings().setInt("TotalBatchGroups", processor_settings.TotalBatchGroups);
+	settings.GetSettings().setInt("BatchesPerGroup", processor_settings.BatchesPerGroup);
+	settings.GetSettings().setInt("InvertTrianges", processor_settings.InvertTrianges ? 1 : 0);
 
 	m_builder = new SmoothVoxelBuilder();
 

@@ -28,20 +28,13 @@ public:
 		friend class Mesh;
 	public:
 
-		VertexAttributeList() : m_float_stride{ (size_t)11 }, m_byte_stride{ (size_t)(11 * sizeof(float))}
-		{
-		}
-
-		VertexAttributeList(int stride) : m_float_stride{ (size_t)stride }, m_byte_stride{ (size_t)(stride * sizeof(float)) }
-		{
-		}
-
-		void add_attribute(int size, int offset) {
-			m_attributes.push_back(glm::ivec4(size, offset, 0, 0));
+		void add_attribute(int num_floats, int byte_offset) {
+			m_attributes.push_back(glm::ivec4(num_floats, byte_offset, 0, 0));
+			calc_offsets();
 		}
 
 		static VertexAttributeList Default() {
-			VertexAttributeList res(11 * sizeof(float));
+			VertexAttributeList res{};
 			res.add_attribute(3, 0);
 			res.add_attribute(3, (3 * sizeof(float)));
 			res.add_attribute(3, (6 * sizeof(float)));
@@ -56,6 +49,17 @@ public:
 		std::vector<glm::ivec4> m_attributes;
 		size_t m_byte_stride{ 0 };
 		size_t m_float_stride{ 0 };
+
+		void calc_offsets() 
+		{
+			int total_floats = 0;
+			for (const auto& elem : m_attributes)
+			{
+				total_floats += elem.x;
+			}
+			m_float_stride = (size_t)total_floats;
+			m_byte_stride = (size_t)(total_floats * sizeof(float));
+		}
 
 		void process();
 	};
@@ -130,6 +134,9 @@ public:
 	bool Has_Indices() {
 		return m_num_indices > 0;
 	}
+
+	size_t Num_Vertices() { return m_num_vertices; }
+	size_t Num_Indices() { return m_num_indices; }
 
 	glm::vec3 Center() { return m_center; }
 

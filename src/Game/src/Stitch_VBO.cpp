@@ -232,17 +232,17 @@ void Stitch_VBO::Reset()
 
 int Stitch_VBO::Byte_Stride()
 {
-
+	return BYTE_STRIDE;
 }
 
 int Stitch_VBO::Float_Stride()
 {
-
+	return FLOAT_STRIDE;
 }
 
 Mesh::VertexAttributeList Stitch_VBO::Get_Vertex_Attributes()
 {
-	Mesh::VertexAttributeList res(FLOAT_STRIDE);
+	Mesh::VertexAttributeList res{};
 	res.add_attribute(4, 0);
 	res.add_attribute(4, (4 * sizeof(float)));
 	res.add_attribute(4, (8 * sizeof(float)));
@@ -269,7 +269,7 @@ void Stitch_VBO::compute_triangles()
 	m_triangles.clear();
 	m_triangles.resize(Max_Verts);
 	bool m_invert_tris = false;
-	for (int i = 0; i < Max_Verts; i += 3) {
+	for (int i = 0; i < (Max_Verts / 3); i += 3) {
 		unsigned int tris_start = i;
 
 		if (m_invert_tris) {

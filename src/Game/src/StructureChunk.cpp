@@ -11,7 +11,7 @@
 
 using namespace VoxelEngine;
 
-void StructureChunk::Init(StructureController::Weak controller)
+void StructureChunk::Init(std::weak_ptr<StructureController> controller)
 {
 	m_controller = controller;
 
@@ -206,7 +206,7 @@ void StructureChunk::update_collision_mesh()
 
 Mesh::VertexAttributeList StructureChunk::get_vertex_attributes()
 {
-	Mesh::VertexAttributeList res(FLOAT_STRIDE);
+	Mesh::VertexAttributeList res{};
 	res.add_attribute(4, 0);
 	res.add_attribute(4, (4 * sizeof(float)));
 	res.add_attribute(4, (8 * sizeof(float)));

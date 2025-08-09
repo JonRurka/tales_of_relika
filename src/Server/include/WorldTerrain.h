@@ -5,10 +5,13 @@
 #include "shared_structures.h"
 #include "IVoxelBuilder.h"
 #include "SmoothVoxelBuilder.h"
+#include "TerrainModifications.h"
+#include "HeightmapGenerator.h"
 
 #include <unordered_map>
 #include <vector>
 #include <queue>
+#include <memory>
 
 using namespace VoxelEngine;
 using namespace DynamicCompute::Compute;
@@ -116,9 +119,9 @@ public:
 
 	World* Get_World() { return m_world; }
 
-	TerrainModifications* Get_TerrainModifications() { return m_terrain_mods; }
+	TerrainModifications::Shared Get_TerrainModifications() { return m_terrain_mods; }
 
-	HeightmapGenerator* Get_HeightmapGenerator() { return m_heightmap_gen; }
+	HeightmapGenerator::Shared Get_HeightmapGenerator() { return m_heightmap_gen; }
 
 	void Init(World* world);
 
@@ -137,9 +140,9 @@ private:
 		glm::ivec3 chunk;
 	};
 
-	IVoxelBuilder_private* m_builder{ nullptr };
-	TerrainModifications* m_terrain_mods{ nullptr };
-	HeightmapGenerator* m_heightmap_gen{ nullptr };
+	IVoxelBuilder_private::Shared m_builder;
+	TerrainModifications::Shared m_terrain_mods;
+	HeightmapGenerator::Shared m_heightmap_gen;
 	ChunkSettings settings;
 
 	World* m_world{ nullptr };

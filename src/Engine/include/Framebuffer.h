@@ -4,6 +4,7 @@
 
 #include <string>
 #include <memory>
+#include <assert.h>
 
 class Texture;
 
@@ -18,11 +19,13 @@ public:
 		Dispose();
 	}
 
+	void Init();
+
 	void Init_Depth_Stencil();
 
 	void Refresh(bool gen_image = true);
 
-	void Bind_Texture(Texture& texture);
+	void Bind_Texture();
 
 	bool Complete();
 
@@ -30,13 +33,17 @@ public:
 
 	void Dispose();
 
-	std::shared_ptr<Texture> Active_Texture() { return m_active_texture; }
+	std::shared_ptr<Texture> Active_Texture() 
+	{ 
+		assert(m_initialized);
+		return m_active_texture; 
+	}
 
 private:
 	GLuint m_framebuffer_obj{ 0 };
 	GLuint m_renderbuffer_obj{ 0 };
 	//std::shared_ptr<Texture> m_default_texture{nullptr};
-	std::shared_ptr<Texture> m_active_texture{ nullptr };
+	std::shared_ptr<Texture> m_active_texture;
 	bool m_initialized{ false };
 	int m_id{ 0 };
 

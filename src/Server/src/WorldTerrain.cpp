@@ -261,25 +261,25 @@ WorldTerrain::ChunkRef WorldTerrain::get_chunk(glm::ivec3 chunk_coord)
 
 void WorldTerrain::initialize_voxel_engine()
 {
-	settings.GetSettings()->setString("programDir", "");
-	settings.GetSettings()->setFloat("voxelsPerMeter", m_voxelsPerMeter);
-	settings.GetSettings()->setInt("chunkMeterSizeX", m_chunkMeterSizeX);
-	settings.GetSettings()->setInt("chunkMeterSizeY", m_chunkMeterSizeX);
-	settings.GetSettings()->setInt("chunkMeterSizeZ", m_chunkMeterSizeX);
-	settings.GetSettings()->setInt("TotalBatchGroups", 1);
-	settings.GetSettings()->setInt("BatchesPerGroup", 1);
-	settings.GetSettings()->setInt("InvertTrianges", false);
-	settings.GetSettings()->setBool("SharedGL", false);
+	settings.GetSettings().setString("programDir", "");
+	settings.GetSettings().setFloat("voxelsPerMeter", m_voxelsPerMeter);
+	settings.GetSettings().setInt("chunkMeterSizeX", m_chunkMeterSizeX);
+	settings.GetSettings().setInt("chunkMeterSizeY", m_chunkMeterSizeX);
+	settings.GetSettings().setInt("chunkMeterSizeZ", m_chunkMeterSizeX);
+	settings.GetSettings().setInt("TotalBatchGroups", 1);
+	settings.GetSettings().setInt("BatchesPerGroup", 1);
+	settings.GetSettings().setInt("InvertTrianges", false);
+	settings.GetSettings().setBool("SharedGL", false);
 
 	m_chunk_size_x = m_chunkMeterSizeX * m_voxelsPerMeter;
 	m_chunk_size_y = m_chunkMeterSizeY * m_voxelsPerMeter;
 	m_chunk_size_z = m_chunkMeterSizeZ * m_voxelsPerMeter;
 
-	m_builder = new SmoothVoxelBuilder();
+	m_builder = std::make_shared<SmoothVoxelBuilder>();
 	m_builder->Init(&settings);
 
-	m_terrain_mods = ((SmoothVoxelBuilder*)m_builder)->Get_Terrain_Modifications();
-	m_heightmap_gen = ((SmoothVoxelBuilder*)m_builder)->Get_Heightmap_Generator();
+	m_terrain_mods = (std::dynamic_pointer_cast<SmoothVoxelBuilder>(m_builder))->Get_Terrain_Modifications();
+	m_heightmap_gen = (std::dynamic_pointer_cast<SmoothVoxelBuilder>(m_builder))->Get_Heightmap_Generator();
 
 	Logger::LogInfo(LOG_POS("initialize_voxel_engine"), "Initialized Voxel Engine.");
 }

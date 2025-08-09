@@ -52,6 +52,7 @@ void Camera::Init()
 	update_view_matrix();
 	create_framebuffer();
 	if (m_active_camera.expired()) {
+		Logger::LogDebug(LOG_POS("Init"), "Setting %s as first active camera.", Object().Name().c_str());
 		Activate(true);
 	}
 	//m_sort = new GPUSort(1024);
@@ -226,6 +227,7 @@ void Camera::Resize_Refresh()
 void Camera::create_framebuffer()
 {
 	m_cam_framebuffer = std::make_shared<Framebuffer>();
+	m_cam_framebuffer->Init();
 	if (!m_cam_framebuffer->Complete())
 	{
 		Logger::LogError(LOG_POS("create_framebuffer"), "Failed to create framebuffer.");
@@ -301,7 +303,7 @@ void Camera::render_opaque(float dt)
 	glm::vec3 cam_pos = Object().Get_Transform().Position();
 
 	int i = 0;
-	std::vector<unsigned int> shader_ids = Shader::Get_Shader_ID_List();
+	std::vector<uint64_t> shader_ids = Shader::Get_Shader_ID_List();
 	for (const auto& ID : shader_ids) {
 		Shader& shader = *Shader::Get_Shader(ID);
 		std::vector<std::weak_ptr<Renderer>> renderers = Shader::Get_Shader_Renderer_List(ID);
@@ -336,9 +338,10 @@ void Camera::render_transparent(float dt)
 
 void Camera::render(float dt)
 {
+	assert(m_cam_framebuffer.get() != nullptr);
 	m_cam_framebuffer->Use(true);
 
-	glClearColor(m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a);
+	glClearColor(m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a); // Yellow
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 

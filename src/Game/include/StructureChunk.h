@@ -2,13 +2,12 @@
 
 #include "game_engine.h"
 
-#include "StructureController.h"
-
 #include <mutex>
 #include <queue>
 #include <memory>
 
 class StructureController;
+
 namespace VoxelEngine {
 	class CubeVoxelBuilder;
 }
@@ -22,7 +21,7 @@ public:
 	typedef std::shared_ptr<StructureChunk> Shared;
 	typedef std::weak_ptr<StructureChunk> Weak;
 
-	void Init(StructureController::Weak controller);
+	void Init(std::weak_ptr<StructureController> controller);
 
 	void Assign(glm::ivec3 chunk_coord);
 
@@ -43,7 +42,7 @@ private:
 
 	glm::ivec3 m_chunk_coords;
 	glm::fvec3 m_chunk_world_pos;
-	StructureController::Weak m_controller;
+	std::weak_ptr<StructureController> m_controller;
 	bool m_assigned{ false };
 	bool m_has_collision{ false };
 	bool m_should_despawn{ false };

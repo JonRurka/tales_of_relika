@@ -16,12 +16,14 @@
 #include <cstdint>
 
 
-std::unordered_map<unsigned int, std::vector<std::weak_ptr<Renderer>>> Shader::m_renderers;
-std::unordered_map<unsigned int, std::weak_ptr<Shader>> Shader::m_shaders;
+std::unordered_map<uint64_t, std::vector<std::weak_ptr<Renderer>>> Shader::m_renderers;
+std::unordered_map<uint64_t, std::weak_ptr<Shader>> Shader::m_shaders;
 std::unordered_map<std::string, std::weak_ptr<Shader>> Shader::m_shaders_map;
+uint64_t Shader::m_next_id{ 0 };
 
 Shader::Shader(std::string name, const std::string vertexPath, const std::string fragmentPath)
 {
+    m_ID = ++m_next_id;
     // 1. retrieve the vertex/fragment source code from filePath
     std::string vertexCode;
     std::string fragmentCode;
@@ -92,15 +94,15 @@ Shader::Shader(std::string name, const std::string vertexPath, const std::string
         return;
     };
 
-    m_ID = glCreateProgram();
-    glAttachShader(m_ID, vertex);
-    glAttachShader(m_ID, fragment);
-    glLinkProgram(m_ID);
+    m_GL_p = glCreateProgram();
+    glAttachShader(m_GL_p, vertex);
+    glAttachShader(m_GL_p, fragment);
+    glLinkProgram(m_GL_p);
     // print linking errors if any
-    glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
+    glGetProgramiv(m_GL_p, GL_LINK_STATUS, &success);
     if (!success)
     {
-        glGetProgramInfoLog(m_ID, 512, NULL, infoLog);
+        glGetProgramInfoLog(m_GL_p, 512, NULL, infoLog);
         //std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
         Logger::LogError(LOG_POS("NEW::PROGRAM"), "LINKING_FAILED: %s", infoLog);
         return;
@@ -117,6 +119,7 @@ Shader::Shader(std::string name, const std::string vertexPath, const std::string
 
 Shader::Shader(std::string name, const char* vertex_source, const char* fragment_src)
 {
+    m_ID = ++m_next_id;
     m_name = name;
 
     const char* vShaderCode = vertex_source;
@@ -162,15 +165,15 @@ Shader::Shader(std::string name, const char* vertex_source, const char* fragment
         return;
     };
 
-    m_ID = glCreateProgram();
-    glAttachShader(m_ID, vertex);
-    glAttachShader(m_ID, fragment);
-    glLinkProgram(m_ID);
+    m_GL_p = glCreateProgram();
+    glAttachShader(m_GL_p, vertex);
+    glAttachShader(m_GL_p, fragment);
+    glLinkProgram(m_GL_p);
     // print linking errors if any
-    glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
+    glGetProgramiv(m_GL_p, GL_LINK_STATUS, &success);
     if (!success)
     {
-        glGetProgramInfoLog(m_ID, 512, NULL, infoLog);
+        glGetProgramInfoLog(m_GL_p, 512, NULL, infoLog);
         //std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
         Logger::LogError(LOG_POS("NEW::PROGRAM"), "LINKING_FAILED: %s", infoLog);
         std::string str(fragment_src);
@@ -190,6 +193,7 @@ Shader::Shader(std::string name, const char* vertex_source, const char* fragment
 
 Shader::Shader(std::string name, const std::vector<char> vertex_bin, const std::vector<char> fragment_bin)
 {
+    m_ID = ++m_next_id;
     m_name = name;
 
     // 2. compile shaders
@@ -235,13 +239,13 @@ Shader::Shader(std::string name, const std::vector<char> vertex_bin, const std::
         //Logger::LogDebug(LOG_POS("NEW::FRAGMENT"), "%s: COMPILATION SUCCESS", name.c_str());
     }
 
-    m_ID = glCreateProgram();
-    glAttachShader(m_ID, vertex);
-    glAttachShader(m_ID, fragment);
-    glLinkProgram(m_ID);
+    m_GL_p = glCreateProgram();
+    glAttachShader(m_GL_p, vertex);
+    glAttachShader(m_GL_p, fragment);
+    glLinkProgram(m_GL_p);
     //glCheckError();
     // print linking errors if any
-    glGetProgramiv(m_ID, GL_LINK_STATUS, &success);
+    glGetProgramiv(m_GL_p, GL_LINK_STATUS, &success);
     if (!success)
     {
         std::string err_type = "";
@@ -260,7 +264,7 @@ Shader::Shader(std::string name, const std::vector<char> vertex_bin, const std::
                 err_type = "OTHER(" + std::to_string(success) + ")";
                 break;
         }
-        glGetProgramInfoLog(m_ID, 512, NULL, infoLog);
+        glGetProgramInfoLog(m_GL_p, 512, NULL, infoLog);
         //std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
         Logger::LogError(LOG_POS("NEW::PROGRAM"), "%s: LINKING_FAILED (%s): %s", name.c_str(), err_type.c_str(), infoLog);
         return;
@@ -285,12 +289,9 @@ Shader::Shader(std::string name, const std::vector<char> vertex_bin, const std::
 
 void Shader::use(bool update_camera)
 {
-    if (!m_initialized) {
-        assert(false);
-        return;
-    }
+    assert(m_initialized);
 
-    glUseProgram(m_ID);
+    glUseProgram(m_GL_p);
     if (update_camera)
     {
         if (Camera::Has_Active_Camera()) {
@@ -304,8 +305,7 @@ void Shader::Init_Lights()
 {
     //GLuint uniformBlockIndexLights = glGetUniformBlockIndex(shaderLightingPass.Program, "LightBlock");
     //glUniformBlockBinding(shaderLightingPass.Program, uniformBlockIndexLights, 0);
-    if (!m_initialized)
-        return;
+    assert(m_initialized);
     if (m_lights_initialized)
         return;
 
@@ -327,7 +327,7 @@ void Shader::Dispose()
     m_shaders.erase(m_ID);
     m_shaders_map.erase(m_name);
     m_renderers.erase(m_ID);
-    glDeleteProgram(m_ID);
+    glDeleteProgram(m_GL_p);
     m_source_materials.clear();
     m_initialized = false;
 }
@@ -435,13 +435,14 @@ void Shader::Set_Textures(std::vector<Texture*> textures)
 
 void Shader::Set_Textures(std::vector<Bound_Texture> textures)
 {
-    if (!m_initialized)
-        return;
+    assert(m_initialized);
     use();
     m_textures = textures;
     if (m_is_spirv)
         return;
     for (int i = 0; i < m_textures.size(); i++) {
+        Logger::LogDebug(LOG_POS("Set_Textures"), "set tex %s: %i",
+            m_textures[i].texture.lock()->Name().c_str(), i);
         setInt(m_textures[i].name, i);
     }
     
@@ -449,34 +450,31 @@ void Shader::Set_Textures(std::vector<Bound_Texture> textures)
 
 void Shader::Bind_Textures()
 {
-    if (!m_initialized)
-        return;
+    assert(m_initialized);
     for (int i = 0; i < m_textures.size(); i++) {
         assert(!m_textures[i].texture.expired());
+        //Logger::LogDebug(LOG_POS("Bind_Textures"), "Bind tex (%i): %s", i, m_textures[i].texture.lock()->Name().c_str());
         m_textures[i].texture.lock()->Bind(GL_TEXTURE0 + i);
     }
 }
 
 void Shader::Register_Renderer(std::weak_ptr<MeshRenderer> rend)
 {
-    if (!m_initialized)
-        return;
+    assert(m_initialized);
     assert(!rend.expired());
     m_renderers[m_ID].push_back(std::static_pointer_cast<Renderer>(rend.lock()));
 }
 
 void Shader::Register_Material(std::weak_ptr<Material> mat)
 {
-    if (!m_initialized)
-        return;
+    assert(m_initialized);
     assert(!mat.expired());
     m_source_materials.push_back(mat);
 }
 
 void Shader::Update_Source_Materials(float dt)
 {
-    if (!m_initialized)
-        return;
+    assert(m_initialized);
     for (const auto& mat : m_source_materials)
     {
         assert(!mat.expired());
@@ -505,7 +503,7 @@ std::shared_ptr<Shader> Shader::Create(std::string name, const std::string verte
     }
 
     bool use_spirv = vertex_asset.use_spirv;
-    std::shared_ptr<Shader> shader = nullptr;
+    std::shared_ptr<Shader> shader;
     std::vector<char> vertex_bin = Resources::Get_Shader_bin(vertex_name);
     std::vector<char> fragment_bin = Resources::Get_Shader_bin(fragment_name);
     if (use_spirv) {
@@ -533,7 +531,7 @@ std::shared_ptr<Shader> Shader::Create(std::string name, const std::string verte
     return shader;
 }
 
-std::shared_ptr<Shader> Shader::Get_Shader(unsigned int id)
+std::shared_ptr<Shader> Shader::Get_Shader(uint64_t id)
 {
     assert(m_shaders.contains(id));
     assert(!m_shaders[id].expired());
@@ -547,9 +545,9 @@ std::shared_ptr<Shader> Shader::Get_Shader(std::string name)
     return m_shaders_map[name].lock();
 }
 
-std::vector<unsigned int> Shader::Get_Shader_ID_List()
+std::vector<uint64_t> Shader::Get_Shader_ID_List()
 {
-    std::vector<unsigned int> keys;
+    std::vector<uint64_t> keys;
     keys.reserve(m_renderers.size());
     for (const auto& pair : m_renderers) {
         keys.push_back(pair.first);
@@ -557,7 +555,7 @@ std::vector<unsigned int> Shader::Get_Shader_ID_List()
     return keys;
 }
 
-std::vector<std::weak_ptr<Renderer>> Shader::Get_Shader_Renderer_List(unsigned int id)
+std::vector<std::weak_ptr<Renderer>> Shader::Get_Shader_Renderer_List(uint64_t id)
 {
     return m_renderers[id];
 }
@@ -574,8 +572,7 @@ std::vector<std::vector<std::weak_ptr<Renderer>>> Shader::Get_Shader_Renderer_Li
 
 void Shader::load_uniforms(const std::vector<char> spirv_bin)
 {
-    if (!m_initialized)
-        return;
+    
     uint32_t* spv_data = reinterpret_cast<uint32_t*>((char*)spirv_bin.data());
     std::vector<uint32_t> spirv_data(spv_data, spv_data + (spirv_bin.size() / 4));
     spirv_cross::Compiler compiler(spirv_data);
@@ -591,7 +588,7 @@ void Shader::load_uniforms(const std::vector<char> spirv_bin)
 
         m_uniform_map[uniform_name] = uniform_index;
 
-        //Logger::LogDebug(LOG_POS("NEW::SPIRV"), "%s: Uniform: %s (%i)", m_name.c_str(), uniform_name.c_str(), uniform_index);
+        Logger::LogDebug(LOG_POS("load_uniforms"), "%s: Uniform: %s (%i)", m_name.c_str(), uniform_name.c_str(), uniform_index);
     }
 
     for (const auto& uniform : resources.sampled_images)
@@ -602,14 +599,13 @@ void Shader::load_uniforms(const std::vector<char> spirv_bin)
 
         m_uniform_map[uniform_name] = uniform_index;
 
-        //Logger::LogDebug(LOG_POS("NEW::SPIRV"), "%s: Sampler: %s (%i)", m_name.c_str(), uniform_name.c_str(), uniform_index);
+        Logger::LogDebug(LOG_POS("load_uniforms"), "%s: Sampler: %s (%i)", m_name.c_str(), uniform_name.c_str(), uniform_index);
     }
 }
 
 int Shader::get_uniform_location(std::string name)
 {
-    if (!m_initialized)
-        return 0;
+    assert(m_initialized);
     if (m_is_spirv) {
         if (!m_uniform_map.contains(name)) {
             Logger::LogError(LOG_POS("get_uniform_location"), "%s: spirv Uniform variable not found: %s", m_name.c_str(), name.c_str());
@@ -618,7 +614,7 @@ int Shader::get_uniform_location(std::string name)
         return m_uniform_map[name];
     }
     else {
-        return glGetUniformLocation(m_ID, name.c_str());
+        return glGetUniformLocation(m_GL_p, name.c_str());
     }
 
 }

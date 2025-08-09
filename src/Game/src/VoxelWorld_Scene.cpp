@@ -102,8 +102,6 @@ void VoxelWorld_Scene::GameConnected()
 
 void VoxelWorld_Scene::OnWorldPlayerDataResult(Data data)
 {
-	assert(!world_gen_controller.expired());
-
 	Logger::LogInfo(LOG_POS("OnWorldPlayerDataResult"), "Received world player data.");
 
 	std::string data_json_str = HashHelper::BytesToString(data.Buffer);
@@ -135,6 +133,11 @@ bool VoxelWorld_Scene::Game_Ready()
 		return false;
 
 	return true;
+}
+
+VoxelWorld_Scene::VoxelWorld_Scene()
+{
+	Logger::LogDebug(LOG_POS("NEW"), "Creat VoxelWorld Scene.");
 }
 
 void VoxelWorld_Scene::startup_squence()
@@ -190,6 +193,8 @@ void VoxelWorld_Scene::setup_camera()
 	Camera_obj.lock()->Get_Transform().LookAt(glm::vec3(0.0f, 10.0f, 100.0f));
 	camera = Camera_obj.lock()->Add_Component<Camera>();
 	camera.lock()->Clear_Color(glm::vec4(1.0, 1.0, 0.0, 1.0));
+
+
 	//Editor_Camera_Control* cam_control = Camera_obj->Add_Component<Editor_Camera_Control>();
 	//cam_control->Speed(10.0f);
 	//camera->Clear_Color(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -290,7 +295,7 @@ void VoxelWorld_Scene::setup_local_player(json player_data)
 	local_player_character = local_player_character_obj.lock()->Add_Component<LocalPlayerCharacter>();
 	local_player_character.lock()->Set_Camera_Object(Camera_obj);
 
-	world_gen_controller.lock()->SetTarget(local_player_character_obj.lock()->Get_Transform());
+	world_gen_controller.lock()->SetTarget(local_player_character_obj.lock()->Get_Transform_Ptr());
 }
 
 void VoxelWorld_Scene::setup_net_player_manager()
@@ -440,6 +445,7 @@ void VoxelWorld_Scene::create_test_items()
 	floor_cube_colors.assign(floor_vertices.size(), cube_color);
 
 	Standard_Material::Shared standard_mat = std::make_shared<Standard_Material>();
+	standard_mat->Set_Shader(Shader::Get_Shader("standard"));
 	standard_mat->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	standard_mat->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	standard_mat->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));

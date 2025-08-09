@@ -72,8 +72,6 @@ private:
 
 	LuaEngine* m_lua_engine{ nullptr };
 
-	Material_Types* m_material_types{nullptr};
-
 	ColliderGenerator* m_collider_generator{ nullptr };
 
 	std::unordered_map<uint32_t, std::shared_ptr<Player>> m_players;

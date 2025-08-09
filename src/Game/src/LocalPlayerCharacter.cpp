@@ -256,6 +256,7 @@ void LocalPlayerCharacter::look_control(float dt)
 void LocalPlayerCharacter::init_geometry()
 {
 	m_character_material = std::make_shared<Standard_Material>();
+	m_character_material->Set_Shader(Shader::Get_Shader("standard"));
 	m_character_material->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	m_character_material->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	m_character_material->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));

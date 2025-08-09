@@ -12,6 +12,10 @@ int Framebuffer::m_next_idx{ 0 };
 Framebuffer::Framebuffer()
 {
 	m_id = ++m_next_idx;
+}
+
+void Framebuffer::Init()
+{
 	Refresh();
 }
 
@@ -28,28 +32,32 @@ void Framebuffer::Refresh(bool gen_image)
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	if (gen_image) {
-		if (m_active_texture != nullptr) {
+		if (m_active_texture.get() != nullptr) {
 			m_active_texture->Dispose();
-			m_active_texture = nullptr;
+			m_active_texture.reset();
 		}
 
-		m_active_texture = std::make_shared<Texture>(Graphics::Width(), Graphics::Height());
+		std::string tex_name = "frame_buff_text_" + std::to_string(m_id);
+		m_active_texture = std::make_shared<Texture>(Graphics::Width(), Graphics::Height(), tex_name);
 		m_active_texture->Enable_Window_Resize();
-		//m_active_texture = m_default_texture;
+		assert(m_active_texture->Initialized());
+		Logger::LogDebug(LOG_POS("Refresh"), "Created Framebuffer texture (%i x %i): %i",
+			Graphics::Width(), Graphics::Height());
+		int i = 0;
 	}
 
-	Bind_Texture(*m_active_texture);
+	Bind_Texture();
 	Init_Depth_Stencil();
 	m_initialized = true;
 }
 
-void Framebuffer::Bind_Texture(Texture& texture)
+void Framebuffer::Bind_Texture()
 {
 	std::weak_ptr<Framebuffer> this_ptr = shared_from_this();
 
-	if (texture.m_linked_framebuffers.contains(m_id))
+	if (m_active_texture->m_linked_framebuffers.contains(m_id))
 	{
-		texture.m_linked_framebuffers.erase(m_id);
+		m_active_texture->m_linked_framebuffers.erase(m_id);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_obj);
@@ -57,7 +65,7 @@ void Framebuffer::Bind_Texture(Texture& texture)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	//m_active_texture = texture;
-	texture.m_linked_framebuffers[m_id] = this_ptr;
+	m_active_texture->m_linked_framebuffers[m_id] = this_ptr;
 	
 	//Logger::LogDebug(LOG_POS("Bind_Texture"), "Bind Texture: %i", m_active_texture->m_linked_framebuffers.size());
 }
@@ -83,6 +91,8 @@ void Framebuffer::Init_Depth_Stencil()
 
 bool Framebuffer::Complete()
 {
+	assert(m_initialized);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_obj);
 	bool res = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -91,7 +101,10 @@ bool Framebuffer::Complete()
 
 void Framebuffer::Use(bool active)
 {
+	assert(m_initialized);
+
 	if (active) {
+		//Logger::LogDebug(LOG_POS("Use"), "use frame buffer: %i", (int)m_framebuffer_obj);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_obj);
 	}
 	else {

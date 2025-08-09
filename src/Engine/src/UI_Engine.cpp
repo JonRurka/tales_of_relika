@@ -217,6 +217,8 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_File(std::string 
 
 std::shared_ptr<Rml::ElementDocument> UI_Engine::Get_Document(std::string name)
 {
+	assert(m_context);
+	assert(m_initialized);
 	if (!Document_Exists(name)) {
 		return nullptr;
 	}
@@ -225,8 +227,9 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Get_Document(std::string name)
 
 void UI_Engine::Display(std::string doc_name)
 {
+	if (!m_initialized)
+		return;
 	assert(m_context);
-	assert(m_initialized);
 	if (!Document_Exists(doc_name)) {
 		Logger::LogWarning(LOG_POS("Display"), "Unable to display document '%s'.", doc_name.c_str());
 		return;
@@ -238,8 +241,9 @@ void UI_Engine::Display(std::string doc_name)
 
 void UI_Engine::Update()
 {
+	if (!m_initialized)
+		return;
 	assert(m_context);
-	assert(m_initialized);
 
 	// The initial window size may have been affected by system DPI settings, apply the actual pixel size and dp-ratio to the context.
 	if (m_context_dimensions_dirty)
@@ -279,8 +283,9 @@ void UI_Engine::Shutdown()
 
 bool UI_Engine::KeyCallback(GLFWwindow*, int glfw_key, int, int glfw_action, int glfw_mods)
 {
+	if (!m_initialized)
+		return true;
 	assert(m_context);
-	assert(m_initialized);
 
 	if (!m_accept_input) {
 		return true;
@@ -319,29 +324,33 @@ bool UI_Engine::KeyCallback(GLFWwindow*, int glfw_key, int, int glfw_action, int
 
 void UI_Engine::CharCallback(GLFWwindow*, unsigned int codepoint)
 {
+	if (!m_initialized)
+		return;
 	assert(m_context);
-	assert(m_initialized);
 	RmlGLFW::ProcessCharCallback(m_context, codepoint);
 }
 
 void UI_Engine::CursorEnterCallback(GLFWwindow*, int entered)
 {
+	if (!m_initialized)
+		return;
 	assert(m_context);
-	assert(!m_initialized);
 	RmlGLFW::ProcessCursorEnterCallback(m_context, entered);
 }
 
 void UI_Engine::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
+	if (!m_initialized)
+		return;
 	assert(m_context);
-	assert(m_initialized);
 	RmlGLFW::ProcessCursorPosCallback(m_context, window, xpos, ypos, m_glfw_active_modifiers);
 }
 
 bool UI_Engine::MouseButtonCallback(GLFWwindow*, int button, int action, int mods)
 {
+	if (!m_initialized)
+		return true;
 	assert(m_context);
-	assert(m_initialized);
 
 	if (!m_accept_input) {
 		return true;
@@ -354,8 +363,9 @@ bool UI_Engine::MouseButtonCallback(GLFWwindow*, int button, int action, int mod
 
 bool UI_Engine::ScrollCallback(GLFWwindow*, double, double yoffset)
 {
+	if (!m_initialized)
+		return true;
 	assert(m_context);
-	assert(m_initialized);
 
 	if (!m_accept_input) {
 		return true;
@@ -367,16 +377,18 @@ bool UI_Engine::ScrollCallback(GLFWwindow*, double, double yoffset)
 
 void UI_Engine::FramebufferSizeCallback(GLFWwindow*, int width, int height)
 {
+	if (!m_initialized)
+		return;
 	assert(m_context);
-	assert(m_initialized);
 	m_render_interface->SetViewport(width, height);
 	RmlGLFW::ProcessFramebufferSizeCallback(m_context, width, height);
 }
 
 void UI_Engine::WindowContentScaleCallback(GLFWwindow*, float xscale, float)
 {
+	if (!m_initialized)
+		return;
 	assert(m_context);
-	assert(m_initialized);
 	RmlGLFW::ProcessContentScaleCallback(m_context, xscale);
 }
 

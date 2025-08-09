@@ -4,7 +4,7 @@
 #include "Logger.h"
 #include "Texture.h"
 
-Cubemap::Shared Create(std::vector<std::string> face_path, bool flip = true)
+Cubemap::Shared Cubemap::Create(std::vector<std::string> face_path, bool flip)
 {
 	return std::make_shared<Cubemap>(face_path, flip);
 }

@@ -6,7 +6,7 @@
 
 #include "StructureDataStorage.h"
 #include "Opaque_Structure_Chunk_Material.h"
-#include "StructureChunk.h"
+#include "CubeVoxelBuilder.h"
 
 #include <unordered_map>
 #include <vector>
@@ -110,7 +110,7 @@ private:
 	struct ChunkRef {
 		glm::ivec3 chunk_coord;
 		WorldObject::Weak chunk_obj;
-		StructureChunk::Weak chunk_comp;
+		std::weak_ptr<StructureChunk> chunk_comp;
 	};
 
 	struct ChunkCreationRequest {

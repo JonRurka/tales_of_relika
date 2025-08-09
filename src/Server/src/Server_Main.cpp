@@ -153,6 +153,8 @@ Server_Main::Server_Main(char* args)
 Server_Main::Server_Main(Options options)
 {
 	Logger::Set_Direct(true);
+	Logger::Set_Crashing_Errors(true);
+	Logger::Set_Crashing_Warnings(true);
 	Logger::LogInfo(LOG_POS("Server_Main"), "Creating server...");
 	m_instance = this;
 
@@ -201,9 +203,8 @@ void Server_Main::Init()
 		//m_server_resources = new Resources();
 		Resources::Instance().Init();
 
-		m_material_types = new Material_Types();
-		m_material_types->Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
-		m_material_types->Initialize_Materials(false);
+		Material_Types::Instance().Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
+		Material_Types::Instance().Initialize_Materials(false);
 		//Material_Processor::Add<Uniform_Material_Processor>();
 		//Block_Type::Init();
 

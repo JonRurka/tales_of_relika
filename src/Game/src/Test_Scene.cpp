@@ -228,6 +228,7 @@ void Test_Scene::Init()
 
 
 	standard_mat = std::make_shared<Standard_Material>();
+	standard_mat->Set_Shader(Shader::Get_Shader("standard"));
 	standard_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	standard_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	standard_mat->SetVec2("material.scale", glm::vec2(1.0f, 1.0f));
@@ -239,6 +240,7 @@ void Test_Scene::Init()
 	standard_mat->setTexture("material.specular", Game_Resources::Textures::CONTAINER_SPECULAR);
 
 	floor_mat = std::make_shared<Standard_Material>();
+	floor_mat->Set_Shader(Shader::Get_Shader("standard"));
 	floor_mat->SetVec3("material.ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	floor_mat->SetVec3("material.diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	floor_mat->SetVec2("material.scale", glm::vec2(100.0f, 100.0f));

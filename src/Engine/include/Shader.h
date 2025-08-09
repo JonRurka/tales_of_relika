@@ -49,6 +49,7 @@ public:
 
     // the program ID
     unsigned int ID() { return m_ID; }
+    GLuint GL_Program() { return m_GL_p; }
     bool Initialized() { return m_initialized; }
     
     // use/activate the shader
@@ -91,18 +92,21 @@ public:
 
 
     static std::shared_ptr<Shader> Create(std::string name, const std::string vertex_name, const std::string fragment_name);
-    static std::shared_ptr<Shader> Get_Shader(unsigned int id);
+    static std::shared_ptr<Shader> Get_Shader(uint64_t id);
     static std::shared_ptr<Shader> Get_Shader(std::string name);
-    static std::vector<unsigned int> Get_Shader_ID_List();
-    static std::vector<std::weak_ptr<Renderer>> Get_Shader_Renderer_List(unsigned int id);
+    static std::vector<uint64_t> Get_Shader_ID_List();
+    static std::vector<std::weak_ptr<Renderer>> Get_Shader_Renderer_List(uint64_t id);
     static std::vector<std::vector<std::weak_ptr<Renderer>>> Get_Shader_Renderer_List();
 
 
 private:
-    unsigned int m_ID{ 0 };
+    GLuint m_GL_p{ 0 };
+    uint64_t m_ID{ 0 };
     std::string m_name;
     bool m_initialized{false};
     bool m_is_spirv{ false };
+
+    static uint64_t m_next_id;
 
     bool m_lights_initialized{false};
     GLuint uniformBlockIndexLights{ 0 };
@@ -118,8 +122,8 @@ private:
 
     int get_uniform_location(std::string name);
 
-    static std::unordered_map<unsigned int, std::vector<std::weak_ptr<Renderer>>> m_renderers;
-    static std::unordered_map<unsigned int, std::weak_ptr<Shader>> m_shaders;
+    static std::unordered_map<uint64_t, std::vector<std::weak_ptr<Renderer>>> m_renderers;
+    static std::unordered_map<uint64_t, std::weak_ptr<Shader>> m_shaders;
     static std::unordered_map<std::string, std::weak_ptr<Shader>> m_shaders_map;
 
     inline static const std::string LOG_LOC{ "SHADER" };

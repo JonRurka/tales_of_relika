@@ -41,6 +41,8 @@ public:
 	static std::vector<LogEntry> GetLogEntries();
 
 	static void Set_Direct(bool value) { m_direct = value; }
+	static void Set_Crashing_Errors(bool value) { m_crash_on_error = value; }
+	static void Set_Crashing_Warnings(bool value) { m_crash_on_warning = value; }
 
 	static void Update();
 
@@ -48,6 +50,8 @@ private:
 
 	static Logger m_logger;
 	inline static bool m_direct{false};
+	inline static bool m_crash_on_error{ false };
+	inline static bool m_crash_on_warning{ false };
 	std::vector<LogEntry> m_entries;
 
 	static std::mutex m_lock;

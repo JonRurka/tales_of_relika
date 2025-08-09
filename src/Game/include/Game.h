@@ -25,8 +25,6 @@ private:
 
 	static Game* m_instance;
 
-	Material_Types m_material_types{};
-
 	std::weak_ptr<Scene> m_main_menu_scene;
 	std::weak_ptr<Scene> m_voxel_world_secen;
 

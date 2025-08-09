@@ -61,7 +61,8 @@ void Scene::Load_File(std::string file)
 std::weak_ptr<WorldObject> Scene::Instantiate()
 {
 	m_next_idx++;
-	std::shared_ptr<WorldObject> obj = std::make_shared<WorldObject>(m_next_idx, shared_from_this());
+	std::shared_ptr<WorldObject> obj = std::make_shared<WorldObject>(m_next_idx, Engine::Get_Scene_Ptr(m_name));
+	obj->scene_init();
 	m_objects[m_next_idx] = obj;
 	return obj;
 }
@@ -69,7 +70,10 @@ std::weak_ptr<WorldObject> Scene::Instantiate()
 std::weak_ptr<WorldObject> Scene::Instantiate(std::string name)
 {
 	m_next_idx++;
-	std::shared_ptr<WorldObject> obj = std::make_shared<WorldObject>(m_next_idx, shared_from_this(), name);
+	//Logger::LogDebug(LOG_POS("Instantiate"), "Shared Count: %i", Engine::Get_Scene_Ptr(m_name).use_count());
+	// TODO: fix using shared_from_This()
+	std::shared_ptr<WorldObject> obj = std::make_shared<WorldObject>(m_next_idx, Engine::Get_Scene_Ptr(m_name), name);
+	obj->scene_init();
 	m_objects[m_next_idx] = obj;
 	return obj;
 }

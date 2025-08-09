@@ -17,8 +17,6 @@ WorldObject::WorldObject(int id, std::weak_ptr<Scene> scene)
 {
 	m_name = DEFAULT_NAME;
 	m_scene = scene;
-	m_transform = std::make_shared<Transform>(shared_from_this());
-	m_renderer = std::make_shared<MeshRenderer>(shared_from_this());
 	m_object_idx = id;
 	m_enabled = true;
 }
@@ -27,8 +25,6 @@ WorldObject::WorldObject(int id, std::weak_ptr<Scene> scene, std::string name)
 {
 	m_name = name;
 	m_scene = scene;
-	m_transform = std::make_shared<Transform>(shared_from_this());
-	m_renderer = std::make_shared<MeshRenderer>(shared_from_this());
 	m_object_idx = id;
 	m_enabled = true;
 }
@@ -105,6 +101,12 @@ void WorldObject::Destroy()
 
 	//Remove_Object(m_object_idx);
 	scene().remove_object_from_scene(m_object_idx);
+}
+
+void WorldObject::scene_init()
+{
+	m_transform = std::make_shared<Transform>(shared_from_this());
+	m_renderer = std::make_shared<MeshRenderer>(shared_from_this());
 }
 
 void WorldObject::Initialize_Component(std::shared_ptr<Component> comp)

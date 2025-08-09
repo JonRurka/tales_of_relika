@@ -42,6 +42,7 @@ void StructureController::Init()
 	m_half = 0;// ((1 / m_voxelsPerMeter) / 2.0);
 
 	m_chunk_opaque_mat = std::make_shared<Opaque_Structure_Chunk_Material>();
+	m_chunk_opaque_mat->Set_Shader(Shader::Get_Shader("opaque_structure_chunk_material"));
 	//m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
 	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance().Structure_Diffuse_Texture_Array());
 	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance().Structure_Normal_Texture_Array());
@@ -68,7 +69,7 @@ void StructureController::Update(float dt)
 void StructureController::start()
 {
 	create_chunk_cache();
-	m_process_thread = std::thread(Run, this);
+	m_process_thread = std::thread(Run);
 }
 
 void StructureController::Run()

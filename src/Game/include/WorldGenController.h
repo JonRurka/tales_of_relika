@@ -9,11 +9,11 @@
 #include "SmoothVoxelBuilder.h"
 #include "Stitch_VBO.h"
 #include "Opaque_Chunk_Material.h"
-#include "TerrainChunk.h"
 
 #include <unordered_map>
 #include <vector>
 #include <queue>
+#include <memory>
 
 using namespace VoxelEngine;
 using namespace DynamicCompute::Compute;
@@ -82,7 +82,7 @@ public:
 		}
 	};
 
-	void SetTarget(Transform* target) { mTarget = target; }
+	void SetTarget(Transform::Weak target);
 
 	void Start();
 
@@ -94,7 +94,7 @@ public:
 
 	bool Chunk_Exists(glm::ivec3 chunk_coord) { return chunk_exists(chunk_coord); };
 
-	TerrainChunk::Weak Get_Chunk(glm::ivec3 chunk_coord);
+	std::weak_ptr<TerrainChunk> Get_Chunk(glm::ivec3 chunk_coord);
 
 	Opaque_Chunk_Material::Shared Get_Chunk_Material() { return m_chunk_opaque_mat; }
 
@@ -150,7 +150,7 @@ private:
 	struct ChunkRef {
 		glm::ivec3 chunk_coord;
 		WorldObject::Weak chunk_obj;
-		TerrainChunk::Weak chunk_comp;
+		std::weak_ptr<TerrainChunk> chunk_comp;
 	};
 
 	struct TerrainModEntry {
@@ -163,8 +163,8 @@ private:
 
 	static WorldGenController* m_Instance;
 
-	IVoxelBuilder_private::Shared m_builder{ nullptr };
-	TerrainModifications::Shared m_terrain_mods{ nullptr };
+	IVoxelBuilder_private::Shared m_builder;
+	TerrainModifications::Shared m_terrain_mods;
 	ChunkSettings settings;
 	Stitch_VBO::Shared vbo_stitch;
 

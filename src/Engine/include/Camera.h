@@ -91,7 +91,7 @@ private:
 	static std::shared_ptr<Shader> m_cubemap_shader;
 	bool m_has_skybox{ false };
 
-	std::shared_ptr<Framebuffer> m_cam_framebuffer{nullptr};
+	std::shared_ptr<Framebuffer> m_cam_framebuffer;
 
 	std::vector<std::weak_ptr<Renderer>> m_alpha_renderers;
 	std::vector<glm::vec4> m_alpha_object_idx;

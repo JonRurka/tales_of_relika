@@ -23,6 +23,8 @@ public:
 	int Get_ID() { return m_ID;}
 	int Max_Stack_Size() { return m_stack_size; }
 
+	Item_Type(Item_Loader::Item_Data data);
+
 private:
 
 	int m_ID{ 0 };
@@ -34,7 +36,7 @@ private:
 
 	static void load_item(Item_Loader::Item_Data data);
 
-	Item_Type(Item_Loader::Item_Data data);
+	
 	
 
 };

@@ -1,8 +1,7 @@
 #pragma once
 
 #include "game_engine.h"
-
-class Block_Type;
+#include "Block_Type.h"
 
 class Block {
 public:

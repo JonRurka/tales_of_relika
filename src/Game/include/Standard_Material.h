@@ -10,7 +10,14 @@ public:
 
 	Standard_Material();
 
-	Material::Shared Copy() override { return std::make_shared<Standard_Material>(); }
+	Material::Shared Copy() override 
+	{ 
+
+		auto mat = std::make_shared<Standard_Material>();
+		mat->Set_Shader(Shader::Get_Shader("standard"));
+		return mat;
+	}
+
 
 private:
 

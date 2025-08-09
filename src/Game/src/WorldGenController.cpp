@@ -48,6 +48,7 @@ void WorldGenController::Init()
 
 
 	m_chunk_opaque_mat = std::make_shared<Opaque_Chunk_Material>(); 
+	m_chunk_opaque_mat->Set_Shader(Shader::Get_Shader("opaque_chunk_material"));
 	//m_chunk_opaque_mat->setTexture("diffuse", m_diffuse_texture_array);
 	m_chunk_opaque_mat->setTexture("diffuse", Material_Types::Instance().Terrain_Diffuse_Texture_Array());
 	m_chunk_opaque_mat->setTexture("normal_maps", Material_Types::Instance().Terrain_Normal_Texture_Array());
@@ -72,6 +73,12 @@ void WorldGenController::Update(float dt)
 	if (m_gen_finished) {
 		process_modifications();
 	}
+}
+
+void WorldGenController::SetTarget(Transform::Weak target)
+{
+	assert(!target.expired());
+	mTarget = target;
 }
 
 void WorldGenController::Start()
@@ -308,15 +315,15 @@ WorldGenController::ChunkRef WorldGenController::get_chunk(glm::ivec3 chunk_coor
 
 void WorldGenController::initialize_voxel_engine()
 {
-	settings.GetSettings()->setString("programDir", "");
-	settings.GetSettings()->setFloat("voxelsPerMeter", m_voxelsPerMeter);
-	settings.GetSettings()->setInt("chunkMeterSizeX", m_chunkMeterSizeX);
-	settings.GetSettings()->setInt("chunkMeterSizeY", m_chunkMeterSizeX);
-	settings.GetSettings()->setInt("chunkMeterSizeZ", m_chunkMeterSizeX);
-	settings.GetSettings()->setInt("TotalBatchGroups", 1);
-	settings.GetSettings()->setInt("BatchesPerGroup", 4);
-	settings.GetSettings()->setInt("InvertTrianges", false);
-	settings.GetSettings()->setBool("SharedGL", true);
+	settings.GetSettings().setString("programDir", "");
+	settings.GetSettings().setFloat("voxelsPerMeter", m_voxelsPerMeter);
+	settings.GetSettings().setInt("chunkMeterSizeX", m_chunkMeterSizeX);
+	settings.GetSettings().setInt("chunkMeterSizeY", m_chunkMeterSizeX);
+	settings.GetSettings().setInt("chunkMeterSizeZ", m_chunkMeterSizeX);
+	settings.GetSettings().setInt("TotalBatchGroups", 1);
+	settings.GetSettings().setInt("BatchesPerGroup", 4);
+	settings.GetSettings().setInt("InvertTrianges", false);
+	settings.GetSettings().setBool("SharedGL", true);
 
 	m_chunk_size_x = m_chunkMeterSizeX * m_voxelsPerMeter;
 	m_chunk_size_y = m_chunkMeterSizeY * m_voxelsPerMeter;
