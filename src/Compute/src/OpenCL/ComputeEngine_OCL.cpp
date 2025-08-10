@@ -762,7 +762,7 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
     cl_event* wait_event_ptr = (GET_EVENT() == NULL) ? NULL : GET_EVENT_PTR();
 
 
-    if (mProgramObj->GetContext()->Supports_Manual_Sync()) {
+    if (mProgramObj->GetContext()->Supports_GL_Sharing() && mProgramObj->GetContext()->Supports_Manual_Sync()) {
         cl_int res = clEnqueueAcquireGLObjects(command_queue, m_ext_buffers.size(), m_ext_buffers.data(), num_wait_events, wait_event_ptr, &finished_event);
         if (res != CL_SUCCESS) {
             printf("clEnqueueAcquireGLObjects failed: %i\n", res);
@@ -777,7 +777,7 @@ int ComputeKernel::Execute(cl_uint work_dim, size_t* global_work_size)
     SET_EVENT(finished_event);
 
 
-    if (mProgramObj->GetContext()->Supports_Manual_Sync()) {
+    if (mProgramObj->GetContext()->Supports_GL_Sharing() && mProgramObj->GetContext()->Supports_Manual_Sync()) {
         clEnqueueReleaseGLObjects(command_queue, m_ext_buffers.size(), m_ext_buffers.data(), 1, GET_EVENT_PTR(), &finished_event);
         SET_EVENT(finished_event);
     }
