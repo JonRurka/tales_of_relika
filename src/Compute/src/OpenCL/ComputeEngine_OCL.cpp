@@ -81,10 +81,11 @@ namespace {
 
     bool checkExtnAvailability(cl_device_id pDevice, std::string pName)
     {
-        char ext_chars[1024];
-        memset(ext_chars, 0, 1024);
+        char ext_chars[1025];
+        memset(ext_chars, 0, 1025);
         // find extensions required
         clGetDeviceInfo(pDevice, CL_DEVICE_EXTENSIONS, 1024, ext_chars, 0);
+        ext_chars[1024] = '\0';
         std::string ext_str = std::string(ext_chars);
         //std::string exts = pDevice.getInfo<CL_DEVICE_EXTENSIONS>();
         std::stringstream ss(ext_str);

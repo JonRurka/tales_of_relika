@@ -51,7 +51,7 @@ void LocalPlayerCharacter::Update(float dt)
 
 	jump_control(dt);
 	move_control(dt);
-	look_control(dt);
+	//look_control(dt);
 
 	if (Utilities::Get_Time() - m_debug_time > 2.0f)
 	{
