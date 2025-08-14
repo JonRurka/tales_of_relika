@@ -33,17 +33,32 @@ public:
 
 	bool Is_Dynamic() { return m_mass > 0.0001f; }
 	
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	btRigidBody& RigidBody() { return *m_rigidbody.get(); }
 	std::weak_ptr<btRigidBody> RigidBody_Ptr() { return m_rigidbody; }
-
 	bool Has_Rigidbody() { return m_rigidbody.get() != nullptr; }
+#else
+	Body& Rigidbody() { return *m_rigidbody; }
+	Body* Rigidbody_Ptr() { return m_rigidbody; }
+	bool Has_Rigidbody() { return m_rigidbody != nullptr; }
+#endif
+
+	
 
 private:
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	btScalar m_mass{ 0.0 };
-	bool m_active{ false };
-
 	std::shared_ptr<btRigidBody> m_rigidbody{ nullptr };
+	btVector3 m_localInertia{ btVector3(0.0f, 0.0f, 0.0f) };
+#else
+	float m_mass{ 0.0 };
+	Body* m_rigidbody{ nullptr };
+#endif
+
+
+
+	bool m_active{ false };
 
 	inline static const std::string LOG_LOC{ "COLLIDER" };
 
@@ -52,13 +67,22 @@ protected:
 	void base_Init();
 	void base_Update(float dt);
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	btTransform create_bt_transform();
-
 	btTransform get_bt_rigid_transform();
-
 
 	void set_rigidbody(std::shared_ptr<btRigidBody> body);
 	void remove_rigidbody();
+#else
+	void set_rigidbody(Body* body);
+	void remove_rigidbody();
+
+
+
+#endif
+
+
+	
 
 	virtual void Init() = 0;
 	virtual void Update(float dt) = 0;
@@ -69,5 +93,5 @@ protected:
 
 	void Destroy_Collider();
 
-	btVector3 m_localInertia{ btVector3(0.0f, 0.0f, 0.0f) };
+	
 };

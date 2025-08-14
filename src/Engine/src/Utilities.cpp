@@ -10,6 +10,7 @@
 #include <sstream>
 #include <iterator>
 #include <chrono>
+#include <array>
 
 #include <boost/dll.hpp>
 #include <boost/filesystem.hpp>
@@ -33,6 +34,7 @@
 #endif
 
 #define ZLIB_CHUNK (256 * 1024)
+#define MAX_FILE_READ_SIZE (20 * 1024 * 1024)
 
 using namespace DynamicCompute;
 using namespace DynamicCompute::Compute;
@@ -40,6 +42,9 @@ using namespace DynamicCompute::Compute;
 namespace {
 
 	std::chrono::high_resolution_clock::time_point g_start_point;
+
+	//char g_read_buffer[MAX_FILE_READ_SIZE];
+	std::array<char, MAX_FILE_READ_SIZE> g_read_buffer;
 
 	typedef std::vector<unsigned char> vec_char;
 	unsigned char out_buf[ZLIB_CHUNK];
@@ -263,16 +268,18 @@ std::vector<char> Utilities::Read_File_Bytes(std::string path)
 		return res; // Empty file, return nullptr
 	}
 
+	assert(outSize <= MAX_FILE_READ_SIZE);
+
 	// Allocate a char array to hold the file contents
-	char* buffer = new char[outSize];
+	//char* buffer = new char[outSize];
 
 	// Move back to the beginning of the file
 	file.seekg(0, std::ios::beg);
 
 	// Read the file contents into the buffer
-	file.read(buffer, outSize);
+	file.read(g_read_buffer.data(), outSize);
 	if (!file) {
-		delete[] buffer;
+		//delete[] buffer;
 		file.close();
 		Logger::LogError(LOG_POS("Read_File"), "Error reading file '%s'.", path.c_str());
 		return res;
@@ -281,9 +288,59 @@ std::vector<char> Utilities::Read_File_Bytes(std::string path)
 	// Close the file
 	file.close();
 
-	res = std::vector<char>(buffer, buffer + outSize);
+	res = std::vector<char>(g_read_buffer.begin(), g_read_buffer.begin() + outSize);
 
-	delete[] buffer;
+	//delete[] buffer;
+
+	return res;
+}
+
+std::vector<char> Utilities::Read_File_Bytes(std::string path, size_t offset, size_t size)
+{
+	path = ReplaceAll(path, "\\", File_Seperator());
+	path = ReplaceAll(path, "/", File_Seperator());
+
+	std::vector<char> res;
+
+	// Open the file in binary mode
+	std::ifstream file(path, std::ios::binary | std::ios::ate);
+	if (!file.is_open()) {
+		Logger::LogError(LOG_POS("Read_File"), "Failed to open file '%s'.", path.c_str());
+		return res;
+	}
+
+	// Get the file size (since we're at the end due to ios::ate)
+	size_t outSize = size;
+	if ((offset + outSize) > file.tellg()) {
+		file.close();
+		return res;
+	}
+
+	assert(outSize <= MAX_FILE_READ_SIZE);
+
+	
+
+	// Allocate a char array to hold the file contents
+	//char* buffer = new char[outSize];
+
+	// Move back to the beginning of the file
+	file.seekg(offset, std::ios::beg);
+
+	// Read the file contents into the buffer
+	file.read(g_read_buffer.data(), outSize);
+	if (!file) {
+		//delete[] buffer;
+		file.close();
+		Logger::LogError(LOG_POS("Read_File"), "Error reading file '%s'.", path.c_str());
+		return res;
+	}
+
+	// Close the file
+	file.close();
+
+	res = std::vector<char>(g_read_buffer.begin(), g_read_buffer.begin() + outSize);
+
+	//delete[] buffer;
 
 	return res;
 }
@@ -310,16 +367,14 @@ void Utilities::Read_File_Bytes(std::string path, size_t offset, size_t size, ch
 
 	// Allocate a char array to hold the file contents
 
-	char* buffer = out_bytes;
 	//char* buffer = new char[outSize];
 
 	// Move back to offset of the file
 	file.seekg(offset, std::ios::beg);
 
 	// Read the file contents into the buffer
-	file.read(buffer, outSize);
+	file.read(out_bytes, outSize);
 	if (!file) {
-		delete[] buffer;
 		file.close();
 		Logger::LogError(LOG_POS("Read_File"), "Error reading file '%s'.", path.c_str());
 		return;
@@ -483,6 +538,7 @@ std::vector<unsigned char> Utilities::Compress(std::vector<unsigned char> input,
 std::vector<unsigned char> Utilities::Decompress(std::vector<unsigned char> input)
 {
 	std::vector<unsigned char> result;
+	result.reserve(input.size());
 
 	int ret, flush;
 	unsigned have;

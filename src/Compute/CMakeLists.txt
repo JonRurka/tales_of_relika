@@ -91,6 +91,7 @@ target_link_libraries(${module}
 	glm::glm
 	glfw
 	Bullet::Bullet
+	Jolt::Jolt
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
 	fmt::fmt

@@ -50,6 +50,7 @@ target_link_libraries(${module}
 	glfw
 	sol2::sol2
 	Bullet::Bullet
+	Jolt::Jolt
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator
 )

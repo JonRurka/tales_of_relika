@@ -165,7 +165,7 @@ void Resources::load_texture(std::string name, bool flip)
 
     if (LOAD_MODE == LOAD_MODE_FS)
     {
-        std::shared_ptr<Texture> tex = std::make_shared<Texture>(asset.path, flip);
+        /*std::shared_ptr<Texture> tex = std::make_shared<Texture>(asset.path, flip);
         asset.tex_handle = tex;
         asset.data = tex->Data().data();
         if (tex->Initialized()) {
@@ -173,17 +173,18 @@ void Resources::load_texture(std::string name, bool flip)
         }
         else {
             Logger::LogError(LOG_POS("Get_Texture"), "Failed to load texture: %s \n", name.c_str());
-        }
+        }*/
         
     }
     else if (LOAD_MODE == LOAD_MODE_BIN) 
     {
         load_pack_data(asset, PackType::Texture_Type);
-        char* data_ptr = (char*)asset.data;
-        size_t data_size = asset.data_size;
-        std::shared_ptr<Texture> tex = std::make_shared<Texture>(name, std::vector<char>(data_ptr, data_ptr + data_size), flip);
+        //char* data_ptr = (char*)asset.data;
+        //size_t data_size = asset.data_size;
+        //std::shared_ptr<Texture> tex = std::make_shared<Texture>(name, std::vector<char>(data_ptr, data_ptr + data_size), flip);
+        std::shared_ptr<Texture> tex = std::make_shared<Texture>(name, asset.data, flip);
         asset.tex_handle = tex;
-        asset.data = tex->Data().data();
+        asset.data = std::vector<char>(tex->Data().begin(), tex->Data().end());
         if (tex->Initialized()) {
             asset.loaded = true;
         }
@@ -215,21 +216,22 @@ void Resources::load_model(std::string name)
 
     if (LOAD_MODE == LOAD_MODE_FS)
     {
-        std::shared_ptr<Model> model = Model::Load(asset.path);
+        /*std::shared_ptr<Model> model = Model::Load(asset.path);
         asset.model_handle = model;
         if (model->Initialized()) {
             asset.loaded = true;
         }
         else {
             Logger::LogError(LOG_POS("load_model"), "Failed to load Model: %s \n", name.c_str());
-        }
+        }*/
     }
     else if (LOAD_MODE == LOAD_MODE_BIN)
     {
         load_pack_data(asset, PackType::Model_Type);
-        char* data_ptr = (char*)asset.data;
-        size_t data_size = asset.data_size;
-        std::shared_ptr<Model> model = Model::Load(name, std::vector<char>(data_ptr, data_ptr + data_size));
+        //char* data_ptr = (char*)asset.data;
+        //size_t data_size = asset.data_size;
+        //std::shared_ptr<Model> model = Model::Load(name, std::vector<char>(data_ptr, data_ptr + data_size));
+        std::shared_ptr<Model> model = Model::Load(name, asset.data);
         asset.model_handle = model;
         if (model->Initialized()) {
             asset.loaded = true;
@@ -302,17 +304,20 @@ void Resources::load_pack_data(Asset& asset, Resources::PackType type)
     std::string file_name = prefix + pad_int(asset.pack_index, 3) + ".pack";
     std::string file_path = data_dir + file_name;
 
-    asset.data = new char[asset.data_size];
-    Utilities::Read_File_Bytes(file_path, asset.pack_offset, asset.data_size, (char*)asset.data);
+    //asset.data = new char[asset.data_size];
+    //Utilities::Read_File_Bytes(file_path, asset.pack_offset, asset.data_size, (char*)asset.data);
+    asset.data = Utilities::Read_File_Bytes(file_path, asset.pack_offset, asset.data_size);
     
-    unsigned char* compressed_data = (unsigned char*)asset.data;
-    std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(compressed_data, compressed_data + asset.data_size));
+    //unsigned char* compressed_data = (unsigned char*)asset.data;
+    //std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(compressed_data, compressed_data + asset.data_size));
+    std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(asset.data.begin(), asset.data.end()));
 
-    delete[] asset.data;
+    asset.data = std::vector<char>(decompressed_data.begin(), decompressed_data.end());
+    //delete[] asset.data;
 
-    asset.data = new char[decompressed_data.size()];
-    memcpy(asset.data, decompressed_data.data(), decompressed_data.size());
-    asset.data_size = decompressed_data.size();
+    //asset.data = new char[decompressed_data.size()];
+    //memcpy(asset.data, decompressed_data.data(), decompressed_data.size());
+    //asset.data_size = decompressed_data.size();
 }
 
 std::shared_ptr<Texture> Resources::get_texture(std::string name)
@@ -348,10 +353,10 @@ std::vector<char> Resources::get_shader_bin(std::string name)
 
     Load_Shader(name);
 
-    char* data_ptr = (char*)m_shader_assets[name].data;
-    size_t data_size = m_shader_assets[name].data_size;
-
-    return std::vector<char>(data_ptr, data_ptr + data_size);
+    return m_shader_assets[name].data;
+    //char* data_ptr = (char*)m_shader_assets[name].data;
+    //size_t data_size = m_shader_assets[name].data_size;
+    //return std::vector<char>(data_ptr, data_ptr + data_size);
 }
 
 void Resources::modify_shader_bin(std::string name, std::vector<char> data)
@@ -363,10 +368,11 @@ void Resources::modify_shader_bin(std::string name, std::vector<char> data)
 
     Load_Shader(name);
 
-    delete[] m_shader_assets[name].data;
-    m_shader_assets[name].data = new char[data.size()];
-    m_shader_assets[name].data_size = data.size();
-    memcpy(m_shader_assets[name].data, data.data(), data.size());
+    m_shader_assets[name].data = data;
+    //delete[] m_shader_assets[name].data;
+    //m_shader_assets[name].data = new char[data.size()];
+    //m_shader_assets[name].data_size = data.size();
+    //memcpy(m_shader_assets[name].data, data.data(), data.size());
 }
 
 std::shared_ptr<Model> Resources::get_model(std::string name)
@@ -392,9 +398,10 @@ std::string Resources::get_data_file_string(std::string name)
     name = Utilities::toLowerCase(name);
     Load_Data_File(name);
 
-    std::string res;
-    res.assign((char*)m_data_assets[name].data, m_data_assets[name].data_size);
-    return res;
+    return std::string(m_data_assets[name].data.begin(), m_data_assets[name].data.end());
+    //std::string res;
+    //res.assign((char*)m_data_assets[name].data, m_data_assets[name].data_size);
+    //return res;
 }
 
 std::vector<char> Resources::get_data_file_bin(std::string name)
@@ -407,9 +414,10 @@ std::vector<char> Resources::get_data_file_bin(std::string name)
     name = Utilities::toLowerCase(name);
     Load_Data_File(name);
 
-    char* dta_ptr = (char*)m_data_assets[name].data;
-    size_t dta_size = m_data_assets[name].data_size;
-    return std::vector<char>(dta_ptr, dta_ptr + dta_size);
+    return m_data_assets[name].data;
+    //char* dta_ptr = (char*)m_data_assets[name].data;
+    //size_t dta_size = m_data_assets[name].data_size;
+    //return std::vector<char>(dta_ptr, dta_ptr + dta_size);
 }
 
 bool Resources::has_data_file(std::string name)
@@ -592,7 +600,7 @@ void Resources::get_binary_assets(std::string data_Path, std::vector<Asset>& ass
         asset.loaded = false;
         asset.tex_handle.reset();
         asset.model_handle.reset();
-        asset.data = nullptr;
+        asset.data = std::vector<char>();
 
         assets.push_back(asset);
     }
@@ -718,15 +726,19 @@ void Resources::load_shaders_binary()
     Logger::LogDebug(LOG_POS("load_shaders_binary"), "Loaded Shaders (%i):", (int)assets.size());
     for (auto& a : assets)
     {
-        unsigned char* compressed_data = (unsigned char*)&data[a.pack_offset];
+        //unsigned char* compressed_data = (unsigned char*)&data[a.pack_offset];
         int compressed_size = a.data_size;
+        std::vector<uint8_t> compressed_data = std::vector<uint8_t>(pack_data.begin() + a.pack_offset, pack_data.begin() + (a.pack_offset + compressed_size));
 
-        std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(compressed_data, compressed_data + a.data_size));
+        //std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(compressed_data, compressed_data + a.data_size));
+        //int decompressed_size = decompressed_data.size();
+        std::vector<unsigned char> decompressed_data = Utilities::Decompress(compressed_data);
         int decompressed_size = decompressed_data.size();
 
-        delete[] a.data;
-        a.data = new char[decompressed_data.size()];
-        memcpy(a.data, decompressed_data.data(), decompressed_data.size());
+        //delete[] a.data;
+        //a.data = new char[decompressed_data.size()];
+        //memcpy(a.data, decompressed_data.data(), decompressed_data.size());
+        a.data = std::vector<char>(decompressed_data.begin(), decompressed_data.end());
 
         a.data_size = decompressed_data.size();
         a.loaded = true;

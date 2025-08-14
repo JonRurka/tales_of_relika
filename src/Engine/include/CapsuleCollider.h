@@ -14,7 +14,13 @@ public:
 
 private:
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	std::unique_ptr<btCollisionShape> m_shape;
+	std::unique_ptr<btDefaultMotionState> m_motionState;
+#else
+	Ref<CapsuleShape> m_shape;
+	Ref<Body> m_rigidbody;
+#endif
 
 
 	inline static const std::string LOG_LOC{ "CAPSULE_COLLIDER" };
@@ -33,4 +39,3 @@ protected:
 	void OnRefresh() override;
 };
 
-#undef DEFAULT_SIZE

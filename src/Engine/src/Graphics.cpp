@@ -29,7 +29,7 @@
 
 #define RENDER_IMGUI false
 #define RENDER_DEBUG_LINES true
-#define RENDER_GAME_UI true
+#define RENDER_GAME_UI false
 #define RENDER_GAME_SCREEN true
 #define RENDER_AXIS_GIZMO false
 

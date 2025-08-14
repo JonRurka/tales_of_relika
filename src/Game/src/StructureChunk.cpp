@@ -188,7 +188,7 @@ void StructureChunk::update_collision_mesh()
 		m_mesh_collider = m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
 	}
 
-	btVector3 min, max;
+	//btVector3 min, max;
 
 	assert(!m_mesh_collider.expired());
 
@@ -199,7 +199,7 @@ void StructureChunk::update_collision_mesh()
 	m_mesh_collider.lock()->SetMesh(m_collision_mesh);
 	m_mesh_collider.lock()->Mass(0.0f);
 	m_mesh_collider.lock()->Activate();
-	m_mesh_collider.lock()->RigidBody().getAabb(min, max);
+	//m_mesh_collider.lock()->RigidBody().getAabb(min, max);
 	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Collision mesh added.");
 
 }

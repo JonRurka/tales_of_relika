@@ -42,7 +42,8 @@ public:
 		std::shared_ptr<Texture> tex_handle{ nullptr };
 		std::shared_ptr<Model> model_handle{ nullptr };
 
-		void* data{ nullptr };
+		//void* data{ nullptr };
+		std::vector<char> data;
 		size_t data_size{ 0 };
 		int pack_index{ 0 };
 		int pack_offset{ 0 };

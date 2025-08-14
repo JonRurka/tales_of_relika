@@ -9,6 +9,12 @@
 
 #include <algorithm>
 
+#define DUMMY_TERRAIN true
+#define DUMMY_SURFACE_HEIGHT (4.5)
+#define DUMMY_SURFACE_THICKNESS (0.5)
+#define DUMMY_SURFACE_Y_LOC (DUMMY_SURFACE_HEIGHT - DUMMY_SURFACE_THICKNESS)
+#define DUMMY_LENGTH (32)
+
 WorldGenController* WorldGenController::m_Instance{nullptr};
 
 namespace {
@@ -31,12 +37,19 @@ void WorldGenController::Init()
 	m_Instance = this;
 
 	std::string block_types_str = Resources::Get_Data_File_String(Game_Resources::Data_Files::BLOCK_TYPES);
-	Logger::LogDebug(LOG_POS("Init"), "%s", block_types_str.c_str());
+	//Logger::LogDebug(LOG_POS("Init"), "%s", block_types_str.c_str());
 
 
 	Logger::LogInfo(LOG_POS("Init"), "Initialized");
 
 	mTarget = Object().Get_Transform_Ptr(); // TODO: Get player transform.
+
+
+	if (DUMMY_TERRAIN) {
+		create_dummy_terrain();
+		m_initialized = true;
+		return;
+	}
 
 	m_half = 0;// ((1 / m_voxelsPerMeter) / 2.0);
 
@@ -63,10 +76,15 @@ void WorldGenController::Init()
 	//Logger::LogDebug(LOG_POS("Init"), "Max cached chunks: %i", m_max_cached_chunks);
 
 	initialize_voxel_engine();
+
+	m_initialized = true;
 }
 
 void WorldGenController::Update(float dt)
 {
+	if (!m_voxel_engine_enabled)
+		return;
+
 	process_deletions();
 	process_additions();
 
@@ -83,6 +101,9 @@ void WorldGenController::SetTarget(Transform::Weak target)
 
 void WorldGenController::Start()
 {
+	if (!m_voxel_engine_enabled)
+		return;
+
 	create_chunk_cache();
 	generate_circular();
 
@@ -98,11 +119,15 @@ TerrainChunk::Weak WorldGenController::Get_Chunk(glm::ivec3 chunk_coord)
 
 ISO_Sampler::Shared WorldGenController::Get_ISO_Sampler()
 {
+	if (!m_voxel_engine_enabled)
+		return ISO_Sampler::Shared();
 	return (std::dynamic_pointer_cast<SmoothVoxelBuilder>(m_builder))->Get_ISO_Sampler();
 }
 
 void WorldGenController::Refresh_Chunk(glm::ivec3 chunk)
 {
+	if (!m_voxel_engine_enabled)
+		return;
 	//Logger::LogDebug(LOG_POS("Refresh_Chunk"), "Refresh chunk (%i, %i, %i)",
 	//	chunk.x, chunk.y, chunk.z);
 	TerrainMod val(glm::vec3(0, 0, 0));
@@ -111,6 +136,9 @@ void WorldGenController::Refresh_Chunk(glm::ivec3 chunk)
 
 void WorldGenController::Modify_Voxel_ISO(glm::ivec3 voxel, float iso)
 {
+	if (!m_voxel_engine_enabled)
+		return;
+
 	//Logger::LogDebug(LOG_POS("Modify_Voxel_ISO"), "Modify voxel");
 	glm::ivec3 chunk = voxelToChunk(voxel);
 	glm::ivec3 voxel_local = globalToLocalChunkCoord(chunk, voxel);
@@ -133,6 +161,9 @@ void WorldGenController::Modify_Voxel_ISO(glm::ivec3 voxel, float iso)
 
 void WorldGenController::Modify_Voxel_Type(glm::ivec3 voxel, int type)
 {
+	if (!m_voxel_engine_enabled)
+		return;
+
 	glm::ivec3 chunk = voxelToChunk(voxel);
 	glm::ivec3 voxel_local = globalToLocalChunkCoord(chunk, voxel);
 
@@ -150,6 +181,9 @@ void WorldGenController::Modify_Voxel_Type(glm::ivec3 voxel, int type)
 
 void WorldGenController::Modify_Voxel(std::vector<TerrainMod> values)
 {
+	if (!m_voxel_engine_enabled)
+		return;
+
 	std::unordered_map<int, std::vector<TerrainMod>> mods;
 
 	for (const auto& elem : values) 
@@ -184,6 +218,9 @@ void WorldGenController::Modify_Voxel(std::vector<TerrainMod> values)
 
 void WorldGenController::Modify_Voxel(glm::ivec3 chunk, TerrainMod value, bool update_neighbor)
 {
+	if (!m_voxel_engine_enabled)
+		return;
+
 	std::vector<TerrainMod> values;
 	values.push_back(value);
 	Modify_Voxel(chunk, values, update_neighbor);
@@ -191,6 +228,8 @@ void WorldGenController::Modify_Voxel(glm::ivec3 chunk, TerrainMod value, bool u
 
 void WorldGenController::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> values, bool update_neighbor)
 {
+	if (!m_voxel_engine_enabled)
+		return;
 
 	Submit_Terrain_Modification(chunk, values);
 
@@ -270,6 +309,8 @@ void WorldGenController::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> 
 
 void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMod value)
 {
+	if (!m_voxel_engine_enabled)
+		return;
 	if (!m_gen_finished)
 		return;
 
@@ -283,6 +324,8 @@ void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMo
 
 void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, std::vector<TerrainMod> values)
 {
+	if (!m_voxel_engine_enabled)
+		return;
 	if (!m_gen_finished)
 		return;
 
@@ -292,6 +335,20 @@ void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, std::vect
 	m_terrain_change_queue.push(entry);
 	//Logger::LogDebug(LOG_POS("Submit_Terrain_Modification_arr"), "Submitted terrain %i changes for chunk (%i, %i, %i).",
 	//	values.size(), chunk.x, chunk.y, chunk.z);
+}
+
+bool WorldGenController::Terrain_Ready()
+{
+	if (!m_initialized)
+		return false;
+
+	if (!m_voxel_engine_enabled)
+		return true;
+
+	if (!m_gen_finished)
+		return false;
+
+	return true;
 }
 
 glm::fvec3 WorldGenController::Target_Position()
@@ -338,6 +395,8 @@ void WorldGenController::initialize_voxel_engine()
 
 	vbo_stitch = std::make_shared<Stitch_VBO>();
 	vbo_stitch->Init(m_builder, max_vert);
+
+	m_voxel_engine_enabled = true;
 }
 
 void WorldGenController::process_additions()
@@ -615,6 +674,176 @@ void WorldGenController::remove_chunk(glm::ivec3 chunk_coord)
 {
 	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
 	m_chunk_map.erase(hash);
+}
+
+void WorldGenController::create_dummy_terrain()
+{
+	std::vector<glm::vec4> floor_vertices = {
+	glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+	glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+	glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+	glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+	glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f),
+	glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+
+	glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+	glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+	glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+	glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+	glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+	glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+
+	glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+	glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f),
+	glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+	glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+	glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+	glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+
+	glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+	glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+	glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+	glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+	glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+	glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+
+	glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+	glm::vec4(0.5f, -0.5f,  -0.5f, 0.0f),
+	glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+	glm::vec4(0.5f, -0.5f,   0.5f, 0.0f),
+	glm::vec4(-0.5f, -0.5f,  0.5f, 0.0f),
+	glm::vec4(-0.5f, -0.5f, -0.5f, 0.0f),
+
+	glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f),
+	glm::vec4(0.5f,  0.5f,  -0.5f, 0.0f),
+	glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+	glm::vec4(0.5f,  0.5f,   0.5f, 0.0f),
+	glm::vec4(-0.5f,  0.5f,  0.5f, 0.0f),
+	glm::vec4(-0.5f,  0.5f, -0.5f, 0.0f)
+	};
+
+	std::vector<glm::vec2> floor_tex_coords = {
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(0.0f, 1.0f),
+
+		glm::vec2(0.0f, 1.0f),
+		glm::vec2(1.0f, 1.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(1.0f, 0.0f),
+		glm::vec2(0.0f, 0.0f),
+		glm::vec2(0.0f, 1.0f),
+	};
+
+	std::vector<glm::vec4> floor_normals = {
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f, -1.0f, 0.0f),
+
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+		glm::vec4(0.0f,  0.0f,  1.0f, 0.0f),
+
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+		glm::vec4(-1.0f,  0.0f, 0.0f, 0.0f),
+
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+		glm::vec4(1.0f,  0.0f,  0.0f, 0.0f),
+
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f, -1.0f,  0.0f, 0.0f),
+
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f),
+		glm::vec4(0.0f,  1.0f,  0.0f, 0.0f)
+	};
+
+	glm::vec4 cube_color(1.0f, 1.0f, 1.0f, 1.0f);
+	std::vector<glm::vec4> floor_cube_colors;
+	floor_cube_colors.assign(floor_vertices.size(), cube_color);
+
+	standard_mat = std::make_shared<Standard_Material>();
+	standard_mat->Set_Shader(Shader::Get_Shader("standard"));
+	standard_mat->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
+	standard_mat->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	standard_mat->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));
+	standard_mat->setFloat("material_shininess", 32.0f);
+	standard_mat->setFloat("material_specular_intensity", 1.0f);
+	standard_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+	standard_mat->setFloat("globalAmbientIntensity", 0.1f);
+	standard_mat->setTexture("material_diffuse", Game_Resources::Textures::CONTAINER_DIFFUSE);
+	standard_mat->setTexture("material_specular", Game_Resources::Textures::CONTAINER_SPECULAR);
+
+	Mesh::Shared cube_mesh = Mesh::Create();
+	cube_mesh->Vertices(floor_vertices);
+	cube_mesh->Normals(floor_normals);
+	cube_mesh->Colors(floor_cube_colors);
+	cube_mesh->TexCoords(floor_tex_coords);
+	cube_mesh->Activate();
+
+	Object().Get_MeshRenderer().Set_Mesh(cube_mesh);
+	Object().Get_MeshRenderer().Set_Material(standard_mat);
+	Object().Get_Transform().Translate(0.0f, DUMMY_SURFACE_Y_LOC, 0.0f);
+	Object().Get_Transform().Scale(glm::vec3(DUMMY_LENGTH, DUMMY_SURFACE_THICKNESS, DUMMY_LENGTH));
+
+	BoxCollider::Weak col = Object().Add_Component<BoxCollider>();
+	col.lock()->Size(glm::vec3(DUMMY_LENGTH / 2, DUMMY_SURFACE_THICKNESS / 2, DUMMY_LENGTH / 2));
+	col.lock()->Mass(0.0f);
+	col.lock()->Activate();
+	//col.lock()->RigidBody().forceActivationState(DISABLE_DEACTIVATION);
+	//col.lock()->RigidBody().getAabb(min, max);
 }
 
 std::vector<glm::ivec3> WorldGenController::get_columns_in_radius(int center_x, int center_z, int radius)

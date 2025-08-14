@@ -52,7 +52,7 @@ namespace {
         switch (source)
         {
         case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; 
-            assert(false);
+            //assert(false);
             break;
         case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
         case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;

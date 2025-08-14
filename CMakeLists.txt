@@ -3,6 +3,17 @@ project(game CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 
+add_compile_definitions(PHYSICS_BACKEND_BULLET=1)
+add_compile_definitions(PHYSICS_BACKEND_JOLT=2)
+add_compile_definitions(PHYSICS_BACKEND=PHYSICS_BACKEND_JOLT)
+
+option(ASAN_ENABLED "Enable Address Sanitation" ON)
+if(ASAN_ENABLED)
+	string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+	message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}\n")
+	add_compile_options(-fsanitize=address)
+	add_compile_definitions(_DISABLE_STRING_ANNOTATION=1 _DISABLE_VECTOR_ANNOTATION=1)
+endif() 
 
 
 if (UNIX)
@@ -23,6 +34,7 @@ find_package(nlohmann_json REQUIRED)
 find_package(Boost REQUIRED)
 find_package(sol2 REQUIRED)
 find_package(Bullet REQUIRED)
+find_package(Jolt REQUIRED)
 find_package(fmt REQUIRED)
 #find_package(OpenAL REQUIRED)
 find_package(inih REQUIRED)

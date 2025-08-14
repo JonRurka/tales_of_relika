@@ -31,6 +31,7 @@ target_link_libraries(${PROJECT_NAME}
 	glm::glm
 	sol2::sol2
 	Bullet::Bullet
+	Jolt::Jolt
 	inih::inih
 	imgui::imgui
 	#rmlui

@@ -46,7 +46,8 @@ void Character_HUD::Init(Camera::Weak camera)
 
 	m_hot_bar_items = std::vector<Inventory_Item>(10, Inventory_Item());
 
-	m_iso_sampler = WorldGenController::Instance()->Get_ISO_Sampler();
+	if (WorldGenController::Instance()->Voxel_Engine_Enabled())
+		m_iso_sampler = WorldGenController::Instance()->Get_ISO_Sampler();
 }
 
 void Character_HUD::HotBar_Visible(bool visible)
@@ -145,7 +146,7 @@ void Character_HUD::Update(float dt)
 	glm::vec3 ray_dir;
 	m_camera.lock()->ScreenPointToRay(mouse_pos, ray_start, ray_dir);
 	Physics::RayHit hit = Physics::Raycast(ray_start, ray_dir * 100.0f);
-	if (hit.did_hit) {
+	if (hit.did_hit && WorldGenController::Instance()->Voxel_Engine_Enabled()) {
 		Graphics::DrawDebugRay(hit.hit_point, hit.normal, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::ivec3 voxel_coord_box = WorldGenController::WorldToVoxel(hit.hit_point - (hit.normal * 0.00f));
 

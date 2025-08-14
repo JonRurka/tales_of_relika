@@ -36,7 +36,7 @@ void VoxelWorld_Scene::Init()
 	m_loading_screen->Show();
 
 	setup_camera();
-	setup_lights();
+	//setup_lights();
 	setup_client_server();
 	
 
@@ -463,7 +463,7 @@ void VoxelWorld_Scene::create_test_items()
 	cube_mesh->TexCoords(floor_tex_coords);
 	cube_mesh->Activate();
 
-	btVector3 min, max;
+	//btVector3 min, max;
 
 	WorldObject::Weak floor_obj = Instantiate("floor");
 	floor_obj.lock()->Get_MeshRenderer().Set_Mesh(cube_mesh);
@@ -474,13 +474,13 @@ void VoxelWorld_Scene::create_test_items()
 	col.lock()->Size(glm::vec3(16.0f, 0.5f, 16.0f));
 	col.lock()->Mass(0.0f);
 	col.lock()->Activate();
-	col.lock()->RigidBody().forceActivationState(DISABLE_DEACTIVATION);
-	col.lock()->RigidBody().getAabb(min, max);
+	//col.lock()->RigidBody().forceActivationState(DISABLE_DEACTIVATION);
+	//col.lock()->RigidBody().getAabb(min, max);
 	//col->RigidBody()->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_STATIC_OBJECT);
 	//col->RigidBody()->setUserIndex(-1);
 
-	Logger::LogDebug(LOG_POS("Init"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
-		min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
+	//Logger::LogDebug(LOG_POS("Init"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
+	//	min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
 
 }
 

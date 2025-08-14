@@ -62,10 +62,12 @@ void Light::Init()
 
 void Light::Update(float dt)
 {
+	return;
+
 	m_data->position = glm::vec4(Object().Get_Transform().Position(), 1.0f);
 	m_data->direction = glm::vec4(Object().Get_Transform().Forward(), 0.0f);
 
-	if (has_shadows)
+	/*if (has_shadows)
 	{
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
@@ -73,7 +75,7 @@ void Light::Update(float dt)
 
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
+	}*/
 	
 
 }
@@ -121,6 +123,7 @@ void Light::Activate_Shadows(bool enabled)
 
 void Light::Flush()
 {
+	return; 
 	if (!m_initialized) {
 		return;
 	}

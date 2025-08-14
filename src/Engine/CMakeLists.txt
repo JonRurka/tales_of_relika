@@ -120,6 +120,7 @@ target_link_libraries(${module}
 	spirv-cross-reflect
 	sol2::sol2
 	Bullet::Bullet
+	Jolt::Jolt
 	#OpenAL::OpenAL
 	imgui::imgui
 	#vulkan-headers::vulkan-headers

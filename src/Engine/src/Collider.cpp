@@ -11,6 +11,7 @@ void Collider::base_Init()
 
 void Collider::base_Update(float dt)
 {
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	if (!m_active || m_rigidbody == nullptr) {
 		return;
 	}
@@ -28,8 +29,33 @@ void Collider::base_Update(float dt)
 		//Logger::LogDebug(LOG_POS("base_Update"), "'%s' (%f): Updated Position: (%f, %f, %f)", 
 		//	Object()->Name().c_str(), m_mass, pos.x(), pos.y(), pos.z());
 	}
+#else
+	if (Is_Dynamic())
+	{
+		Transform& obj_trans = Object().Get_Transform();
+		Vec3 pos = m_rigidbody->GetPosition();
+		Quat rot = m_rigidbody->GetRotation();
+		obj_trans.Position(glm::vec3(pos.GetX(), pos.GetY(), pos.GetZ()));
+		obj_trans.Rotation(glm::quat(rot.GetW(), rot.GetX(), rot.GetY(), rot.GetZ()));
+	}
+
+
+#endif
 }
 
+void Collider::Destroy_Collider()
+{
+
+	remove_rigidbody();
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
+	
+#else
+
+#endif
+}
+
+
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 btTransform Collider::create_bt_transform()
 {
 	Transform& trans = Object().Get_Transform();
@@ -82,8 +108,18 @@ void Collider::remove_rigidbody()
 		m_rigidbody.reset();
 	}
 }
-
-void Collider::Destroy_Collider()
+#else
+void Collider::set_rigidbody(Body* body)
 {
-	remove_rigidbody();
+	m_rigidbody = body;
+	//Physics::GetBodyInterface().AddBody(m_rigidbody->GetID());
 }
+
+void Collider::remove_rigidbody()
+{
+	Physics::GetBodyInterface().RemoveBody(m_rigidbody->GetID());
+	m_rigidbody = nullptr;
+}
+
+#endif
+

@@ -24,6 +24,7 @@ void LocalPlayerCharacter::Init()
 
 	m_body_trans = Object().Get_Transform_Ptr();
 	//m_body_trans->Position(glm::vec3(100, 50, 100));
+	m_body_trans.lock()->Position(glm::vec3(0, 15, 0));
 
 	m_location = m_body_trans.lock()->Position();
 	m_old_location = m_location;
@@ -51,7 +52,7 @@ void LocalPlayerCharacter::Update(float dt)
 
 	jump_control(dt);
 	move_control(dt);
-	//look_control(dt);
+	look_control(dt);
 
 	if (Utilities::Get_Time() - m_debug_time > 2.0f)
 	{
@@ -71,6 +72,7 @@ void LocalPlayerCharacter::jump_control(float dt)
 {
 	assert(!m_capsule_collider.expired());
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	if (Input::GetKeyDown(KeyCode::Space) && 
 		m_capsule_collider.lock()->Get_Controller().onGround())
 	{
@@ -78,6 +80,11 @@ void LocalPlayerCharacter::jump_control(float dt)
 		SendPlayerEvent(OpCodes::Player_Events::Jump, Protocal_Tcp);
 		//m_capsule_collider->RigidBody()->applyCentralImpulse(btVector3(0, m_jump_force, 0));
 	}
+#else
+
+
+
+#endif
 }
 
 void LocalPlayerCharacter::move_control(float dt)
@@ -99,20 +106,25 @@ void LocalPlayerCharacter::move_control(float dt)
 		//Logger::LogDebug(LOG_POS("move_control"), "move forward");
 		m_do_move = true;
 		move_vec += forward;
+		Logger::LogDebug(LOG_POS("move_control"), "W");
 	}
 	if (Input::GetKey(input::KeyCode::S)) {
 		m_do_move = true;
 		move_vec -= forward;
+		Logger::LogDebug(LOG_POS("move_control"), "S");
 	}
 	if (Input::GetKey(input::KeyCode::A)) {
 		m_do_move = true;
 		move_vec += right;
+		Logger::LogDebug(LOG_POS("move_control"), "A");
 	}
 	if (Input::GetKey(input::KeyCode::D)) {
 		m_do_move = true;
 		move_vec -= right;
+		Logger::LogDebug(LOG_POS("move_control"), "D");
 	}
 	
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	if (m_do_move) {
 		glm::vec3 tr_move_vec = glm::vec3(move_vec.x, 0, move_vec.z);
 
@@ -131,10 +143,40 @@ void LocalPlayerCharacter::move_control(float dt)
 
 	btVector3 vel = char_col.Get_Controller().getLinearVelocity();
 	m_velocity = glm::fvec3(vel.x(), vel.y(), vel.z());// (m_location - m_old_location) / dt;
+#else
+	if (true) 
+	{
+		if (m_do_move)
+			Logger::LogDebug(LOG_POS("move_control"), "Move: (%f, %f)",
+				move_vec.x, move_vec.z);
+		Vec3 tr_move_vec = Vec3(move_vec.x, 0, move_vec.z);
+		if (tr_move_vec != Vec3::sZero()) {
+			tr_move_vec = tr_move_vec.Normalized();
+		}
+
+		char_col.HandleMovement(tr_move_vec, dt);
+	}
+	else {
+		//char_col.HandleMovement(Vec3(0, 0, 0), dt);
+	}
+
+	Vec3 pos = char_col.Get_Controller().GetPosition();
+	Vec3 c_up = char_col.Get_Controller().GetUp();
+	m_location = glm::fvec3(pos.GetX(), pos.GetY(), pos.GetZ());
+	glm::vec3 up = glm::vec3(c_up.GetX(), c_up.GetY(), c_up.GetZ());
+
+	//Logger::LogDebug(LOG_POS("move_control"), "Position(%i): (%f, %f, %f)",
+	//	(int)char_col.Get_Controller().IsSupported(), up.x, up.y, up.z);
+
+	Vec3 vel = char_col.Get_Controller().GetLinearVelocity();
+	m_velocity = glm::fvec3(vel.GetX(), vel.GetY(), vel.GetZ());
+
+#endif
+
 
 	m_old_location = m_location;
 
-
+	return;
 	double curr_time = Utilities::Get_Time();
 	if (curr_time - m_last_send_move >= MOVE_SEND_TIMEOUT)
 	{
@@ -162,8 +204,7 @@ void LocalPlayerCharacter::move_control(float dt)
 		if (m_do_move)
 		{
 			glm::vec3 new_pos = glm::mix(m_location, pred_server_pos, dt * 2);
-			btVector3 bt_new_pos = btVector3(new_pos.x, new_pos.y, new_pos.z);
-			char_col.Get_Controller().warp(bt_new_pos);
+			char_col.Set_Location(new_pos);
 			m_body_trans.lock()->Position(new_pos);
 			m_cam_trans.lock()->Position(new_pos + cam_offset);
 			m_location = new_pos;
@@ -186,8 +227,7 @@ void LocalPlayerCharacter::move_control(float dt)
 		{
 			move_dt += dt;
 			glm::vec3 new_pos = glm::mix(m_location, pred_server_pos, move_dt);
-			btVector3 bt_new_pos = btVector3(new_pos.x, new_pos.y, new_pos.z);
-			char_col.Get_Controller().warp(bt_new_pos);
+			char_col.Set_Location(new_pos);
 			m_body_trans.lock()->Position(new_pos);
 			m_cam_trans.lock()->Position(new_pos + cam_offset);
 			m_location = new_pos;
@@ -205,6 +245,8 @@ void LocalPlayerCharacter::move_control(float dt)
 
 void LocalPlayerCharacter::OnOrientationSync(Data data)
 {
+	return;
+
 	auto data_buf = data.Buffer;
 	//float* orientation_buff = (float*)(data.Buffer.data());
 	//glm::vec3 player_loc = glm::vec3(orientation_buff[0], orientation_buff[1], orientation_buff[2]);

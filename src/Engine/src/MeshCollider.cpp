@@ -17,13 +17,12 @@ void MeshCollider::Init()
 void MeshCollider::SetMesh(Mesh::Shared mesh)
 {
 	//m_mesh = mesh;
-
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	std::vector<glm::vec3> tmp_verts = {
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		glm::vec3(0.0f, 1.0f, 0.0f),
 		glm::vec3(1.0f, 1.0f, 0.0f),
 	};
-
 	std::vector<unsigned int> tmp_tris = {
 		0, 1, 2
 	};
@@ -79,6 +78,28 @@ void MeshCollider::SetMesh(Mesh::Shared mesh)
 		}
 		m_shape = std::make_unique<btBvhTriangleMeshShape>(m_triangle_mesh.get(), true, true);
 	}
+#else
+	TriangleList triangles;
+	std::vector<glm::vec4> verts = mesh->Vertices();
+	for (int t_idx = 0; t_idx < verts.size() / 3; t_idx++)
+	{
+		glm::vec4 gv1 = verts[(t_idx * 3) + 0];
+		glm::vec4 gv2 = verts[(t_idx * 3) + 1];
+		glm::vec4 gv3 = verts[(t_idx * 3) + 2];
+
+		Float3 v1 = Float3(gv1.x, gv1.y, gv1.z);
+		Float3 v2 = Float3(gv2.x, gv2.y, gv2.z);
+		Float3 v3 = Float3(gv3.x, gv3.y, gv3.z);
+
+		triangles.push_back(Triangle(v1, v2, v3, 0));
+	}
+
+	PhysicsMaterialList materials;
+	materials.push_back(new PhysicsMaterialSimple("Phy_Material", Color::sGetDistinctColor(0)));
+
+	m_shape_settings = new MeshShapeSettings(triangles, std::move(materials));
+
+#endif
 
 
 	OnRefresh();
@@ -103,10 +124,12 @@ void MeshCollider::OnRefresh()
 {
 	if (!Active())
 		return;
-
 	if (Has_Rigidbody()) {
 		remove_rigidbody();
 	}
+
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
+	
 
 	if (Is_Dynamic()) {
 		m_shape->calculateLocalInertia(Mass(), m_localInertia);
@@ -116,8 +139,8 @@ void MeshCollider::OnRefresh()
 	}
 
 	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
-	btDefaultMotionState* myMotionState = new btDefaultMotionState(create_bt_transform());
-	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), myMotionState, m_shape.get(), m_localInertia);
+	m_motionState = std::make_unique<btDefaultMotionState>(create_bt_transform());
+	btRigidBody::btRigidBodyConstructionInfo rbInfo(Mass(), m_motionState.get(), m_shape.get(), m_localInertia);
 	set_rigidbody(std::make_shared<btRigidBody>(rbInfo));
 
 	//Transform* obj_trans = Object().Get_Transform();
@@ -125,10 +148,18 @@ void MeshCollider::OnRefresh()
 	//Logger::LogDebug(LOG_POS("OnRefresh"), "Rigid Position:(%f, %f, %f), Obj Position:(%f, %f, %f)",
 	//	bt_trans.getOrigin().x(), bt_trans.getOrigin().y(), bt_trans.getOrigin().z(),
 	//	obj_trans->Position().x, obj_trans->Position().y, obj_trans->Position().z);
+#else
+
+	Body* rigidbody = Physics::GetBodyInterface().CreateBody(BodyCreationSettings(m_shape_settings, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+	Physics::GetBodyInterface().AddBody(rigidbody->GetID(), EActivation::DontActivate);
+	set_rigidbody(rigidbody);
+
+#endif
 }
 
 void MeshCollider::Clear()
 {
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	if (Has_Rigidbody()) {
 		remove_rigidbody();
 	}
@@ -138,6 +169,15 @@ void MeshCollider::Clear()
 	m_triangle_mesh.reset();
 	mTriangleIndexVertexArray.reset();
 	m_shape.reset();
+#else
+	if (Has_Rigidbody()) {
+		remove_rigidbody();
+	}
+
+	Destroy_Collider();
+
+
+#endif
 }
 
 void MeshCollider::OnDestroy()

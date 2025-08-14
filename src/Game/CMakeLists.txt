@@ -89,6 +89,7 @@ target_link_libraries(${module}
 	glfw
 	sol2::sol2
 	Bullet::Bullet
+	Jolt::Jolt
 	#OpenAL::OpenAL
 	inih::inih
 	imgui::imgui

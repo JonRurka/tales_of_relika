@@ -18,9 +18,15 @@ public:
 
 private:
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	std::unique_ptr<btCollisionShape> m_shape;
 	std::unique_ptr<btTriangleIndexVertexArray> mTriangleIndexVertexArray;
 	std::unique_ptr<btTriangleMesh> m_triangle_mesh;
+	std::unique_ptr<btDefaultMotionState> m_motionState;
+#else
+	Ref<MeshShapeSettings> m_shape_settings;
+
+#endif
 
 	std::vector<glm::vec3> vert3;
 

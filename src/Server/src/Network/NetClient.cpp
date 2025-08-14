@@ -1,5 +1,7 @@
 #include "NetClient.h"
 
+#include <array>
+
 #include "Logger.h"
 #include "BufferUtils.h"
 
@@ -8,8 +10,8 @@
 #define PING_SEND_MS 1000
 
 namespace {
-    uint8_t g_tcp_message[UINT16_MAX];
-    uint8_t g_udp_message[UINT16_MAX + 2];
+    std::array<uint8_t, UINT16_MAX> g_tcp_message;
+    std::array<uint8_t, UINT16_MAX + 2> g_udp_message;
 }
 
 NetClient::NetClient() 
@@ -290,7 +292,7 @@ void NetClient::read_socket_tcp()
     // TODO: garentee this won't fragment
     boost::asio::read(m_socket_tcp, boost::asio::buffer(g_tcp_message, size));
 
-    std::vector<uint8_t> msg(g_tcp_message, g_tcp_message + size);
+    std::vector<uint8_t> msg(g_tcp_message.begin(), g_tcp_message.begin() + size);
 
     add_received_packet(msg, Protocal_Tcp);
 }
@@ -299,10 +301,11 @@ void NetClient::read_socket_udp()
 {
     m_socket_udp.receive_from(boost::asio::buffer(g_udp_message), m_server_endpoint_udp);
 
-    uint16_t size = *(reinterpret_cast<uint16_t*>(g_udp_message));
+    uint16_t size = *(reinterpret_cast<uint16_t*>(g_udp_message.data()));
 
-    uint8_t* data_ptr = &g_udp_message[2];
-    std::vector<uint8_t> buffer(data_ptr, data_ptr + size);
+    //uint8_t* data_ptr = &g_udp_message[2];
+    //std::vector<uint8_t> buffer(data_ptr, data_ptr + size);
+    std::vector<uint8_t> buffer(g_udp_message.begin() + 2, g_udp_message.begin() + 2 + size);
 
     add_received_packet(buffer, Protocal_Udp);
 }

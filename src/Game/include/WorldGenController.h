@@ -9,6 +9,7 @@
 #include "SmoothVoxelBuilder.h"
 #include "Stitch_VBO.h"
 #include "Opaque_Chunk_Material.h"
+#include "Standard_Material.h"
 
 #include <unordered_map>
 #include <vector>
@@ -114,11 +115,13 @@ public:
 
 	int Chunk_Radius() { return m_max_chunk_radius; }
 
-	bool Terrain_Ready() { return m_gen_finished; }
+	bool Terrain_Ready();
 
 	glm::fvec3 Target_Position();
 
 	glm::ivec3 Target_Chunk();
+
+	bool Voxel_Engine_Enabled() { return m_voxel_engine_enabled; }
 
 	static glm::ivec3 WorldPosToChunkCoord(glm::fvec3 pos) { return m_Instance->worldPosToChunkCoord(pos); }
 
@@ -192,7 +195,7 @@ private:
 	double m_gen_start{ 0.0 };
 	double m_gen_stop{ 0.0 };
 	bool m_gen_finished{ false };
-
+	bool m_initialized{ false };
 	bool m_world_gen_started{ false };
 	//int m_num_filled_chunks{ 0 };
 
@@ -212,6 +215,8 @@ private:
 	Opaque_Chunk_Material::Shared m_chunk_opaque_mat;
 
 	Texture::Shared m_diffuse_texture_array;
+
+	bool m_voxel_engine_enabled{ false };
 
 	ChunkRef get_chunk(glm::ivec3 coord);
 
@@ -238,6 +243,11 @@ private:
 	bool chunk_exists(glm::ivec3 chunk_coord);
 
 	void remove_chunk(glm::ivec3 chunk_coord);
+
+
+	Standard_Material::Shared standard_mat;
+	Mesh::Shared cube_mesh;
+	void create_dummy_terrain();
 
 	std::vector<glm::ivec3> get_columns_in_radius(int center_x, int center_z, int radius);
 

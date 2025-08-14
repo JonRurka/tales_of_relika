@@ -11,6 +11,7 @@ boost/1.87.0
 imgui/1.92.0
 sol2/3.5.0
 bullet3/3.25
+joltphysics/5.2.0
 fmt/11.1.4
 #openal/1.22.2
 inih/60

@@ -233,7 +233,7 @@ void Voxel_Test_Scene::Init()
 	cube_mesh->TexCoords(floor_tex_coords);
 	cube_mesh->Activate();
 
-	btVector3 min, max;
+	//btVector3 min, max;
 
 	WorldObject::Weak floor_obj = Instantiate("floor");
 	floor_obj.lock()->Get_MeshRenderer().Set_Mesh(cube_mesh);
@@ -247,8 +247,8 @@ void Voxel_Test_Scene::Init()
 	col.lock()->SetMesh(cube_mesh);
 	col.lock()->Mass(0.0f);
 	col.lock()->Activate();
-	col.lock()->RigidBody().forceActivationState(DISABLE_DEACTIVATION);
-	col.lock()->RigidBody().getAabb(min, max);
+	//col.lock()->RigidBody().forceActivationState(DISABLE_DEACTIVATION);
+	//col.lock()->RigidBody().getAabb(min, max);
 	//col->RigidBody()->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_STATIC_OBJECT);
 	//col->RigidBody()->setUserIndex(-1);
 
@@ -266,7 +266,7 @@ void Voxel_Test_Scene::Init()
 	col_box.lock()->Size(glm::vec3(0.5f, 0.5f, 0.5f));
 	col_box.lock()->Mass(1.0f);
 	col_box.lock()->Activate();
-	col_box.lock()->RigidBody().getAabb(min, max);
+	//col_box.lock()->RigidBody().getAabb(min, max);
 	
 	//Logger::LogDebug(LOG_POS("Init"), "Cube Min:(%f, %f, %f), max:(%f, %f, %f)",
 	//	min.x(), min.y(), min.z(), max.x(), max.y(), max.z());

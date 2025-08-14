@@ -290,7 +290,7 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 		}
 	}
 
-	btVector3 min, max;
+	//btVector3 min, max;
 
 	m_collision_mesh = Mesh::Create();
 	//m_collision_mesh->Indices(tris);
@@ -300,7 +300,7 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 	m_mesh_collider.lock()->Mass(0.0f);
 	m_mesh_collider.lock()->Activate();
 	//m_mesh_collider->RigidBody()->forceActivationState(DISABLE_DEACTIVATION);
-	m_mesh_collider.lock()->RigidBody().getAabb(min, max);
+	//m_mesh_collider.lock()->RigidBody().getAabb(min, max);
 
 	//Logger::LogDebug(LOG_POS("update_collision_mesh"), "Floor Min:(%f, %f, %f), max:(%f, %f, %f)",
 	//	min.x(), min.y(), min.z(), max.x(), max.y(), max.z());

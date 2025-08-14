@@ -11,8 +11,11 @@ public:
 
 private:
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	std::unique_ptr<btCollisionShape> m_shape;
-
+	std::unique_ptr<btDefaultMotionState> m_motionState;
+#else
+#endif
 
 	inline static const std::string LOG_LOC{ "SPHERE_COLLIDER" };
 

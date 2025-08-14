@@ -101,6 +101,7 @@ target_link_libraries(${PROJECT_NAME}
 	spirv-cross-reflect
 	sol2::sol2
 	Bullet::Bullet
+	Jolt::Jolt
 	#OpenAL::OpenAL
 	inih::inih
 	imgui::imgui

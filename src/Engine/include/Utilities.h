@@ -51,6 +51,8 @@ public:
 
 	static std::vector<char> Read_File_Bytes(std::string path);
 
+	static std::vector<char> Read_File_Bytes(std::string path, size_t offset, size_t size);
+
 	static void Read_File_Bytes(std::string path, size_t offset, size_t size, char* out_bytes);
 
 	static std::string Read_File_String(std::string path);

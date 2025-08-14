@@ -51,6 +51,7 @@ void NetPlayerManager::OnUpdateOrientations(Data data)
 
 void NetPlayerManager::OnPlayerEvent(Data data)
 {
+	return;
 	uint8_t num_updates = data.Buffer[0];
 	data.Buffer = BufferUtils::RemoveFront(1, data.Buffer);
 
