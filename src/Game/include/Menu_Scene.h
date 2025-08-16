@@ -26,8 +26,8 @@ private:
 
 	DEFINE_UI_EVENT(Start_SP_Click_Event, Menu_Scene, OnStartSP_Clicked)
 
-	Rml::ElementDocument* m_startup_splash{ nullptr };
-	Rml::ElementDocument* m_main_menu_screen{ nullptr };
+	ElementDocument m_startup_splash;
+	ElementDocument m_main_menu_screen;
 
 	Rml::Element* m_start_sp_button_elem{ nullptr };
 	Start_SP_Click_Event* m_start_sp_event_listener{ nullptr };

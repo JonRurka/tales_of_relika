@@ -35,6 +35,14 @@ namespace {
 
 	}
 #elif (PHYSICS_BACKEND==PHYSICS_BACKEND_JOLT)
+	Vec3 to_jolt_vector(glm::vec3 value) {
+		return Vec3(value.x, value.y, value.z);
+	}
+
+	glm::vec3 to_glm_vector(Vec3 value) {
+		return glm::vec3(value.GetX(), value.GetY(), value.GetZ());
+	}
+
 	static const uint cNumBodies = 10240;
 	static const uint cNumBodyMutexes = 0; // Autodetect
 	static const uint cMaxBodyPairs = 65536;
@@ -186,7 +194,7 @@ void Physics::update_internal(float dt)
 	m_last_update = Utilities::Get_Time();
 
 
-	mPhysicsSystem->Update(time, JOLT_SIMULATION_STEPS, mTempAllocator.get(), mJobSystem.get());
+	mPhysicsSystem->Update(time, JOLT_SIMULATION_STEPS, mTempAllocator, mJobSystem);
 
 
 #endif
@@ -250,16 +258,16 @@ void Physics::Init()
 
 #elif(PHYSICS_BACKEND == PHYSICS_BACKEND_JOLT)
 
-	mTempAllocator = std::make_unique<TempAllocatorImpl>(JOLT_TEMP_ALLOCATOR_SIZE);
+	mTempAllocator = new TempAllocatorImpl(JOLT_TEMP_ALLOCATOR_SIZE);
 	
-	mJobSystem = std::make_unique<JobSystemThreadPool>(cMaxPhysicsJobs, cMaxPhysicsBarriers, thread::hardware_concurrency() - 1);
-	mJobSystemValidating = std::make_unique<JobSystemSingleThreaded>(cMaxPhysicsJobs);
+	mJobSystem = new JobSystemThreadPool(cMaxPhysicsJobs, cMaxPhysicsBarriers, thread::hardware_concurrency() - 1);
+	mJobSystemValidating = new JobSystemSingleThreaded(cMaxPhysicsJobs);
 
-	mPhysicsSystem = std::make_unique<PhysicsSystem>();
+	mPhysicsSystem = new PhysicsSystem();
 	mPhysicsSystem->Init(cNumBodies, cNumBodyMutexes, cMaxBodyPairs, cMaxContactConstraints, gBroadPhaseLayerInterface, gObjectVsBroadPhaseLayerFilter, gObjectVsObjectLayerFilter);
 	mPhysicsSystem->SetPhysicsSettings(mPhysicsSettings);
 	mPhysicsSystem->SetGravity(Vec3(0, -9.81f, 0));
-	mBodyInterface = std::unique_ptr<BodyInterface>(&mPhysicsSystem->GetBodyInterface());
+	mBodyInterface = &mPhysicsSystem->GetBodyInterface();
 
 #endif
 
@@ -379,6 +387,19 @@ void Physics::remove_rigidbody(btRigidBody* body)
 }
 #elif (PHYSICS_BACKEND == PHYSICS_BACKEND_JOLT)
 
+void Physics::Add_Rigidbody(Body* body)
+{
+	m_bodies[body->GetID().GetIndex()] = body;
+}
+
+void Physics::Remove_Rigidbody(Body* body)
+{
+	if (m_bodies.contains(body->GetID().GetIndex()))
+	{
+		m_bodies.erase(body->GetID().GetIndex());
+	}
+}
+
 Physics::RayHit Physics::raycast_jolt(glm::vec3 from, glm::vec3 dir)
 {
 	const BroadPhaseQuery& broadphase = Instance().mPhysicsSystem->GetBroadPhaseQuery();
@@ -400,3 +421,18 @@ void Physics::optimize_jolt()
 
 
 #endif
+
+
+Physics::~Physics()
+{
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
+
+
+#elif (PHYSICS_BACKEND == PHYSICS_BACKEND_JOLT)
+	delete mPhysicsSystem;
+	delete mJobSystemValidating;
+	delete mJobSystem;
+	delete mTempAllocator;
+	StaticDispose();
+#endif
+}

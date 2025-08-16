@@ -27,9 +27,11 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "input_events.h"
+
 #define RENDER_IMGUI false
 #define RENDER_DEBUG_LINES true
-#define RENDER_GAME_UI false
+#define RENDER_GAME_UI true
 #define RENDER_GAME_SCREEN true
 #define RENDER_AXIS_GIZMO false
 
@@ -240,7 +242,8 @@ void Graphics::Set_Screen_FrameTexture(std::shared_ptr<Texture> tex)
 
 void Graphics::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	bool propogated = UI_Engine::Instance().KeyCallback(window, key, scancode, action, mods);
+	bool propogated = UI_Engine::Instance().KeyCallback(window, key, scancode, action, mods); 
+	Logger::LogDebug(LOG_POS("key_callback"), "Graphics Key Down (propogate: %i): %i", (int)propogated, (int)Input::Instance().translate_key_code(key));
 	if (propogated)
 		Input::Instance().key_callback(window, key, scancode, action, mods);
 }

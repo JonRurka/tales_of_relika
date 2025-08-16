@@ -28,6 +28,7 @@ void Framebuffer::Refresh(bool gen_image)
 
 
 	glGenFramebuffers(1, &m_framebuffer_obj);
+	Logger::LogDebug(LOG_POS("Refresh"), "Create Engine Framebuffer: %i", m_framebuffer_obj);
 	//glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer_obj);
 	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

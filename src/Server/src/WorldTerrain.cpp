@@ -496,9 +496,10 @@ void WorldTerrain::remove_chunk(glm::ivec3 chunk_coord)
 void WorldTerrain::compute_triangles()
 {
 	int Max_Verts = (int)Utilities::Vertex_Limit_Mode::Chunk_Max;
+	int numPoly = Max_Verts / 3;
 	bool m_invert_tris = false;
-	for (int i = 0; i < Max_Verts; i += 3) {
-		unsigned int tris_start = i;
+	for (int p = 0; p < numPoly; p++) {
+		unsigned int tris_start = p * 3;
 
 		if (m_invert_tris) {
 			m_triangles[tris_start + 0] = tris_start + 0;

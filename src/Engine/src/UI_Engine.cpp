@@ -225,6 +225,11 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Get_Document(std::string name)
 	return m_documents[name];
 }
 
+void UI_Engine::Accept_Input(bool val)
+{
+	m_accept_input = val;
+}
+
 void UI_Engine::Display(std::string doc_name)
 {
 	if (!m_initialized)

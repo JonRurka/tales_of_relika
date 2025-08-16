@@ -7,6 +7,8 @@
 #include "input_events.h"
 #include "Utilities.h"
 
+using namespace input;
+
 class Engine;
 class Graphics;
 struct GLFWwindow;
@@ -108,5 +110,14 @@ private:
 	double get_input_x(std::string device);
 	double get_input_y(std::string device);
 	glm::vec2 get_mouse_pos();
+
+	KeyCode translate_key_code(int key);
+
+	inline static KeyCode translate_key_code(const std::unordered_map<int, KeyCode>& key_lookup, int key);
+	inline static KeyAction translate_key_action(int action);
+	inline static MouseButton translate_mouse_button(int button);
+	inline static MouseAction translate_mouse_action(int action);
+
+	inline static const std::string LOG_LOC{ "INPUT" };
 
 };

@@ -28,6 +28,7 @@ private:															 \
 };
 
 typedef std::shared_ptr<Rml::ElementDocument> ElementDocument;
+typedef std::shared_ptr<Rml::Element> Element;
 
 class UI_Engine {
 	friend class Graphics;
@@ -51,7 +52,7 @@ public:
 
 	std::shared_ptr<Rml::ElementDocument> Get_Document(std::string name);
 
-	void Accept_Input(bool val) { m_accept_input = true; }
+	void Accept_Input(bool val);
 
 	void Display(std::string doc_name);
 

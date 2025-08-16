@@ -30,6 +30,7 @@ set(${module}_headers
 	include/ServerTerrainChunk.h
 	include/ServerStructureChunk.h
 	include/Player.h
+	include/Player_Movement.h
 	include/Server_Main.h
 	include/stdafx.h
 	
@@ -58,6 +59,7 @@ set(${module}_sources
 	src/ServerStructureChunk.cpp
 	src/Linux_conio.cpp
 	src/Player.cpp
+	src/Player_Movement.cpp
 	src/Server_Main.cpp
 )
 

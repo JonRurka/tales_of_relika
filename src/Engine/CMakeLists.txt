@@ -25,6 +25,7 @@ set(${module}_headers
 	include/input_events.h
 	include/Input.h
 	#include/Raycast.h
+	include/Physics_base.h
 	include/Physics.h
 	include/Scene.h
 	include/Light_Material.h

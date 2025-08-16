@@ -117,6 +117,8 @@ void ServerTerrainChunk::apply_collider(ColliderGenerator::Request* req)
 		return;
 	}
 
+
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	m_opaque_shape = req->Mesh_Shape();
 
 	btTransform startTransform;
@@ -128,7 +130,15 @@ void ServerTerrainChunk::apply_collider(ColliderGenerator::Request* req)
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(0, myMotionState, m_opaque_shape, m_localInertia);
 	m_opaque_rigidbody = new btRigidBody(rbInfo);
 	m_world_physics->Add_Rigidbody(m_opaque_rigidbody);
+#elif (PHYSICS_BACKEND==PHYSICS_BACKEND_JOLT)
 
+	m_opaque_shape = req->Mesh_Shape();
+
+	m_opaque_rigidbody = m_world_physics->GetBodyInterface().CreateBody(BodyCreationSettings(m_opaque_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+	m_world_physics->GetBodyInterface().AddBody(m_opaque_rigidbody->GetID(), EActivation::DontActivate);
+	m_world_physics->Add_Rigidbody(m_opaque_rigidbody);
+
+#endif
 	//Logger::LogDebug(LOG_POS("apply_collider"), "Applied collider with %i vertices.", req->Num_Verts());
 
 	m_current_col_req = req;

@@ -47,12 +47,18 @@ void ColliderGenerator::release_request(Request* req)
 {
 	if (req == nullptr)
 		return;
-
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	if (req->m_mesh_shape != nullptr)
 		delete req->m_mesh_shape;
 
 	if (req->m_triangle_mesh != nullptr)
 		delete req->m_triangle_mesh;
+#elif (PHYSICS_BACKEND==PHYSICS_BACKEND_JOLT)
+
+
+
+
+#endif
 
 	delete req;
 }
@@ -96,6 +102,7 @@ void ColliderGenerator::do_process()
 	} while (has_next);
 }
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 void ColliderGenerator::process_request(Request* req)
 {
 	if (req->m_vertices.size() <= 0) {
@@ -160,4 +167,54 @@ void ColliderGenerator::process_request(Request* req)
 	//Logger::LogInfo(LOG_POS("process_request"), "process collider with %i verts.", req->m_vertices.size());
 }
 
+#elif (PHYSICS_BACKEND==PHYSICS_BACKEND_JOLT)
+
+void ColliderGenerator::process_request(Request* req)
+{
+	if (req->m_vertices.size() <= 0) {
+		req->m_is_ready = true;
+		req->m_is_valid = false;
+		return;
+	}
+
+	std::vector<glm::vec4> vert = req->m_vertices;
+	std::vector<unsigned int> tris = req->m_triangles;
+
+	if (tris.size() > 0) {
+
+	}
+	else 
+	{
+		auto start = std::chrono::high_resolution_clock::now();
+
+		TriangleList triangles;
+		std::vector<glm::vec4> verts = req->m_vertices;
+		for (int t_idx = 0; t_idx < verts.size() / 3; t_idx++)
+		{
+			glm::vec4 gv1 = verts[(t_idx * 3) + 0];
+			glm::vec4 gv2 = verts[(t_idx * 3) + 1];
+			glm::vec4 gv3 = verts[(t_idx * 3) + 2];
+
+			Float3 v1 = Float3(gv1.x, gv1.y, gv1.z);
+			Float3 v2 = Float3(gv2.x, gv2.y, gv2.z);
+			Float3 v3 = Float3(gv3.x, gv3.y, gv3.z);
+
+			triangles.push_back(Triangle(v1, v2, v3, 0));
+		}
+
+		PhysicsMaterialList materials;
+		materials.push_back(new PhysicsMaterialSimple("Phy_Material", Color::sGetDistinctColor(0)));
+
+		req->m_shape_settings = new MeshShapeSettings(triangles, std::move(materials));
+
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration<double>(end - start).count();
+	}
+
+	req->m_is_valid = true;
+	req->m_is_ready = true;
+}
+
+
+#endif
 

@@ -59,14 +59,14 @@ void Game::Init()
 	assert(!m_main_menu_scene.expired());
 	assert(!m_voxel_world_secen.expired());
 
-	//m_main_menu_scene.lock()->Activate(true);
+	m_main_menu_scene.lock()->Activate(true);
 	
 	Scene::SceneStartData start_data{};
 	start_data.setInt("connection", (int)VoxelWorld_Scene::ConnectMode::Remote);
 	start_data.setString("username", "test_user");
 	start_data.setInt("user_id", 1);
 	start_data.setString("host", "204.12.203.152");
-	m_voxel_world_secen.lock()->Activate(true, start_data);
+	//m_voxel_world_secen.lock()->Activate(true, start_data);
 }
 
 void Game::init_shaders()

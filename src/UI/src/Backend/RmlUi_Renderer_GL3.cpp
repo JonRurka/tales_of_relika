@@ -694,6 +694,8 @@ static bool CreateFramebuffer(FramebufferData& out_fb, int width, int height, in
 
 	CheckGLError("CreateFramebuffer");
 
+	Rml::Log::Message(Rml::Log::LT_INFO, "Create Rml Framebuffer: %i", (int)framebuffer);
+
 	out_fb = {};
 	out_fb.width = width;
 	out_fb.height = height;
@@ -913,7 +915,8 @@ void RenderInterface_GL3::BeginFrame()
 	SetTransform(nullptr);
 
 	render_layers.BeginFrame(viewport_width, viewport_height);
-	glBindFramebuffer(GL_FRAMEBUFFER, render_layers.GetTopLayer().framebuffer);
+	GLuint f_buff = render_layers.GetTopLayer().framebuffer;
+	glBindFramebuffer(GL_FRAMEBUFFER, f_buff);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	UseProgram(ProgramId::None);

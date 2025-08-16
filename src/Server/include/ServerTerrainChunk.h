@@ -55,11 +55,22 @@ private:
 	uint64_t m_last_applied_col{ 0 };
 	ColliderGenerator::Request* m_current_col_req{ nullptr };
 
+
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
+
 	btVector3 m_localInertia{ btVector3(0.0f, 0.0f, 0.0f) };
 	btCollisionShape* m_opaque_shape{ nullptr };
 	btTriangleIndexVertexArray* m_opaque_TriangleIndexVertexArray{ nullptr };
 	btTriangleMesh* m_opaque_triangle_mesh{ nullptr };
 	btRigidBody* m_opaque_rigidbody{ nullptr };
+
+#elif (PHYSICS_BACKEND==PHYSICS_BACKEND_JOLT)
+
+	Ref<MeshShapeSettings> m_opaque_shape;
+	Body* m_opaque_rigidbody{ nullptr };
+
+#endif
+
 
 	void process_collider();
 	void apply_collider(ColliderGenerator::Request* req);

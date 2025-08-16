@@ -282,8 +282,9 @@ void Player::process_controll_event(PlayerEvent p_event)
 
 	m_last_move_send_id = move_id;
 
-	m_move_state.Do_Move = do_move;
-	m_move_state.Move_Dir = glm::vec2(move_x, move_z);
+	m_player_movement.Set_Move_State(do_move, glm::vec2(move_x, move_z));
+	//m_move_state.Do_Move = do_move;
+	//m_move_state.Move_Dir = glm::vec2(move_x, move_z);
 
 	//Logger::LogDebug(LOG_POS("process_controll_event"), "Server UDP Send Q Size: %i", UDP_Send_Q_Size());
 	// AsyncServer::GetInstance()->Async_Command_Queue_Size()
@@ -294,49 +295,16 @@ void Player::process_controll_event(PlayerEvent p_event)
 
 void Player::process_jump_event(PlayerEvent p_event)
 {
-	m_charCon->jump(btVector3(0, m_jump_power, 0));
+	m_player_movement.Jump();
 	Forward_Player_Event(p_event);
 }
 
 void Player::move_control(float dt) 
 {
-	if (m_charCon == nullptr)
-		return;
-
-	if (m_move_state.Do_Move) {
-		glm::vec3 tr_move_vec = glm::vec3(m_move_state.Move_Dir.x, 0, m_move_state.Move_Dir.y);
-
-		if (m_charCon->onGround())
-			m_charCon->setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
-		else
-			m_charCon->setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
-
-	}
-	else {
-		m_charCon->setWalkDirection(btVector3(0, 0, 0));
-	}
-
-	btTransform t;
-	t = m_charCon->getGhostObject()->getWorldTransform();
-	btVector3 pos = t.getOrigin();
-	btQuaternion quat = t.getRotation();
-	m_location = glm::vec3(pos.x(), pos.y(), pos.z());
-
-	btVector3 bt_vel = m_charCon->getLinearVelocity();
-	m_velocity = glm::fvec3(bt_vel.x(), bt_vel.y(), bt_vel.z());// (m_location - m_old_location) / dt;
+	m_player_movement.Update(dt);
 	m_old_location = m_location;
-
-	if (Utilities::Get_Time() - m_debug_timer > 1.0f)
-	{
-		//if (m_move_state.Do_Move)
-		//	Logger::LogDebug(LOG_POS("move_control"), "SERVER MOVING");
-
-		m_debug_timer = Utilities::Get_Time();
-
-		//Logger::LogDebug(LOG_POS("move_control"), "Current Pos: (%f, %f, %f), Velocity: (%f, %f, %f)",
-		//	m_location.x, m_location.y, m_location.z, 
-		//	m_velocity.x, m_velocity.y, m_velocity.z);
-	}
+	m_location = m_player_movement.Position();
+	m_velocity = m_player_movement.Velocity();
 }
 
 void Player::update_nearby_players()
@@ -359,46 +327,18 @@ void Player::save_player_data()
 
 void Player::remove_character_controller()
 {
-	if (m_charCon != nullptr) {
-		m_current_world->Physics()->GetDynamicWorld()->removeAction(m_charCon);
-		m_current_world->Physics()->GetDynamicWorld()->removeCollisionObject(m_ghostObject);
-
-		delete m_charCon;
-		m_charCon = nullptr;
-
-		delete m_ghostObject;
-		m_ghostObject = nullptr;
-
-		delete m_shape;
-		m_shape = nullptr;
-	}
+	m_player_movement.Remove();
 }
 
 void Player::refresh_character_controller()
 {
-	remove_character_controller();
+	assert(m_current_world != nullptr);
+	m_player_movement.Current_World(m_current_world);
+	m_player_movement.Position(m_location);
+	m_player_movement.Refresh();
 
 	Logger::LogDebug(LOG_POS("refresh_character_controller"), "Creat character controller: (%f, %f, %f)",
 		m_location.x, m_location.y, m_location.z);
-
-	m_shape = new btCapsuleShapeZ(m_radius, m_height);
-	m_shape->calculateLocalInertia(m_mass, m_localInertia);
-
-	btTransform startTransform;
-	startTransform.setIdentity();
-	startTransform.setOrigin(btVector3(m_location.x, m_location.y, m_location.z));
-
-	m_ghostObject = new btPairCachingGhostObject();
-	m_ghostObject->setWorldTransform(startTransform);
-	m_ghostObject->setCollisionShape(m_shape);
-	m_ghostObject->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
-
-	m_charCon = new btKinematicCharacterController(m_ghostObject, (btCapsuleShapeZ*)m_shape, 0.05f, btVector3(0, 1, 0));
-	m_charCon->setGravity(btVector3(0, m_current_world->Physics()->Gravity(), 0));
-
-	m_current_world->Physics()->GetDynamicWorld()->addCollisionObject(m_ghostObject, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::AllFilter);
-	m_current_world->Physics()->GetDynamicWorld()->addAction(m_charCon);
-
 }
 
 void Player::load_world_profile()

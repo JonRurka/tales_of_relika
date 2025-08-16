@@ -726,18 +726,12 @@ void Resources::load_shaders_binary()
     Logger::LogDebug(LOG_POS("load_shaders_binary"), "Loaded Shaders (%i):", (int)assets.size());
     for (auto& a : assets)
     {
-        //unsigned char* compressed_data = (unsigned char*)&data[a.pack_offset];
         int compressed_size = a.data_size;
         std::vector<uint8_t> compressed_data = std::vector<uint8_t>(pack_data.begin() + a.pack_offset, pack_data.begin() + (a.pack_offset + compressed_size));
 
-        //std::vector<unsigned char> decompressed_data = Utilities::Decompress(std::vector<unsigned char>(compressed_data, compressed_data + a.data_size));
-        //int decompressed_size = decompressed_data.size();
         std::vector<unsigned char> decompressed_data = Utilities::Decompress(compressed_data);
         int decompressed_size = decompressed_data.size();
 
-        //delete[] a.data;
-        //a.data = new char[decompressed_data.size()];
-        //memcpy(a.data, decompressed_data.data(), decompressed_data.size());
         a.data = std::vector<char>(decompressed_data.begin(), decompressed_data.end());
 
         a.data_size = decompressed_data.size();

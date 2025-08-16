@@ -106,22 +106,22 @@ void LocalPlayerCharacter::move_control(float dt)
 		//Logger::LogDebug(LOG_POS("move_control"), "move forward");
 		m_do_move = true;
 		move_vec += forward;
-		Logger::LogDebug(LOG_POS("move_control"), "W");
+		//Logger::LogDebug(LOG_POS("move_control"), "W");
 	}
 	if (Input::GetKey(input::KeyCode::S)) {
 		m_do_move = true;
 		move_vec -= forward;
-		Logger::LogDebug(LOG_POS("move_control"), "S");
+		//Logger::LogDebug(LOG_POS("move_control"), "S");
 	}
 	if (Input::GetKey(input::KeyCode::A)) {
 		m_do_move = true;
 		move_vec += right;
-		Logger::LogDebug(LOG_POS("move_control"), "A");
+		//Logger::LogDebug(LOG_POS("move_control"), "A");
 	}
 	if (Input::GetKey(input::KeyCode::D)) {
 		m_do_move = true;
 		move_vec -= right;
-		Logger::LogDebug(LOG_POS("move_control"), "D");
+		//Logger::LogDebug(LOG_POS("move_control"), "D");
 	}
 	
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
@@ -146,9 +146,9 @@ void LocalPlayerCharacter::move_control(float dt)
 #else
 	if (true) 
 	{
-		if (m_do_move)
-			Logger::LogDebug(LOG_POS("move_control"), "Move: (%f, %f)",
-				move_vec.x, move_vec.z);
+		//if (m_do_move)
+			//Logger::LogDebug(LOG_POS("move_control"), "Move: (%f, %f)",
+			//	move_vec.x, move_vec.z);
 		Vec3 tr_move_vec = Vec3(move_vec.x, 0, move_vec.z);
 		if (tr_move_vec != Vec3::sZero()) {
 			tr_move_vec = tr_move_vec.Normalized();

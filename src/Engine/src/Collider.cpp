@@ -112,12 +112,13 @@ void Collider::remove_rigidbody()
 void Collider::set_rigidbody(Body* body)
 {
 	m_rigidbody = body;
-	//Physics::GetBodyInterface().AddBody(m_rigidbody->GetID());
+	Physics::Instance().Add_Rigidbody(m_rigidbody);
 }
 
 void Collider::remove_rigidbody()
 {
 	Physics::GetBodyInterface().RemoveBody(m_rigidbody->GetID());
+	Physics::Instance().Remove_Rigidbody(m_rigidbody);
 	m_rigidbody = nullptr;
 }
 

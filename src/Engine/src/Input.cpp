@@ -2,6 +2,7 @@
 
 #include "opengl.h"
 #include "Graphics.h"
+#include "Logger.h"
 
 using namespace input;
 
@@ -119,60 +120,67 @@ namespace {
 		return key_lookup;
 	}
 
-	inline KeyCode translate_key_code(std::unordered_map<int, KeyCode> key_lookup, int key) {
-		auto key_it = key_lookup.find(key);
-
-		if (key_it == key_lookup.end())
-		{
-			return KeyCode::Unknown;
-		}
-
-		return key_it->second;
-	}
-
-	inline KeyAction translate_key_action(int action)
-	{
-		if (action == GLFW_PRESS)
-		{
-			return KeyAction::Down;
-		}
-		else if (action == GLFW_RELEASE)
-		{
-			return KeyAction::Up;
-		}
-		else if (action == GLFW_REPEAT)
-		{
-			return KeyAction::Repeat;
-		}
-
-		return KeyAction::Unknown;
-	}
-
-	inline MouseButton translate_mouse_button(int button)
-	{
-		if (button < GLFW_MOUSE_BUTTON_6)
-		{
-			return static_cast<MouseButton>(button);
-		}
-
-		return MouseButton::Unknown;
-	}
-
-	inline MouseAction translate_mouse_action(int action)
-	{
-		if (action == GLFW_PRESS)
-		{
-			return MouseAction::Down;
-		}
-		else if (action == GLFW_RELEASE)
-		{
-			return MouseAction::Up;
-		}
-
-		return MouseAction::Unknown;
-	}
 
 }
+
+KeyCode Input::translate_key_code(int key)
+{
+	return translate_key_code(m_key_lookup, key);
+}
+
+KeyCode Input::translate_key_code(const std::unordered_map<int, KeyCode>& key_lookup, int key) {
+	auto key_it = key_lookup.find(key);
+
+	if (key_it == key_lookup.end())
+	{
+		return KeyCode::Unknown;
+	}
+
+	return key_it->second;
+}
+
+KeyAction Input::translate_key_action(int action)
+{
+	if (action == GLFW_PRESS)
+	{
+		return KeyAction::Down;
+	}
+	else if (action == GLFW_RELEASE)
+	{
+		return KeyAction::Up;
+	}
+	else if (action == GLFW_REPEAT)
+	{
+		return KeyAction::Repeat;
+	}
+
+	return KeyAction::Unknown;
+}
+
+MouseButton Input::translate_mouse_button(int button)
+{
+	if (button < GLFW_MOUSE_BUTTON_6)
+	{
+		return static_cast<MouseButton>(button);
+	}
+
+	return MouseButton::Unknown;
+}
+
+MouseAction Input::translate_mouse_action(int action)
+{
+	if (action == GLFW_PRESS)
+	{
+		return MouseAction::Down;
+	}
+	else if (action == GLFW_RELEASE)
+	{
+		return MouseAction::Up;
+	}
+
+	return MouseAction::Unknown;
+}
+
 
 void Input::Init()
 {
@@ -194,20 +202,22 @@ void Input::update(float dt)
 
 void Input::update_keys(float dt)
 {
-	std::vector<input::KeyInputEvent> to_released;
+	std::vector<input::KeyInputEvent> to_held;
 	for (auto& pair : m_input_down_keys) {
 
 		if (pair.second.get_num_frames() > 0) {
-			to_released.push_back(pair.second);
+			to_held.push_back(pair.second);
+			Logger::LogDebug(LOG_POS("update_keys"), "Shift key to Held step 1: %i", (int)pair.second.get_code());
 		}
 		pair.second.tick();
 	}
 
-	for (auto& key_input : to_released) {
+	for (auto& key_input : to_held) {
 		m_input_pressed_keys[key_input.get_code()] = key_input;
 		key_input.update_action(KeyAction::Repeat);
 		key_input.reset();
 		m_input_down_keys.erase(key_input.get_code());
+		Logger::LogDebug(LOG_POS("update_keys"), "Shift key to Held step 2: %i", (int)key_input.get_code());
 	}
 
 	for (auto& pair : m_input_pressed_keys) {
@@ -220,12 +230,14 @@ void Input::update_keys(float dt)
 
 		if (pair.second.get_num_frames() > 0) {
 			remove_from_up.push_back(pair.second);
+			Logger::LogDebug(LOG_POS("update_keys"), "Remove key from Up 1: %i", (int)pair.second.get_code());
 		}
 		pair.second.tick();
 	}
 
 	for (auto& key_input : remove_from_up) {
 		m_input_up_keys.erase(key_input.get_code());
+		Logger::LogDebug(LOG_POS("update_keys"), "Remove key from Up 2: %i", (int)key_input.get_code());
 	}
 }
 
@@ -281,19 +293,27 @@ void Input::key_callback(GLFWwindow* window, int key, int, int action, int)
 	KeyInputEvent input_event = KeyInputEvent{ key_code, key_action };
 
 	if (key_action == KeyAction::Down) {
+		Logger::LogDebug(LOG_POS("key_callback"), "Key Down: %i", (int)key_code);
 		if (!m_input_down_keys.contains(key_code) &&
 			!m_input_pressed_keys.contains(key_code) &&
 			!m_input_up_keys.contains(key_code))
+
+			Logger::LogDebug(LOG_POS("key_callback"), "Added key to Key Down: %i", (int)key_code);
 			m_input_down_keys[key_code] = input_event;
+			
 	}
 	else if (key_action == KeyAction::Up) {
+		Logger::LogDebug(LOG_POS("key_callback"), "Key Up: %i", (int)key_code);
 		if (m_input_down_keys.contains(key_code)) {
 			m_input_down_keys.erase(key_code);
+			Logger::LogDebug(LOG_POS("key_callback"), "Removed key from down_keys: %i", (int)key_code);
 		}
 		if (m_input_pressed_keys.contains(key_code)) {
 			m_input_pressed_keys.erase(key_code);
+			Logger::LogDebug(LOG_POS("key_callback"), "Removed key from pressed_keys: %i", (int)key_code);
 		}
 		m_input_up_keys[key_code] = input_event;
+		Logger::LogDebug(LOG_POS("key_callback"), "Added key to Key Up: %i", (int)key_code);
 	}
 
 	//Logger::LogDebug(LOG_POS("key_callback"), "Key Action: %s", input_event.to_string().c_str());
@@ -440,3 +460,5 @@ glm::vec2 Input::get_mouse_pos()
 {
 	return glm::vec2(m_mouse_xpos, m_mouse_ypos);
 }
+
+
