@@ -62,7 +62,7 @@ void Light::Init()
 
 void Light::Update(float dt)
 {
-	return;
+	//return;
 
 	m_data->position = glm::vec4(Object().Get_Transform().Position(), 1.0f);
 	m_data->direction = glm::vec4(Object().Get_Transform().Forward(), 0.0f);
@@ -123,7 +123,7 @@ void Light::Activate_Shadows(bool enabled)
 
 void Light::Flush()
 {
-	return; 
+	//return; 
 	if (!m_initialized) {
 		return;
 	}

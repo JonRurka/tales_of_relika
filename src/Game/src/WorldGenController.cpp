@@ -9,7 +9,7 @@
 
 #include <algorithm>
 
-#define DUMMY_TERRAIN true
+#define DUMMY_TERRAIN false
 #define DUMMY_SURFACE_HEIGHT (4.5)
 #define DUMMY_SURFACE_THICKNESS (0.5)
 #define DUMMY_SURFACE_Y_LOC (DUMMY_SURFACE_HEIGHT - DUMMY_SURFACE_THICKNESS)
@@ -380,7 +380,7 @@ void WorldGenController::initialize_voxel_engine()
 	settings.GetSettings().setInt("TotalBatchGroups", 1);
 	settings.GetSettings().setInt("BatchesPerGroup", 4);
 	settings.GetSettings().setInt("InvertTrianges", false);
-	settings.GetSettings().setBool("SharedGL", true);
+	settings.GetSettings().setBool("SharedGL", false);
 
 	m_chunk_size_x = m_chunkMeterSizeX * m_voxelsPerMeter;
 	m_chunk_size_y = m_chunkMeterSizeY * m_voxelsPerMeter;

@@ -154,7 +154,7 @@ Server_Main::Server_Main(Options options)
 {
 	Logger::Set_Direct(true);
 	Logger::Set_Crashing_Errors(true);
-	Logger::Set_Crashing_Warnings(true);
+	Logger::Set_Crashing_Warnings(false);
 	Logger::LogInfo(LOG_POS("Server_Main"), "Creating server...");
 	m_instance = this;
 

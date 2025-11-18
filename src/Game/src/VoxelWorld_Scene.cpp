@@ -57,6 +57,60 @@ void VoxelWorld_Scene::Update(float dt)
 	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 
+void VoxelWorld_Scene::startup_squence()
+{
+	if (!m_server_started) {
+
+		double cur_time = Utilities::Get_Time();
+		if (cur_time - m_start_time > SERVER_START_WAIT_TIME)
+		{
+			setup_game_client();
+			m_server_started = true;
+		}
+
+	}
+
+	if (m_client_connected) {
+		if (!m_init_data_requested) {
+			if (Utilities::Get_Time() - m_connected_time > SERVER_DATA_REQUEST_WAIT_TIME) {
+				m_init_data_requested = true;
+				Logger::LogInfo(LOG_POS("Update"), "Requesting world player data...");
+				game_client.lock()->Send_World(OpCodes::Server_World::Request_World_Player_Data);
+			}
+		}
+	}
+
+	if (!m_loading_hidden)
+	{
+		if (Game_Ready())
+		{
+			m_loading_screen->Hide();
+			m_loading_hidden = true;
+		}
+	}
+
+}
+
+// STEP 1: Connect
+void VoxelWorld_Scene::setup_game_client()
+{
+	std::string username = Start_Data().getString("username");
+	std::string host = Start_Data().getString("host");
+	uint32_t user_id = Start_Data().getInt("user_id");
+
+	if (username == "")
+		username = "test_user";
+
+	game_client_obj = Instantiate("Game_Client");
+	game_client = game_client_obj.lock()->Add_Component<GameClient>();
+	game_client.lock()->Init(username, host, user_id, m_remote_connection);
+	game_client.lock()->SetOnConnectSuccess(OnGameConnect, this);
+	game_client.lock()->Net_Client().AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
+	game_client.lock()->Connect();
+	Logger::LogInfo(LOG_POS("setup_game_client"), "Connecting to game server...");
+}
+
+// STEP 2: Process connected result, and trigger count down to request player data.
 void VoxelWorld_Scene::GameConnected()
 {
 	Logger::LogInfo(LOG_POS("GameConnected"), "Game server connected successfully.");
@@ -100,6 +154,7 @@ void VoxelWorld_Scene::GameConnected()
 	obj->Get_MeshRenderer()->Set_Material(m_character_material);*/
 }
 
+// STEP 3: Receive player data, and initialize world
 void VoxelWorld_Scene::OnWorldPlayerDataResult(Data data)
 {
 	Logger::LogInfo(LOG_POS("OnWorldPlayerDataResult"), "Received world player data.");
@@ -117,6 +172,54 @@ void VoxelWorld_Scene::OnWorldPlayerDataResult(Data data)
 
 	world_gen_controller.lock()->Start();
 }
+
+// STEP 3a
+void VoxelWorld_Scene::setup_chunk_gen(json world_data)
+{
+	world_gen_controller_obj = Instantiate("World_Gen_Controller");
+	world_gen_controller = world_gen_controller_obj.lock()->Add_Component<WorldGenController>();
+}
+
+// STEP 3b
+void VoxelWorld_Scene::setup_structure_controller(json world_data)
+{
+	structure_controller_obj = Instantiate("Structure_Controller");
+	structure_controller = structure_controller_obj.lock()->Add_Component<StructureController>();
+}
+
+// STEP 3c
+void VoxelWorld_Scene::setup_local_player(json player_data)
+{
+	Item_Loader::Instance().Load_Items(Game_Resources::Data_Files::ITEM_TYPES);
+	Item_Type::Init();
+
+	json location_obj = player_data["location"];
+	float x = location_obj["x"];
+	float y = location_obj["y"];
+	float z = location_obj["z"];
+	glm::vec3 loc = glm::vec3(x, y, z);
+
+	Logger::LogDebug(LOG_POS("setup_local_player"), "Received Pos: (%f, %f, %f)",
+		loc.x, loc.y, loc.z);
+
+	local_player_character_obj = Instantiate("Local_Character");
+	local_player_character_obj.lock()->Get_Transform().Position(loc);
+	local_player_character = local_player_character_obj.lock()->Add_Component<LocalPlayerCharacter>();
+	local_player_character.lock()->Set_Camera_Object(Camera_obj);
+
+	world_gen_controller.lock()->SetTarget(local_player_character_obj.lock()->Get_Transform_Ptr());
+}
+
+// STEP 3d
+void VoxelWorld_Scene::setup_net_player_manager()
+{
+	net_player_manager_obj = Instantiate("Net_Player_Manager");
+	net_player_manager = net_player_manager_obj.lock()->Add_Component<NetPlayerManager>();
+	net_player_manager.lock()->RegisterLocalPlayer(local_player_character);
+
+}
+
+
 
 bool VoxelWorld_Scene::Game_Ready()
 {
@@ -138,40 +241,6 @@ bool VoxelWorld_Scene::Game_Ready()
 VoxelWorld_Scene::VoxelWorld_Scene()
 {
 	Logger::LogDebug(LOG_POS("NEW"), "Creat VoxelWorld Scene.");
-}
-
-void VoxelWorld_Scene::startup_squence()
-{
-	if (!m_server_started) {
-
-		double cur_time = Utilities::Get_Time();
-		if (cur_time - m_start_time > SERVER_START_WAIT_TIME)
-		{
-			setup_game_client();
-			m_server_started = true;
-		}
-
-	}
-
-	if (m_client_connected) {
-		if (!m_init_data_requested) {
-			if (Utilities::Get_Time() - m_connected_time > SERVER_DATA_REQUEST_WAIT_TIME) {
-				m_init_data_requested = true;
-				Logger::LogInfo(LOG_POS("Update"), "Requesting world player data...");
-				game_client.lock()->Send_World(OpCodes::Server_World::Request_World_Player_Data);
-			}
-		}
-	}
-
-	if (!m_loading_hidden)
-	{
-		if (Game_Ready())
-		{
-			m_loading_screen->Hide();
-			m_loading_hidden = true;
-		}
-	}
-
 }
 
 void VoxelWorld_Scene::setup_camera()
@@ -236,18 +305,6 @@ void VoxelWorld_Scene::setup_lights()
 	light_comp_dir.lock()->OuterCutOff(glm::cos(glm::radians(15.5f)));
 }
 
-void VoxelWorld_Scene::setup_chunk_gen(json world_data)
-{
-	world_gen_controller_obj = Instantiate("World_Gen_Controller");
-	world_gen_controller = world_gen_controller_obj.lock()->Add_Component<WorldGenController>();
-}
-
-void VoxelWorld_Scene::setup_structure_controller(json world_data)
-{
-	structure_controller_obj = Instantiate("Structure_Controller");
-	structure_controller = structure_controller_obj.lock()->Add_Component<StructureController>();
-}
-
 void VoxelWorld_Scene::setup_client_server()
 {
 	client_server_obj = Instantiate("Client_Server");
@@ -255,55 +312,6 @@ void VoxelWorld_Scene::setup_client_server()
 	if (!m_remote_connection) {
 		client_server.lock()->Initialize_Server();
 	}
-}
-
-void VoxelWorld_Scene::setup_game_client()
-{
-
-	std::string username = Start_Data().getString("username");
-	std::string host = Start_Data().getString("host");
-	uint32_t user_id = Start_Data().getInt("user_id");
-
-	if (username == "")
-		username = "test_user";
-
-	game_client_obj = Instantiate("Game_Client");
-	game_client = game_client_obj.lock()->Add_Component<GameClient>();
-	game_client.lock()->Init(username, host, user_id, m_remote_connection);
-	game_client.lock()->SetOnConnectSuccess(OnGameConnect, this);
-	game_client.lock()->Net_Client().AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
-	game_client.lock()->Connect();
-	Logger::LogInfo(LOG_POS("setup_game_client"), "Connecting to game server...");
-}
-
-void VoxelWorld_Scene::setup_local_player(json player_data)
-{
-	Item_Loader::Instance().Load_Items(Game_Resources::Data_Files::ITEM_TYPES);
-	Item_Type::Init();
-
-	json location_obj = player_data["location"];
-	float x = location_obj["x"];
-	float y = location_obj["y"];
-	float z = location_obj["z"];
-	glm::vec3 loc = glm::vec3(x, y, z);
-
-	Logger::LogDebug(LOG_POS("setup_local_player"), "Received Pos: (%f, %f, %f)",
-		loc.x, loc.y, loc.z);
-
-	local_player_character_obj = Instantiate("Local_Character");
-	local_player_character_obj.lock()->Get_Transform().Position(loc);
-	local_player_character = local_player_character_obj.lock()->Add_Component<LocalPlayerCharacter>();
-	local_player_character.lock()->Set_Camera_Object(Camera_obj);
-
-	world_gen_controller.lock()->SetTarget(local_player_character_obj.lock()->Get_Transform_Ptr());
-}
-
-void VoxelWorld_Scene::setup_net_player_manager()
-{
-	net_player_manager_obj = Instantiate("Net_Player_Manager");
-	net_player_manager = net_player_manager_obj.lock()->Add_Component<NetPlayerManager>();
-	net_player_manager.lock()->RegisterLocalPlayer(local_player_character);
-
 }
 
 void VoxelWorld_Scene::create_test_items()
