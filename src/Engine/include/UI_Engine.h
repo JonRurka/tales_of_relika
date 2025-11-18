@@ -4,15 +4,19 @@
 #include <unordered_map>
 #include <memory>
 
-#include "RmlUi_Platform_GLFW.h"
-#include "RmlUi_Renderer_GL3.h"
+//#include "RmlUi_Platform_GLFW.h"
+//#include "RmlUi_Renderer_GL3.h"
 
 class Graphics;
 struct GLFWwindow;
 
+class SystemInterface_GLFW;
+class RenderInterface_GL3;
+
 namespace Rml {
 	class Context;
 	class ElementDocument;
+	class Element;
 }
 
 #define DEFINE_UI_EVENT(_event_name_, _target_class_, _target_func_) \
