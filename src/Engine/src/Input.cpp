@@ -207,7 +207,7 @@ void Input::update_keys(float dt)
 
 		if (pair.second.get_num_frames() > 0) {
 			to_held.push_back(pair.second);
-			Logger::LogDebug(LOG_POS("update_keys"), "Shift key to Held step 1: %i", (int)pair.second.get_code());
+			//Logger::LogDebug(LOG_POS("update_keys"), "Shift key to Held step 1: %i", (int)pair.second.get_code());
 		}
 		pair.second.tick();
 	}
@@ -217,7 +217,7 @@ void Input::update_keys(float dt)
 		key_input.update_action(KeyAction::Repeat);
 		key_input.reset();
 		m_input_down_keys.erase(key_input.get_code());
-		Logger::LogDebug(LOG_POS("update_keys"), "Shift key to Held step 2: %i", (int)key_input.get_code());
+		//Logger::LogDebug(LOG_POS("update_keys"), "Shift key to Held step 2: %i", (int)key_input.get_code());
 	}
 
 	for (auto& pair : m_input_pressed_keys) {
@@ -230,14 +230,14 @@ void Input::update_keys(float dt)
 
 		if (pair.second.get_num_frames() > 0) {
 			remove_from_up.push_back(pair.second);
-			Logger::LogDebug(LOG_POS("update_keys"), "Remove key from Up 1: %i", (int)pair.second.get_code());
+			//Logger::LogDebug(LOG_POS("update_keys"), "Remove key from Up 1: %i", (int)pair.second.get_code());
 		}
 		pair.second.tick();
 	}
 
 	for (auto& key_input : remove_from_up) {
 		m_input_up_keys.erase(key_input.get_code());
-		Logger::LogDebug(LOG_POS("update_keys"), "Remove key from Up 2: %i", (int)key_input.get_code());
+		//Logger::LogDebug(LOG_POS("update_keys"), "Remove key from Up 2: %i", (int)key_input.get_code());
 	}
 }
 
@@ -293,27 +293,27 @@ void Input::key_callback(GLFWwindow* window, int key, int, int action, int)
 	KeyInputEvent input_event = KeyInputEvent{ key_code, key_action };
 
 	if (key_action == KeyAction::Down) {
-		Logger::LogDebug(LOG_POS("key_callback"), "Key Down: %i", (int)key_code);
+		//Logger::LogDebug(LOG_POS("key_callback"), "Key Down: %i", (int)key_code);
 		if (!m_input_down_keys.contains(key_code) &&
 			!m_input_pressed_keys.contains(key_code) &&
 			!m_input_up_keys.contains(key_code))
 
-			Logger::LogDebug(LOG_POS("key_callback"), "Added key to Key Down: %i", (int)key_code);
+			//Logger::LogDebug(LOG_POS("key_callback"), "Added key to Key Down: %i", (int)key_code);
 			m_input_down_keys[key_code] = input_event;
 			
 	}
 	else if (key_action == KeyAction::Up) {
-		Logger::LogDebug(LOG_POS("key_callback"), "Key Up: %i", (int)key_code);
+		//Logger::LogDebug(LOG_POS("key_callback"), "Key Up: %i", (int)key_code);
 		if (m_input_down_keys.contains(key_code)) {
 			m_input_down_keys.erase(key_code);
-			Logger::LogDebug(LOG_POS("key_callback"), "Removed key from down_keys: %i", (int)key_code);
+			//Logger::LogDebug(LOG_POS("key_callback"), "Removed key from down_keys: %i", (int)key_code);
 		}
 		if (m_input_pressed_keys.contains(key_code)) {
 			m_input_pressed_keys.erase(key_code);
-			Logger::LogDebug(LOG_POS("key_callback"), "Removed key from pressed_keys: %i", (int)key_code);
+			//Logger::LogDebug(LOG_POS("key_callback"), "Removed key from pressed_keys: %i", (int)key_code);
 		}
 		m_input_up_keys[key_code] = input_event;
-		Logger::LogDebug(LOG_POS("key_callback"), "Added key to Key Up: %i", (int)key_code);
+		//Logger::LogDebug(LOG_POS("key_callback"), "Added key to Key Up: %i", (int)key_code);
 	}
 
 	//Logger::LogDebug(LOG_POS("key_callback"), "Key Action: %s", input_event.to_string().c_str());

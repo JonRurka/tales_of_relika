@@ -282,32 +282,44 @@ void NetClient::SendLoop(NetClient* obj_ptr)
 
 void NetClient::read_socket_tcp()
 {
-    uint8_t length_buff[2];
-    int32_t BytesRead = 0;
+    try {
+        uint8_t length_buff[2];
+        int32_t BytesRead = 0;
 
-    boost::asio::read(m_socket_tcp, boost::asio::buffer(length_buff, 2));
+        boost::asio::read(m_socket_tcp, boost::asio::buffer(length_buff, 2));
 
-    uint16_t size = *(reinterpret_cast<uint16_t*>(&length_buff));
+        uint16_t size = *(reinterpret_cast<uint16_t*>(&length_buff));
 
-    // TODO: garentee this won't fragment
-    boost::asio::read(m_socket_tcp, boost::asio::buffer(g_tcp_message, size));
+        // TODO: garentee this won't fragment
+        boost::asio::read(m_socket_tcp, boost::asio::buffer(g_tcp_message, size));
 
-    std::vector<uint8_t> msg(g_tcp_message.begin(), g_tcp_message.begin() + size);
+        std::vector<uint8_t> msg(g_tcp_message.begin(), g_tcp_message.begin() + size);
 
-    add_received_packet(msg, Protocal_Tcp);
+        add_received_packet(msg, Protocal_Tcp);
+    }
+    catch (boost::system::system_error e)
+    {
+        Logger::LogWarning(LOG_POS("read_socket_tcp"), "System error.");
+    }
 }
 
 void NetClient::read_socket_udp()
 {
-    m_socket_udp.receive_from(boost::asio::buffer(g_udp_message), m_server_endpoint_udp);
+    try {
+        m_socket_udp.receive_from(boost::asio::buffer(g_udp_message), m_server_endpoint_udp);
 
-    uint16_t size = *(reinterpret_cast<uint16_t*>(g_udp_message.data()));
+        uint16_t size = *(reinterpret_cast<uint16_t*>(g_udp_message.data()));
 
-    //uint8_t* data_ptr = &g_udp_message[2];
-    //std::vector<uint8_t> buffer(data_ptr, data_ptr + size);
-    std::vector<uint8_t> buffer(g_udp_message.begin() + 2, g_udp_message.begin() + 2 + size);
+        //uint8_t* data_ptr = &g_udp_message[2];
+        //std::vector<uint8_t> buffer(data_ptr, data_ptr + size);
+        std::vector<uint8_t> buffer(g_udp_message.begin() + 2, g_udp_message.begin() + 2 + size);
 
-    add_received_packet(buffer, Protocal_Udp);
+        add_received_packet(buffer, Protocal_Udp);
+    }
+    catch (boost::system::system_error e)
+    {
+        Logger::LogWarning(LOG_POS("read_socket_udp"), "System error.");
+    }
 }
 
 void NetClient::handle_sends()

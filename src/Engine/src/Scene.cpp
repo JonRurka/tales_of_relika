@@ -148,6 +148,10 @@ void Scene::deactivate()
 
 void Scene::Update_internal(float dt)
 {
+	if (!m_active) {
+		return;
+	}
+
 	for (const auto& pair : m_objects)
 	{
 		pair.second->DoUpdate(dt);
@@ -158,6 +162,10 @@ void Scene::Update_internal(float dt)
 
 void Scene::remove_object_from_scene(int id)
 {
+	if (!m_active) {
+		return;
+	}
+
 	if (m_objects.contains(id))
 	{
 		m_objects.erase(id);

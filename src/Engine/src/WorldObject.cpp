@@ -100,7 +100,9 @@ void WorldObject::Destroy()
 	//m_renderer.Destroy();
 
 	//Remove_Object(m_object_idx);
-	scene().remove_object_from_scene(m_object_idx);
+	if (!m_scene.expired()) {
+		scene().remove_object_from_scene(m_object_idx);
+	}
 }
 
 void WorldObject::scene_init()

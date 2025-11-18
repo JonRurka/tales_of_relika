@@ -36,7 +36,7 @@ void VoxelWorld_Scene::Init()
 	m_loading_screen->Show();
 
 	setup_camera();
-	//setup_lights();
+	setup_lights();
 	setup_client_server();
 	
 

@@ -178,6 +178,11 @@ Server_Main::Server_Main(Options options)
 	Logger::LogInfo(LOG_POS("Server_Main"), "Server Created");
 }
 
+Server_Main::~Server_Main()
+{
+	Stop();
+}
+
 void Server_Main::Start()
 {
 	Init();
@@ -287,7 +292,7 @@ void Server_Main::Update(double dt)
 
 	//Logger::Log("Memory Used: " + GetMemoryUsage());
 
-	SetMemoryUsageForThread("main", GetMemoryUsage());
+	//SetMemoryUsageForThread("main", GetMemoryUsage());
 
 	auto now = GetEpoch();
 
@@ -314,6 +319,10 @@ void Server_Main::Update(double dt)
 
 void Server_Main::Stop()
 {
+	if (!m_running) {
+		return;
+	}
+
 	m_running = false;
 
 	Dispose();
@@ -321,6 +330,10 @@ void Server_Main::Stop()
 
 void Server_Main::Dispose()
 {
+	if (m_options.Async)
+	{
+		m_loop_thread.join();
+	}
 }
 
 uint64_t Server_Main::GetMemoryUsage()

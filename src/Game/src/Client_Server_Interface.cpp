@@ -24,6 +24,6 @@ void Client_Server::Update(float dt)
 
 void Client_Server::OnDestroy()
 {
-	m_server->Dispose();
+	m_server->Stop();
 	m_server.reset();
 }

@@ -8,7 +8,7 @@
 
 void Menu_Scene::Init()
 {
-	//setup_camera();
+	setup_camera();
 
 	m_startup_splash = UI_Engine::Instance().Load_Document_Resource("splash", Game_Resources::UI::Documents::MENU::SPLASH);
 	m_main_menu_screen = UI_Engine::Instance().Load_Document_Resource("main_menu", Game_Resources::UI::Documents::MENU::MAIN);
@@ -36,7 +36,7 @@ void Menu_Scene::Update(float dt)
 
 void Menu_Scene::Deactivate()
 {
-	//remove_main_menu_listeners();
+	remove_main_menu_listeners();
 }
 
 
@@ -50,10 +50,10 @@ void Menu_Scene::OnStartSP_Clicked()
 	start_data.setInt("user_id", 1);
 	start_data.setString("host", "204.12.203.152");
 
-	//m_main_menu_screen->Hide();
+	m_main_menu_screen->Hide();
 	UI_Engine::Instance().Accept_Input(false);
-	//m_camera->Activate(false);
-	//Game::OpenVoxelWorld(start_data);
+	m_camera.lock()->Activate(false);
+	Game::OpenVoxelWorld(start_data);
 }
 
 void Menu_Scene::add_main_menu_listeners()

@@ -186,6 +186,8 @@ public:
 
 	Server_Main(Options options);
 
+	~Server_Main();
+
 
 	void Start();
 
