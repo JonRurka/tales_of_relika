@@ -19,6 +19,7 @@ endif()
 if (UNIX)
     add_compile_options(-pthread -fPIC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
+	set(LDFLAGS "${LDFLAGS} -fsanitize=address")
 	#set(CMAKE_CXX_COMPILER /opt/gcc-15/bin/g++)
 endif ()
 
