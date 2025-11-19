@@ -100,7 +100,7 @@ target_link_libraries(${module}
 	#rmlui_shell
 )
 
-target_link_libraries(${module} Compute VoxelEngine Engine Server UI_Backend)
+target_link_libraries(${module} Compute VoxelEngine Engine Shared Server UI_Backend)
 
 
 

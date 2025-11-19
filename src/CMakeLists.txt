@@ -7,6 +7,14 @@ option(VULKAN_PLATFROM "Include Vulkan platform for compute." OFF)
 add_compile_definitions(RMLUI_STATIC_LIB)
 add_compile_definitions(RMLUI_GL3_CUSTOM_LOADER="opengl.h")
 
+if (SERVER_BUILD)
+	add_compile_definitions(SERVER_BUILD=1)
+endif()
+
+if (NO_UI)
+	add_compile_definitions(NO_UI=1)
+endif()
+
 add_compile_definitions(CL_TARGET_OPENCL_VERSION=210)
 add_compile_definitions(CL_HPP_TARGET_OPENCL_VERSION=210)
 add_compile_definitions(NOMINMAX)
@@ -21,27 +29,35 @@ else()
 	
 endif()
 
-if(SOURCE_RMLUI)
-	LIST(APPEND RMLUI_LIBS 
-		UI 
-		UI_debugger
-	)
-else()
-	LIST(APPEND RMLUI_LIBS 
-		rmlui 
-		rmlui_debugger
-	)
+if (NOT NO_UI)
+	if(SOURCE_RMLUI)
+		LIST(APPEND RMLUI_LIBS 
+			UI 
+			UI_debugger
+		)
+	else()
+		LIST(APPEND RMLUI_LIBS 
+			rmlui 
+			rmlui_debugger
+		)
+	endif()
 endif()
-
 
 #include_directories(LuaCpp)
 include_directories(Compute/include)
 include_directories(VoxelEngine/include)
 include_directories(Engine/include)
-include_directories(Game/include)
-include_directories(Server/include)
-include_directories(UI/include)
+include_directories(Shared/include)
 
+if (NOT SERVER_BUILD)
+	include_directories(Game/include)
+endif()
+
+include_directories(Server/include)
+
+if (NOT NO_UI)
+	include_directories(UI/include)
+endif()
 
 ## Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
 #add_library(rmlui_bin SHARED IMPORTED )
@@ -60,9 +76,17 @@ include_directories(UI/include)
 add_subdirectory(Compute)
 add_subdirectory(VoxelEngine)
 add_subdirectory(Engine)
+add_subdirectory(Shared)
 add_subdirectory(Server)
-add_subdirectory(Game)
-add_subdirectory(UI)
+
+if (NOT SERVER_BUILD)
+	add_subdirectory(Game)
+endif()
+
+if (NOT NO_UI)
+	add_subdirectory(UI)
+endif()
+
 add_subdirectory(Server_Exe)
 
 # Add X11 for screenshot support on linux
@@ -82,36 +106,39 @@ set(${PROJECT_NAME}_sources
     game_exe_main.cpp
 )
 
-add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
 
-target_link_libraries(${PROJECT_NAME} 
-	${PLATFORM_LIBRARIES}
-	${RMLUI_LIBS}
-	${VULKAN_LIBS}
-	ZLIB::ZLIB
-	assimp::assimp 
-	nlohmann_json::nlohmann_json 
-	#glaze::glaze
-	boost::boost
-	glm::glm
-	glfw
-	spirv-cross-core
-	spirv-cross-glsl
-	spirv-cross-msl
-	spirv-cross-reflect
-	sol2::sol2
-	Bullet::Bullet
-	Jolt::Jolt
-	#OpenAL::OpenAL
-	inih::inih
-	imgui::imgui
-	#vulkan-headers::vulkan-headers
-	
-	#GPUOpen::VulkanMemoryAllocator
-	#rmlui
-	#rmlui_debugger
-	#rmlui_shell
-)
+if (NOT SERVER_BUILD)
+	add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
+
+	target_link_libraries(${PROJECT_NAME} 
+		${PLATFORM_LIBRARIES}
+		${RMLUI_LIBS}
+		${VULKAN_LIBS}
+		ZLIB::ZLIB
+		assimp::assimp 
+		nlohmann_json::nlohmann_json 
+		#glaze::glaze
+		boost::boost
+		glm::glm
+		glfw
+		spirv-cross-core
+		spirv-cross-glsl
+		spirv-cross-msl
+		spirv-cross-reflect
+		sol2::sol2
+		Bullet::Bullet
+		Jolt::Jolt
+		#OpenAL::OpenAL
+		inih::inih
+		imgui::imgui
+		#vulkan-headers::vulkan-headers
+		
+		#GPUOpen::VulkanMemoryAllocator
+		#rmlui
+		#rmlui_debugger
+		#rmlui_shell
+	)
 
 
-target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Game Server UI_Backend)
+	target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Shared Game Server UI_Backend)
+endif()

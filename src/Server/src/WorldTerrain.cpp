@@ -2,7 +2,7 @@
 
 #include "Logger.h"
 #include "Resources.h"
-#include "Game_Resources.h"
+//#include "Game_Resources.h"
 
 #include "ServerTerrainChunk.h"
 
@@ -16,7 +16,7 @@ void WorldTerrain::Init(World* world)
 {
 	m_world = world;
 
-	std::string block_types_str = Resources::Get_Data_File_String(Game_Resources::Data_Files::BLOCK_TYPES);
+	std::string block_types_str = Resources::Get_Data_File_String("block_types.ini");
 	//Logger::LogDebug(LOG_POS("Init"), "%s", block_types_str.c_str());
 	
 	

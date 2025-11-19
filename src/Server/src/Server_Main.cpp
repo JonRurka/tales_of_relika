@@ -12,10 +12,12 @@
 #include "Player.h"
 #include "Utilities.h"
 #include "Resources.h"
-#include "Game_Resources.h"
+//#include "Game_Resources.h"
 #include "LuaEngine.h"
+
 #include "Material_Types.h"
-#include "Material_Processor.h"
+//#include "Material_Processor.h"
+
 #include "ColliderGenerator.h"
 
 #define COLLIDER_GEN_WORKERS 4
@@ -208,8 +210,11 @@ void Server_Main::Init()
 		//m_server_resources = new Resources();
 		Resources::Instance().Init();
 
-		Material_Types::Instance().Load_Materials(Game_Resources::Data_Files::BLOCK_TYPES);
+		// TODO: Share these.
+		Material_Types::Instance().Load_Materials(BLOCK_TYPES_RESOURCE);
 		Material_Types::Instance().Initialize_Materials(false);
+
+
 		//Material_Processor::Add<Uniform_Material_Processor>();
 		//Block_Type::Init();
 

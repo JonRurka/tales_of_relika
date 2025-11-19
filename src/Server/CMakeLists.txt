@@ -84,7 +84,7 @@ target_link_libraries(${module}
 	#GPUOpen::VulkanMemoryAllocator
 )
 
-target_link_libraries(${module} Compute VoxelEngine Engine Game)
+target_link_libraries(${module} Compute VoxelEngine Engine Shared)
 
 
 

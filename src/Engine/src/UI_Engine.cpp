@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include "Resources.h"
 
+#if !defined(NO_UI)
 #include "FontEngineInterfaceBitmap.h"
 #include "ShellFileInterface.h"
 #include <RmlUi/Core.h>
@@ -15,6 +16,8 @@
 #include <RmlUi/Debugger.h>
 #include "RmlUi_Platform_GLFW.h"
 #include "RmlUi_Renderer_GL3.h"
+#endif
+
 #include <GLFW/glfw3.h>
 
 #include <span>
@@ -22,6 +25,8 @@
 
 bool UI_Engine::Init()
 {
+
+#if !defined(NO_UI)
 	// Load the OpenGL functions.
 	Rml::String renderer_message;
 	if (!RmlGL3::Initialize(&renderer_message)) {
@@ -29,8 +34,8 @@ bool UI_Engine::Init()
 		return false;
 	}
 
-	m_system_interface = std::make_unique<SystemInterface_GLFW>();
-	m_render_interface = std::make_unique<RenderInterface_GL3>();
+	m_system_interface = std::make_shared<SystemInterface_GLFW>();
+	m_render_interface = std::make_shared<RenderInterface_GL3>();
 
 	GLFWwindow* window = Graphics::Instance().Get_GLFW_Window();
 
@@ -110,12 +115,13 @@ bool UI_Engine::Init()
 
 	m_initialized = true;
 	Logger::LogInfo(LOG_POS("Init"), "Rml UI initialized successfully.");
-
+#endif
 	return true;
 }
 
 void UI_Engine::Load_Font(std::string resource_name)
 {
+#if !defined(NO_UI)
 	assert(m_context);
 	assert(m_initialized);
 
@@ -132,6 +138,10 @@ void UI_Engine::Load_Font(std::string resource_name)
 		Logger::LogError(LOG_POS("Load_Font"), "Failed to load font asset %s at %s", 
 			resource_name.c_str(), asset.relative_path.c_str());
 	}
+#else
+	Logger::LogError(LOG_POS("Load_Font"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+#endif
 
 	/*
 	std::vector<char> font_bin_vec = Resources::Get_Data_File_Bin(resource_name);
@@ -158,13 +168,20 @@ void UI_Engine::Load_Font(std::string resource_name)
 
 bool UI_Engine::Document_Exists(std::string name)
 {
+#if !defined(NO_UI)
 	assert(m_context);
 	assert(m_initialized);
 	return m_documents.contains(name);
+#else
+	Logger::LogError(LOG_POS("Document_Exists"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+	return false;
+#endif
 }
 
 std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_Resource(std::string name, std::string resource_name)
 {
+#if !defined(NO_UI)
 	assert(m_context);
 	assert(m_initialized);
 
@@ -182,6 +199,11 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_Resource(std::str
 	m_documents[name] = std::shared_ptr<Rml::ElementDocument>(document);
 	Logger::LogInfo(LOG_POS("Load_Document_File"), "Document file %s loaded.", name.c_str());
 	return m_documents[name];
+#else
+	Logger::LogError(LOG_POS("Load_Document_Resource"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+	return m_documents["null"];
+#endif
 	
 
 	/*
@@ -203,6 +225,7 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_Resource(std::str
 
 std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_File(std::string name, std::string file_path)
 {
+#if !defined(NO_UI)
 	assert(m_context);
 	assert(m_initialized);
 	if (m_documents.contains(name))
@@ -213,16 +236,27 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_File(std::string 
 	m_documents[name] = std::shared_ptr<Rml::ElementDocument>(document);
 	Logger::LogInfo(LOG_POS("Load_Document_File"), "Document file %s loaded", name.c_str());
 	return m_documents[name];
+#else
+	Logger::LogError(LOG_POS("Load_Document_File"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+	return m_documents["null"];
+#endif
 }
 
 std::shared_ptr<Rml::ElementDocument> UI_Engine::Get_Document(std::string name)
 {
+#if !defined(NO_UI)
 	assert(m_context);
 	assert(m_initialized);
 	if (!Document_Exists(name)) {
 		return nullptr;
 	}
 	return m_documents[name];
+#else
+	Logger::LogError(LOG_POS("Get_Document"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+	return m_documents["null"];
+#endif
 }
 
 void UI_Engine::Accept_Input(bool val)
@@ -232,6 +266,7 @@ void UI_Engine::Accept_Input(bool val)
 
 void UI_Engine::Display(std::string doc_name)
 {
+#if !defined(NO_UI)
 	if (!m_initialized)
 		return;
 	assert(m_context);
@@ -242,10 +277,16 @@ void UI_Engine::Display(std::string doc_name)
 
 	m_documents[doc_name]->Show();
 	Logger::LogDebug(LOG_POS("Display"), "Display document: %s", doc_name.c_str());
+#else
+	Logger::LogError(LOG_POS("Display"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+#endif
 }
 
 void UI_Engine::Update()
 {
+#if !defined(NO_UI)
+
 	if (!m_initialized)
 		return;
 	assert(m_context);
@@ -276,18 +317,22 @@ void UI_Engine::Update()
 	// Optional, used to mark frames during performance profiling.
 	RMLUI_FrameMark;
 
+#endif
 	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 
 void UI_Engine::Shutdown()
 {
+#if !defined(NO_UI)
 	RmlGL3::Shutdown();
 	m_system_interface.reset();
 	m_render_interface.reset();
+#endif
 }
 
 bool UI_Engine::KeyCallback(GLFWwindow*, int glfw_key, int, int glfw_action, int glfw_mods)
 {
+#if !defined(NO_UI)
 	if (!m_initialized)
 		return true;
 	assert(m_context);
@@ -325,34 +370,55 @@ bool UI_Engine::KeyCallback(GLFWwindow*, int glfw_key, int, int glfw_action, int
 	}
 
 	return res;
+#else
+	Logger::LogError(LOG_POS("KeyCallback"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+	return false;
+#endif
 }
 
 void UI_Engine::CharCallback(GLFWwindow*, unsigned int codepoint)
 {
+#if !defined(NO_UI)
 	if (!m_initialized)
 		return;
 	assert(m_context);
 	RmlGLFW::ProcessCharCallback(m_context, codepoint);
+#else
+	Logger::LogError(LOG_POS("CharCallback"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+#endif
 }
 
 void UI_Engine::CursorEnterCallback(GLFWwindow*, int entered)
 {
+#if !defined(NO_UI)
 	if (!m_initialized)
 		return;
 	assert(m_context);
 	RmlGLFW::ProcessCursorEnterCallback(m_context, entered);
+#else
+	Logger::LogError(LOG_POS("CursorEnterCallback"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+#endif
 }
 
 void UI_Engine::CursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
+#if !defined(NO_UI)
 	if (!m_initialized)
 		return;
 	assert(m_context);
 	RmlGLFW::ProcessCursorPosCallback(m_context, window, xpos, ypos, m_glfw_active_modifiers);
+#else
+	Logger::LogError(LOG_POS("CursorPosCallback"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+#endif
 }
 
 bool UI_Engine::MouseButtonCallback(GLFWwindow*, int button, int action, int mods)
 {
+#if !defined(NO_UI)
 	if (!m_initialized)
 		return true;
 	assert(m_context);
@@ -364,10 +430,16 @@ bool UI_Engine::MouseButtonCallback(GLFWwindow*, int button, int action, int mod
 	m_glfw_active_modifiers = mods;
 	bool propogated = RmlGLFW::ProcessMouseButtonCallback(m_context, button, action, mods);
 	return propogated;
+#else
+	Logger::LogError(LOG_POS("MouseButtonCallback"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+	return false;
+#endif
 }
 
 bool UI_Engine::ScrollCallback(GLFWwindow*, double, double yoffset)
 {
+#if !defined(NO_UI)
 	if (!m_initialized)
 		return true;
 	assert(m_context);
@@ -378,23 +450,38 @@ bool UI_Engine::ScrollCallback(GLFWwindow*, double, double yoffset)
 
 	bool propogated = RmlGLFW::ProcessScrollCallback(m_context, yoffset, m_glfw_active_modifiers);
 	return propogated;
+#else
+	Logger::LogError(LOG_POS("ScrollCallback"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+	return false;
+#endif
 }
 
 void UI_Engine::FramebufferSizeCallback(GLFWwindow*, int width, int height)
 {
+#if !defined(NO_UI)
 	if (!m_initialized)
 		return;
 	assert(m_context);
 	m_render_interface->SetViewport(width, height);
 	RmlGLFW::ProcessFramebufferSizeCallback(m_context, width, height);
+#else
+	Logger::LogError(LOG_POS("FramebufferSizeCallback"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+#endif
 }
 
 void UI_Engine::WindowContentScaleCallback(GLFWwindow*, float xscale, float)
 {
+#if !defined(NO_UI)
 	if (!m_initialized)
 		return;
 	assert(m_context);
 	RmlGLFW::ProcessContentScaleCallback(m_context, xscale);
+#else
+	Logger::LogError(LOG_POS("WindowContentScaleCallback"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
+#endif
 }
 
 

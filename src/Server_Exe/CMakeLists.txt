@@ -38,4 +38,4 @@ target_link_libraries(${PROJECT_NAME}
 	#rmlui_debugger
 	#rmlui_shell
 )
-target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Game Server)
+target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Shared Server)

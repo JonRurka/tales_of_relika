@@ -2,7 +2,10 @@ set(module "Engine")
 
 
 include_directories(include)
-include_directories(include/RmlUi)
+
+if (NOT NO_UI)
+	include_directories(include/RmlUi)
+endif()
 
 set(${module}_headers
 	include/glad.h
@@ -132,7 +135,10 @@ target_link_libraries(${module}
 	#rmlui_bin rmlui_debugger_bin
 )
 
-target_link_libraries(${module} Compute VoxelEngine UI_Backend)
-
+if (NO_UI)
+	target_link_libraries(${module} Compute VoxelEngine)
+else()
+	target_link_libraries(${module} Compute VoxelEngine UI_Backend)
+endif()
 
 

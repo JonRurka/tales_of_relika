@@ -4,8 +4,10 @@
 #include <unordered_map>
 #include <memory>
 
-//#include "RmlUi_Platform_GLFW.h"
-//#include "RmlUi_Renderer_GL3.h"
+#if !defined(NO_UI)
+#include "RmlUi_Platform_GLFW.h"
+#include "RmlUi_Renderer_GL3.h"
+#endif
 
 class Graphics;
 struct GLFWwindow;
@@ -66,8 +68,8 @@ public:
 
 private:
 
-	std::unique_ptr<SystemInterface_GLFW> m_system_interface;
-	std::unique_ptr<RenderInterface_GL3> m_render_interface;
+	std::shared_ptr<SystemInterface_GLFW> m_system_interface;
+	std::shared_ptr<RenderInterface_GL3> m_render_interface;
 
 	bool m_context_dimensions_dirty{true};
 	Rml::Context* m_context{nullptr};
