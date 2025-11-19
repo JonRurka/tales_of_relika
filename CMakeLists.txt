@@ -7,19 +7,20 @@ add_compile_definitions(PHYSICS_BACKEND_BULLET=1)
 add_compile_definitions(PHYSICS_BACKEND_JOLT=2)
 add_compile_definitions(PHYSICS_BACKEND=PHYSICS_BACKEND_JOLT)
 
-option(ASAN_ENABLED "Enable Address Sanitation" ON)
+option(ASAN_ENABLED "Enable Address Sanitation" OFF)
+
 if(ASAN_ENABLED)
 	string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 	message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}\n")
 	add_compile_options(-fsanitize=address)
 	add_compile_definitions(_DISABLE_STRING_ANNOTATION=1 _DISABLE_VECTOR_ANNOTATION=1)
+	set(LDFLAGS "${LDFLAGS} -fsanitize=address")
 endif() 
 
 
 if (UNIX)
     add_compile_options(-pthread -fPIC)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.1")
-	set(LDFLAGS "${LDFLAGS} -fsanitize=address")
 	#set(CMAKE_CXX_COMPILER /opt/gcc-15/bin/g++)
 endif ()
 
