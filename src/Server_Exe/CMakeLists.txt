@@ -39,4 +39,4 @@ target_link_libraries(${PROJECT_NAME}
 	#rmlui_shell
 )
 target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Shared Server)
-#target_link_libraries(${PROJECT_NAME} -fsanitize=address)
+target_link_libraries(${PROJECT_NAME} -fsanitize=address)

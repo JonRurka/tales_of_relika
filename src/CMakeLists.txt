@@ -141,5 +141,5 @@ if (NOT SERVER_BUILD)
 
 
 	target_link_libraries(${PROJECT_NAME} Compute VoxelEngine Engine Shared Game Server UI_Backend)
-	#target_link_libraries(${PROJECT_NAME} -fsanitize=address)
+	target_link_libraries(${PROJECT_NAME} -fsanitize=address)
 endif()
