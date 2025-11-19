@@ -15,8 +15,11 @@ if (NO_UI)
 	add_compile_definitions(NO_UI=1)
 endif()
 
+
 add_compile_definitions(CL_TARGET_OPENCL_VERSION=210)
 add_compile_definitions(CL_HPP_TARGET_OPENCL_VERSION=210)
+
+
 add_compile_definitions(NOMINMAX)
 
 if (VULKAN_PLATFROM)
