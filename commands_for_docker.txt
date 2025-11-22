@@ -1,0 +1,41 @@
+https://documentation.ubuntu.com/server/how-to/graphics/install-nvidia-drivers/
+install ubuntu-drivers
+sudo ubuntu-drivers install --gpgpu
+
+installing docker
+https://docs.docker.com/engine/install/ubuntu/
+
+docker volumes:
+https://www.geeksforgeeks.org/devops/what-is-docker-volume/
+
+port forwarding vast.ai:
+https://docs.vast.ai/documentation/reference/faq/networking
+
+enable gpu passthrough in docker.
+https://stackoverflow.com/questions/25185405/using-gpu-from-a-docker-container
+https://docs.docker.com/desktop/features/gpu/
+
+
+docker build -t jonathanrurka/relika_server_base .
+docker image tag jonathanrurka/relika_server_base jonathanrurka/relika_server_base:v0.0.1
+docker push jonathanrurka/relika_server_base:v0.0.1
+
+
+https://stackoverflow.com/a/79444629/1513608
+run in docker container to get OpenCL working:
+apt-get install -y pocl-opencl-icd ocl-icd-opencl-dev gcc clinfo
+
+docker pull ubuntu:24.04
+
+docker volume create my_volume
+
+docker run --rm -it --gpus=all nvcr.io/nvidia/k8s/cuda-sample:nbody nbody -gpu -benchmark
+
+docker run -it --name relika_build jonathanrurka/relika_server_builder
+docker run -it --name relika --gpus 'all,"capabilities=compute,utility"' -v my_volume:/data --mount type=bind,src="~/relika_data",target=/host_data jonathanrurka/relika_server_base 
+docker start -a relika
+docker stop relika
+docker rm relika
+
+Enter back in to terminal:
+docker exec -it relika bash
