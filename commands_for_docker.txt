@@ -13,7 +13,11 @@ https://docs.vast.ai/documentation/reference/faq/networking
 
 enable gpu passthrough in docker.
 https://stackoverflow.com/questions/25185405/using-gpu-from-a-docker-container
+https://stackoverflow.com/questions/79417016/how-do-i-use-opencl-in-a-docker-container
 https://docs.docker.com/desktop/features/gpu/
+
+// Docker takes to much space
+https://medium.com/@piyushkashyap045/why-docker-keeps-eating-up-your-disk-space-and-how-to-fix-it-48d2ecf3dc65
 
 
 docker build -t jonathanrurka/relika_server_base .
@@ -31,7 +35,7 @@ docker volume create my_volume
 
 docker run --rm -it --gpus=all nvcr.io/nvidia/k8s/cuda-sample:nbody nbody -gpu -benchmark
 
-docker run -it --name relika_build jonathanrurka/relika_server_builder
+docker run -it --name relika_build --mount type=bind,src="~/host_shared",target=/host_shared jonathanrurka/relika_server_builder
 docker run -it --name relika --gpus 'all,"capabilities=compute,utility"' -v my_volume:/data --mount type=bind,src="~/relika_data",target=/host_data jonathanrurka/relika_server_base 
 docker start -a relika
 docker stop relika
