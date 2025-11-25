@@ -15,14 +15,27 @@ enable gpu passthrough in docker.
 https://stackoverflow.com/questions/25185405/using-gpu-from-a-docker-container
 https://stackoverflow.com/questions/79417016/how-do-i-use-opencl-in-a-docker-container
 https://docs.docker.com/desktop/features/gpu/
+https://forums.docker.com/t/cant-start-containers-with-gpu-access-on-linux-mint/144606/4
+docker run --rm --gpus all nvidia/opencl clinfo
 
 // Docker takes to much space
 https://medium.com/@piyushkashyap045/why-docker-keeps-eating-up-your-disk-space-and-how-to-fix-it-48d2ecf3dc65
-
+docker system df
+docker container prune
+docker image prune -a
+docker builder prune
 
 docker build -t jonathanrurka/relika_server_base .
 docker image tag jonathanrurka/relika_server_base jonathanrurka/relika_server_base:v0.0.1
 docker push jonathanrurka/relika_server_base:v0.0.1
+
+docker build -t jonathanrurka/relika_server_builder .
+docker image tag jonathanrurka/relika_server_builder jonathanrurka/relika_server_builder:v0.0.1
+docker push jonathanrurka/relika_server_builder:v0.0.1
+
+docker build -t jonathanrurka/relika_server_prebuilt .
+docker image tag jonathanrurka/relika_server_prebuilt jonathanrurka/relika_server_prebuilt:v0.0.1
+docker push jonathanrurka/relika_server_prebuilt:v0.0.1
 
 
 https://stackoverflow.com/a/79444629/1513608
@@ -35,7 +48,10 @@ docker volume create my_volume
 
 docker run --rm -it --gpus=all nvcr.io/nvidia/k8s/cuda-sample:nbody nbody -gpu -benchmark
 
-docker run -it --name relika_build --mount type=bind,src="~/host_shared",target=/host_shared jonathanrurka/relika_server_builder
+
+docker run -it --rm --name relika_base --runtime=nvidia --gpus all jonathanrurka/relika_server_base:ubuntu22
+docker run -it --name relika_build --gpus all jonathanrurka/relika_server_builder:v0.0.1
+docker run -it --name relika_build --gpus all -v build_data:/home/ubuntu -v server_app:/home/ubuntu/server jonathanrurka/relika_server_builder
 docker run -it --name relika --gpus 'all,"capabilities=compute,utility"' -v my_volume:/data --mount type=bind,src="~/relika_data",target=/host_data jonathanrurka/relika_server_base 
 docker start -a relika
 docker stop relika
