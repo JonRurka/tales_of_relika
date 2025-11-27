@@ -34,6 +34,8 @@ class SocketUser;
 
 #define SERVER_LOCAL true
 
+#define VAST_AI_PORT_MAPPING true
+
 class AsyncServer {
 	friend class SocketUser;
 public:
@@ -85,6 +87,7 @@ public:
 	//void Process(SocketUser* socket_user, Data data);
 	void Process(SocketUser* socket_user, uint8_t command, uint8_t* data, int size, Protocal type);
 	
+	int GetExternalPort(int port);
 
 	static AsyncServer* GetInstance() {
 		return m_instance;
@@ -139,6 +142,11 @@ private:
 	std::queue<ThreadCommand> m_async_command_queue;
 	std::mutex m_async_command_queue_lock;
 	int m_async_cmd_q_len = 0;
+
+	bool m_load_port_map = VAST_AI_PORT_MAPPING;
+	std::unordered_map<int, int> m_port_map;
+
+	void LoadPublicPortMap();
 
 	int threadSafeCommandQueueDuplicate(std::mutex& lock, std::queue<ThreadCommand>& from, std::queue<ThreadCommand>& to);
 

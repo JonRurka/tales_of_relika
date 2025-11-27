@@ -3,6 +3,7 @@
 #include "WorldController.h"
 #include "../Server_Main.h"
 #include "Logger.h"
+#include "Utilities.h"
 #include "../HashHelper.h"
 #include <thread>
 
@@ -14,6 +15,8 @@ AsyncServer::AsyncServer(Server_Main* server)
 
 	m_server = server;
 	//m_authenticator = PlayerAuthenticator(this);
+
+    LoadPublicPortMap();
 
     //m_udp_server = new udp_server(this, m_io_service_udp, UDP_PORT);
 	m_tcp_server = new tcp_server(this, m_io_service_tcp, TCP_PORT);
@@ -130,6 +133,35 @@ void AsyncServer::Process_Async(AsyncServer* svr) {
 
         //Server_Main::SetMemoryUsageForThread("async_server_process");
     }
+}
+
+void AsyncServer::LoadPublicPortMap()
+{
+    if (!m_load_port_map)
+        return;
+
+    std::string env = Utilities::Execute_Cmd("printenv");
+    auto env_lines = Utilities::Split(env, "\n");
+    for (const auto& line : env_lines) {
+        if (line.find("VAST_UDP_PORT") != std::string::npos)
+        {
+            auto str_parts = Utilities::Split(line, "=");
+            std::string int_port_str = Utilities::Split(str_parts[0], "_")[3];
+            std::string ext_port_str = str_parts[1];
+            int int_port = std::stoi(int_port_str);
+            int ext_port = std::stoi(ext_port_str);
+            m_port_map[int_port] = ext_port;
+        }
+    }
+}
+
+int AsyncServer::GetExternalPort(int port)
+{
+    if (!m_load_port_map) {
+        return port;
+    }
+
+    return m_port_map[port];
 }
 
 int AsyncServer::threadSafeCommandQueueDuplicate(std::mutex& lock, std::queue<ThreadCommand>& from, std::queue<ThreadCommand>& to)

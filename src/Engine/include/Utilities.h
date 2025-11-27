@@ -60,6 +60,8 @@ public:
 	static void Init_Time();
 	static double Get_Time();
 
+	static std::string Execute_Cmd(std::string input);
+
 	static int Is_Extension_Supported(const std::string extension);
 
 	static std::vector<glm::vec4> vec2_to_vec4_arr(std::vector<glm::vec2> arr);

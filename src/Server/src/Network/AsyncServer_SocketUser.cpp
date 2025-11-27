@@ -59,7 +59,7 @@ void SocketUser::HandleStartConnect_Finished(bool successfull)
 		_server->Add_UDP_ID(udp_id, user_ptr);
 		tcp_connection_client->Set_Socket_User(user_ptr);
 		
-		uint16_t udp_port = EnableUdp();
+		uint16_t udp_port = _server->GetExternalPort(EnableUdp());
 
 		uint8_t* udp_buf = reinterpret_cast<uint8_t*>(&udp_id);
 		uint8_t* udp_port_buf = reinterpret_cast<uint8_t*>(&udp_port);
@@ -239,3 +239,4 @@ void SocketUser::ResetPingCounter()
 {
 	m_last_ping = Server_Main::GetEpoch();
 }
+

@@ -19,6 +19,7 @@
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/archive/iterators/insert_linebreaks.hpp>
 #include <boost/archive/iterators/remove_whitespace.hpp>
+#include <boost/process.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/find_iterator.hpp>
@@ -425,6 +426,17 @@ double Utilities::Get_Time()
 	auto now_point = std::chrono::high_resolution_clock::now();
 	return std::chrono::duration<double>(now_point - g_start_point).count();
 	//return glfwGetTime();
+}
+
+std::string Utilities::Execute_Cmd(std::string input)
+{
+	std::string res;
+	boost::process::ipstream out;
+	boost::process::child c("ls", boost::process::std_out > out);
+	std::string line; while (std::getline(out, line)) {
+		res += line + "\n";
+	}
+	return std::string();
 }
 
 int Utilities::Is_Extension_Supported(const std::string extension)
