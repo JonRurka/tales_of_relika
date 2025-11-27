@@ -2,6 +2,8 @@ https://documentation.ubuntu.com/server/how-to/graphics/install-nvidia-drivers/
 install ubuntu-drivers
 sudo ubuntu-drivers install --gpgpu
 
+https://dev.to/emmanuelnk/using-sudo-without-password-prompt-as-non-root-docker-user-52bg
+
 installing docker
 https://docs.docker.com/engine/install/ubuntu/
 
@@ -26,16 +28,16 @@ docker image prune -a
 docker builder prune
 
 docker build -t jonathanrurka/relika_server_base .
-docker image tag jonathanrurka/relika_server_base jonathanrurka/relika_server_base:v0.0.1
-docker push jonathanrurka/relika_server_base:v0.0.1
+docker image tag jonathanrurka/relika_server_base jonathanrurka/relika_server_base:ubuntu24-c
+docker push jonathanrurka/relika_server_base:ubuntu24-c
 
 docker build -t jonathanrurka/relika_server_builder .
-docker image tag jonathanrurka/relika_server_builder jonathanrurka/relika_server_builder:v0.0.1
-docker push jonathanrurka/relika_server_builder:v0.0.1
+docker image tag jonathanrurka/relika_server_builder jonathanrurka/relika_server_builder:v0.1.0
+docker push jonathanrurka/relika_server_builder:v0.1.0
 
 docker build -t jonathanrurka/relika_server_prebuilt .
-docker image tag jonathanrurka/relika_server_prebuilt jonathanrurka/relika_server_prebuilt:v0.0.1
-docker push jonathanrurka/relika_server_prebuilt:v0.0.1
+docker image tag jonathanrurka/relika_server_prebuilt jonathanrurka/relika_server_prebuilt:v0.1.0
+docker push jonathanrurka/relika_server_prebuilt:v0.1.0
 
 
 https://stackoverflow.com/a/79444629/1513608
@@ -47,6 +49,7 @@ docker pull ubuntu:24.04
 docker volume create my_volume
 
 docker run --rm -it --gpus=all nvcr.io/nvidia/k8s/cuda-sample:nbody nbody -gpu -benchmark
+docker run --rm -it --gpus=all nvidia/opencl clinfo
 
 
 docker run -it --rm --name relika_base --runtime=nvidia --gpus all jonathanrurka/relika_server_base:ubuntu22
@@ -59,3 +62,7 @@ docker rm relika
 
 Enter back in to terminal:
 docker exec -it relika bash
+
+
+
+

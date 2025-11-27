@@ -603,18 +603,32 @@ OpenCL_Device_Info Utilities::Get_Recommended_Device()
 	}
 	//printf("\n");
 
-	OpenCL_Device_Info picked_device{};
+	OpenCL_Device_Info picked_device{}; 
+	OpenCL_Device_Info cpu_fallback{};
 	bool found_device = false;
+	bool found_fallback_device = false;
 	picked_device.num_compute_units = 0;
+
 	int max_comp = 0;
 	for (const auto& elem : devices) {
-		if (elem.num_compute_units > picked_device.num_compute_units) {
+		if (elem.num_compute_units > picked_device.num_compute_units && elem.is_type_GPU) {
 			picked_device = elem;
-			Logger::LogDebug(LOG_POS("Get_Recommended_Device"), "Found a device.");
+			//Logger::LogDebug(LOG_POS("Get_Recommended_Device"), "Found a device: %s", picked_device.name);
 			found_device = true;
+		}
+		if (elem.is_type_CPU)
+		{
+			cpu_fallback = elem;
+			found_fallback_device = true;
 		}
 	}
 	//picked_device = devices[1];
+	if (!found_device && found_fallback_device)
+	{
+		picked_device = cpu_fallback;
+		found_device = true;
+		Logger::LogDebug(LOG_POS("Get_Recommended_Device"), "Fallback to CPU device: %s", picked_device.name);
+	}
 
 	if (!found_device)
 	{

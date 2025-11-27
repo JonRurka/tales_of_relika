@@ -28,7 +28,7 @@ using boost::asio::ip::address_v4;
 #endif
 
 #define UDP_PORT_RANGE_START 51000
-#define UDP_PORT_RANGE_END 52000
+#define UDP_PORT_RANGE_END 51005
 
 //socket_(io_service, udp::endpoint(udp::v4(), port)
 
