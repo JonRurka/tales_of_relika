@@ -603,7 +603,7 @@ void Shader::load_uniforms(const std::vector<char> spirv_bin)
     }
 }
 
-int Shader::get_uniform_location(std::string name)
+int Shader::get_uniform_location(const std::string& name)
 {
     assert(m_initialized);
     if (m_is_spirv) {

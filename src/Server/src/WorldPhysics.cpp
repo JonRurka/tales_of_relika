@@ -3,7 +3,9 @@
 #include "Utilities.h"
 #include "Logger.h"
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 #include "BulletCollision/CollisionDispatch/btGhostObject.h"
+#endif
 
 #define UPDATE_INTERVAL (1.f / 60.f)
 #define JOLT_TEMP_ALLOCATOR_SIZE (32 * 1024 * 1024)

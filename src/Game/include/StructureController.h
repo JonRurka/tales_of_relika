@@ -105,6 +105,8 @@ protected:
 
 	void Update(float dt) override;
 
+	void OnDestroy() override;
+
 private:
 
 	struct ChunkRef {

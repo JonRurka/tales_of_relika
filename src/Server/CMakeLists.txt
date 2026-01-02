@@ -75,7 +75,7 @@ target_link_libraries(${module}
 	glm::glm
 	glfw
 	sol2::sol2
-	Bullet::Bullet
+	#Bullet::Bullet
 	Jolt::Jolt
 	#OpenAL::OpenAL
 	inih::inih

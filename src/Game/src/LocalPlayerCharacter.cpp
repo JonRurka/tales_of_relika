@@ -11,8 +11,10 @@
 #include "Primitives.h"
 #include "Character_HUD.h"
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 #include"BulletCollision/CollisionDispatch/btGhostObject.h"
 #include"BulletDynamics/Character/btKinematicCharacterController.h"
+#endif
 
 #define MOVE_SEND_TIMEOUT (1. / 20.f)
 

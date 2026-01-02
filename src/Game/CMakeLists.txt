@@ -29,7 +29,6 @@ set(${module}_headers
 	include/StructureController.h
 	include/TerrainChunk.h
 	include/StructureChunk.h
-	include/Material_Types.h
 	include/Block_Type.h
 	include/Block.h
 	include/Material_Processor.h
@@ -65,7 +64,6 @@ set(${module}_sources
 	src/StructureController.cpp
 	src/TerrainChunk.cpp
 	src/StructureChunk.cpp
-	src/Material_Types.cpp
 	src/Block_Type.cpp
 	src/Block.cpp
 	src/Material_Processor.cpp
@@ -88,7 +86,7 @@ target_link_libraries(${module}
 	glm::glm
 	glfw
 	sol2::sol2
-	Bullet::Bullet
+	#Bullet::Bullet
 	Jolt::Jolt
 	#OpenAL::OpenAL
 	inih::inih

@@ -66,6 +66,12 @@ void StructureController::Update(float dt)
 
 }
 
+void StructureController::OnDestroy()
+{
+	m_async_run = false;
+	m_process_thread.join();
+}
+
 void StructureController::start()
 {
 	create_chunk_cache();

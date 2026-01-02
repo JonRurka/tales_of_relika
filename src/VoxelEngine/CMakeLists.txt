@@ -49,7 +49,7 @@ target_link_libraries(${module}
 	glm::glm
 	glfw
 	sol2::sol2
-	Bullet::Bullet
+	#Bullet::Bullet
 	Jolt::Jolt
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator

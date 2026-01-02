@@ -289,11 +289,12 @@ void VoxelWorld_Scene::setup_lights()
 {
 	Create_Ambient_Lights();
 	
-	glm::vec4 light_color_dir = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	glm::vec3 light_pos_dir = glm::vec3(0.0f, 0.0f, 100.0f);
+	glm::vec4 light_color_dir = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	glm::vec3 light_pos_dir = glm::vec3(0.0f, 100.0f, 0.0f);
 
 	light_obj_dir = Instantiate("light");
 	light_obj_dir.lock()->Get_Transform().Translate(light_pos_dir);
+	light_obj_dir.lock()->Get_Transform().LookAt(glm::vec3(0.0f, -100.0f, -0.0f));
 
 	light_comp_dir = light_obj_dir.lock()->Add_Component<Light>();
 	light_comp_dir.lock()->Type(Light::Light_Type::DIRECTIONAL);

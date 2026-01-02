@@ -90,7 +90,7 @@ target_link_libraries(${module}
 	boost::boost
 	glm::glm
 	glfw
-	Bullet::Bullet
+	#Bullet::Bullet
 	Jolt::Jolt
 	#vulkan-headers::vulkan-headers
 	#GPUOpen::VulkanMemoryAllocator

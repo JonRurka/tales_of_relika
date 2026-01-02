@@ -5,8 +5,10 @@
 #include "Logger.h"
 #include "Graphics.h"
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 #include"BulletCollision/CollisionDispatch/btGhostObject.h"
 #include"BulletDynamics/Character/btKinematicCharacterController.h"
+#endif
 
 void CharacterCollider::Init()
 {

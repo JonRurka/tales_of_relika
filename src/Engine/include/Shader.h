@@ -120,7 +120,7 @@ private:
 
     void load_uniforms(const std::vector<char> spirv_bin);
 
-    int get_uniform_location(std::string name);
+    int get_uniform_location(const std::string& name);
 
     static std::unordered_map<uint64_t, std::vector<std::weak_ptr<Renderer>>> m_renderers;
     static std::unordered_map<uint64_t, std::weak_ptr<Shader>> m_shaders;

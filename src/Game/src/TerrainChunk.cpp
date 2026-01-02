@@ -166,7 +166,6 @@ void TerrainChunk::Update(float dt)
 			//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 			Refresh();
 			m_has_collision = true;
-			
 		}
 	}
 
@@ -286,6 +285,9 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 
 	if (DEBUG_DRAW_VERTICES) {
 		for (int i = 0; i < num_vertices; i++) {
+			if (i % 3 != 0)
+				continue;
+
 			Graphics::DrawDebugRay(vert[i], glm::vec3(0, 1, 0), glm::vec3(0, 0, 1), 10000);
 		}
 	}
@@ -308,6 +310,8 @@ void TerrainChunk::update_collision_mesh(IComputeBuffer* vert_buffer, unsigned i
 	//Logger::LogInfo(LOG_POS("Update"), "Collision for (%i, %i, %i) enabled successfully.",
 	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 	m_has_collision = true;
+
+	draw_debug_cube();
 
 }
 

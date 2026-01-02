@@ -8,8 +8,10 @@
 #include "ServerTerrainChunk.h"
 #include "SocketUser.h"
 
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 #include "BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "BulletDynamics/Character/btKinematicCharacterController.h"
+#endif
 
 //#include "glaze/glaze.hpp" 
 #include <nlohmann/json.hpp>

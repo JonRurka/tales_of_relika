@@ -129,7 +129,7 @@ if (NOT SERVER_BUILD)
 		spirv-cross-msl
 		spirv-cross-reflect
 		sol2::sol2
-		Bullet::Bullet
+		#Bullet::Bullet
 		Jolt::Jolt
 		#OpenAL::OpenAL
 		inih::inih

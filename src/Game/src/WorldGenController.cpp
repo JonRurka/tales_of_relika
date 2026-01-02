@@ -15,6 +15,9 @@
 #define DUMMY_SURFACE_Y_LOC (DUMMY_SURFACE_HEIGHT - DUMMY_SURFACE_THICKNESS)
 #define DUMMY_LENGTH (32)
 
+
+#define PROCESS_DELETIONS false
+
 WorldGenController* WorldGenController::m_Instance{nullptr};
 
 namespace {
@@ -449,6 +452,10 @@ void WorldGenController::process_additions()
 
 void WorldGenController::process_deletions()
 {
+	if (!PROCESS_DELETIONS) {
+		return;
+	}
+
 	while (!m_delete_queue.empty()) {
 		glm::ivec3 chunk_coord = m_delete_queue.front();
 		m_delete_queue.pop();
