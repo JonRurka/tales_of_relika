@@ -56,6 +56,14 @@ void Server_Main::UserDisconnected(SocketUser* socket_user)
 	
 }
 
+void Server_Main::DisconnectAll(const std::string& reason)
+{
+	for (auto& pair : m_players)
+	{
+		pair.second.get()->Disconnect(reason);
+	}
+}
+
 void Server_Main::PlayerAuthenticated(std::shared_ptr<Player> player, bool authorized)
 {
 	if (authorized) {
@@ -324,6 +332,8 @@ void Server_Main::Update(double dt)
 
 void Server_Main::Stop()
 {
+	DisconnectAll("Server Closed");
+
 	if (!m_running) {
 		return;
 	}

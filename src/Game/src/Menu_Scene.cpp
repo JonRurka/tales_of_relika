@@ -37,6 +37,12 @@ void Menu_Scene::Update(float dt)
 void Menu_Scene::Deactivate()
 {
 	remove_main_menu_listeners();
+
+	UI_Engine::Instance().Unload_Document("splash");
+	UI_Engine::Instance().Unload_Document("main_menu");
+
+	m_startup_splash = nullptr;
+	m_main_menu_screen = nullptr;
 }
 
 

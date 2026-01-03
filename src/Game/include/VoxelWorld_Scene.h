@@ -58,6 +58,8 @@ protected:
 
 	void Update(float dt) override;
 
+	void Deactivate() override;
+
 private:
 
 	double m_start_time{ 0 };

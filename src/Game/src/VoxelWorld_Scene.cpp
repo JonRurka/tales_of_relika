@@ -57,6 +57,12 @@ void VoxelWorld_Scene::Update(float dt)
 	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 
+void VoxelWorld_Scene::Deactivate()
+{
+	UI_Engine::Instance().Unload_Document("loading");
+	m_loading_screen = nullptr;
+}
+
 void VoxelWorld_Scene::startup_squence()
 {
 	if (!m_server_started) {

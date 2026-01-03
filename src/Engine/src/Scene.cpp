@@ -25,10 +25,9 @@ void Scene::Activate(bool active, SceneStartData data)
 
 	m_active = active;
 
-	Engine::Activate_Scene(Name());
-
 	if (m_active) 
 	{
+		Engine::Activate_Scene(Name());
 		m_start_data = data;
 		Initialize();
 	}

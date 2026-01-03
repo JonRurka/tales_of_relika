@@ -1,6 +1,11 @@
 #include "IUser.h"
 #include "Network/SocketUser.h"
 
+void IUser::Disconnect(const std::string& reason)
+{
+	AsyncServer::GetInstance()->RemovePlayer(m_socket_user->SessionToken);
+}
+
 void IUser::Send(OpCodes::Client cmd, std::vector<uint8_t> message, Protocal type)
 {
 	if (Connected()) {

@@ -32,6 +32,7 @@ public:
 		return m_is_connected;
 	}
 
+	virtual void Disconnect(const std::string& reason);
 	virtual void Send(OpCodes::Client cmd, std::vector<uint8_t> message, Protocal type = Protocal_Tcp);
 	virtual void Send(OpCodes::Client cmd, std::string message, Protocal type = Protocal_Tcp);
 

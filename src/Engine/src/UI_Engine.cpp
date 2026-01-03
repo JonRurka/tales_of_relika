@@ -23,6 +23,8 @@
 #include <span>
 #include <vector>
 
+
+
 bool UI_Engine::Init()
 {
 
@@ -34,15 +36,17 @@ bool UI_Engine::Init()
 		return false;
 	}
 
-	m_system_interface = std::make_shared<SystemInterface_GLFW>();
-	m_render_interface = std::make_shared<RenderInterface_GL3>();
+	//m_system_interface = std::make_shared<SystemInterface_GLFW>();
+	//m_render_interface = std::make_shared<RenderInterface_GL3>();
+
+	m_backend = std::make_unique<BackendData>();
 
 	GLFWwindow* window = Graphics::Instance().Get_GLFW_Window();
 
-	m_system_interface->SetWindow(window);
+	m_backend->system_interface.SetWindow(window);
 	//m_system_interface->LogMessage(Rml::Log::LT_INFO, renderer_message);
 	Logger::LogInfo(LOG_POS("Init"), "%s", renderer_message.c_str());
-	m_system_interface->LogMessage(Rml::Log::LT_INFO, renderer_message);
+	m_backend->system_interface.LogMessage(Rml::Log::LT_INFO, renderer_message);
 
 	glfwSetCharCallback(window, [](GLFWwindow* p_window, unsigned int codepoint) {
 		Instance().CharCallback(p_window, codepoint);
@@ -67,14 +71,14 @@ bool UI_Engine::Init()
 
 	// The window size may have been scaled by DPI settings, get the actual pixel size.
 	glfwGetFramebufferSize(window, &width, &height);
-	m_render_interface->SetViewport(width, height);
+	m_backend->render_interface.SetViewport(width, height);
 
 	// Receive num lock and caps lock modifiers for proper handling of numpad inputs in text fields.
 	glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 
 	// Install the custom interfaces constructed by the backend before initializing RmlUi.
-	Rml::SetSystemInterface(m_system_interface.get());
-	Rml::SetRenderInterface(m_render_interface.get());
+	Rml::SetSystemInterface(&m_backend->system_interface);
+	Rml::SetRenderInterface(&m_backend->render_interface);
 
 	// The shell overrides the default file interface so that absolute paths in RML/RCSS-documents are relative to the 'Samples' directory.
 	//file_interface = Rml::MakeUnique<ShellFileInterface>(root);
@@ -106,7 +110,6 @@ bool UI_Engine::Init()
 	m_context = Rml::CreateContext("main", Rml::Vector2i(width, height));
 	if (!m_context)
 	{
-		Rml::Shutdown();
 		Shutdown();
 		return false;
 	}
@@ -179,7 +182,7 @@ bool UI_Engine::Document_Exists(std::string name)
 #endif
 }
 
-std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_Resource(std::string name, std::string resource_name)
+ElementDocument UI_Engine::Load_Document_Resource(std::string name, std::string resource_name)
 {
 #if !defined(NO_UI)
 	assert(m_context);
@@ -196,7 +199,7 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_Resource(std::str
 	Rml::ElementDocument* document = m_context->LoadDocument(rel_path);
 	assert(document);
 
-	m_documents[name] = std::shared_ptr<Rml::ElementDocument>(document);
+	m_documents[name] = document;//std::shared_ptr<Rml::ElementDocument>(document);
 	Logger::LogInfo(LOG_POS("Load_Document_File"), "Document file %s loaded.", name.c_str());
 	return m_documents[name];
 #else
@@ -223,7 +226,7 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_Resource(std::str
 	return document;*/
 }
 
-std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_File(std::string name, std::string file_path)
+ElementDocument UI_Engine::Load_Document_File(std::string name, std::string file_path)
 {
 #if !defined(NO_UI)
 	assert(m_context);
@@ -233,7 +236,7 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_File(std::string 
 	Rml::ElementDocument* document = m_context->LoadDocument(file_path);
 	assert(document);
 
-	m_documents[name] = std::shared_ptr<Rml::ElementDocument>(document);
+	m_documents[name] = document;//std::shared_ptr<Rml::ElementDocument>(document);
 	Logger::LogInfo(LOG_POS("Load_Document_File"), "Document file %s loaded", name.c_str());
 	return m_documents[name];
 #else
@@ -243,7 +246,7 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Load_Document_File(std::string 
 #endif
 }
 
-std::shared_ptr<Rml::ElementDocument> UI_Engine::Get_Document(std::string name)
+ElementDocument UI_Engine::Get_Document(std::string name)
 {
 #if !defined(NO_UI)
 	assert(m_context);
@@ -256,6 +259,24 @@ std::shared_ptr<Rml::ElementDocument> UI_Engine::Get_Document(std::string name)
 	Logger::LogError(LOG_POS("Get_Document"), "UI operations not supported: NO_UI was defined.");
 	assert(false);
 	return m_documents["null"];
+#endif
+}
+
+void UI_Engine::Unload_Document(std::string name)
+{
+#if !defined(NO_UI)
+	assert(m_context);
+	assert(m_initialized);
+	if (!m_documents.contains(name))
+		return;
+
+	Logger::LogDebug(LOG_POS("Unload_Document"), "Unloading UI document: %s", name.c_str());
+	m_context->UnloadDocument(m_documents[name]);
+	m_documents.erase(name);
+
+#else
+	Logger::LogError(LOG_POS("Unload_Document"), "UI operations not supported: NO_UI was defined.");
+	assert(false);
 #endif
 }
 
@@ -310,9 +331,9 @@ void UI_Engine::Update()
 	m_context->Update();
 
 	//m_render_interface->Clear();
-	m_render_interface->BeginFrame();
+	m_backend->render_interface.BeginFrame();
 	m_context->Render();
-	m_render_interface->EndFrame();
+	m_backend->render_interface.EndFrame();
 
 	// Optional, used to mark frames during performance profiling.
 	RMLUI_FrameMark;
@@ -324,9 +345,12 @@ void UI_Engine::Update()
 void UI_Engine::Shutdown()
 {
 #if !defined(NO_UI)
+
+	m_documents.clear();
+
+	Rml::Shutdown();
+	m_backend.reset();
 	RmlGL3::Shutdown();
-	m_system_interface.reset();
-	m_render_interface.reset();
 #endif
 }
 
@@ -463,7 +487,7 @@ void UI_Engine::FramebufferSizeCallback(GLFWwindow*, int width, int height)
 	if (!m_initialized)
 		return;
 	assert(m_context);
-	m_render_interface->SetViewport(width, height);
+	m_backend->render_interface.SetViewport(width, height);
 	RmlGLFW::ProcessFramebufferSizeCallback(m_context, width, height);
 #else
 	Logger::LogError(LOG_POS("FramebufferSizeCallback"), "UI operations not supported: NO_UI was defined.");

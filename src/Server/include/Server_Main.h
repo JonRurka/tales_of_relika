@@ -170,6 +170,8 @@ public:
 
 	void UserDisconnected(SocketUser* socket_user);
 
+	void DisconnectAll(const std::string& reason);
+
 	void PlayerAuthenticated(std::shared_ptr<Player> player, bool authorized);
 
 	void PlayerJoined(std::shared_ptr<Player> player);

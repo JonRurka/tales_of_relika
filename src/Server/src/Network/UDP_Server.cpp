@@ -220,3 +220,14 @@ uint16_t udp_main_server::Get_New_Port()
 	}
 	return newNum;
 }
+
+// Return true if port is bound.
+bool udp_main_server::has_port(uint16_t port)
+{
+	if (!AsyncServer::IsUdpPortAvailable(port))
+	{
+		return true;
+	}
+
+	return m_connections.find(port) != m_connections.end();
+}

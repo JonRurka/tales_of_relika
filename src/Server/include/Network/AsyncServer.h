@@ -63,10 +63,10 @@ public:
 	}
 
 	boost::shared_ptr<SocketUser> AddPlayer(SocketUser* user);
-	
-	void RemovePlayer(std::string user);
 
-	bool HasPlayerSession(std::string session_key);
+	bool RemovePlayer(const std::string& session_token, const std::string& reason = "");
+
+	bool HasPlayerSession(const std::string& session_key);
 
 	void PlayerAuthenticated(boost::shared_ptr<SocketUser> user, bool authorized);
 
@@ -93,6 +93,8 @@ public:
 		return m_instance;
 	}
 
+	static bool IsUdpPortAvailable(int port);
+
 private:
 
 	struct NetCommand {
@@ -108,6 +110,11 @@ private:
 		uint8_t* buffer;
 		int buffer_size;
 		Protocal type;
+	};
+
+	struct RemoveRequest {
+		std::string session_token;
+		std::string reason;
 	};
 
 	static AsyncServer* m_instance;
@@ -133,7 +140,7 @@ private:
 	std::recursive_mutex m_user_mtx;
 
 	std::queue<boost::shared_ptr<SocketUser>> m_queue_user_add;
-	std::queue<std::string> m_queue_user_remove;
+	std::queue<RemoveRequest> m_queue_user_remove;
 
 	std::queue<ThreadCommand> m_main_command_queue;
 	std::mutex m_main_command_queue_lock;
@@ -154,7 +161,7 @@ private:
 
 	void DoAddPlayer(boost::shared_ptr<SocketUser> user);
 
-	void DoRemovePlayer(std::string user);
+	void DoRemovePlayer(RemoveRequest user);
 
 	void DoProcess(std::string socket_user, Data data);
 

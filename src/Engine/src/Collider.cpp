@@ -45,8 +45,10 @@ void Collider::base_Update(float dt)
 
 void Collider::Destroy_Collider()
 {
+	if (Has_Rigidbody()) {
+		remove_rigidbody();
+	}
 
-	remove_rigidbody();
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	
 #else

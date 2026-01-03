@@ -14,6 +14,7 @@ struct GLFWwindow;
 
 class SystemInterface_GLFW;
 class RenderInterface_GL3;
+struct BackendData;
 
 namespace Rml {
 	class Context;
@@ -33,8 +34,8 @@ private:															 \
 	_target_class_* m_target{ nullptr };							 \
 };
 
-typedef std::shared_ptr<Rml::ElementDocument> ElementDocument;
-typedef std::shared_ptr<Rml::Element> Element;
+typedef Rml::ElementDocument* ElementDocument;
+typedef Rml::Element* Element;
 
 class UI_Engine {
 	friend class Graphics;
@@ -52,11 +53,13 @@ public:
 
 	bool Document_Exists(std::string name);
 
-	std::shared_ptr<Rml::ElementDocument> Load_Document_Resource(std::string name, std::string resource_name);
+	ElementDocument Load_Document_Resource(std::string name, std::string resource_name);
 
-	std::shared_ptr<Rml::ElementDocument> Load_Document_File(std::string name, std::string file_path);
+	ElementDocument Load_Document_File(std::string name, std::string file_path);
 
-	std::shared_ptr<Rml::ElementDocument> Get_Document(std::string name);
+	ElementDocument Get_Document(std::string name);
+
+	void Unload_Document(std::string name);
 
 	void Accept_Input(bool val);
 
@@ -68,8 +71,14 @@ public:
 
 private:
 
-	std::shared_ptr<SystemInterface_GLFW> m_system_interface;
-	std::shared_ptr<RenderInterface_GL3> m_render_interface;
+	struct BackendData {
+		SystemInterface_GLFW system_interface;
+		RenderInterface_GL3 render_interface;
+	};
+
+	//std::shared_ptr<SystemInterface_GLFW> m_system_interface;
+	//std::shared_ptr<RenderInterface_GL3> m_render_interface;
+	std::unique_ptr<BackendData> m_backend;
 
 	bool m_context_dimensions_dirty{true};
 	Rml::Context* m_context{nullptr};
@@ -81,7 +90,7 @@ private:
 
 	std::string m_ui_data_root;
 
-	std::unordered_map<std::string, std::shared_ptr<Rml::ElementDocument>> m_documents;
+	std::unordered_map<std::string, Rml::ElementDocument*> m_documents;
 
 	UI_Engine() = default;
 

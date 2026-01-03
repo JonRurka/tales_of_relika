@@ -9,6 +9,7 @@
 #include "Input.h"
 #include "Physics.h"
 #include "Camera.h"
+#include "UI_Engine.h"
 
 #include <queue>
 
@@ -184,8 +185,17 @@ void Engine::process_input()
 
 void Engine::cleanup()
 {
+	Logger::LogDebug(LOG_POS("cleanup"), "Shutting down...");
+
+	if (m_instance->m_has_active_scene) {
+		Logger::LogInfo(LOG_POS("cleanup"), "Deactivating scene: %s", m_instance->m_active_scene.lock()->Name().c_str());
+		m_instance->m_active_scene.lock()->Activate(false);
+	}
+
+	Logger::LogInfo(LOG_POS("cleanup"), "UI Engine shutdown.");
+	UI_Engine::Instance().Shutdown();
+
+	Logger::LogInfo(LOG_POS("cleanup"), "Destroy camera.");
 	Camera::StaticDestroy();
-
-
-
+	
 }

@@ -45,10 +45,10 @@ void AsyncServer::Update(float dt)
     }
 
     while (!m_queue_user_remove.empty()) {
-        std::string user = m_queue_user_remove.front();
+        RemoveRequest req = m_queue_user_remove.front();
         m_queue_user_remove.pop();
 
-        DoRemovePlayer(user);
+        DoRemovePlayer(req);
     }
 
     std::string use_count_str;
@@ -164,6 +164,26 @@ int AsyncServer::GetExternalPort(int port)
     return m_port_map[port];
 }
 
+bool AsyncServer::IsUdpPortAvailable(int port)
+{
+    bool res;
+
+    try 
+    {
+        boost::asio::io_context io_context;
+        udp::socket socket(io_context, udp::endpoint(udp::v4(), port));
+        socket.close();
+        res = true;
+    }
+    catch (boost::system::system_error error)
+    {
+        Logger::LogWarning(LOG_POS("IsPortOpen"), "Port %d not available.", port);
+        res = false;
+    }
+
+    return res;
+}
+
 int AsyncServer::threadSafeCommandQueueDuplicate(std::mutex& lock, std::queue<ThreadCommand>& from, std::queue<ThreadCommand>& to)
 {
     int res = 0;
@@ -195,9 +215,16 @@ boost::shared_ptr<SocketUser> AsyncServer::AddPlayer(SocketUser* user)
     return res;
 }
 
-void AsyncServer::RemovePlayer(std::string user)
+bool AsyncServer::RemovePlayer(const std::string& session_token, const std::string& reason)
 {
-    m_queue_user_remove.push(user);
+    if (!HasPlayerSession(session_token))
+    {
+        return false;
+    }
+
+    RemoveRequest req{ session_token, reason };
+    m_queue_user_remove.push(req);
+    return true;
 }
 
 void AsyncServer::DoAddPlayer(boost::shared_ptr<SocketUser> user) {
@@ -210,17 +237,19 @@ void AsyncServer::DoAddPlayer(boost::shared_ptr<SocketUser> user) {
     }
 }
 
-void AsyncServer::DoRemovePlayer(std::string user) {
-    std::string session_token = user;
-    if (HasPlayerSession(session_token)) {
+void AsyncServer::DoRemovePlayer(RemoveRequest user) {
+    if (HasPlayerSession(user.session_token)) {
 
-        SocketUser* user_obj = m_socket_users[session_token].get();
+        SocketUser* user_obj = m_socket_users[user.session_token].get();
+
+        // TODO: Send close message packet.
+
         uint16_t udp_id = user_obj->Get_UDP_ID();
         m_server->UserDisconnected(user_obj);
         user_obj->Close(false);
 
         m_user_mtx.lock();
-        m_socket_users.erase(session_token);
+        m_socket_users.erase(user.session_token);
         m_udp_id_map.erase(udp_id);
         m_user_mtx.unlock();
 
@@ -229,7 +258,7 @@ void AsyncServer::DoRemovePlayer(std::string user) {
     }
 }
 
-bool AsyncServer::HasPlayerSession(std::string session_key)
+bool AsyncServer::HasPlayerSession(const std::string& session_key)
 {
     return m_socket_users.find(session_key) != m_socket_users.end();
 }

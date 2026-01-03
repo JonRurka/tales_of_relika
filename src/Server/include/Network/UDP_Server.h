@@ -168,9 +168,7 @@ private:
 
 	uint16_t Get_New_Port();
 
-	bool has_port(uint16_t port) {
-		return m_connections.find(port) != m_connections.end();
-	}
+	bool has_port(uint16_t port);
 
 	static void RunService(udp_main_server* svr);
 
