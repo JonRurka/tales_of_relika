@@ -8,6 +8,8 @@
 #include "Shader.h"
 #include "Logger.h"
 
+#include "tracy/Tracy.hpp"
+
 #define NUM_LIGHTS() (m_light_data[0].int_options_1.w)
 
 #define DEFAULT_LINEAR_COEF 0.027f
@@ -40,6 +42,8 @@ std::unordered_map<int, std::weak_ptr<Light>> Light::m_linked_lights;
 
 void Light::Update_Lights(float dt)
 {
+	ZoneScopedN("Client Lights");
+
 	Flush();
 }
 

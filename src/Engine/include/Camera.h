@@ -12,6 +12,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 class Engine;
+class Graphics;
 class WorldObject;
 class Transform;
 class Framebuffer;
@@ -26,6 +27,8 @@ class Camera : public Component
 {
 	friend class WorldObject;
 	friend class Engine;
+	friend class Graphics;
+	
 public:
 	typedef std::shared_ptr<Camera> Shared;
 	typedef std::weak_ptr<Camera> Weak;

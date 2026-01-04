@@ -6,6 +6,7 @@
 #include "Light.h"
 #include "Transform.h"
 
+#include "tracy/Tracy.hpp"
 
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -147,6 +148,9 @@ void Scene::deactivate()
 
 void Scene::Update_internal(float dt)
 {
+	ZoneScopedN("Client Scene");
+
+
 	if (!m_active) {
 		return;
 	}

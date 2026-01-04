@@ -3,6 +3,8 @@
 #include "Logger.h"
 #include "Utilities.h"
 
+#include "tracy/Tracy.hpp"
+
 #define UPDATE_INTERVAL (1.f / 60.f)
 
 
@@ -172,6 +174,8 @@ namespace {
 
 void Physics::update_internal(float dt)
 {
+	ZoneScopedN("Client Physics");
+
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	float time = Utilities::Get_Time() - m_last_update;
 	if (time < UPDATE_INTERVAL) {

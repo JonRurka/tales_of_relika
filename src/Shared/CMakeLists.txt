@@ -1,14 +1,20 @@
 set(module "Shared")
 
 include_directories(include)
-
+include_directories(thirdparty/tracy_client/tracy)
 
 set(${module}_headers
 	include/Material_Types.h
+	
+	# include tracy header
+	thirdparty/tracy_client/tracy/Tracy.hpp
 )
 
 set(${module}_sources
 	src/Material_Types.cpp
+	
+	# include tracy source
+	thirdparty/tracy_client/TracyClient.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})
@@ -35,3 +41,4 @@ target_link_libraries(${module}
 )
 
 target_link_libraries(${module} Compute VoxelEngine Engine)
+#target_compile_definitions(${module} )

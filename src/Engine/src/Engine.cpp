@@ -11,6 +11,8 @@
 #include "Camera.h"
 #include "UI_Engine.h"
 
+#include "tracy/Tracy.hpp"
+
 #include <queue>
 
 #include "imgui.h"
@@ -134,11 +136,13 @@ void Engine::game_loop()
 	float lastFrame = (float)Utilities::Get_Time();
 	while (m_running && !Graphics::Instance().Window_Should_Close())
 	{
-		
+		ZoneScopedN("Client Main Loop");
+
 		process_input();
 		Physics::Instance().update_internal(m_deltaTime);
 
 		if (Graphics::Instance().Render_ImgUI()) {
+			ZoneScopedN("ImgUI begin frame.");
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
@@ -157,8 +161,10 @@ void Engine::game_loop()
 
 		Logger::Update();
 
+		ZoneNamedN(swapzone, "glfw Poll Events", true);
 		glfwPollEvents();
 
+		ZoneNamedN(endzone, "end frame", true);
 		float newTime = (float)Utilities::Get_Time();
 		m_deltaTime = newTime - lastFrame;
 		lastFrame = newTime;
@@ -173,6 +179,9 @@ void Engine::game_loop()
 		}
 		m_avg_deltaTime = time_sum / previous_frame_times.size();
 		m_fps = 1.0f / m_avg_deltaTime;
+
+		// Tracy end frame.
+		FrameMark;
 	}
 
 	cleanup();
@@ -198,4 +207,5 @@ void Engine::cleanup()
 	Logger::LogInfo(LOG_POS("cleanup"), "Destroy camera.");
 	Camera::StaticDestroy();
 	
+	Logger::LogInfo(LOG_POS("cleanup"), "Finished.");
 }

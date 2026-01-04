@@ -23,6 +23,7 @@
 #include <span>
 #include <vector>
 
+#include "tracy/Tracy.hpp"
 
 
 bool UI_Engine::Init()
@@ -306,6 +307,8 @@ void UI_Engine::Display(std::string doc_name)
 
 void UI_Engine::Update()
 {
+	ZoneScopedN("Client Rml UI");
+
 #if !defined(NO_UI)
 
 	if (!m_initialized)

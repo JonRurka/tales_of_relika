@@ -4,6 +4,8 @@
 #include "Graphics.h"
 #include "Logger.h"
 
+#include "tracy/Tracy.hpp"
+
 using namespace input;
 
 #define REPEAT_TIMER 0.1f
@@ -189,6 +191,8 @@ void Input::Init()
 
 void Input::update(float dt)
 {
+	ZoneScopedN("Client Input");
+
 	update_keys(dt);
 	update_mouse_move(dt);
 	update_mouse_press(dt);

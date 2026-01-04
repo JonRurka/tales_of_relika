@@ -14,6 +14,8 @@
 #include "Resources.h"
 #include "Texture.h"
 
+#include "tracy/Tracy.hpp"
+
 #include <math.h>
 
 
@@ -61,7 +63,7 @@ void Camera::Init()
 void Camera::Update(float dt)
 {
 	update_view_matrix();
-	render(dt);
+	//render(dt);
 }
 
 void Camera::Load(json data)
@@ -274,6 +276,8 @@ void Camera::render_skybox(float dt)
 		return;
 	}
 
+	ZoneScopedN("camera render skybox");
+
 	glDepthFunc(GL_LEQUAL);
 	m_cubemap_shader->use(false);
 
@@ -294,6 +298,8 @@ void Camera::render_skybox(float dt)
 
 void Camera::render_opaque(float dt)
 {
+	ZoneScopedN("camera render opaque");
+
 	m_alpha_renderers.clear();
 	m_alpha_renderers.reserve(Object().scene().Objects().size());
 
@@ -328,6 +334,8 @@ void Camera::render_opaque(float dt)
 
 void Camera::render_transparent(float dt)
 {
+	ZoneScopedN("camera render transparent");
+
 	for (const auto& elem : m_alpha_object_idx) {
 		int i = lround(elem.x);
 		assert(!m_alpha_renderers[i].expired());
@@ -338,6 +346,8 @@ void Camera::render_transparent(float dt)
 
 void Camera::render(float dt)
 {
+	ZoneScopedN("camera render");
+
 	assert(m_cam_framebuffer.get() != nullptr);
 	m_cam_framebuffer->Use(true);
 

@@ -11,6 +11,8 @@
 #include "Material_Processor.h"
 #include "Uniform_Material_Processor.h"
 
+#include "tracy/Tracy.hpp"
+
 #include "UI_Engine.h"
 
 Game* Game::m_instance{ nullptr };
@@ -127,4 +129,5 @@ void Game::init_block_types()
 
 void Game::Update(float dt)
 {
+	//ZoneScopedN("Client Game Base");
 }

@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <iostream>
 
+#include "tracy/Tracy.hpp"
+
 #define MESSAGE_BUFFER_SIZE 10 * 1024
 
 #include "opengl.h"
@@ -14,6 +16,36 @@
 
 Logger Logger::m_logger;
 std::mutex Logger::m_lock;
+
+namespace {
+	std::string to_display_string(Logger::Level log_level, const std::string& source, const std::string& message)
+	{
+		std::string type_str;
+		switch (log_level)
+		{
+		case Logger::Level::Debug:
+			type_str = "DEBUG";
+			break;
+		case Logger::Level::Info:
+			type_str = "INFO";
+			break;
+		case Logger::Level::Warning:
+			type_str = "WARNING";
+			break;
+		case Logger::Level::Error:
+			type_str = "ERROR";
+			break;
+		case Logger::Level::Fatal:
+			type_str = "FATAL_ERROR";
+			break;
+		}
+
+		char tmp_buffer[MESSAGE_BUFFER_SIZE];
+		sprintf(tmp_buffer, "%s::%s: %s\n", type_str.c_str(), source.c_str(), message.c_str());
+		std::string res = tmp_buffer;
+		return res;
+	}
+}
 
 void Logger::Log(Logger::Level level, std::string source, std::string message)
 {
@@ -25,6 +57,9 @@ void Logger::Log(Logger::Level level, std::string source, std::string message)
 	m_lock.lock();
 	m_logger.m_entries.push_back(entry);
 	m_lock.unlock();
+
+	std::string msg = to_display_string(level, source, message);
+	TracyMessageL(msg.c_str());
 
 	if (m_direct) {
 		Update();
@@ -155,29 +190,27 @@ void Logger::Update()
 	bool halt = false;
 	std::vector<Logger::LogEntry> entries = GetLogEntries();
 	for (const auto& entry : entries) {
-		std::string type_str;
-		switch (entry.log_level)
+		if (m_crash_on_warning && entry.log_level == Logger::Level::Warning)
 		{
-			case Logger::Level::Debug:
-				type_str = "DEBUG";
-				break;
-			case Logger::Level::Info:
-				type_str = "INFO";
-				break;
-			case Logger::Level::Warning:
-				type_str = "WARNING";
-				if (m_crash_on_warning) halt = true;
-				break;
-			case Logger::Level::Error:
-				type_str = "ERROR";
-				if (m_crash_on_error) halt = true;
-				break;
-			case Logger::Level::Fatal:
-				type_str = "FATAL_ERROR";
-				break;
+			halt = true;
+		}
+		if (m_crash_on_error && entry.log_level == Logger::Level::Error)
+		{
+			halt = true;
+		}
+		if (entry.log_level == Logger::Level::Fatal)
+		{
+			halt = true;
 		}
 
-		printf("%s::%s: %s\n", type_str.c_str(), entry.source.c_str(), entry.message.c_str());
+		//printf("%s::%s: %s\n", type_str.c_str(), entry.source.c_str(), entry.message.c_str());
+		std::string output = to_display_string(entry.log_level, entry.source, entry.message);
+		printf("%s", output.c_str());
+
+		if (halt)
+		{
+			assert(false);
+		}
 	}
 }
 

@@ -121,6 +121,8 @@ namespace {
         Graphics* user_ptr = (Graphics*)glfwGetWindowUserPointer(window);
         if (user_ptr == nullptr)
             return;
+        if (width == 0 || height == 0)
+            return;
         user_ptr->OnWindowResize(window, width, height);
     }
 

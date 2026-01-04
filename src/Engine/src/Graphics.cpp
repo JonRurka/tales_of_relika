@@ -29,6 +29,8 @@
 
 #include "input_events.h"
 
+#include "tracy/Tracy.hpp"
+
 #define RENDER_IMGUI false
 #define RENDER_DEBUG_LINES true
 #define RENDER_GAME_UI true
@@ -68,21 +70,24 @@ void Graphics::Init()
 
 	Viewport(0, 0, m_width, m_height);
 
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	m_io = ImGui::GetIO();
-	m_io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	m_io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	if (RENDER_IMGUI)
+	{
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		m_io = ImGui::GetIO();
+		m_io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+		m_io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
-	// Setup scaling
-	ImGuiStyle& style = ImGui::GetStyle();
-	style.ScaleAllSizes(w.window_scale());        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-	style.FontScaleDpi = w.window_scale();        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
+		// Setup scaling
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.ScaleAllSizes(w.window_scale());        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+		style.FontScaleDpi = w.window_scale();        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
 
-	// Setup Platform/Renderer backends
-	const char* glsl_version = "#version 450";
-	ImGui_ImplGlfw_InitForOpenGL(m_window, true);
-	ImGui_ImplOpenGL3_Init(glsl_version);
+		// Setup Platform/Renderer backends
+		const char* glsl_version = "#version 450";
+		ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+		ImGui_ImplOpenGL3_Init(glsl_version);
+	}
 
 	//m_UI = new UI_Engine();
 	bool ui_init_success = UI_Engine::Instance().Init();
@@ -177,6 +182,8 @@ void Graphics::Init()
 
 void Graphics::Update(float dt)
 {
+	ZoneScopedN("Client Graphics");
+
 	if (!m_initialized)
 		return;
 
@@ -199,6 +206,7 @@ void Graphics::Update(float dt)
 		}
 	}*/
 
+	ZoneNamedN(swapzone, "glfw Swap Buffers", true);
 	glfwSwapBuffers(m_window);
 
 
@@ -251,6 +259,8 @@ void Graphics::key_callback(GLFWwindow* window, int key, int scancode, int actio
 void Graphics::OnWindowResize(GLFWwindow* window, int width, int height)
 {
 	if (!m_initialized)
+		return;
+	if (width == 0 || height == 0)
 		return;
 	//Logger::LogDebug(LOG_POS("OnWindowResize"), "");
 	//Logger::LogDebug(LOG_POS("OnWindowResize"), "##### WINDOW RESIZE START #####");
@@ -335,10 +345,15 @@ void Graphics::draw_debug_line(glm::vec3 start, glm::vec3 stop, glm::vec3 color,
 
 void Graphics::render(float dt)
 {
+	ZoneScopedN("Client Graphics render");
+
 	if (!m_initialized)
 		return;
 
-	
+	if (Camera::Has_Active_Camera())
+	{
+		Camera::Get_Active().render(dt);
+	}
 
 	//ImGui::ShowDemoWindow();
 
@@ -350,8 +365,11 @@ void Graphics::render(float dt)
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+
 	if (RENDER_GAME_SCREEN) 
 	{
+		ZoneScopedN("Render Game Screen");
+
 		assert(m_screen_shader.get() != nullptr);
 		m_screen_shader->use(false);
 		m_screen_shader->Bind_Textures();
@@ -369,6 +387,8 @@ void Graphics::render(float dt)
 	// Debug Lines
 	if (RENDER_DEBUG_LINES)
 	{
+		ZoneScopedN("Render Debug Lines");
+
 		unsigned int vao;
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
@@ -418,6 +438,7 @@ void Graphics::render(float dt)
 	}
 
 	if (RENDER_IMGUI) {
+		ZoneScopedN("ImgUI render frame.");
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}

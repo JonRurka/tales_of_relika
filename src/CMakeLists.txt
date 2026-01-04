@@ -52,6 +52,9 @@ include_directories(VoxelEngine/include)
 include_directories(Engine/include)
 include_directories(Shared/include)
 
+# include tracy header project wide.
+include_directories(Shared/thirdparty/tracy_client)
+
 if (NOT SERVER_BUILD)
 	include_directories(Game/include)
 endif()

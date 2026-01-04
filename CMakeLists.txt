@@ -4,6 +4,9 @@ project(game CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 
+# tracy profiler macros
+add_compile_definitions(TRACY_ENABLE TRACY_ON_DEMAND TRACY_ONLY_LOCALHOST TRACY_NO_EXIT)
+
 add_compile_definitions(PHYSICS_BACKEND_BULLET=1)
 add_compile_definitions(PHYSICS_BACKEND_JOLT=2)
 add_compile_definitions(PHYSICS_BACKEND=PHYSICS_BACKEND_JOLT)

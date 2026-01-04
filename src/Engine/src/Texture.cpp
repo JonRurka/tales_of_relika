@@ -336,10 +336,19 @@ void Texture::Resize(int width, int height)
 		//Logger::LogDebug(LOG_POS("Resize"), "New Render Texture Width: (%i, %i)",
 		//	width, height);
 
+		std::vector<std::weak_ptr<Framebuffer>> refresh_framebuffers;
+
+		// Refresh removes framebuffer from m_linked_framebuffers and re-adds it, 
+		// so add to list to prevent modifying m_linked_framebuffers while iterating.
 		for (const auto& elem : m_linked_framebuffers)
 		{
-			assert(!elem.second.expired());
-			elem.second.lock()->Refresh(false);
+			refresh_framebuffers.push_back(elem.second);
+		}
+
+		for (const auto& elem : refresh_framebuffers)
+		{
+			assert(!elem.expired());
+			elem.lock()->Refresh(false);
 		}
 	}
 }
