@@ -7,7 +7,10 @@
 #include "Block_Type.h"
 #include "StructureDataStorage.h"
 
+
 #include <thread>
+
+#define ASYNC_THREAD_SLEEP 1000
 
 namespace {
 	int floor_to_int(float val) {
@@ -87,7 +90,8 @@ void StructureController::run_loop()
 {
 	m_async_run = true;
 	while (m_async_run) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		Utilities::Sleep(ASYNC_THREAD_SLEEP);
 		async_update();
 	}
 }

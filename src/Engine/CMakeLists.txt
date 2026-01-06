@@ -46,6 +46,10 @@ set(${module}_headers
 	include/window.h
 	include/WorldObject.h
 	include/GPUSort.h
+	include/Frustum.h
+	include/BoundingVolume.h
+	include/Plane.h
+	include/AABB.h
 	
 	include/LuaEngine.h
 	include/UI_Engine.h
@@ -94,6 +98,9 @@ set(${module}_sources
 	src/window.cpp
 	src/WorldObject.cpp
 	src/GPUSort.cpp
+	src/Frustum.cpp
+	src/Plane.cpp
+	src/AABB.cpp
 	
 	src/LuaEngine.cpp
 	src/UI_Engine.cpp

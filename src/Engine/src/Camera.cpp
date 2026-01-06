@@ -85,6 +85,11 @@ void Camera::OnDestroy()
 	destroy_skybox();
 }
 
+float Camera::Aspect()
+{
+	return Graphics::Width() / (float)Graphics::Height();
+}
+
 void Camera::Set_Skybox(std::shared_ptr<Cubemap> value)
 {
 	if (m_cubemap_mesh == nullptr) 
@@ -263,7 +268,7 @@ void Camera::update_view_matrix()
 
 void Camera::update_projection_matrix()
 {
-	m_projection = glm::perspective(glm::radians(m_FOV), Graphics::Width() / (float)Graphics::Height(), m_near, m_far);
+	m_projection = glm::perspective(glm::radians(m_FOV), Aspect(), m_near, m_far);
 }
 
 void Camera::render_skybox(float dt)
@@ -348,6 +353,8 @@ void Camera::render(float dt)
 {
 	ZoneScopedN("camera render");
 
+	refresh_frustum();
+
 	assert(m_cam_framebuffer.get() != nullptr);
 	m_cam_framebuffer->Use(true);
 
@@ -360,6 +367,36 @@ void Camera::render(float dt)
 	render_skybox(dt);
 
 	m_cam_framebuffer->Use(false);
+}
+
+void Camera::refresh_frustum()
+{
+	m_frustum = createFrustumFromCamera();
+}
+
+Frustum Camera::createFrustumFromCamera()
+{
+	Frustum frustum;
+
+	glm::vec3 front = Object().Get_Transform().Forward();
+	glm::vec3 right = Object().Get_Transform().Right();
+	glm::vec3 up = Object().Get_Transform().Up();
+	glm::vec cam_pos = Object().Get_Transform().Position();
+
+	const float halfVSide = m_far * tanf(m_FOV * .5f);
+	const float halfHSide = halfVSide * Aspect();
+	const glm::vec3 frontMultFar = m_far * front;
+
+	frustum.nearFace = { cam_pos + m_near * front, front };
+	frustum.farFace = { cam_pos + frontMultFar, -front };
+
+	frustum.rightFace = { cam_pos, glm::cross(frontMultFar - right * halfHSide, up) };
+	frustum.leftFace = { cam_pos, glm::cross(up, frontMultFar + right * halfHSide) };
+
+	frustum.topFace = { cam_pos, glm::cross(right, frontMultFar - up * halfVSide) };
+	frustum.bottomFace = { cam_pos, glm::cross(frontMultFar + up * halfVSide, right) };
+
+	return frustum;
 }
 
 void Camera::StaticDestroy()

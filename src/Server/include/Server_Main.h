@@ -82,9 +82,11 @@ private:
 
 	static QueueLengths m_queue_lengths;
 
+	
+
 public:
 
-	
+	static void Sleep(int ns);
 
 	static Server_Main* Instance() {
 		return m_instance;

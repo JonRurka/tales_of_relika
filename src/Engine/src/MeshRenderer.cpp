@@ -115,6 +115,37 @@ void MeshRenderer::Use()
 	}
 }
 
+AABB MeshRenderer::Bounds()
+{
+	Transform trans = m_object.lock()->Get_Transform();
+	AABB bounds = m_object.lock()->Get_MeshRenderer().Bounds();
+
+	const glm::vec3 globalCenter = trans.Position();
+	const glm::vec3 extents = bounds.size;
+
+	// Scaled orientation
+	const glm::vec3 right = trans.Right() * extents.x;
+	const glm::vec3 up = trans.Up() * extents.y;
+	const glm::vec3 forward = trans.Forward() * extents.z;
+
+	const float newIi = 
+		std::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, right)) +
+		std::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, up)) +
+		std::abs(glm::dot(glm::vec3{ 1.f, 0.f, 0.f }, forward));
+
+	const float newIj = 
+		std::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, right)) +
+		std::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, up)) +
+		std::abs(glm::dot(glm::vec3{ 0.f, 1.f, 0.f }, forward));
+
+	const float newIk = 
+		std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, right)) +
+		std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, up)) +
+		std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, forward));
+
+	return AABB(globalCenter, glm::vec3(newIi, newIj, newIk));
+}
+
 void MeshRenderer::Draw(float dt)
 {
 	update_model_matrix();

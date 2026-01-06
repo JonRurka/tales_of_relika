@@ -11,6 +11,8 @@
 #include "WorldPhysics.h"
 #include "ServerTerrainChunk.h"
 
+#include "tracy/Tracy.hpp"
+
 //#include "glaze/glaze.hpp" 
 
 #include <nlohmann/json.hpp>
@@ -19,6 +21,8 @@ using json = nlohmann::json;
 #define ORIENTATION_SEND_RATE ((1.0 / 20.0)) // Seconds
 #define INITIAL_CHUNK_SIM_RADIUS 4
 #define INITIAL_CHUNK_SIM_DEPTH 4
+
+#define WORLD_THREAD_SLEEP_MICRO_SEC 1000
 
 					  
 void World::Init()
@@ -308,18 +312,32 @@ void World::load(uint64_t id)
 void World::GameLoop()
 {
 	while (m_running) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+		ZoneScopedN("World Main Loop");
 
 		double now = Utilities::Get_Time();
 		float delta_time = (now - m_last_frame);
-		m_last_frame = now;
+
+		//double sleep_st = Utilities::Get_Time();
+		Server_Main::Sleep(WORLD_THREAD_SLEEP_MICRO_SEC);
+		//double sleep_end = Utilities::Get_Time();
+		//Logger::LogDebug(LOG_POS("GameLoop"), "frame: %lf", sleep_end - sleep_st);
 
 		AsynUpdate(delta_time);
+		
+		m_last_frame = now;
+
+		
+		FrameMark;
+
+		
 	}
 }
 
 void World::AsynUpdate(float dt)
 {
+	ZoneScopedN("World AsynUpdate");
+
 	m_world_terrain->Update(dt);
 	m_world_physics->Update(dt);
 

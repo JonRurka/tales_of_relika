@@ -3,6 +3,7 @@
 #include "Utilities.h"
 #include "WorldPhysics.h"
 #include "Logger.h"
+#include "Server_Main.h"
 
 ColliderGenerator* ColliderGenerator::m_instance{nullptr};
 
@@ -74,7 +75,7 @@ void ColliderGenerator::run_worker()
 
 	while (m_running) 
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		Server_Main::Sleep(1000); // micro seconds (1ms)
 		do_process();
 	}
 }

@@ -7,6 +7,8 @@
 #include "../HashHelper.h"
 #include <thread>
 
+#include "tracy/Tracy.hpp"
+
 AsyncServer* AsyncServer::m_instance = nullptr;
 
 AsyncServer::AsyncServer(Server_Main* server)
@@ -35,6 +37,7 @@ AsyncServer::AsyncServer(Server_Main* server)
 
 void AsyncServer::Update(float dt)
 {
+    ZoneScopedN("Server AsyncServer");
     //Logger::Log(LOG_POS("Update"), "server update.");
 
     while (!m_queue_user_add.empty()) {
@@ -91,11 +94,12 @@ void AsyncServer::Process_Async(AsyncServer* svr) {
     svr->m_run_async_commands = true;
 
     uint64_t last_command_processed = 0;
-    int ns_wait = 1000;
+    int micro_wait = 1000;
 
     while (svr->m_run) {
 
-        std::this_thread::sleep_for(std::chrono::nanoseconds(ns_wait));
+        //std::this_thread::sleep_for(std::chrono::nanoseconds(ns_wait));
+        Server_Main::Sleep(micro_wait);
 
         //Logger::LogDebug(LOG_POS("Process_Async"), "We did receive a command on async thread. %i", svr->m_async_command_queue.size());
 
@@ -114,13 +118,13 @@ void AsyncServer::Process_Async(AsyncServer* svr) {
         last_command_processed = now;
 
         if (time_diff_ms > 10000) { // no command in 10 seconds
-            ns_wait = 1000; // 1 ms
+            micro_wait = 1000; // 1 ms
         }
         else if (time_diff_ms > 1000) { // no command in 1 second
-            ns_wait = 100;
+            micro_wait = 100; // 0.1 ms
         }
         else {
-            ns_wait = 1;
+            micro_wait = 1; // 1 micro second
         }
 
         while (!current_command_queue.empty()) {

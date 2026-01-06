@@ -9,6 +9,8 @@
 #include "Player.h"
 #include "World.h"
 
+#include "tracy/Tracy.hpp"
+
 WorldController* WorldController::m_instance{nullptr};
 
 WorldController::WorldController()
@@ -29,6 +31,8 @@ void WorldController::Init()
 
 void WorldController::Update(float dt)
 {
+	ZoneScopedN("Server WorldController");
+
 }
 
 void WorldController::RoutWorldNetCommand(SocketUser& user, Data data)

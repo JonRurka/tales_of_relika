@@ -4,6 +4,7 @@
 #include "SocketUser.h"
 #include "../Server_Main.h"
 #include "../HashHelper.h"
+#include "Utilities.h"
 
 udp_main_server* udp_main_server::m_instance = nullptr;
 
@@ -178,7 +179,8 @@ void udp_server::RunService(udp_server* svr)
 	svr->start_send();
 	while (svr->m_running) {
 		svr->io_service_.run();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		Utilities::Sleep(1000); // micro seconds (1ms)
 	}
 	Logger::Log("UDP io_service stopped running.");
 	
@@ -206,7 +208,7 @@ void udp_main_server::RunService(udp_main_server* svr)
 	Logger::Log(LOG_POS("RunService"), "Running UPD io_service");
 	while (svr->m_run) {
 		svr->io_service_.run();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		Server_Main::Sleep(1000); // micro seconds (1ms)
 	}
 	Logger::Log(LOG_POS("RunService"), "UDP io_service stopped running.");
 

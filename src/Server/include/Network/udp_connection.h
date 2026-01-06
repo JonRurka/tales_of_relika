@@ -26,6 +26,10 @@ using boost::asio::ip::address_v4;
 #define MAX_UDP_SIZE UINT16_MAX
 #endif
 
+#ifndef ASYNC_THREAD_SLEEP
+#define ASYNC_THREAD_SLEEP 1000
+#endif
+
 class udp_connection {
 	friend class udp_main_server;
 
@@ -111,16 +115,7 @@ private:
 		m_thread_service = std::thread(RunService, this);
 	}
 
-	static void RunSend(udp_connection* srv) {
-		while (srv->m_running) {
-			//Logger::Log("Run send");
-			//srv->start_send();
-			//srv->m_sends_semaphore_1.acquire();
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-			srv->send_messages();
-
-		}
-	}
+	static void RunSend(udp_connection* srv);
 
 	void start_send();
 

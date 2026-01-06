@@ -5,6 +5,8 @@
 
 #include "dynamic_compute.h"
 
+#include "Frustum.h"
+
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -22,6 +24,8 @@ class Cubemap;
 class Mesh;
 class Shader;
 class GPUSort;
+
+using namespace BoundsVolume;
 
 class Camera : public Component
 {
@@ -53,6 +57,8 @@ public:
 		m_far = value;
 		update_projection_matrix();
 	}
+
+	static float Aspect();
 
 	glm::vec4 Clear_Color() { return m_clear_color; }
 	void Clear_Color(glm::vec4 value) { m_clear_color = value; }
@@ -101,6 +107,8 @@ private:
 
 	GPUSort* m_sort{ nullptr };
 
+	Frustum m_frustum;
+
 	//Transform* m_transform{ nullptr };
 
 	static std::weak_ptr<Camera> m_active_camera;
@@ -117,6 +125,9 @@ private:
 	void render_opaque(float dt);
 	void render_transparent(float dt);
 	void render(float dt);
+
+	void refresh_frustum();
+	Frustum createFrustumFromCamera();
 
 	// Called by the engine on shutdown.
 	static void StaticDestroy();

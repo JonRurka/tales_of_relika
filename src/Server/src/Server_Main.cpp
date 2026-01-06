@@ -20,10 +20,22 @@
 
 #include "ColliderGenerator.h"
 
+#include "tracy/Tracy.hpp"
+#include <algorithm>
+
+#ifdef WIN32
+#define MIN_SLEEP_TIME 10000
+#else
+#define MIN_SLEEP_TIME 1
+#endif
+
 #define COLLIDER_GEN_WORKERS 4
+#define MAIN_THREAD_SLEEP_MICRO_SEC 1000
  
 Server_Main* Server_Main::m_instance = nullptr;
 Server_Main::QueueLengths Server_Main::m_queue_lengths{};
+
+
 
 void Server_Main::UserConnected(boost::shared_ptr<SocketUser> socket_user)
 {
@@ -275,13 +287,18 @@ void Server_Main::Loop()
 	lastTime = timer.elapsed();
 	while (m_running)
 	{
+		ZoneScopedN("Server Main Loop");
+
 		double curTime = timer.elapsed();
 		double dt = curTime - lastTime;
 		lastTime = curTime;
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		Sleep(MAIN_THREAD_SLEEP_MICRO_SEC);
 		Update(dt);
+
 		frameCounter++;
+
+		FrameMark;
 	}
 }
 
@@ -289,6 +306,8 @@ void Server_Main::Update(double dt)
 {
 	if (!m_running)
 		return;
+
+	ZoneScopedN("Server Update");
 
 	m_com_executer->Process();
 	m_net_server->Update(dt);
@@ -325,8 +344,10 @@ void Server_Main::Update(double dt)
 		m_last_memory_print_time = now;
 	}
 
-
-	Logger::Update(); // TODO: decide if this should be called
+	if (m_options.Type == Server_Type::Remote)
+	{
+		Logger::Update();
+	}
 
 }
 
@@ -349,6 +370,12 @@ void Server_Main::Dispose()
 	{
 		m_loop_thread.join();
 	}
+}
+
+void Server_Main::Sleep(int micro_s)
+{
+	ZoneScopedN("Sleep");
+	Utilities::Sleep(std::max(micro_s, MIN_SLEEP_TIME));
 }
 
 uint64_t Server_Main::GetMemoryUsage()

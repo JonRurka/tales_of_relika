@@ -8,6 +8,9 @@
 #include "Renderer.h"
 
 #include "Shader.h"
+#include "AABB.h"
+
+using namespace BoundsVolume;
 
 class Mesh;
 class Shader;
@@ -38,6 +41,8 @@ public:
 	void Set_Mesh(std::shared_ptr<Mesh> value, bool activate_mesh = true);
 
 	void Use();
+
+	AABB Bounds();
 
 	void Draw(float dt) override;
 

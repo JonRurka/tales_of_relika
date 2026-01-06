@@ -44,7 +44,7 @@ public:
 	static void Set_Crashing_Errors(bool value) { m_crash_on_error = value; }
 	static void Set_Crashing_Warnings(bool value) { m_crash_on_warning = value; }
 
-	static void Update();
+	static void Update(bool force = false);
 
 private:
 

@@ -62,7 +62,7 @@ void Logger::Log(Logger::Level level, std::string source, std::string message)
 	TracyMessageL(msg.c_str());
 
 	if (m_direct) {
-		Update();
+		Update(true);
 	}
 }
 
@@ -185,8 +185,11 @@ std::vector<Logger::LogEntry> Logger::GetLogEntries()
 	return res;
 }
 
-void Logger::Update()
+void Logger::Update(bool force)
 {
+	if (m_direct && !force)
+		return;
+
 	bool halt = false;
 	std::vector<Logger::LogEntry> entries = GetLogEntries();
 	for (const auto& entry : entries) {

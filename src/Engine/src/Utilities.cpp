@@ -64,6 +64,94 @@ namespace {
 	}
 }
 
+#ifdef WIN32
+#include <windows.h>
+#include <algorithm>
+
+#define MIN_WIN_SLEEP_TIME  500
+
+namespace {
+	int micro_sleep(long long usec)
+	{
+		// https://stackoverflow.com/a/77941601/1513608
+		usec = std::max(usec, (long long)MIN_WIN_SLEEP_TIME);
+
+		if (usec <= 0)
+		{
+			SwitchToThread();
+			return -1;
+		}
+
+		// Up to last busywait/10 usec are busy waited
+		const int busywait = 2000; 
+
+		LARGE_INTEGER t0, freq;
+		QueryPerformanceCounter(&t0);
+		QueryPerformanceFrequency(&freq);
+		if (usec - busywait > 0)
+		{
+			static bool resolutionSet = false;
+			if (!resolutionSet)
+			{
+				HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+				if (ntdll)
+				{
+					auto NtSetTimerResolution = (LONG(__stdcall*)(ULONG, BOOLEAN, PULONG))
+						GetProcAddress(ntdll, "NtSetTimerResolution");
+					if (NtSetTimerResolution)
+					{
+						ULONG actualResolution;
+						NtSetTimerResolution(1, true, &actualResolution);
+					}
+				}
+				resolutionSet = true;
+			}
+			std::this_thread::sleep_for(std::chrono::microseconds(usec - busywait));
+		}
+		for (;;) // busy wait the remainder
+		{
+			LARGE_INTEGER t1;
+			QueryPerformanceCounter(&t1);
+			long long waited = ((t1.QuadPart - t0.QuadPart) / freq.QuadPart) * 1000000LL +
+				((t1.QuadPart - t0.QuadPart) % freq.QuadPart) * 1000000LL / freq.QuadPart;
+			if (waited >= usec)
+				break;
+			if (usec - waited > busywait / 10) // full busy wait last 200 usec
+				SwitchToThread();
+		}
+		return 0;
+	}
+}
+
+#else
+#include <time.h>
+#include <errno.h> 
+
+namespace {
+	/* msleep(): Sleep for the requested number of milliseconds. */
+	int micro_sleep(long msec)
+	{
+		struct timespec ts;
+		int res;
+
+		if (msec < 0)
+		{
+			errno = EINVAL;
+			return -1;
+		}
+
+		ts.tv_sec = 0;
+		ts.tv_nsec = msec * 1000;
+
+		do {
+			res = nanosleep(&ts, &ts);
+		} while (res && errno == EINTR);
+
+		return res;
+	}
+}
+#endif
+
 
 std::string Utilities::File_Seperator()
 {
@@ -654,6 +742,11 @@ OpenCL_Device_Info Utilities::Get_Recommended_Device()
 int Utilities::Hash_Chunk_Coord(int x, int y, int z)
 {
 	return (x << 16) ^ (y << 8) ^ z;
+}
+
+int Utilities::Sleep(long long micro_sec)
+{
+	return micro_sleep(micro_sec);
 }
 
 

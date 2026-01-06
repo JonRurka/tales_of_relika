@@ -80,6 +80,8 @@ public:
 
 	static int Hash_Chunk_Coord(int x, int y, int z);
 
+	static int Sleep(long long micro_sec);
+
 	enum class Vertex_Limit_Mode : int 
 	{
 		Max = UINT16_MAX,

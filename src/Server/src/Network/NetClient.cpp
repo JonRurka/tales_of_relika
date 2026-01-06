@@ -4,10 +4,13 @@
 
 #include "Logger.h"
 #include "BufferUtils.h"
+#include "Utilities.h"
 
 
 #define TIMEOUT_MS 10000
 #define PING_SEND_MS 1000
+
+#define SLEEP_TIME 5000
 
 namespace {
     std::array<uint8_t, UINT16_MAX> g_tcp_message;
@@ -275,7 +278,7 @@ void NetClient::SendLoop(NetClient* obj_ptr)
     NetClient* clnt = (NetClient*)obj_ptr;
     while (clnt->m_run)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        Utilities::Sleep(SLEEP_TIME); // micro seconds (1ms)
         clnt->handle_sends();
     }
 }

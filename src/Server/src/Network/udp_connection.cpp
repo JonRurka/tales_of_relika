@@ -4,6 +4,7 @@
 #include "AsyncServer.h"
 #include "SocketUser.h"
 #include "../Server_Main.h"
+#include "Utilities.h"
 
 void udp_connection::Close()
 {
@@ -38,6 +39,18 @@ void udp_connection::Send(udp::endpoint remote_endpoint, std::vector<uint8_t> se
 
 	//Logger::Log("Push UDP message");
 	m_sends_semaphore_2.release();
+}
+
+void udp_connection::RunSend(udp_connection* srv)
+{
+	while (srv->m_running) {
+		//Logger::Log("Run send");
+		//srv->start_send();
+		//srv->m_sends_semaphore_1.acquire();
+		Server_Main::Sleep(ASYNC_THREAD_SLEEP);
+		srv->send_messages();
+
+	}
 }
 
 void udp_connection::start_send()
@@ -147,7 +160,7 @@ void udp_connection::RunService(udp_connection* svr)
 	while (svr->m_running && svr->m_udp_server->m_run) {
 		//svr->m_own_io_service.run();
 		svr->m_udp_server->io_service_.run();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		Utilities::Sleep(1000); // micro seconds (1ms)
 	}
 	Logger::Log(LOG_POS("RunService"), "UDP io_service stopped running.");
 }

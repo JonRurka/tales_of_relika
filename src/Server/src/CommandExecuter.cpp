@@ -1,6 +1,10 @@
 #include "CommandExecuter.h"
 #include "Server_Main.h"
 #include "Logger.h"
+#include "Utilities.h"
+#include "Server_Main.h"
+
+#include "tracy/Tracy.hpp"
 
 CommandExecuter::CommandExecuter()
 {
@@ -26,7 +30,7 @@ void CommandExecuter::Loop()
     do
     {
         Process();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        Server_Main::Sleep(1000); // micro seconds (1ms)
     } while (running);
 
 }
@@ -35,6 +39,8 @@ void CommandExecuter::Process()
 {
     if (!running)
         return;
+
+    ZoneScopedN("Server CommandExecuter");
 
     char c;
 

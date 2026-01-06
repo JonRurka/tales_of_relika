@@ -8,6 +8,10 @@
 #include <vector>
 #include <string>
 
+#include "AABB.h"
+
+using namespace BoundsVolume;
+
 class Model;
 
 namespace DynamicCompute {
@@ -135,6 +139,10 @@ public:
 		return m_num_indices > 0;
 	}
 
+	AABB Bounds() const { return m_bounds; }
+	void SetBounds(AABB new_bounds) { m_bounds = new_bounds; }
+	AABB CalculateBounds();
+		
 	size_t Num_Vertices() { return m_num_vertices; }
 	size_t Num_Indices() { return m_num_indices; }
 
@@ -178,6 +186,8 @@ private:
 
 	glm::vec3 m_min;
 	glm::vec3 m_max;
+
+	AABB m_bounds;
 
 	// Number of floats, not bytes
 	size_t m_float_stride {11};

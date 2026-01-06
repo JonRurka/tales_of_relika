@@ -145,6 +145,19 @@ void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size)
 
 }
 
+AABB Mesh::CalculateBounds()
+{
+	assert(m_vertices.size() > 0);
+
+	m_bounds = AABB(m_vertices[0], glm::vec3(0));
+	for (int i = 0; i < m_vertices.size(); i++)
+	{
+		m_bounds.expand_to(m_vertices[i]);
+	}
+
+	return m_bounds;
+}
+
 void Mesh::Set_Raw_Vertex_Data(std::vector<float> data, bool delete_old)
 {
 	if (delete_old)
