@@ -166,7 +166,7 @@ public:
 
 	void Generate_Normals();
 
-	void Draw(GLenum mode = GL_TRIANGLES);
+	bool Draw(GLenum mode = GL_TRIANGLES);
 
 	void Dispose();
 

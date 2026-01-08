@@ -95,7 +95,7 @@ public:
     static std::shared_ptr<Shader> Get_Shader(uint64_t id);
     static std::shared_ptr<Shader> Get_Shader(std::string name);
     static std::vector<uint64_t> Get_Shader_ID_List();
-    static std::vector<std::weak_ptr<Renderer>> Get_Shader_Renderer_List(uint64_t id);
+    static std::vector<std::weak_ptr<Renderer>>& Get_Shader_Renderer_List(uint64_t id);
     static std::vector<std::vector<std::weak_ptr<Renderer>>> Get_Shader_Renderer_List();
 
 

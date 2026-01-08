@@ -50,6 +50,8 @@ private:
 	int m_usages{ 0 };
 	bool m_keep_alive{ false };
 
+	double m_test_timer{ 0 };
+
 	std::unordered_map<uint64_t, ColliderGenerator::Request*> m_collider_requests;
 	uint64_t m_col_request_num{ 0 };
 	uint64_t m_last_applied_col{ 0 };

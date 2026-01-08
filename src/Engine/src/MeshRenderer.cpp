@@ -9,6 +9,8 @@
 #include "Graphics.h"
 #include "Logger.h"
 
+#include "tracy/Tracy.hpp"
+
 MeshRenderer::MeshRenderer(std::weak_ptr<WorldObject> obj)
 {
 	m_object = obj;
@@ -118,9 +120,9 @@ void MeshRenderer::Use()
 AABB MeshRenderer::Bounds()
 {
 	Transform trans = m_object.lock()->Get_Transform();
-	AABB bounds = m_object.lock()->Get_MeshRenderer().Bounds();
+	AABB bounds = m_mesh->Bounds();
 
-	const glm::vec3 globalCenter = trans.Position();
+	const glm::vec3 globalCenter = trans.Position() + bounds.get_position();
 	const glm::vec3 extents = bounds.size;
 
 	// Scaled orientation
@@ -146,24 +148,46 @@ AABB MeshRenderer::Bounds()
 	return AABB(globalCenter, glm::vec3(newIi, newIj, newIk));
 }
 
-void MeshRenderer::Draw(float dt)
+bool MeshRenderer::Draw(std::weak_ptr<Camera> cam, float dt)
 {
+	ZoneScopedN("MeshRenderer::Draw");
+
+	assert(!cam.expired());
+
+	if (!Active())
+	{
+		return true;
+	}
+
+	if (do_frustrum_cull)
+	{
+		if (!Bounds().isOnFrustum(cam.lock()->GetFrustum()))
+		{
+			return false;
+		}
+	}
+
 	update_model_matrix();
+
 	m_source_material->Internal_Update(dt, true);
 	m_bound_material->Internal_Update(dt);
 
 	bool enable_transparency = m_bound_material->Transparent();// && !graphics->Active_Options().transparency_enabled;
+
+
 
 	if (enable_transparency) {
 		//glEnable(GL_BLEND);
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
-	m_mesh->Draw();
+	bool res = m_mesh->Draw();
 
 	if (enable_transparency) {
 		//glDisable(GL_BLEND);
 	}
+
+	return res;
 }
 
 

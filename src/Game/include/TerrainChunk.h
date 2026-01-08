@@ -36,6 +36,8 @@ public:
 
 	bool Collision_Enabled();
 
+	void DisableCollision();
+
 	void Refresh();
 
 protected:
@@ -55,7 +57,10 @@ private:
 	bool m_assigned{ false };
 	bool m_has_collision{ false };
 	bool m_should_despawn{ false };
+	int m_collision_distance{ 0 };
 	glm::vec4* m_col_vert_data{ nullptr };
+
+	double m_test_timer = 0;
 
 	WorldObject::Weak m_opaque_chunk_obj;
 	Mesh::Shared m_voxel_opaque_mesh;
@@ -67,7 +72,7 @@ private:
 
 	bool test_despawn();
 
-	void draw_debug_cube();
+	void draw_debug_cube(glm::vec3 color = glm::vec3(0, 1, 0));
 
 	void update_collision_mesh(IComputeBuffer* vert_buffer, unsigned int* tris_data, int num_vertices);
 

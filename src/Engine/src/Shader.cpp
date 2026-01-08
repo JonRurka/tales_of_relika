@@ -555,7 +555,7 @@ std::vector<uint64_t> Shader::Get_Shader_ID_List()
     return keys;
 }
 
-std::vector<std::weak_ptr<Renderer>> Shader::Get_Shader_Renderer_List(uint64_t id)
+std::vector<std::weak_ptr<Renderer>>& Shader::Get_Shader_Renderer_List(uint64_t id)
 {
     return m_renderers[id];
 }

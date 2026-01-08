@@ -5,6 +5,8 @@
 
 #include "Logger.h"
 
+#include "tracy/Tracy.hpp"
+
 #ifdef WIN32
 //#define WIN32_LEAN_AND_MEAN
 //#include <Windows.h>
@@ -261,8 +263,10 @@ void Mesh::Generate_Normals()
 	sync_vertices(Mesh::Vert_Update_Mode::NORMALS);
 }
 
-void Mesh::Draw(GLenum mode)
+bool Mesh::Draw(GLenum mode)
 {
+	ZoneScopedN("Mesh::Draw");
+
 	glBindVertexArray(VAO);
 
 	//printf("Process mesh: %s, verts: %i, indices: %i\n", m_name.c_str(), (int)m_num_vertices, (int)m_num_indices);
@@ -294,6 +298,8 @@ void Mesh::Draw(GLenum mode)
 	}
 
 	glBindVertexArray(0);
+
+	return true;
 }
 
 void Mesh::Dispose()

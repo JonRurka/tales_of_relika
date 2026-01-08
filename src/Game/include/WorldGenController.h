@@ -121,6 +121,21 @@ public:
 
 	glm::ivec3 Target_Chunk();
 
+	glm::vec3 ChunkMeterSize() const
+	{
+		return glm::vec3(m_chunkMeterSizeX, m_chunkMeterSizeY, m_chunkMeterSizeZ);
+	}
+
+	glm::vec3 ChunkSize() const
+	{
+		return glm::vec3(m_chunk_size_x, m_chunk_size_y, m_chunk_size_z);
+	}
+
+	double VoxelsPerMeter() const
+	{
+		return m_voxelsPerMeter;
+	}
+
 	bool Voxel_Engine_Enabled() { return m_voxel_engine_enabled; }
 
 	static glm::ivec3 WorldPosToChunkCoord(glm::fvec3 pos) { return m_Instance->worldPosToChunkCoord(pos); }

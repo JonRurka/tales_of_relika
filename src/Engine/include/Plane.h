@@ -40,6 +40,8 @@ namespace BoundsVolume
 		float distance_to(const glm::vec3& p_point) const;
 		bool has_point(const glm::vec3& p_point, float p_tolerance = CMP_EPSILON) const;
 
+		float getSignedDistanceToPlane(const glm::vec3& point) const;
+
 		/* intersections */
 
 		bool intersect_3(const Plane& p_plane1, const Plane& p_plane2, glm::vec3* r_result = nullptr) const;

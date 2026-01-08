@@ -896,12 +896,21 @@ void AABB::grow_by(float p_amount) {
 
 bool AABB::isOnOrForwardPlane(const Plane& plane) const
 {
-	return false;
+	// Compute the projection interval radius of b onto L(t) = b.c + t * p.n
+	const float r = size.x * std::abs(plane.normal.x) +
+		size.y * std::abs(plane.normal.y) + size.z * std::abs(plane.normal.z);
+
+	return -r <= plane.getSignedDistanceToPlane(position);
 }
 
 bool AABB::isOnFrustum(const Frustum& camFrustum) const
 {
-	return false;
+	return (isOnOrForwardPlane(camFrustum.leftFace) &&
+			isOnOrForwardPlane(camFrustum.rightFace) &&
+			isOnOrForwardPlane(camFrustum.topFace) &&
+			isOnOrForwardPlane(camFrustum.bottomFace) &&
+			isOnOrForwardPlane(camFrustum.nearFace) &&
+			isOnOrForwardPlane(camFrustum.farFace));
 }
 
 /*AABB::operator String() const {

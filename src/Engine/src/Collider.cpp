@@ -46,6 +46,7 @@ void Collider::base_Update(float dt)
 void Collider::Destroy_Collider()
 {
 	if (Has_Rigidbody()) {
+		Logger::LogDebug(LOG_POS("Destroy_Collider"), "Remove rigidbody");
 		remove_rigidbody();
 	}
 

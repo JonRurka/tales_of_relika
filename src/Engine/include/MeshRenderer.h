@@ -44,7 +44,17 @@ public:
 
 	AABB Bounds();
 
-	void Draw(float dt) override;
+	void FrustumCull(bool enabled)
+	{
+		do_frustrum_cull = enabled;
+	}
+
+	bool FrustumCull()
+	{
+		return do_frustrum_cull;
+	}
+
+	bool Draw(std::weak_ptr<Camera> cam, float dt) override;
 
 private:
 
@@ -63,6 +73,7 @@ private:
 	bool has_default_mesh = true;
 	bool has_shader = false;
 	bool has_material = false;
+	bool do_frustrum_cull = true;
 
 	void update_model_matrix();
 

@@ -69,6 +69,11 @@ public:
 
 	Texture& FrameTexture();
 
+	Frustum& GetFrustum()
+	{
+		return m_frustum;
+	}
+
 	glm::mat4 Projection_Matrix() { return m_projection; }
 	glm::mat4 View_Matrix() { return m_view; }
 

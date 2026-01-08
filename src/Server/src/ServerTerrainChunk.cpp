@@ -16,6 +16,14 @@ void ServerTerrainChunk::Update(float dt)
 	if (!m_assigned)
 		return;
 
+	/*m_test_timer -= dt;
+	if (m_test_timer <= 0)
+	{
+		//Logger::LogDebug(LOG_POS("Unassign"), "Debug Despawning chunk: (%d, %d, %d)",
+		//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
+		//m_usages = 0;
+		//m_keep_alive = false;
+	}*/
 	
 	process_collider();
 	test_removal();
@@ -26,11 +34,15 @@ void ServerTerrainChunk::Assign(glm::ivec3 chunk_coord)
 	m_assigned = true;
 	m_chunk_coords = chunk_coord;
 
+	m_test_timer = 10;
+
 	m_chunk_world_pos = m_controller->ChunkCoordToWorldPos(chunk_coord);
 }
 
 void ServerTerrainChunk::Unassign() 
 {
+	
+
 	m_assigned = false;
 	m_usages = 0;
 	m_keep_alive = false;
@@ -133,6 +145,7 @@ void ServerTerrainChunk::apply_collider(ColliderGenerator::Request* req)
 #elif (PHYSICS_BACKEND==PHYSICS_BACKEND_JOLT)
 
 	m_opaque_shape = req->Mesh_Shape();
+
 
 	m_opaque_rigidbody = m_world_physics->GetBodyInterface().CreateBody(BodyCreationSettings(m_opaque_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
 	m_world_physics->GetBodyInterface().AddBody(m_opaque_rigidbody->GetID(), EActivation::DontActivate);

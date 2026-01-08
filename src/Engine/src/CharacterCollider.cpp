@@ -172,7 +172,7 @@ void CharacterCollider::OnRefresh()
 	mSettings->mCharacterPadding = sCharacterPadding;
 	mSettings->mPenetrationRecoverySpeed = sPenetrationRecoverySpeed;
 	mSettings->mPredictiveContactDistance = sPredictiveContactDistance;
-	mSettings->mSupportingVolume = Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
+	mSettings->mSupportingVolume =JPH::Plane(Vec3::sAxisY(), -cCharacterRadiusStanding); // Accept contacts that touch the lower sphere of the capsule
 	mSettings->mEnhancedInternalEdgeRemoval = sEnhancedInternalEdgeRemoval;
 	mSettings->mInnerBodyShape = sCreateInnerBody ? mInnerStandingShape : nullptr;
 	mSettings->mInnerBodyLayer = Layers::MOVING;

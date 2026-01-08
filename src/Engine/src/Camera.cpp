@@ -313,11 +313,14 @@ void Camera::render_opaque(float dt)
 	
 	glm::vec3 cam_pos = Object().Get_Transform().Position();
 
+	int total_obj = 0;
+	int num_drawn = 0;
+
 	int i = 0;
-	std::vector<uint64_t> shader_ids = Shader::Get_Shader_ID_List();
+	const std::vector<uint64_t>& shader_ids = Shader::Get_Shader_ID_List();
 	for (const auto& ID : shader_ids) {
 		Shader& shader = *Shader::Get_Shader(ID);
-		std::vector<std::weak_ptr<Renderer>> renderers = Shader::Get_Shader_Renderer_List(ID);
+		const std::vector<std::weak_ptr<Renderer>>& renderers = Shader::Get_Shader_Renderer_List(ID);
 		if (renderers.size() <= 0)
 			continue;
 		shader.use(true);
@@ -331,10 +334,19 @@ void Camera::render_opaque(float dt)
 				m_alpha_object_idx.push_back(a_map);
 				continue;
 			}
-			renderer.Draw(dt);
+
+			bool did_draw = renderer.Draw(std::dynamic_pointer_cast<Camera>(shared_from_this()), dt);
+
+			total_obj++;
+			if (did_draw)
+			{
+				num_drawn++;
+			}
 		}
 
 	}
+
+	//Logger::LogDebug(LOG_POS("render_opaque"), "Drawn: %d \ %d objects", num_drawn, total_obj);
 }
 
 void Camera::render_transparent(float dt)
@@ -345,7 +357,7 @@ void Camera::render_transparent(float dt)
 		int i = lround(elem.x);
 		assert(!m_alpha_renderers[i].expired());
 		Renderer& rend = *m_alpha_renderers[i].lock();
-		rend.Draw(dt);
+		rend.Draw(std::dynamic_pointer_cast<Camera>(shared_from_this()), dt);
 	}
 }
 

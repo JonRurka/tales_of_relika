@@ -214,6 +214,11 @@ bool Plane::has_point(const glm::vec3& p_point, float p_tolerance) const {
 	return (dist <= p_tolerance);
 }
 
+float Plane::getSignedDistanceToPlane(const glm::vec3& point) const
+{
+	return glm::dot(normal, point) - d;
+}
+
 constexpr Plane::Plane(const glm::vec3& p_normal, float p_d) :
 	normal(p_normal),
 	d(p_d) {

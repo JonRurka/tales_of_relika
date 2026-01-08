@@ -154,6 +154,8 @@ void MeshCollider::OnRefresh()
 	Physics::GetBodyInterface().AddBody(rigidbody->GetID(), EActivation::DontActivate);
 	set_rigidbody(rigidbody);
 
+	Logger::LogDebug(LOG_POS("OnRefresh"), "Set rigidbody: %d", rigidbody->GetID());
+
 #endif
 }
 
@@ -170,10 +172,6 @@ void MeshCollider::Clear()
 	mTriangleIndexVertexArray.reset();
 	m_shape.reset();
 #else
-	if (Has_Rigidbody()) {
-		remove_rigidbody();
-	}
-
 	Destroy_Collider();
 
 
