@@ -318,6 +318,11 @@ void Mesh::sync_vertices(Vert_Update_Mode mode)
 		return;
 	}
 
+	if (!m_flush_enabled)
+	{
+		return;
+	}
+
 	unsigned int num_elements = m_vertices.size();
 
 	if (m_num_vertices != num_elements) {

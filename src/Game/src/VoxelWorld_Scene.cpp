@@ -53,7 +53,13 @@ void VoxelWorld_Scene::Update(float dt)
 {
 	startup_squence();
 
-	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()));
+	glm::ivec3 tc = glm::ivec3();
+	if (!world_gen_controller.expired())
+	{
+		tc = world_gen_controller.lock()->Target_Chunk();
+	}
+
+	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()) + " || (" + std::to_string(tc.x) + ", " + std::to_string(tc.y) + ", " + std::to_string(tc.z) + ")");
 	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 

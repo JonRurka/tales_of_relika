@@ -164,6 +164,13 @@ public:
 		m_active = true;
 	}
 
+	void GPU_Flush(bool enabled) {
+		m_flush_enabled = enabled;
+	}
+	bool GPU_Flush() {
+		return m_flush_enabled;
+	}
+
 	void Generate_Normals();
 
 	bool Draw(GLenum mode = GL_TRIANGLES);
@@ -188,6 +195,8 @@ private:
 	glm::vec3 m_max;
 
 	AABB m_bounds;
+
+	bool m_flush_enabled{ true };
 
 	// Number of floats, not bytes
 	size_t m_float_stride {11};

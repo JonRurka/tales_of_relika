@@ -72,7 +72,7 @@ private:
 
 	bool test_despawn();
 
-	void draw_debug_cube(glm::vec3 color = glm::vec3(0, 1, 0));
+	void draw_debug_cube(glm::vec3 color = glm::vec3(0, 1, 0), float time = 0);
 
 	void update_collision_mesh(IComputeBuffer* vert_buffer, unsigned int* tris_data, int num_vertices);
 

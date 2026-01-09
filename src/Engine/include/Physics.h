@@ -144,7 +144,7 @@ private:
 
 	PhysicsSettings	mPhysicsSettings;
 
-
+	std::vector<BodyID> m_bodies_to_add;
 
 	static RayHit		raycast_jolt(glm::vec3 from, glm::vec3 dir);
 	static RayHitList	raycastAll_jolt(glm::vec3 from, glm::vec3 dir);

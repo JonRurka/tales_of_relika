@@ -88,6 +88,9 @@ void WorldGenController::Update(float dt)
 	if (!m_voxel_engine_enabled)
 		return;
 
+	glm::vec3 target_chunk_pos = ChunkCoordToWorldPos(Target_Chunk()) + glm::vec3(m_chunkMeterSizeX / 2, m_chunkMeterSizeY / 2, m_chunkMeterSizeZ / 2);
+	Graphics::DrawDebugRay(target_chunk_pos + glm::vec3(0.1, 0, 0.1), glm::vec3(0, 4, 0), glm::vec3(0, 1, 0));
+
 	process_deletions();
 	process_additions();
 
@@ -601,13 +604,13 @@ void WorldGenController::generate_circular()
 
 	assert(!mTarget.expired());
 
-	glm::ivec3 target_chunk_pos = worldPosToChunkCoord(mTarget.lock()->Position());
+	m_target_chunk_pos = Target_Chunk();
 
-	std::vector<glm::ivec3> cols = get_columns_in_radius(target_chunk_pos.x, target_chunk_pos.z, m_max_chunk_radius);
+	std::vector<glm::ivec3> cols = get_columns_in_radius(m_target_chunk_pos.x, m_target_chunk_pos.z, m_max_chunk_radius);
 
 	//Logger::LogInfo(LOG_POS("generate_circular"), "Generating %i Columns", cols.size());
 
-	int y_start = target_chunk_pos.y - (m_chunks_depth / 2);
+	int y_start = m_target_chunk_pos.y - (m_chunks_depth / 2);
 
 	int queued_chunks_num = 0;
 
@@ -891,6 +894,8 @@ std::vector<glm::ivec3> WorldGenController::get_columns_in_radius(int center_x, 
 
 glm::ivec3 WorldGenController::worldPosToChunkCoord(glm::fvec3 pos)
 {
+	pos -= glm::vec3(m_chunkMeterSizeX / 2, m_chunkMeterSizeY / 2, m_chunkMeterSizeZ / 2);
+
 	return glm::ivec3(
 		std::round(pos.x / (m_chunkMeterSizeX + m_half)), 
 		std::round(pos.y / (m_chunkMeterSizeY + m_half)),

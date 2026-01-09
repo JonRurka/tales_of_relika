@@ -46,7 +46,7 @@ void Collider::base_Update(float dt)
 void Collider::Destroy_Collider()
 {
 	if (Has_Rigidbody()) {
-		Logger::LogDebug(LOG_POS("Destroy_Collider"), "Remove rigidbody");
+		//Logger::LogDebug(LOG_POS("Destroy_Collider"), "Remove rigidbody");
 		remove_rigidbody();
 	}
 
@@ -120,7 +120,7 @@ void Collider::set_rigidbody(Body* body)
 
 void Collider::remove_rigidbody()
 {
-	Physics::GetBodyInterface().RemoveBody(m_rigidbody->GetID());
+	//Physics::GetBodyInterface().RemoveBody(m_rigidbody->GetID());
 	Physics::Instance().Remove_Rigidbody(m_rigidbody);
 	m_rigidbody = nullptr;
 }

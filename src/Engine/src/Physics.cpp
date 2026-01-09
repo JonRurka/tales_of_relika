@@ -197,6 +197,18 @@ void Physics::update_internal(float dt)
 	//Logger::LogDebug(LOG_POS("update_internal"), "physics update: %f", time * 1000);
 	m_last_update = Utilities::Get_Time();
 
+	int num_bodies_add = m_bodies_to_add.size();
+	if (num_bodies_add > 0)
+	{
+		BodyID* ids = new BodyID[num_bodies_add];
+		memcpy((void*)ids, (void*)m_bodies_to_add.data(), sizeof(BodyID) * num_bodies_add);
+		m_bodies_to_add.clear();
+
+		BodyInterface::AddState add_state = GetBodyInterface().AddBodiesPrepare(ids, num_bodies_add);
+		GetBodyInterface().AddBodiesFinalize(ids, num_bodies_add, add_state, EActivation::Activate);
+		delete[] ids;
+	}
+
 
 	mPhysicsSystem->Update(time, JOLT_SIMULATION_STEPS, mTempAllocator, mJobSystem);
 
@@ -394,10 +406,14 @@ void Physics::remove_rigidbody(btRigidBody* body)
 void Physics::Add_Rigidbody(Body* body)
 {
 	m_bodies[body->GetID().GetIndex()] = body;
+	m_bodies_to_add.push_back(body->GetID());
 }
 
 void Physics::Remove_Rigidbody(Body* body)
 {
+	assert(body != nullptr);
+
+	GetBodyInterface().RemoveBody(body->GetID());
 	if (m_bodies.contains(body->GetID().GetIndex()))
 	{
 		m_bodies.erase(body->GetID().GetIndex());

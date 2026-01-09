@@ -146,9 +146,10 @@ void ServerTerrainChunk::apply_collider(ColliderGenerator::Request* req)
 
 	m_opaque_shape = req->Mesh_Shape();
 
-
-	m_opaque_rigidbody = m_world_physics->GetBodyInterface().CreateBody(BodyCreationSettings(m_opaque_shape, RVec3::sZero(), Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
-	m_world_physics->GetBodyInterface().AddBody(m_opaque_rigidbody->GetID(), EActivation::DontActivate);
+	glm::vec3 t_pos = m_chunk_world_pos;
+	RVec3 r_pos = RVec3(t_pos.x, t_pos.y, t_pos.z);
+	m_opaque_rigidbody = m_world_physics->GetBodyInterface().CreateBody(BodyCreationSettings(m_opaque_shape, r_pos, Quat::sIdentity(), EMotionType::Static, Layers::NON_MOVING));
+	//m_world_physics->GetBodyInterface().AddBody(m_opaque_rigidbody->GetID(), EActivation::Activate);
 	m_world_physics->Add_Rigidbody(m_opaque_rigidbody);
 
 #endif

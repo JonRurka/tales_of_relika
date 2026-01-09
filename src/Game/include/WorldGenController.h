@@ -219,6 +219,8 @@ private:
 	int m_num_filled_init_chunks{ 0 };
 	int m_num_all_init_chunks{0};
 
+	glm::ivec3 m_target_chunk_pos{ glm::ivec3() };
+
 	std::queue<ChunkRef> m_cached_chunks;
 	std::unordered_map<int, ChunkRef> m_chunk_map;
 
