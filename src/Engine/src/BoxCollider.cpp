@@ -93,16 +93,12 @@ void BoxCollider::OnRefresh()
 	glm::quat rot = Object().Get_Transform().Rotation();
 
 	Body* rigidbody = Physics::GetBodyInterface().CreateBody(BodyCreationSettings(m_shape, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), e_type, layer));
-	Physics::GetBodyInterface().AddBody(rigidbody->GetID(), EActivation::Activate);
+	//Physics::GetBodyInterface().AddBody(rigidbody->GetID(), EActivation::Activate);
 	set_rigidbody(rigidbody);
 #endif
 }
 
 void BoxCollider::OnDestroy()
 {
-	if (Has_Rigidbody()) {
-		remove_rigidbody();
-	}
-
 	Destroy_Collider();
 }

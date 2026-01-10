@@ -32,8 +32,8 @@ void World::Init()
 
 void World::Stop(bool trigger_events)
 {
-
-
+	m_running = false;
+	m_thread.join();
 }
 
 void World::Update(float dt)
@@ -329,8 +329,6 @@ void World::GameLoop()
 
 		
 		FrameMark;
-
-		
 	}
 }
 

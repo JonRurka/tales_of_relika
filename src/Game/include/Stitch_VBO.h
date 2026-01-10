@@ -26,7 +26,7 @@ public:
 
 	void Init(IVoxelBuilder_private::Shared builder, int elements);
 	void Stitch(int elements);
-	void Process(Mesh& mesh, glm::ivec4 count, bool gpu_copy);
+	void Process(Mesh& mesh, glm::ivec4 count, bool gpu_copy, bool apply_mesh = true);
 	void Reset();
 
 	IComputeBuffer* Input_Vertex_Buffer() { return vertex_buffer; }

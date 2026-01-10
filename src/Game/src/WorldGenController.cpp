@@ -97,6 +97,33 @@ void WorldGenController::Update(float dt)
 	if (m_gen_finished) {
 		process_modifications();
 	}
+
+	
+	if (Input::GetKeyDown(KeyCode::K))
+	{
+		m_k_key_hit = true;
+		glm::ivec3 t_c = Target_Chunk();
+		Logger::LogDebug(LOG_POS("Update"), "Collision Stats Dump: ");
+		for (int x = t_c.x - 1; x <= t_c.x + 1; x++)
+		{
+			for (int z = t_c.z - 1; z <= t_c.z + 1; z++)
+			{
+				if (!Chunk_Exists(glm::ivec3(x, t_c.y, z)))
+				{
+					continue;
+				}
+				char m = ' ';
+				if (t_c == glm::ivec3(x, t_c.y, z))
+				{
+					m = '*';
+				}
+
+				TerrainChunk::Weak c = Get_Chunk(glm::ivec3(x, t_c.y, z));
+				Logger::LogDebug(LOG_POS("Update"), "\t(%d, %d)%c - Update: %d, Available: %d, Enabled: %d", 
+					x, z, m, c.lock()->Should_Update(), c.lock()->Collision_Available(), c.lock()->Collision_Enabled());
+			}
+		}
+	}
 }
 
 void WorldGenController::SetTarget(Transform::Weak target)
@@ -130,13 +157,14 @@ ISO_Sampler::Shared WorldGenController::Get_ISO_Sampler()
 	return (std::dynamic_pointer_cast<SmoothVoxelBuilder>(m_builder))->Get_ISO_Sampler();
 }
 
-void WorldGenController::Refresh_Chunk(glm::ivec3 chunk)
+void WorldGenController::Refresh_Chunk(glm::ivec3 chunk, MeshUpdateMode mode)
 {
 	if (!m_voxel_engine_enabled)
 		return;
 	//Logger::LogDebug(LOG_POS("Refresh_Chunk"), "Refresh chunk (%i, %i, %i)",
 	//	chunk.x, chunk.y, chunk.z);
 	TerrainMod val(glm::vec3(0, 0, 0));
+	val.Mode = mode;
 	Modify_Voxel(chunk, val, false);
 }
 
@@ -294,6 +322,7 @@ void WorldGenController::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> 
 			other_mod.Type = val.Type;
 			other_mod.Change_Type = val.Change_Type;
 			other_mod.chunk_coord = other_chunk_voxel;
+			other_mod.Mode = val.Mode;
 
 			int other_hash = Utilities::Hash_Chunk_Coord(other_chunk.x, other_chunk.y, other_chunk.z);
 			if (!neighboor_updates.contains(other_hash))
@@ -412,15 +441,27 @@ void WorldGenController::process_additions()
 	if (!has_items)
 		return;
 
+	double gen_tm_start = Utilities::Get_Time();
+
 	double start = Utilities::Get_Time();
 	double end = start;
 	double timer = (end - start);
 
+	int num_processed = 0;
 	while (has_items && timer < m_process_time_ms) {
 		has_items = process_batch();
 
 		end = Utilities::Get_Time();
 		timer = (end - start) * 1000.0;
+
+		num_processed++;
+	}
+
+	double gen_tm_end = Utilities::Get_Time();
+	if (m_gen_finished)
+	{
+		Logger::LogDebug(LOG_POS("process_additions"), "%d addition batches processed in %lf ms",
+			num_processed, (gen_tm_end - gen_tm_start) * 1000.0);
 	}
 
 
@@ -511,7 +552,7 @@ bool WorldGenController::process_batch()
 		int num_verts = counts[i].x;
 
 		assert(!batch[i].chunk_comp.expired());
-		batch[i].chunk_comp.lock()->Process_Mesh_Update(counts[i]);
+		batch[i].chunk_comp.lock()->Process_Mesh_Update(counts[i], TerrainChunk::MeshUpdateMode::Both);
 
 		if (num_verts > 0) {
 			m_num_filled_init_chunks++;
@@ -536,10 +577,23 @@ bool WorldGenController::process_batch()
 
 void WorldGenController::process_modifications()
 {
+	if (m_terrain_change_queue.empty())
+		return;
 
+	int num_processed = 0;
+	double gen_tm_start = Utilities::Get_Time();
+	double build_time = 0;
+	double apply_time = 0;
 	while (!m_terrain_change_queue.empty()) 
 	{
 		//Logger::LogDebug(LOG_POS("process_modifications"), "Items in mod queue: %i", m_terrain_change_queue.size());
+
+		double gen_curr = Utilities::Get_Time();
+		double gen_time = (gen_curr - gen_tm_start) * 1000.0;
+		if (gen_time >= 16)
+		{
+			break;
+		}
 
 		TerrainModEntry entry = m_terrain_change_queue.front();
 		m_terrain_change_queue.pop();
@@ -549,6 +603,12 @@ void WorldGenController::process_modifications()
 
 		if (!Chunk_Exists(chunk)) {
 			continue;
+		}
+
+		MeshUpdateMode mode = MeshUpdateMode::Both;
+		if (changes.size() > 0)
+		{
+			mode = changes[0].Mode;
 		}
 
 		for (const auto& v_change : changes)
@@ -562,7 +622,7 @@ void WorldGenController::process_modifications()
 			}
 		}
 
-
+		double build_time_start = Utilities::Get_Time();
 		ChunkGenerationOptions gen_options;
 		ChunkRenderOptions render_options;
 
@@ -573,11 +633,23 @@ void WorldGenController::process_modifications()
 		glm::dvec4 gen_times = m_builder->Generate(&gen_options);
 		glm::dvec4 render_times = m_builder->Render(&render_options);
 		std::vector<glm::ivec4> counts = m_builder->GetSize();
+		double build_time_end = Utilities::Get_Time();
+		build_time += (build_time_end - build_time_start) * 1000.0;
 
 		ChunkRef c_ref = get_chunk(chunk);
 		assert(!c_ref.chunk_comp.expired());
-		c_ref.chunk_comp.lock()->Process_Mesh_Update(counts[0]);
+
+		double apply_time_start = Utilities::Get_Time();
+		c_ref.chunk_comp.lock()->Process_Mesh_Update(counts[0], (TerrainChunk::MeshUpdateMode)mode);
+		double apply_time_end = Utilities::Get_Time();
+		apply_time += (apply_time_end - apply_time_start) * 1000.0;
+
+		num_processed++;
 	}
+	double gen_tm_end = Utilities::Get_Time();
+
+	//Logger::LogDebug(LOG_POS("process_additions"), "%d modifications processed in %lf ms (build: %lf ms, apply: %lf ms)",
+	//	num_processed, (gen_tm_end - gen_tm_start) * 1000.0, build_time, apply_time);
 }
 
 WorldGenController::ChunkRef WorldGenController::create_chunk_object()

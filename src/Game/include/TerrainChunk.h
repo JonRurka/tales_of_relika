@@ -22,23 +22,36 @@ public:
 	typedef std::shared_ptr<TerrainChunk> Shared;
 	typedef std::weak_ptr<TerrainChunk> Weak;
 
+	enum MeshUpdateMode
+	{
+		Graphic = 1,
+		Collision = 2,
+		Both = 3,
+	};
+
 	void Init(std::weak_ptr<WorldGenController> controller, Stitch_VBO::Shared vbo_stitch);
 
 	void Assign(glm::ivec3 chunk_coord);
 
 	void Unassign();
 
-	void Process_Mesh_Update(glm::ivec4 counts);
+	void Process_Mesh_Update(glm::ivec4 counts, MeshUpdateMode mode);
 
 	void Modify_Point_ISO(glm::ivec3 local_voxel, float iso);
 
 	void Modify_Point_Type(glm::ivec3 local_voxel, int type);
 
-	bool Collision_Enabled();
+	bool Assigned() const { return m_assigned; }
+
+	bool Collision_Available();
+
+	bool Collision_Enabled() const { return m_has_collision; }
+
+	int Should_Update();
 
 	void DisableCollision();
 
-	void Refresh();
+	void Refresh(MeshUpdateMode mode);
 
 protected:
 	void Init() override;

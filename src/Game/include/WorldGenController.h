@@ -40,6 +40,13 @@ public:
 	typedef std::shared_ptr<WorldGenController> Shared;
 	typedef std::weak_ptr<WorldGenController> Weak;
 
+	enum MeshUpdateMode
+	{
+		Graphic = 1,
+		Collision = 2,
+		Both = 3,
+	};
+
 	struct TerrainMod {
 	public:
 		float ISO{ 0 };
@@ -47,6 +54,7 @@ public:
 		bool Change_ISO{ false };
 		bool Change_Type{ false };
 		glm::ivec3 Voxel{ glm::ivec3() };
+		MeshUpdateMode Mode{ MeshUpdateMode::Both };
 
 		glm::ivec3 chunk_coord{ glm::ivec3() };
 
@@ -103,7 +111,7 @@ public:
 
 	bool Finished_Initial_Generation() { return m_gen_finished; }
 
-	void Refresh_Chunk(glm::ivec3 chunk);
+	void Refresh_Chunk(glm::ivec3 chunk, MeshUpdateMode mode);
 	void Modify_Voxel_ISO(glm::ivec3 voxel, float iso);
 	void Modify_Voxel_Type(glm::ivec3 voxel, int type);
 	void Modify_Voxel(std::vector<TerrainMod> values);
@@ -144,19 +152,25 @@ public:
 
 	static glm::ivec3 VoxelToChunk(glm::ivec3 location) { return m_Instance->voxelToChunk(location); }
 
-	static glm::ivec3 ChunkToVoxel(glm::ivec3 location){ return m_Instance->chunkToVoxel(location); }
+	static glm::ivec3 ChunkToVoxel(glm::ivec3 location) { return m_Instance->chunkToVoxel(location); }
 
-	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 location){ return m_Instance->globalToLocalChunkCoord(location); }
+	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 location) { return m_Instance->globalToLocalChunkCoord(location); }
 
-	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location){ return m_Instance->globalToLocalChunkCoord(ChunkCoord, location); }
+	static glm::ivec3 GlobalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location) { return m_Instance->globalToLocalChunkCoord(ChunkCoord, location); }
 
-	static glm::ivec3 LocalToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location){ return m_Instance->localToGlobalCoord(Chunk, location); }
+	static glm::ivec3 LocalToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location) { return m_Instance->localToGlobalCoord(Chunk, location); }
 
 	static glm::fvec3 VoxelToWorld(glm::ivec3 loc) { return m_Instance->voxelToWorld(loc); }
 
 	static glm::ivec3 WorldToVoxel(glm::fvec3 worldPos) { return m_Instance->worldToVoxel(worldPos); }
 
 	static int Hash_Chunk(glm::ivec3 chunk);
+
+
+	bool K_Was_Hit() {
+		return m_k_key_hit;
+	}
+
 
 protected:
 	void Init() override;
@@ -218,6 +232,9 @@ private:
 	double m_chunk_init_filled_gen_time_ms{ 0 };
 	int m_num_filled_init_chunks{ 0 };
 	int m_num_all_init_chunks{0};
+
+
+	bool m_k_key_hit{ false };
 
 	glm::ivec3 m_target_chunk_pos{ glm::ivec3() };
 

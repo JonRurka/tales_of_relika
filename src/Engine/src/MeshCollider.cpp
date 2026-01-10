@@ -9,12 +9,41 @@
 
 #define DEFAULT_SIZE (1.0f)
 
+
+int MeshCollider::s_num_threads{ 0 };
+
+// Run on external thread
+void MeshCollider::RunShapeWorker(ShapeBuildRequest* req)
+{
+	TriangleList triangles;
+	for (int t_idx = 0; t_idx < req->verts.size() / 3; t_idx++)
+	{
+		glm::vec4 gv1 = req->verts[(t_idx * 3) + 0];
+		glm::vec4 gv2 = req->verts[(t_idx * 3) + 1];
+		glm::vec4 gv3 = req->verts[(t_idx * 3) + 2];
+
+		Float3 v1 = Float3(gv1.x, gv1.y, gv1.z);
+		Float3 v2 = Float3(gv2.x, gv2.y, gv2.z);
+		Float3 v3 = Float3(gv3.x, gv3.y, gv3.z);
+
+		triangles.push_back(Triangle(v1, v2, v3, 0));
+	}
+
+	PhysicsMaterialList materials;
+	materials.push_back(new PhysicsMaterialSimple("Phy_Material", Color::sGetDistinctColor(0)));
+
+	req->Shape_Settings = new MeshShapeSettings(triangles, std::move(materials));
+
+	req->Ready = true;
+	//Logger::LogDebug(LOG_POS("RunShapeWorker"), "Finished building shape.");
+}
+
 void MeshCollider::Init()
 {
 	base_Init();
 }
 
-void MeshCollider::SetMesh(Mesh::Shared mesh)
+void MeshCollider::SetMesh(Mesh::Shared mesh, bool activate)
 {
 	//m_mesh = mesh;
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
@@ -79,8 +108,10 @@ void MeshCollider::SetMesh(Mesh::Shared mesh)
 		m_shape = std::make_unique<btBvhTriangleMeshShape>(m_triangle_mesh.get(), true, true);
 	}
 #else
-	TriangleList triangles;
-	std::vector<glm::vec4> verts = mesh->Vertices();
+
+
+	/*TriangleList triangles;
+	verts = mesh->Vertices();
 	for (int t_idx = 0; t_idx < verts.size() / 3; t_idx++)
 	{
 		glm::vec4 gv1 = verts[(t_idx * 3) + 0];
@@ -97,17 +128,82 @@ void MeshCollider::SetMesh(Mesh::Shared mesh)
 	PhysicsMaterialList materials;
 	materials.push_back(new PhysicsMaterialSimple("Phy_Material", Color::sGetDistinctColor(0)));
 
-	m_shape_settings = new MeshShapeSettings(triangles, std::move(materials));
+	m_shape_settings = new MeshShapeSettings(triangles, std::move(materials));*/
 
 #endif
 
+	
+	//if (activate)
+	//	Activate();
 
-	OnRefresh();
+	
+
+	if (s_num_threads < MAX_SHAPE_THREADS)
+	{
+		add_build_request(mesh->Vertices());
+	}
+	else 
+	{
+		m_request_backlog.push(mesh->Vertices());
+	}
+}
+
+void MeshCollider::add_build_request(const std::vector<glm::vec4>& req_verts)
+{
+	ShapeBuildRequest req;
+	req.Ready = false;
+	req.verts = req_verts;
+	req.ID = ++m_latest_build_req_id;
+	req.MColl = this;
+
+	m_build_requests[req.ID] = req;
+	m_build_requests_threads[req.ID] = std::thread(RunShapeWorker, &m_build_requests[req.ID]);
+	s_num_threads++;
 }
 
 void MeshCollider::Update(float dt)
 {
 	base_Update(dt);
+
+	bool should_activate = false;
+	std::vector<uint64_t> to_remove;
+	for (const auto& pair : m_build_requests)
+	{
+		if (pair.first < m_latest_build_req_id && pair.second.Ready)
+		{
+			//Logger::LogDebug(LOG_POS("Update"), "Disgard old shape.");
+			to_remove.push_back(pair.second.ID);
+		}
+		else if (pair.first == m_latest_build_req_id && pair.second.Ready)
+		{
+			//Logger::LogDebug(LOG_POS("Update"), "Shape ready.");
+			m_shape_settings = pair.second.Shape_Settings;
+			to_remove.push_back(pair.second.ID);
+			should_activate = true;
+		}
+	}
+
+	for (const auto& id : to_remove)
+	{
+		s_num_threads--;
+		m_build_requests_threads[id].join();
+		m_build_requests_threads.erase(id);
+		m_build_requests.erase(id);
+	}
+
+	// Add request from backlog
+	while (!m_request_backlog.empty() && s_num_threads < MAX_SHAPE_THREADS)
+	{
+		add_build_request(m_request_backlog.front());
+		m_request_backlog.pop();
+	}
+
+	if (should_activate)
+	{
+		//Logger::LogDebug(LOG_POS("Update"), "Activating collision mesh...");
+		Activate();
+	}
+
 
 	/*Transform* obj_trans = Object()->Get_Transform();
 	btTransform bt_trans = get_bt_rigid_transform();
@@ -127,6 +223,8 @@ void MeshCollider::OnRefresh()
 	if (Has_Rigidbody()) {
 		remove_rigidbody();
 	}
+
+	assert(m_shape_settings != nullptr);
 
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	
