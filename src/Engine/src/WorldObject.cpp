@@ -83,7 +83,9 @@ void WorldObject::DoUpdate(float dt)
 	m_transform->Update(dt);
 	m_renderer->Update(dt);
 	for (const auto& pair : m_components) {
-		pair.second->Update(dt);
+		//if (pair.second->Enabled()) {
+			pair.second->Update(dt);
+		//}
 	}
 }
 

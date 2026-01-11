@@ -237,6 +237,7 @@ private:
 	bool m_k_key_hit{ false };
 
 	glm::ivec3 m_target_chunk_pos{ glm::ivec3() };
+	glm::ivec3 m_old_target_chunk_pos{ glm::ivec3() };
 
 	std::queue<ChunkRef> m_cached_chunks;
 	std::unordered_map<int, ChunkRef> m_chunk_map;

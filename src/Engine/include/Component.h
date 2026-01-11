@@ -24,6 +24,9 @@ public:
 
 	static Component* Load_Component(WorldObject* obj, json data);
 
+	void Enabled(bool val) { m_enabled = val; }
+	bool Enabled() { return m_enabled; }
+
 	void Destroy();
 
 	virtual void Load(json data) {};
@@ -37,6 +40,7 @@ private:
 	std::weak_ptr<WorldObject> m_object;
 	int m_comp_idx{ 0 };
 	std::string m_type_name{"Custom_Component"};
+	bool m_enabled{ true };
 
 protected:
 	virtual void Init() = 0;

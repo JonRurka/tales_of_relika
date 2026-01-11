@@ -97,6 +97,7 @@ void VoxelWorld_Scene::startup_squence()
 		if (Game_Ready())
 		{
 			m_loading_screen->Hide();
+			//local_player_character.lock()->LockOrientation(false);
 			m_loading_hidden = true;
 		}
 	}
@@ -217,6 +218,7 @@ void VoxelWorld_Scene::setup_local_player(json player_data)
 	local_player_character_obj = Instantiate("Local_Character");
 	local_player_character_obj.lock()->Get_Transform().Position(loc);
 	local_player_character = local_player_character_obj.lock()->Add_Component<LocalPlayerCharacter>();
+	//local_player_character.lock()->LockOrientation(true);
 	local_player_character.lock()->Set_Camera_Object(Camera_obj);
 
 	world_gen_controller.lock()->SetTarget(local_player_character_obj.lock()->Get_Transform_Ptr());

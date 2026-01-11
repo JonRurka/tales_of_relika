@@ -91,6 +91,11 @@ void WorldGenController::Update(float dt)
 	glm::vec3 target_chunk_pos = ChunkCoordToWorldPos(Target_Chunk()) + glm::vec3(m_chunkMeterSizeX / 2, m_chunkMeterSizeY / 2, m_chunkMeterSizeZ / 2);
 	Graphics::DrawDebugRay(target_chunk_pos + glm::vec3(0.1, 0, 0.1), glm::vec3(0, 4, 0), glm::vec3(0, 1, 0));
 
+	if (m_gen_finished)
+	{
+
+	}
+
 	process_deletions();
 	process_additions();
 
@@ -139,6 +144,8 @@ void WorldGenController::Start()
 
 	create_chunk_cache();
 	generate_circular();
+	m_old_target_chunk_pos = Target_Chunk();
+
 
 	//Logger::LogDebug(LOG_POS("Start"), "The queue is %i long", m_create_queue.size());
 }

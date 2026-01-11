@@ -351,6 +351,12 @@ void LocalPlayerCharacter::Set_Camera_Object(WorldObject::Weak cam_object)
 	m_hud.lock()->Init(Camera::Get_Active_Ptr());
 }
 
+void LocalPlayerCharacter::LockOrientation(bool locked)
+{
+	assert(!m_capsule_collider.expired());
+	m_capsule_collider.lock()->Enabled(!locked);
+}
+
 void LocalPlayerCharacter::SendJumpEvent()
 {
 	SendPlayerEvent(OpCodes::Player_Events::Jump);

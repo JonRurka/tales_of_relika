@@ -30,6 +30,8 @@ public:
 
 	void Set_Camera_Object(WorldObject::Weak cam_object);
 
+	void LockOrientation(bool locked);
+
 	void SendJumpEvent();
 
 	void SendPlayerEvent(OpCodes::Player_Events event_cmd, Protocal protocal = Protocal_Tcp);
