@@ -471,8 +471,8 @@ void WorldGenController::process_additions()
 	double gen_tm_end = Utilities::Get_Time();
 	if (m_gen_finished)
 	{
-		Logger::LogDebug(LOG_POS("process_additions"), "%d addition batches processed in %lf ms",
-			num_processed, (gen_tm_end - gen_tm_start) * 1000.0);
+		//Logger::LogDebug(LOG_POS("process_additions"), "%d addition batches processed in %lf ms",
+		//	num_processed, (gen_tm_end - gen_tm_start) * 1000.0);
 	}
 
 
@@ -710,7 +710,7 @@ void WorldGenController::generate_circular()
 	}
 
 	double end = Utilities::Get_Time();
-	Logger::LogDebug(LOG_POS("generate_circular"), "Queued %i chunks in %f ms.", queued_chunks_num, (end - start) * 1000);
+	//Logger::LogDebug(LOG_POS("generate_circular"), "Queued %i chunks in %f ms.", queued_chunks_num, (end - start) * 1000);
 
 	m_gen_start = Utilities::Get_Time();
 	m_world_gen_started = true;

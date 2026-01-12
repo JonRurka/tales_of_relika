@@ -7,8 +7,8 @@
 #define DRAW_DEBUG_BOX false
 #define DRAW_DEBUG_COLLISION_BOX true
 #define DEBUG_DRAW_VERTICES false
-#define DESPAWN_ENABLE false
-#define COLLISION_DISTANCE 1
+#define DESPAWN_ENABLE true
+#define COLLISION_DISTANCE 2
 
 void TerrainChunk::Init()
 {
