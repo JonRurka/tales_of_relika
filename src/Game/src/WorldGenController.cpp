@@ -16,7 +16,7 @@
 #define DUMMY_LENGTH (32)
 
 
-#define PROCESS_DELETIONS false
+#define PROCESS_DELETIONS true
 
 WorldGenController* WorldGenController::m_Instance{nullptr};
 
@@ -93,7 +93,11 @@ void WorldGenController::Update(float dt)
 
 	if (m_gen_finished)
 	{
-
+		if (m_old_target_chunk_pos != Target_Chunk())
+		{
+			generate_circular();
+			m_old_target_chunk_pos = Target_Chunk();
+		}
 	}
 
 	process_deletions();
@@ -485,6 +489,7 @@ void WorldGenController::process_additions()
 
 			m_gen_stop = Utilities::Get_Time();
 			m_gen_finished = true;
+			m_process_time_ms = DEFAULT_PROCESS_TIME_RUNTIME_CREATE_MS;
 			double m_total_time = (m_gen_stop - m_gen_start) * 1000.0f;
 			//Logger::LogInfo(LOG_POS("process_additions"), "%i Chunks generated in %f ms. Average construct time: %f ms.", 
 			//	m_num_filled_init_chunks, (m_gen_stop - m_gen_start) * 1000.0f, avg * 1000.0f);

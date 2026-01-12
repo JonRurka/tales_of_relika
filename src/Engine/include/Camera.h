@@ -58,6 +58,8 @@ public:
 		update_projection_matrix();
 	}
 
+	bool Frustrum_Culling_Enabled();
+
 	static float Aspect();
 
 	glm::vec4 Clear_Color() { return m_clear_color; }
@@ -113,6 +115,7 @@ private:
 	GPUSort* m_sort{ nullptr };
 
 	Frustum m_frustum;
+	bool m_frustrum_culling_enabled{ true };
 
 	//Transform* m_transform{ nullptr };
 

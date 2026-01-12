@@ -26,6 +26,8 @@
 #define SKYBOX_PROJECTION_LOC	10
 #define SKYBOX_VIEW_LOC			11
 
+#define FRUSTRUM_CULLING_ENABLED false
+
 std::weak_ptr<Camera> Camera::m_active_camera;
 std::shared_ptr<Shader> Camera::m_cubemap_shader{ nullptr };
 std::shared_ptr<Mesh> Camera::m_cubemap_mesh{ nullptr };
@@ -83,6 +85,11 @@ void Camera::OnDestroy()
 
 	destroy_framebuffer();
 	destroy_skybox();
+}
+
+bool Camera::Frustrum_Culling_Enabled()
+{
+	return m_frustrum_culling_enabled && FRUSTRUM_CULLING_ENABLED;
 }
 
 float Camera::Aspect()
@@ -365,7 +372,8 @@ void Camera::render(float dt)
 {
 	ZoneScopedN("camera render");
 
-	refresh_frustum();
+	if (Frustrum_Culling_Enabled())
+		refresh_frustum();
 
 	assert(m_cam_framebuffer.get() != nullptr);
 	m_cam_framebuffer->Use(true);

@@ -97,7 +97,7 @@ void VoxelWorld_Scene::startup_squence()
 		if (Game_Ready())
 		{
 			m_loading_screen->Hide();
-			//local_player_character.lock()->LockOrientation(false);
+			local_player_character.lock()->LockOrientation(false);
 			m_loading_hidden = true;
 		}
 	}
@@ -167,7 +167,7 @@ void VoxelWorld_Scene::GameConnected()
 	obj->Get_MeshRenderer()->Set_Material(m_character_material);*/
 }
 
-// STEP 3: Receive player data, and initialize world
+// STEP 3: Receive player data, setup chunk/structure gen, setup local player and net player manager.
 void VoxelWorld_Scene::OnWorldPlayerDataResult(Data data)
 {
 	Logger::LogInfo(LOG_POS("OnWorldPlayerDataResult"), "Received world player data.");
@@ -218,7 +218,7 @@ void VoxelWorld_Scene::setup_local_player(json player_data)
 	local_player_character_obj = Instantiate("Local_Character");
 	local_player_character_obj.lock()->Get_Transform().Position(loc);
 	local_player_character = local_player_character_obj.lock()->Add_Component<LocalPlayerCharacter>();
-	//local_player_character.lock()->LockOrientation(true);
+	local_player_character.lock()->LockOrientation(true);
 	local_player_character.lock()->Set_Camera_Object(Camera_obj);
 
 	world_gen_controller.lock()->SetTarget(local_player_character_obj.lock()->Get_Transform_Ptr());
@@ -306,18 +306,20 @@ void VoxelWorld_Scene::setup_lights()
 	glm::vec4 light_color_dir = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	glm::vec3 light_pos_dir = glm::vec3(0.0f, 100.0f, 0.0f);
 
-	light_obj_dir = Instantiate("light");
+	light_obj_dir = Instantiate("main light");
 	light_obj_dir.lock()->Get_Transform().Translate(light_pos_dir);
 	light_obj_dir.lock()->Get_Transform().LookAt(glm::vec3(0.0f, -100.0f, -0.0f));
 
 	light_comp_dir = light_obj_dir.lock()->Add_Component<Light>();
-	light_comp_dir.lock()->Type(Light::Light_Type::DIRECTIONAL);
-	light_comp_dir.lock()->Color(light_color_dir);
-	light_comp_dir.lock()->Strength(2.0f);
-	light_comp_dir.lock()->Linear_Coefficient(0.027f);
-	light_comp_dir.lock()->Quadratic_Coefficient(0.0028f);
-	light_comp_dir.lock()->CutOff(glm::cos(glm::radians(12.5f)));
-	light_comp_dir.lock()->OuterCutOff(glm::cos(glm::radians(15.5f)));
+	Light& llight_comp_dir = *light_comp_dir.lock().get();
+
+	llight_comp_dir.Type(Light::Light_Type::DIRECTIONAL);
+	llight_comp_dir.Color(light_color_dir);
+	llight_comp_dir.Strength(2.0f);
+	llight_comp_dir.Linear_Coefficient(0.027f);
+	llight_comp_dir.Quadratic_Coefficient(0.0028f);
+	llight_comp_dir.CutOff(glm::cos(glm::radians(12.5f)));
+	llight_comp_dir.OuterCutOff(glm::cos(glm::radians(15.5f)));
 }
 
 void VoxelWorld_Scene::setup_client_server()

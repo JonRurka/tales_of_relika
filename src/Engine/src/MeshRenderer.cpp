@@ -153,15 +153,16 @@ bool MeshRenderer::Draw(std::weak_ptr<Camera> cam, float dt)
 	ZoneScopedN("MeshRenderer::Draw");
 
 	assert(!cam.expired());
+	Camera& camera = *cam.lock().get();
 
 	if (!Active())
 	{
-		return true;
+		return false;
 	}
 
-	if (do_frustrum_cull)
+	if (camera.Frustrum_Culling_Enabled() && do_frustrum_cull)
 	{
-		if (!Bounds().isOnFrustum(cam.lock()->GetFrustum()))
+		if (!Bounds().isOnFrustum(camera.GetFrustum()))
 		{
 			return false;
 		}

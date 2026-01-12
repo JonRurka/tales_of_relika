@@ -32,7 +32,7 @@ class ISO_Sampler;
 #define DEFAULT_BATCH_SIZE 4
 #define MAX_BATCH_SIZE 4
 #define DEFAULT_PROCESS_TIME_INIT_CREATE_MS 250.0
-#define DEFAULT_PROCESS_TIME_RUNTIME_CREATE_MS 16.0
+#define DEFAULT_PROCESS_TIME_RUNTIME_CREATE_MS 8.0
 
 class WorldGenController : public Component
 {

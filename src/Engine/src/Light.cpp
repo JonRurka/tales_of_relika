@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <sstream>
 
 #include "WorldObject.h"
 #include "Transform.h"
@@ -9,6 +10,11 @@
 #include "Logger.h"
 
 #include "tracy/Tracy.hpp"
+
+
+#define FLUSH_DEBUG_PRINT false
+
+
 
 #define NUM_LIGHTS() (m_light_data[0].int_options_1.w)
 
@@ -32,7 +38,10 @@
 bool Light::m_initialized{ false };
 GLuint Light::m_uboLights{ 0 };
 bool Light::m_lights_inited{ false };
-Light::Light_Data Light::m_light_data[MAX_LIGHTS];
+
+//std::span<Light::Light_Data, MAX_LIGHTS> Light::m_light_data;
+
+
 int Light::m_num_lights{0};
 int Light::curr_index{0};
 std::vector<Shader*> Light::m_light_shaders;
@@ -44,6 +53,8 @@ void Light::Update_Lights(float dt)
 {
 	ZoneScopedN("Client Lights");
 
+	debug_timer -= dt;
+
 	Flush();
 }
 
@@ -51,25 +62,52 @@ void Light::Init()
 {
 	if (!m_initialized) {
 		glGenBuffers(1, &m_uboLights);
-		std::memset((void*)m_light_data, 0, MAX_LIGHTS * sizeof(Light_Data));
+		Light_Data empty_data{};
+		OPTIONS_ALLOCATED(&empty_data) = false;
+		std::fill(m_light_data.begin(), m_light_data.end(), empty_data);
+		//std::memset((void*)m_light_data, 0, MAX_LIGHTS * sizeof(Light_Data));
 		Flush();
 		m_initialized = true;
 		Logger::LogInfo(LOG_POS("Init"), "Lights initialized.");
 	}
 
-
-	m_data = Allocate_Light(std::dynamic_pointer_cast<Light>(shared_from_this()), m_id);
+	Light_Data data = Allocate_Light(std::dynamic_pointer_cast<Light>(shared_from_this()), m_id);
+	//m_data = Allocate_Light(std::dynamic_pointer_cast<Light>(shared_from_this()), m_id);
 	//printf("Added light: %i\n", m_id);
 
+	m_otions_type = (Light_Type)OPTIONS_TYPE(&data);
+	m_option_color = data.lightColor;
+	m_option_strength = OPTIONS_STENGTH(&data);
+	//m_option_constant = OPTIONS_CONSTANT(&data);
+	m_option_linear_coefficient = OPTIONS_LINEAR(&data);
+	m_option_quadratic_coefficient = OPTIONS_QUADRATIC(&data);
+	m_option_cutOff = OPTIONS_CUTOFF(&data);
+	m_option_outerCutOff = OPTIONS_OUTER_CUTOFF(&data);
 	
+	/*
+	OPTIONS_ENABLED(&data)		= true;
+	OPTIONS_TYPE(&data)			= (int)Light_Type::DIRECTIONAL;
+	data.position				= glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	data.lightColor				= glm::vec4(1.0f);
+	data.direction				= glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+	OPTIONS_STENGTH(&data)		= 1.0f;
+	OPTIONS_CONSTANT(&data)		= 1.0f;
+	OPTIONS_LINEAR(&data)		= DEFAULT_LINEAR_COEF;
+	OPTIONS_QUADRATIC(&data)	= DEFAULT_QUADRATIC_COEF;
+	OPTIONS_CUTOFF(&data)		= DEFAULT_SPOTLIGHT_CUTOFF;
+	OPTIONS_OUTER_CUTOFF(&data) = DEFAULT_SPOTLIGHT_OUTER_CUTOFF;
+	
+	*/
+
+
 }
 
 void Light::Update(float dt)
 {
 	//return;
 
-	m_data->position = glm::vec4(Object().Get_Transform().Position(), 1.0f);
-	m_data->direction = glm::vec4(Object().Get_Transform().Forward(), 0.0f);
+	//m_data->position = glm::vec4(Object().Get_Transform().Position(), 1.0f);
+	//m_data->direction = glm::vec4(Object().Get_Transform().Forward(), 0.0f);
 
 	/*if (has_shadows)
 	{
@@ -80,7 +118,6 @@ void Light::Update(float dt)
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}*/
-	
 
 }
 
@@ -125,14 +162,69 @@ void Light::Activate_Shadows(bool enabled)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void Light::option_updated()
+{
+	Logger::LogDebug(LOG_POS("option_updated"), "An option has been updated.");
+	m_has_change = true;
+}
+
+Light::Light_Data Light::sync()
+{
+	Light_Data data{};
+	OPTIONS_ALLOCATED(&data) = 1;
+	OPTIONS_ENABLED(&data) = m_option_enabled;
+	OPTIONS_TYPE(&data) = (int)m_otions_type;
+	data.lightColor = m_option_color;
+	OPTIONS_STENGTH(&data) = m_option_strength;
+	OPTIONS_LINEAR(&data) = m_option_linear_coefficient;
+	OPTIONS_QUADRATIC(&data) = m_option_quadratic_coefficient;
+	OPTIONS_CUTOFF(&data) = m_option_cutOff;
+	OPTIONS_OUTER_CUTOFF(&data) = m_option_outerCutOff;
+
+	m_has_change = false;
+
+	return data;
+}
+
 void Light::Flush()
 {
 	//return; 
 	if (!m_initialized) {
 		return;
 	}
+
+	for (const auto& pair : m_linked_lights)
+	{
+		assert(!pair.second.expired());
+		Light& light = *pair.second.lock().get();
+		Light_Data& l_data = m_light_data[pair.first];
+
+		if (light.m_has_change)
+		{
+			Logger::LogDebug(LOG_POS("Flush"), "Sync %s", light.Object().Name().c_str());
+			l_data = light.sync();
+		}
+
+		l_data.position = glm::vec4(light.Object().Get_Transform().Position(), 1.0f);
+		l_data.direction = glm::vec4(light.Object().Get_Transform().Forward(), 0.0f);
+	}
+
+	NUM_LIGHTS() = m_num_lights;
+	Light_Data* data_ptr = m_light_data.data();
+
+
+	if (FLUSH_DEBUG_PRINT && debug_timer <= 0)
+	{
+		Logger::LogDebug(LOG_POS("Flush"), "DUMP LIGHTS (%d): ", data_ptr[0].int_options_1.w);
+		for (int i = 0; i < m_num_lights; i++)
+		{
+			Logger::LogDebug(LOG_POS("Flush"), "%s", data_ptr[i].print_data().c_str());
+		}
+		debug_timer = 2.0f;
+	}
+
 	glBindBuffer(GL_UNIFORM_BUFFER, m_uboLights);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(Light_Data) * m_num_lights, m_light_data, GL_DYNAMIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(Light_Data) * m_num_lights, data_ptr, GL_DYNAMIC_DRAW);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 1, m_uboLights);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
@@ -150,13 +242,22 @@ void Light::Add_Shader(Shader* value)
 	//printf("Shader added to lights\n");
 }
 
-Light::Light_Data* Light::Allocate_Light(std::weak_ptr<Light> light, int& id)
+Light::Light_Data Light::Allocate_Light(std::weak_ptr<Light> light, int& id)
 {
 	if (m_num_lights == MAX_LIGHTS) {
 		Logger::LogError(LOG_POS("Allocate_Light"), "Max Lights reached!");
-		return nullptr;
+		return Light::Light_Data();
 	}
 
+	m_light_data[m_num_lights] = Default_Light_Data();
+	id = m_num_lights;
+	m_num_lights++;
+	m_linked_lights[id] = light;
+	
+
+	return m_light_data[id];
+
+	/*
 	Light_Data* res;
 
 	m_light_data[m_num_lights] = Default_Light_Data();
@@ -165,9 +266,9 @@ Light::Light_Data* Light::Allocate_Light(std::weak_ptr<Light> light, int& id)
 	m_num_lights++;
 	m_linked_lights[id] = light;
 
-	NUM_LIGHTS() = m_num_lights;
+	NUM_LIGHTS() = m_num_lights;*/
 
-	return res;
+	//return nullptr;
 }
 
 void Light::Deallocate_Light(int id)
@@ -194,8 +295,8 @@ void Light::Deallocate_Light(int id)
 Light::Light_Data Light::Default_Light_Data()
 {
 	Light_Data data;
-	OPTIONS_ALLOCATED(&data)	= true;
-	OPTIONS_ENABLED(&data)		= true;
+	OPTIONS_ALLOCATED(&data)	= 1;
+	OPTIONS_ENABLED(&data)		= 1;
 	OPTIONS_TYPE(&data)			= (int)Light_Type::DIRECTIONAL;
 	data.position				= glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	data.lightColor				= glm::vec4(1.0f);
@@ -207,4 +308,30 @@ Light::Light_Data Light::Default_Light_Data()
 	OPTIONS_CUTOFF(&data)		= DEFAULT_SPOTLIGHT_CUTOFF;
 	OPTIONS_OUTER_CUTOFF(&data) = DEFAULT_SPOTLIGHT_OUTER_CUTOFF;
 	return data;
+}
+
+std::string Light::Light_Data::print_data()
+{
+	std::stringstream ss;
+
+	ss << "Light Data:" << std::endl;
+	ss << "\t Allocated: " << OPTIONS_ALLOCATED(this) << std::endl;
+	ss << "\t Enabled: " << OPTIONS_ENABLED(this) << std::endl;
+	ss << "\t Type: " << OPTIONS_TYPE(this) << std::endl;
+
+	glm::vec4 pos = this->position;
+	ss << "\t Position: (" << pos.x << ", " << pos.y << ", " << pos.z << ")" << std::endl;
+	glm::vec4 col = this->lightColor;
+	ss << "\t Light Color: (" << col.x << ", " << col.y << ", " << col.z << ")" << std::endl;
+	glm::vec4 dir = this->direction;
+	ss << "\t Direction: (" << dir.x << ", " << dir.y << ", " << dir.z << ")" << std::endl;
+
+	ss << "\t Strength: " << OPTIONS_STENGTH(this) << std::endl;
+	ss << "\t Constant: " << OPTIONS_CONSTANT(this) << std::endl;
+	ss << "\t Linear: " << OPTIONS_LINEAR(this) << std::endl;
+	ss << "\t Quadratic: " << OPTIONS_QUADRATIC(this) << std::endl;
+	ss << "\t Cutoff: " << OPTIONS_CUTOFF(this) << std::endl;
+	ss << "\t Outer Cutoff: " << OPTIONS_OUTER_CUTOFF(this) << std::endl;
+
+	return ss.str();
 }
