@@ -30,7 +30,7 @@ void CommandExecuter::Loop()
     do
     {
         Process();
-        Server_Main::Sleep(1000); // micro seconds (1ms)
+        Server_Main::Sleep(1, Utilities::Sleep_Mode::Millisecond); // micro seconds (1ms)
     } while (running);
 
 }

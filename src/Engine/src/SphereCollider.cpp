@@ -33,6 +33,11 @@ void SphereCollider::Update(float dt)
 	base_Update(dt);
 }
 
+void SphereCollider::FixedUpdate(float dt)
+{
+	base_FixedUpdate(dt);
+}
+
 void SphereCollider::Load(json data)
 {
 }

@@ -9,6 +9,7 @@
 #include "Character_HUD.h"
 
 #include <vector>
+#include <atomic>
 
 #define CAM_OFFSET_DEFAULT (glm::vec3(0, 1.2, 0))
 #define JUMP_POWER_DEFAULT (6.0)
@@ -48,6 +49,8 @@ protected:
 
 	void Update(float dt) override;
 
+	void FixedUpdate(float dt) override;
+
 	void OnDestroy() override;
 
 private:
@@ -55,8 +58,8 @@ private:
 	static LocalPlayerCharacter* m_instance;
 
 	glm::vec3 m_old_location{ glm::vec3()};
-	glm::vec3 m_location{ glm::vec3() };
-	glm::vec3 m_velocity{ glm::vec3() };
+	std::atomic<glm::vec3> m_location{ glm::vec3() };
+	std::atomic<glm::vec3> m_velocity{ glm::vec3() };
 	glm::vec3 m_server_loc{ glm::vec3() };
 	bool m_do_move{ false };
 	uint64_t m_move_send_id{ 0 };
@@ -66,6 +69,9 @@ private:
 	bool m_received_server_pos{ false };
 	bool m_moving_player_back{ false };
 	float move_dt{ 0 };
+	std::atomic<glm::vec3> m_move_vec;
+
+	volatile bool m_controller_created{ false };
 
 	Transform::Weak m_body_trans;
 

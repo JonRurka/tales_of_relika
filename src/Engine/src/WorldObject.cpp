@@ -82,21 +82,59 @@ void WorldObject::DoUpdate(float dt)
 
 	m_transform->Update(dt);
 	m_renderer->Update(dt);
-	for (const auto& pair : m_components) {
-		if (pair.second->Enabled()) {
-			pair.second->Update(dt);
+
+	std::vector<std::shared_ptr<Component>> comp_list;
+	threadSafeComponentsCopy(m_component_lock, m_components, comp_list);
+
+	for (const auto& c : comp_list) {
+		if (c->Enabled()) {
+			c->Update(dt);
 		}
 	}
+}
+
+void WorldObject::DoFixedUpdate(float dt)
+{
+	if (!Enabled()) {
+		return;
+	}
+
+	std::vector<std::shared_ptr<Component>> comp_list;
+	threadSafeComponentsCopy(m_component_lock, m_components, comp_list);
+
+	for (const auto& c : comp_list) {
+		if (c->Enabled()) {
+			c->FixedUpdate(dt);
+		}
+	}
+}
+
+int WorldObject::threadSafeComponentsCopy(std::mutex& lock, const std::unordered_map<int, std::shared_ptr<Component>>& from, std::vector<std::shared_ptr<Component>>& to)
+{
+	lock.lock();
+	to.reserve(from.size());
+	for (const auto& pair : from)
+	{
+		to.push_back(pair.second);
+	}
+	lock.unlock();
+	return to.size();
 }
 
 void WorldObject::Destroy()
 {
 	Enabled(false);
 
-	for (const auto& pair : m_components) {
-		pair.second->Destroy();
+	std::vector<std::shared_ptr<Component>> comp_list;
+	threadSafeComponentsCopy(m_component_lock, m_components, comp_list);
+
+	for (const auto& c : comp_list) {
+		c->Destroy();
 	}
+
+	m_component_lock.lock();
 	m_components.clear();
+	m_component_lock.unlock();
 
 	//m_transform.Destroy();
 	//m_renderer.Destroy();
@@ -115,19 +153,26 @@ void WorldObject::scene_init()
 
 void WorldObject::Initialize_Component(std::shared_ptr<Component> comp)
 {
+	m_component_lock.lock();
 	m_next_comp_idx++;
-	comp->Object(shared_from_this());
 	m_components[m_next_comp_idx] = comp;
+	comp->Object(shared_from_this());
 	comp->Component_Index(m_next_comp_idx);
+	m_component_lock.unlock();
+
 	comp->Init();
 }
 
 void WorldObject::Remove_Component(int comp_idx)
 {
+	m_component_lock.lock();
+
 	if (!m_components.contains(comp_idx))
 		return;
 	m_components[comp_idx]->Destroy();
 	m_components.erase(comp_idx);
+
+	m_component_lock.unlock();
 }
 
 std::weak_ptr<WorldObject> WorldObject::Instantiate(std::shared_ptr<Model> model, std::shared_ptr<Material> mat, std::shared_ptr<WorldObject> parent)

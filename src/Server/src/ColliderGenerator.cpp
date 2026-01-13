@@ -75,7 +75,7 @@ void ColliderGenerator::run_worker()
 
 	while (m_running) 
 	{
-		Server_Main::Sleep(1000); // micro seconds (1ms)
+		Server_Main::Sleep(1, Utilities::Sleep_Mode::Millisecond); // micro seconds (1ms)
 		do_process();
 	}
 }

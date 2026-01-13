@@ -24,6 +24,15 @@ void CharacterCollider::Init()
 #endif
 }
 
+void CharacterCollider::Update(float dt)
+{
+	m_lock.lock();
+	glm::fvec3 pos = glm::fvec3(m_pos.GetX(), m_pos.GetY(), m_pos.GetZ());
+	m_lock.unlock();
+
+	Object().Get_Transform().Position(pos);
+}
+
 void CharacterCollider::Radius(float radius) 
 {
 	cCharacterRadiusStanding = radius;
@@ -66,8 +75,10 @@ void CharacterCollider::Set_Location(glm::vec3 pos)
 #endif
 }
 
-void CharacterCollider::Update(float dt)
+void CharacterCollider::FixedUpdate(float dt)
 {
+
+
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	if (m_charCon == nullptr)
 		return;
@@ -79,6 +90,13 @@ void CharacterCollider::Update(float dt)
 
 	Object().Get_Transform().Position(glm::fvec3(pos.x(), pos.y(), pos.z()));
 #else
+
+	if (m_reset_character) {
+		m_reset_character = false;
+		mCharacter = new CharacterVirtual(mSettings, m_reset_pos, Quat::sIdentity(), 0, &Physics::GetPhysicsSystem());
+		mCharacter->SetCharacterVsCharacterCollision(&mCharacterVsCharacterCollision);
+	}
+
 	if (mCharacter.GetPtr() == nullptr)
 		return;
 
@@ -93,11 +111,11 @@ void CharacterCollider::Update(float dt)
 		{ },
 		Physics::GetTempAllocator());
 
-
-	Vec3 pos = mCharacter->GetPosition();
-	Quat rot = mCharacter->GetRotation();
-
-	Object().Get_Transform().Position(glm::fvec3(pos.GetX(), pos.GetY(), pos.GetZ()));
+	m_lock.lock();
+	m_pos = mCharacter->GetPosition();
+	m_rot = mCharacter->GetRotation();
+	m_lock.unlock();
+	
 
 
 #endif
@@ -180,9 +198,9 @@ void CharacterCollider::OnRefresh()
 	glm::vec3 pos = Object().Get_Transform().Position();
 	glm::quat rot = Object().Get_Transform().Rotation();
 
-	mCharacter = new CharacterVirtual(mSettings, RVec3(pos.x, pos.y, pos.z), Quat::sIdentity(), 0, &Physics::GetPhysicsSystem());
-	mCharacter->SetCharacterVsCharacterCollision(&mCharacterVsCharacterCollision);
 
+	m_reset_pos = RVec3(pos.x, pos.y, pos.z);
+	m_reset_character = true;
 
 #endif
 
@@ -256,8 +274,8 @@ void CharacterCollider::HandleMovement(Vec3 move_vec, float dt)
 	mCharacter->SetLinearVelocity(new_velocity);
 	Vec3 loc = mCharacter->GetPosition();
 	//mDesiredVelocity
-	Graphics::DrawDebugRay(Physics::glm_vec3(loc), Physics::glm_vec3(mDesiredVelocity), glm::vec3(1, 0, 0));
-	Graphics::DrawDebugRay(Physics::glm_vec3(loc), Physics::glm_vec3(new_velocity), glm::vec3(0, 1, 0));
+	//Graphics::DrawDebugRay(Physics::glm_vec3(loc), Physics::glm_vec3(mDesiredVelocity), glm::vec3(1, 0, 0));
+	//Graphics::DrawDebugRay(Physics::glm_vec3(loc), Physics::glm_vec3(new_velocity), glm::vec3(0, 1, 0));
 
 }
 

@@ -164,7 +164,7 @@ void Light::Activate_Shadows(bool enabled)
 
 void Light::option_updated()
 {
-	Logger::LogDebug(LOG_POS("option_updated"), "An option has been updated.");
+	//Logger::LogDebug(LOG_POS("option_updated"), "An option has been updated.");
 	m_has_change = true;
 }
 

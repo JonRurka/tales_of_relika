@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "Network/Data.h"
+#include "Utilities.h"
 
 #define BOOST_TIMER_ENABLE_DEPRECATED
 #include <boost/timer.hpp>
@@ -86,7 +87,7 @@ private:
 
 public:
 
-	static void Sleep(int ns);
+	static void Sleep(int ns, Utilities::Sleep_Mode mode = Utilities::Sleep_Mode::Microsecond);
 
 	static Server_Main* Instance() {
 		return m_instance;

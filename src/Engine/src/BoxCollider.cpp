@@ -38,7 +38,7 @@ void BoxCollider::Update(float dt)
 {
 	base_Update(dt);
 
-
+	/*
 	AABox box = Rigidbody().GetWorldSpaceBounds();
 	box.GetSize();
 	glm::vec3 min = glm::vec3(box.mMin.GetX(), box.mMin.GetY(), box.mMin.GetZ());
@@ -47,7 +47,9 @@ void BoxCollider::Update(float dt)
 
 	Graphics::DrawDebugRay(min, glm::vec3(0, 1, 0), glm::vec3(1, 1, 0));
 	Graphics::DrawDebugRay(max, glm::vec3(0, 1, 0), glm::vec3(1, 1, 0));
-	Graphics::DrawDebugLine(min, max, glm::vec3(1, 0, 0));
+	Graphics::DrawDebugLine(min, max, glm::vec3(1, 0, 0));*/
+
+
 
 	//Logger::LogDebug(LOG_POS("Size"), "Box size: (%f, %f, %f)",
 	//	extent.x, extent.y, extent.z);
@@ -92,9 +94,10 @@ void BoxCollider::OnRefresh()
 	glm::vec3 pos = Object().Get_Transform().Position();
 	glm::quat rot = Object().Get_Transform().Rotation();
 
-	Body* rigidbody = Physics::GetBodyInterface().CreateBody(BodyCreationSettings(m_shape, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), e_type, layer));
+	create_Rigidbody(BodyCreationSettings(m_shape, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), e_type, layer));
+	//Body* rigidbody = Physics::GetBodyInterface().CreateBody(BodyCreationSettings(m_shape, RVec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), e_type, layer));
 	//Physics::GetBodyInterface().AddBody(rigidbody->GetID(), EActivation::Activate);
-	set_rigidbody(rigidbody);
+	//set_rigidbody(rigidbody);
 #endif
 }
 

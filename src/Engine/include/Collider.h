@@ -7,6 +7,7 @@
 
 class Collider : public Component 
 {
+	friend class Physics;
 public:
 	typedef std::shared_ptr<Collider> Shared;
 	typedef std::weak_ptr<Collider> Weak;
@@ -54,11 +55,20 @@ private:
 #else
 	float m_mass{ 0.0 };
 	Body* m_rigidbody{ nullptr };
+	bool m_has_rigidbody{ false };
+	glm::vec3 m_pos;
+	glm::quat m_rot;
 #endif
 
-
+	std::mutex m_lock;
 
 	bool m_active{ false };
+
+	void OnSetRigidbody(Body* body) // TODO Callback from physics engine with rigidbody.
+	{
+		m_rigidbody = body;
+		m_has_rigidbody = true;
+	}
 
 	inline static const std::string LOG_LOC{ "COLLIDER" };
 
@@ -66,6 +76,7 @@ protected:
 
 	void base_Init();
 	void base_Update(float dt);
+	void base_FixedUpdate(float dt);
 
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	btTransform create_bt_transform();
@@ -74,10 +85,15 @@ protected:
 	void set_rigidbody(std::shared_ptr<btRigidBody> body);
 	void remove_rigidbody();
 #else
+	void create_Rigidbody(BodyCreationSettings settings); // TODO from shape. Request physics engine to create it via queue
+
+	// Depricated.
 	void set_rigidbody(Body* body);
+
+
 	void remove_rigidbody();
 
-
+	
 
 #endif
 

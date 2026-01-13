@@ -15,13 +15,16 @@ using json = nlohmann::json;
 class Transform;
 class MeshRenderer;
 class Material;
+class Collider;
 class Model;
 class Scene;
 
 class WorldObject : public std::enable_shared_from_this<WorldObject>
 {
 	friend class Component;
+	friend class Collider;
 	friend class Scene;
+	friend class Physics;
 public:
 	typedef std::shared_ptr<WorldObject> Shared;
 	typedef std::weak_ptr<WorldObject> Weak;
@@ -85,6 +88,7 @@ private:
 	std::weak_ptr<WorldObject> m_parent;
 	bool m_enabled{ false };
 	int m_object_idx{ 0 };
+	std::mutex m_component_lock;
 	
 	static int m_next_idx;
 
@@ -97,6 +101,10 @@ private:
 	void Initialize_Component(std::shared_ptr<Component> comp);
 
 	void Remove_Component(int comp_idx);
+
+	void DoFixedUpdate(float dt);
+
+	int threadSafeComponentsCopy(std::mutex& lock, const std::unordered_map<int, std::shared_ptr<Component>>& from, std::vector<std::shared_ptr<Component>>& to);
 
 	static int Add_Object(WorldObject* object);
 

@@ -19,6 +19,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#define MULTITHREADED_PHYSICS true
+
 Engine* Engine::m_instance{nullptr};
 
 void Engine::Activate_Scene(Scene& value)
@@ -121,7 +123,7 @@ void Engine::initialize()
 	Resources::Instance().Init();
 	Input::Instance().Init();
 	Graphics::Instance().Init();
-	Physics::Instance().Init();
+	Physics::Instance().Init(MULTITHREADED_PHYSICS);
 
 	Graphics::Instance().Clear_Color(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
 
@@ -139,7 +141,9 @@ void Engine::game_loop()
 		ZoneScopedN("Client Main Loop");
 
 		process_input();
-		Physics::Instance().update_internal(m_deltaTime);
+
+		if (!MULTITHREADED_PHYSICS)
+			Physics::Instance().update_internal(m_deltaTime);
 
 		if (Graphics::Instance().Render_ImgUI()) {
 			ZoneScopedN("ImgUI begin frame.");

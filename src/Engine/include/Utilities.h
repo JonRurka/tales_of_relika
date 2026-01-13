@@ -29,6 +29,11 @@ class Utilities
 {
 public:
 
+	enum class Sleep_Mode {
+		Millisecond,
+		Microsecond
+	};
+
 	static std::string File_Seperator();
 
 	static std::string Get_Root_Directory();
@@ -80,7 +85,7 @@ public:
 
 	static int Hash_Chunk_Coord(int x, int y, int z);
 
-	static int Sleep(long long micro_sec);
+	static int Sleep(long long micro_sec, Sleep_Mode mode = Sleep_Mode::Microsecond);
 
 	enum class Vertex_Limit_Mode : int 
 	{

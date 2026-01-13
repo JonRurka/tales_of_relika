@@ -208,7 +208,7 @@ void udp_main_server::RunService(udp_main_server* svr)
 	Logger::Log(LOG_POS("RunService"), "Running UPD io_service");
 	while (svr->m_run) {
 		svr->io_service_.run();
-		Server_Main::Sleep(1000); // micro seconds (1ms)
+		Server_Main::Sleep(1, Utilities::Sleep_Mode::Millisecond); // micro seconds (1ms)
 	}
 	Logger::Log(LOG_POS("RunService"), "UDP io_service stopped running.");
 

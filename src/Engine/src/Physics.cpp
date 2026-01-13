@@ -2,6 +2,8 @@
 
 #include "Logger.h"
 #include "Utilities.h"
+#include "Collider.h"
+#include "WorldObject.h"
 
 #include "tracy/Tracy.hpp"
 
@@ -172,7 +174,17 @@ namespace {
 
 
 
-void Physics::update_internal(float dt)
+void Physics::RunAsync(Physics* phy)
+{
+	phy->m_last_update = Utilities::Get_Time();
+	phy->m_running = true;
+	while (phy->m_running)
+	{
+		phy->update_internal(Fixed_DeltaTime());
+	}
+}
+
+void Physics::update_internal(float fixed_dt)
 {
 	ZoneScopedN("Client Physics");
 
@@ -190,15 +202,47 @@ void Physics::update_internal(float dt)
 
 #elif (PHYSICS_BACKEND == PHYSICS_BACKEND_JOLT)
 
-	float time = Utilities::Get_Time() - m_last_update;
-	if (time < UPDATE_INTERVAL) {
-		return;
-	}
-	//Logger::LogDebug(LOG_POS("update_internal"), "physics update: %f", time * 1000);
-	m_last_update = Utilities::Get_Time();
 
+	double frame_duration_start = Utilities::Get_Time();
+
+	m_lock.lock();
+
+	double curr_tim = Utilities::Get_Time();
+	double actual_dt = curr_tim - m_last_update;
+	if (actual_dt < 0)
+		Logger::LogDebug(LOG_POS("update_internal"), "%lf - %lf = %lf", curr_tim, m_last_update, actual_dt);
+	m_last_update = curr_tim;
+
+	// TODO: This will be replaced with the Sleep call
+	if (!m_is_async) {
+		if (actual_dt < UPDATE_INTERVAL) {
+			m_lock.unlock();
+			return;
+		}
+	}
+
+	//Logger::LogDebug(LOG_POS("update_internal"), "physics update: %f", time * 1000);
+	
+
+
+	// TODO: process queue to create rigidbodies from shapes.
+	while (!m_rigidbody_req_queue.empty() && false)
+	{
+		auto req = m_rigidbody_req_queue.front();
+		m_rigidbody_req_queue.pop();
+
+		assert(!req.Col.expired());
+
+		Body* rigidbody = GetBodyInterface().CreateBody(req.ShapeSettings);
+		req.Col.lock()->OnSetRigidbody(rigidbody);
+		Add_Rigidbody(req.Col, rigidbody);
+	}
+
+
+
+	// Process added rigidbodies. Will probably need to rework to spread out the work.
 	int num_bodies_add = m_bodies_to_add.size();
-	if (num_bodies_add > 0)
+	if (num_bodies_add > 0 && false)
 	{
 		BodyID* ids = new BodyID[num_bodies_add];
 		memcpy((void*)ids, (void*)m_bodies_to_add.data(), sizeof(BodyID) * num_bodies_add);
@@ -209,9 +253,33 @@ void Physics::update_internal(float dt)
 		delete[] ids;
 	}
 
+	// TODO: A FixedUpdate function should probably be called here for each object.
+	for (const auto& pair : m_bodies)
+	{
+		pair.second.Obj->DoFixedUpdate(fixed_dt);
+	}
 
-	mPhysicsSystem->Update(time, JOLT_SIMULATION_STEPS, mTempAllocator, mJobSystem);
+	// Trigger update
+	mPhysicsSystem->Update(actual_dt, JOLT_SIMULATION_STEPS, mTempAllocator, mJobSystem);
 
+	m_lock.unlock();
+
+	
+	double frame_duration_end = Utilities::Get_Time();
+	double durr_ms = (frame_duration_end - frame_duration_start) * 1000;
+	int sleep_ms = static_cast<int>(std::roundl((fixed_dt * 1000) - durr_ms));
+	Utilities::Sleep(std::max(0, sleep_ms), Utilities::Sleep_Mode::Millisecond);
+	// TODO: Subtract the time taken to execute from the frame sleep time
+	// To attempt to lock to a fixed framerate.
+	// Sleep(16 - durr) 
+
+	m_debug_print_timer -= actual_dt;
+
+	if (m_debug_print_timer <= 0)
+	{
+		Logger::LogDebug(LOG_POS("update_internal"), "Physics frame time: %lf sec, sub from sleep: %lf ms, sleep_amount: %d ms", 1.0f / actual_dt, durr_ms, sleep_ms);
+		m_debug_print_timer = 0.5f;
+	}
 
 #endif
 
@@ -251,8 +319,9 @@ void Physics::StaticDispose()
 	m_static_inited = false;
 }
 
-void Physics::Init()
+void Physics::Init(bool async)
 {
+	m_is_async = async;
 	StaticInit();
 
 
@@ -292,6 +361,12 @@ void Physics::Init()
 	Logger::LogInfo(LOG_POS("INIT"), "Physics Initialized.");
 
 	m_initialied = true;
+
+	if (m_is_async)
+	{
+		m_thread = std::thread(RunAsync, this);
+	}
+
 }
 
 float Physics::Fixed_DeltaTime()
@@ -403,21 +478,42 @@ void Physics::remove_rigidbody(btRigidBody* body)
 }
 #elif (PHYSICS_BACKEND == PHYSICS_BACKEND_JOLT)
 
-void Physics::Add_Rigidbody(Body* body)
+void Physics::Request_Rigidbody(std::weak_ptr<Collider> col, BodyCreationSettings shape_settings)
 {
-	m_bodies[body->GetID().GetIndex()] = body;
+	rigidbody_request req{};
+	req.Col = col;
+	req.ShapeSettings = shape_settings;
+
+	m_lock.lock();
+	m_rigidbody_req_queue.push(req);
+	m_lock.unlock();
+}
+
+void Physics::Add_Rigidbody(std::weak_ptr<Collider> col, Body* body)
+{
+	assert(!col.expired());
+	body_ref body_obj{};
+	body_obj.RBody = body;
+	body_obj.Col = col;
+	body_obj.Obj = col.lock()->Object_Ptr().lock();
+
+	m_lock.lock();
+	m_bodies[body->GetID().GetIndex()] = body_obj;
 	m_bodies_to_add.push_back(body->GetID());
+	m_lock.unlock();
 }
 
 void Physics::Remove_Rigidbody(Body* body)
 {
+	m_lock.lock();
 	assert(body != nullptr);
-
+	
 	GetBodyInterface().RemoveBody(body->GetID());
 	if (m_bodies.contains(body->GetID().GetIndex()))
 	{
 		m_bodies.erase(body->GetID().GetIndex());
 	}
+	m_lock.unlock();
 }
 
 Physics::RayHit Physics::raycast_jolt(glm::vec3 from, glm::vec3 dir)

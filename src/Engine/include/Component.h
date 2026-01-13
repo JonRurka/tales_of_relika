@@ -41,10 +41,12 @@ private:
 	int m_comp_idx{ 0 };
 	std::string m_type_name{"Custom_Component"};
 	bool m_enabled{ true };
+	
 
 protected:
 	virtual void Init() = 0;
 	virtual void Update(float dt) = 0;
+	virtual void FixedUpdate(float dt) {};
 	virtual void OnDestroy() {};
 
 	std::weak_ptr<WorldObject> Instantiate();

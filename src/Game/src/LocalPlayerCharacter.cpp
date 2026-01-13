@@ -35,6 +35,7 @@ void LocalPlayerCharacter::Init()
 	m_capsule_collider = Object().Add_Component<CharacterCollider>();
 	m_capsule_collider.lock()->Mass(50.0);
 	m_capsule_collider.lock()->Activate();
+	m_controller_created = true;
 	
 	//m_capsule_collider->RigidBody()->setAngularFactor(btVector3(1.0f, 1.0f, 1.0f));
 
@@ -47,6 +48,11 @@ void LocalPlayerCharacter::Init()
 
 void LocalPlayerCharacter::Update(float dt)
 {
+	assert(!m_capsule_collider.expired());
+
+	CharacterCollider& char_col = *m_capsule_collider.lock().get();
+
+
 	if (Input::GetKeyDown(KeyCode::Escape)) {
 		m_mouse_hidden = !m_mouse_hidden;
 		Input::Set_Mouse_Visibility(m_mouse_hidden);
@@ -64,6 +70,66 @@ void LocalPlayerCharacter::Update(float dt)
 		//	m_velocity.x, m_velocity.y, m_velocity.z,
 		//	m_server_loc.x, m_server_loc.y, m_server_loc.z);
 	}
+}
+
+void LocalPlayerCharacter::FixedUpdate(float dt)
+{
+	if (!m_controller_created)
+		return;
+
+	assert(!m_capsule_collider.expired());
+	CharacterCollider& char_col = *m_capsule_collider.lock().get();
+
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
+	if (m_do_move) {
+		glm::vec3 tr_move_vec = glm::vec3(move_vec.x, 0, move_vec.z);
+
+		if (char_col.Get_Controller().onGround())
+			char_col.Get_Controller().setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
+		else
+			char_col.Get_Controller().setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
+
+	}
+	else {
+		char_col.Get_Controller().setWalkDirection(btVector3(0, 0, 0));
+	}
+
+	btVector3 pos = char_col.Get_Controller().getGhostObject()->getWorldTransform().getOrigin();
+	m_location = glm::fvec3(pos.x(), pos.y(), pos.z());
+
+	btVector3 vel = char_col.Get_Controller().getLinearVelocity();
+	m_velocity = glm::fvec3(vel.x(), vel.y(), vel.z());// (m_location - m_old_location) / dt;
+#else
+	if (true)
+	{
+		//if (m_do_move)
+			//Logger::LogDebug(LOG_POS("move_control"), "Move: (%f, %f)",
+			//	move_vec.x, move_vec.z);
+		glm::vec3 m_vec = m_move_vec.load();
+		Vec3 tr_move_vec = Vec3(m_vec.x, 0, m_vec.z);
+		if (tr_move_vec != Vec3::sZero()) {
+			tr_move_vec = tr_move_vec.Normalized();
+		}
+
+		char_col.HandleMovement(tr_move_vec, dt);
+	}
+	else {
+		//char_col.HandleMovement(Vec3(0, 0, 0), dt);
+	}
+
+	Vec3 pos = char_col.Get_Controller().GetPosition();
+	Vec3 c_up = char_col.Get_Controller().GetUp();
+	m_location = glm::fvec3(pos.GetX(), pos.GetY(), pos.GetZ());
+	glm::vec3 up = glm::vec3(c_up.GetX(), c_up.GetY(), c_up.GetZ());
+
+	//Logger::LogDebug(LOG_POS("move_control"), "Position(%i): (%f, %f, %f)",
+	//	(int)char_col.Get_Controller().IsSupported(), up.x, up.y, up.z);
+
+	Vec3 vel = char_col.Get_Controller().GetLinearVelocity();
+	m_velocity = glm::fvec3(vel.GetX(), vel.GetY(), vel.GetZ());
+
+#endif
+
 }
 
 void LocalPlayerCharacter::OnDestroy()
@@ -103,77 +169,30 @@ void LocalPlayerCharacter::move_control(float dt)
 	glm::vec3 right = -glm::normalize(glm::vec3(dir_right.x, 0, dir_right.z));
 
 	m_do_move = false;
-	glm::vec3 move_vec = glm::vec3(0, 0, 0);
+	glm::vec3 m_vec = glm::vec3(0, 0, 0);
+	//m_move_vec = glm::vec3(0, 0, 0);
 	if (Input::GetKey(input::KeyCode::W)) {
 		//Logger::LogDebug(LOG_POS("move_control"), "move forward");
 		m_do_move = true;
-		move_vec += forward;
+		m_vec += forward;
 		//Logger::LogDebug(LOG_POS("move_control"), "W");
 	}
 	if (Input::GetKey(input::KeyCode::S)) {
 		m_do_move = true;
-		move_vec -= forward;
+		m_vec -= forward;
 		//Logger::LogDebug(LOG_POS("move_control"), "S");
 	}
 	if (Input::GetKey(input::KeyCode::A)) {
 		m_do_move = true;
-		move_vec += right;
+		m_vec += right;
 		//Logger::LogDebug(LOG_POS("move_control"), "A");
 	}
 	if (Input::GetKey(input::KeyCode::D)) {
 		m_do_move = true;
-		move_vec -= right;
+		m_vec -= right;
 		//Logger::LogDebug(LOG_POS("move_control"), "D");
 	}
-	
-#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
-	if (m_do_move) {
-		glm::vec3 tr_move_vec = glm::vec3(move_vec.x, 0, move_vec.z);
-
-		if (char_col.Get_Controller().onGround())
-			char_col.Get_Controller().setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
-		else
-			char_col.Get_Controller().setWalkDirection(btVector3(tr_move_vec.x, tr_move_vec.y, tr_move_vec.z).normalized() / 10);
-
-	}
-	else {
-		char_col.Get_Controller().setWalkDirection(btVector3(0, 0, 0));
-	}
-
-	btVector3 pos = char_col.Get_Controller().getGhostObject()->getWorldTransform().getOrigin();
-	m_location = glm::fvec3(pos.x(), pos.y(), pos.z());
-
-	btVector3 vel = char_col.Get_Controller().getLinearVelocity();
-	m_velocity = glm::fvec3(vel.x(), vel.y(), vel.z());// (m_location - m_old_location) / dt;
-#else
-	if (true) 
-	{
-		//if (m_do_move)
-			//Logger::LogDebug(LOG_POS("move_control"), "Move: (%f, %f)",
-			//	move_vec.x, move_vec.z);
-		Vec3 tr_move_vec = Vec3(move_vec.x, 0, move_vec.z);
-		if (tr_move_vec != Vec3::sZero()) {
-			tr_move_vec = tr_move_vec.Normalized();
-		}
-
-		char_col.HandleMovement(tr_move_vec, dt);
-	}
-	else {
-		//char_col.HandleMovement(Vec3(0, 0, 0), dt);
-	}
-
-	Vec3 pos = char_col.Get_Controller().GetPosition();
-	Vec3 c_up = char_col.Get_Controller().GetUp();
-	m_location = glm::fvec3(pos.GetX(), pos.GetY(), pos.GetZ());
-	glm::vec3 up = glm::vec3(c_up.GetX(), c_up.GetY(), c_up.GetZ());
-
-	//Logger::LogDebug(LOG_POS("move_control"), "Position(%i): (%f, %f, %f)",
-	//	(int)char_col.Get_Controller().IsSupported(), up.x, up.y, up.z);
-
-	Vec3 vel = char_col.Get_Controller().GetLinearVelocity();
-	m_velocity = glm::fvec3(vel.GetX(), vel.GetY(), vel.GetZ());
-
-#endif
+	m_move_vec = m_vec;
 
 
 	m_old_location = m_location;
@@ -187,8 +206,8 @@ void LocalPlayerCharacter::move_control(float dt)
 		m_last_send_move = Utilities::Get_Time();
 		std::vector<uint8_t> send_data;
 		send_data.push_back((m_do_move ? 0x01 : 0x00));
-		send_data = BufferUtils::AppendFloat(send_data, move_vec.x);
-		send_data = BufferUtils::AppendFloat(send_data, move_vec.z);
+		send_data = BufferUtils::AppendFloat(send_data, m_vec.x);
+		send_data = BufferUtils::AppendFloat(send_data, m_vec.z);
 		// TODO: heading
 		send_data = BufferUtils::Append_UInt64(send_data, m_move_send_id);
 		
@@ -201,11 +220,11 @@ void LocalPlayerCharacter::move_control(float dt)
 	
 	if (m_received_server_pos && m_do_move)
 	{
-		glm::vec3 pred_server_pos = (m_server_loc + glm::vec3(0, 0.0f, 0)) + (m_velocity * (float)m_move_trip_time);
+		glm::vec3 pred_server_pos = (m_server_loc + glm::vec3(0, 0.0f, 0)) + (m_velocity.load() * (float)m_move_trip_time);
 
 		if (m_do_move)
 		{
-			glm::vec3 new_pos = glm::mix(m_location, pred_server_pos, dt * 2);
+			glm::vec3 new_pos = glm::mix(m_location.load(), pred_server_pos, dt * 2);
 			char_col.Set_Location(new_pos);
 			m_body_trans.lock()->Position(new_pos);
 			m_cam_trans.lock()->Position(new_pos + cam_offset);
@@ -217,7 +236,7 @@ void LocalPlayerCharacter::move_control(float dt)
 		// Start the process of moving back they player if they desync.
 		if (!m_moving_player_back)
 		{
-			if (glm::distance(m_location, pred_server_pos) > 0.5f)
+			if (glm::distance(m_location.load(), pred_server_pos) > 0.5f)
 			{
 				m_moving_player_back = true;
 				move_dt = 1.0;
@@ -228,13 +247,13 @@ void LocalPlayerCharacter::move_control(float dt)
 		else
 		{
 			move_dt += dt;
-			glm::vec3 new_pos = glm::mix(m_location, pred_server_pos, move_dt);
+			glm::vec3 new_pos = glm::mix(m_location.load(), pred_server_pos, move_dt);
 			char_col.Set_Location(new_pos);
 			m_body_trans.lock()->Position(new_pos);
 			m_cam_trans.lock()->Position(new_pos + cam_offset);
 			m_location = new_pos;
 
-			if (glm::distance(m_location, pred_server_pos) < 0.1f) {
+			if (glm::distance(m_location.load(), pred_server_pos) < 0.1f) {
 				m_moving_player_back = false;
 				Logger::LogDebug(LOG_POS("move_control"), "Stop syncing position now.");
 			}
@@ -294,7 +313,7 @@ void LocalPlayerCharacter::look_control(float dt)
 		float mouse_y = Input::Get_Input_Y();
 		update_rotation(dt, mouse_x, mouse_y);
 	}
-	m_cam_trans.lock()->Position(m_location + cam_offset);
+	m_cam_trans.lock()->Position(m_location.load() + cam_offset);
 }
 
 void LocalPlayerCharacter::init_geometry()

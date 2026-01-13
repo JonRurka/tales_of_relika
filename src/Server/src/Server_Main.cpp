@@ -372,10 +372,17 @@ void Server_Main::Dispose()
 	}
 }
 
-void Server_Main::Sleep(int micro_s)
+void Server_Main::Sleep(int micro_s, Utilities::Sleep_Mode mode)
 {
 	ZoneScopedN("Sleep");
-	Utilities::Sleep(std::max(micro_s, MIN_SLEEP_TIME));
+
+	int min_sleep = MIN_SLEEP_TIME;
+	if (mode == Utilities::Sleep_Mode::Millisecond)
+	{
+		min_sleep /= 1000;
+	}
+
+	Utilities::Sleep(std::max(micro_s, min_sleep), mode);
 }
 
 uint64_t Server_Main::GetMemoryUsage()

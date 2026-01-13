@@ -5,12 +5,14 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <queue>
 
 #include "Physics_base.h"
 
 class Engine;
 class Collider;
 class BoxCollider;
+class WorldObject;
 
 class Physics {
 	friend class Engine;
@@ -45,7 +47,7 @@ public:
 
 	static void StaticInit();
 	static void StaticDispose();
-	void Init();
+	void Init(bool async);
 
 	static float Fixed_DeltaTime();
 
@@ -83,10 +85,12 @@ public:
 	static btDiscreteDynamicsWorld& GetDynamicWorld() { return *Instance().m_dynamicsWorld; }
 #elif (PHYSICS_BACKEND==PHYSICS_BACKEND_JOLT)
 
-	void Add_Rigidbody(Body* body);
+	void Request_Rigidbody(std::weak_ptr<Collider> col, BodyCreationSettings shape_settings); // add shape to queue to be processed
 
+	void Add_Rigidbody(std::weak_ptr<Collider> col, Body* body);
+
+	// Do not call from Fixed Update.
 	void Remove_Rigidbody(Body* body);
-
 
 	static BodyInterface& GetBodyInterface() { return *Instance().mBodyInterface; }
 	static PhysicsSystem& GetPhysicsSystem() { return *Instance().mPhysicsSystem; }
@@ -140,11 +144,22 @@ private:
 	PhysicsSystem* mPhysicsSystem{ nullptr };
 	BodyInterface* mBodyInterface{ nullptr };
 
-	std::unordered_map<uint32_t, Body*> m_bodies;
+	struct body_ref{
+		Body* RBody;
+		std::weak_ptr<Collider> Col;
+		std::shared_ptr<WorldObject> Obj;
+	};
+	std::unordered_map<uint32_t, body_ref> m_bodies;
 
 	PhysicsSettings	mPhysicsSettings;
 
 	std::vector<BodyID> m_bodies_to_add;
+
+	struct rigidbody_request {
+		BodyCreationSettings ShapeSettings;
+		std::weak_ptr<Collider> Col;
+	};
+	std::queue<rigidbody_request> m_rigidbody_req_queue;
 
 	static RayHit		raycast_jolt(glm::vec3 from, glm::vec3 dir);
 	static RayHitList	raycastAll_jolt(glm::vec3 from, glm::vec3 dir);
@@ -153,14 +168,20 @@ private:
 
 #endif
 
+	bool m_is_async{ false };
+	std::mutex m_lock;
+
 	static bool m_static_inited;
 
 	double m_last_update{ 0 };
 	float m_gravity{ DEFAULT_GRAVITY };
 	bool m_initialied{ false };
+	bool m_running{ false };
+	std::thread m_thread;
 
+	double m_debug_print_timer{ .5 };
 	
-
+	static void RunAsync(Physics* phy);
 	void update_internal(float dt);
 
 

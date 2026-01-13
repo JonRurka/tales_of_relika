@@ -32,6 +32,7 @@ protected:
 
 	void Init() override;
 	void Update(float dt) override;
+	void FixedUpdate(float dt) override;
 	void Load(json data) override;
 	void OnDestroy() override;
 

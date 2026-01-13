@@ -34,6 +34,7 @@ public:
 private:
 
 
+
 	inline static const std::string LOG_LOC{ "CHARACTER_COLLIDER" };
 
 protected:
@@ -88,10 +89,18 @@ protected:
 	// True when the player is pressing movement controls
 	bool mAllowSliding = false;
 
+	Vec3 m_pos;
+	Quat m_rot;
+	volatile bool m_reset_character{ false };
+	RVec3 m_reset_pos;
+
+	std::mutex m_lock;
+
 #endif
 
 	void Init() override;
 	void Update(float dt) override;
+	void FixedUpdate(float dt) override;
 	void Load(json data) override;
 	void OnDestroy() override;
 

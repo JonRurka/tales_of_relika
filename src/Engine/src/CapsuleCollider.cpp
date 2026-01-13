@@ -45,6 +45,11 @@ void CapsuleCollider::Update(float dt)
 	base_Update(dt);
 }
 
+void CapsuleCollider::FixedUpdate(float dt)
+{
+	base_FixedUpdate(dt);
+}
+
 void CapsuleCollider::Load(json data)
 {
 }

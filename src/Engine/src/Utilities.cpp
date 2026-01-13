@@ -43,6 +43,7 @@ using namespace DynamicCompute::Compute;
 namespace {
 
 	std::chrono::high_resolution_clock::time_point g_start_point;
+	bool g_timer_inited{ false };
 
 	//char g_read_buffer[MAX_FILE_READ_SIZE];
 	std::array<char, MAX_FILE_READ_SIZE> g_read_buffer;
@@ -506,11 +507,15 @@ std::string Utilities::Read_File_String(std::string path)
 
 void Utilities::Init_Time()
 {
+	if (g_timer_inited)
+		return;
 	g_start_point = std::chrono::high_resolution_clock::now();
+	g_timer_inited = true;
 }
 
 double Utilities::Get_Time()
 {
+	Init_Time();
 	auto now_point = std::chrono::high_resolution_clock::now();
 	return std::chrono::duration<double>(now_point - g_start_point).count();
 	//return glfwGetTime();
@@ -744,8 +749,12 @@ int Utilities::Hash_Chunk_Coord(int x, int y, int z)
 	return (x << 16) ^ (y << 8) ^ z;
 }
 
-int Utilities::Sleep(long long micro_sec)
+int Utilities::Sleep(long long micro_sec, Sleep_Mode mode)
 {
+	if (mode == Sleep_Mode::Millisecond) {
+		micro_sec *= 1000;
+	}
+
 	return micro_sleep(micro_sec);
 }
 
