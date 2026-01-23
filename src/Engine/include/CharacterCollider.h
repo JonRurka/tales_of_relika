@@ -27,13 +27,15 @@ public:
 #else
 	CharacterVirtual& Get_Controller() { return *mCharacter.GetPtr(); }
 
+	bool Character_Inited() { return m_has_character; }
+
 	void HandleMovement(Vec3 move_vec, float dt);
 
 #endif
 
 private:
 
-
+	bool m_has_character{ false };
 
 	inline static const std::string LOG_LOC{ "CHARACTER_COLLIDER" };
 

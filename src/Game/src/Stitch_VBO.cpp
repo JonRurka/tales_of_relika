@@ -219,6 +219,8 @@ void Stitch_VBO::Process(Mesh& mesh, glm::ivec4 count, bool gpu_copy, bool apply
 			std::vector<float> raw_data(m_raw_vert_data, m_raw_vert_data + (count.x * FLOAT_STRIDE));
 			mesh.Set_Raw_Vertex_Data(raw_data, false);
 			mesh.Activate();
+
+			//Logger::LogDebug(LOG_POS("Process"), "actually did render.");
 		}
 
 		end = std::chrono::high_resolution_clock::now();

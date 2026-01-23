@@ -85,13 +85,16 @@ public:
 	static btDiscreteDynamicsWorld& GetDynamicWorld() { return *Instance().m_dynamicsWorld; }
 #elif (PHYSICS_BACKEND==PHYSICS_BACKEND_JOLT)
 
+	// Don't call from fixed update. Thread-safe add call.
 	void Request_Rigidbody(std::weak_ptr<Collider> col, BodyCreationSettings shape_settings); // add shape to queue to be processed
 
-	void Add_Rigidbody(std::weak_ptr<Collider> col, Body* body);
-
-	// Do not call from Fixed Update.
 	void Remove_Rigidbody(Body* body);
 
+	// DO ONLY call from fixed update, not thread-safe.
+	uint32_t Add_Collider(std::weak_ptr<Collider> col, bool do_lock = true);
+
+	void Remove_Collider(uint32_t id, bool do_lock = true);
+		
 	static BodyInterface& GetBodyInterface() { return *Instance().mBodyInterface; }
 	static PhysicsSystem& GetPhysicsSystem() { return *Instance().mPhysicsSystem; }
 	static TempAllocator& GetTempAllocator() { return *Instance().mTempAllocator; }
@@ -146,10 +149,19 @@ private:
 
 	struct body_ref{
 		Body* RBody;
+		std::string Object_Name;
+		std::weak_ptr<Collider> Col;
+		std::shared_ptr<WorldObject> Obj;
+	};
+	struct collider_ref {
+		std::string Object_Name;
 		std::weak_ptr<Collider> Col;
 		std::shared_ptr<WorldObject> Obj;
 	};
 	std::unordered_map<uint32_t, body_ref> m_bodies;
+
+	uint32_t m_char_latest_id = 0;
+	std::unordered_map<uint32_t, collider_ref> m_colliders;
 
 	PhysicsSettings	mPhysicsSettings;
 
@@ -161,10 +173,18 @@ private:
 	};
 	std::queue<rigidbody_request> m_rigidbody_req_queue;
 
+
+	std::queue<Body*> m_rigidbody_rem_queue;
+
 	static RayHit		raycast_jolt(glm::vec3 from, glm::vec3 dir);
 	static RayHitList	raycastAll_jolt(glm::vec3 from, glm::vec3 dir);
 
 	static void optimize_jolt();
+
+	void add_rigidbody_internal(std::weak_ptr<Collider> col, Body* body);
+
+	// Do not call from Fixed Update.
+	bool remove_rigidbody_internal(Body* body);
 
 #endif
 
@@ -176,7 +196,7 @@ private:
 	double m_last_update{ 0 };
 	float m_gravity{ DEFAULT_GRAVITY };
 	bool m_initialied{ false };
-	bool m_running{ false };
+	volatile bool m_running{ false };
 	std::thread m_thread;
 
 	double m_debug_print_timer{ .5 };

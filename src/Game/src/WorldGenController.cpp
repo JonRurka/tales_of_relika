@@ -737,6 +737,11 @@ bool WorldGenController::queue_chunk_create(glm::ivec3 chunk_coord)
 		return false;
 	}
 
+	if (m_cached_chunks.size() <= 0)
+	{
+		return false;
+	}
+
 	ChunkRef chunk = m_cached_chunks.front();
 	m_cached_chunks.pop();
 

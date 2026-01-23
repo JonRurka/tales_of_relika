@@ -45,6 +45,16 @@ public:
 
 	bool Collision_Available();
 
+	void Enable_Collision() 
+	{ 
+		// to keep this from triggering more than once, as 
+		// it might take another frame or two to actually enable.
+		m_has_collision = true;
+
+		// trigger regeneration of the chunk.
+		Refresh(MeshUpdateMode::Collision);
+	}
+
 	bool Collision_Enabled() const { return m_has_collision; }
 
 	int Should_Update();

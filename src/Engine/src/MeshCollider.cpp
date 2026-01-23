@@ -215,6 +215,8 @@ void MeshCollider::Update(float dt)
 void MeshCollider::FixedUpdate(float dt)
 {
 	base_FixedUpdate(dt);
+
+	//Logger::LogDebug(LOG_POS("FixedUpdate"), "call fixed update.");
 }
 
 void MeshCollider::Load(json data)
@@ -256,8 +258,10 @@ void MeshCollider::OnRefresh()
 	glm::vec3 t_pos = Object().Get_Transform().Position();
 	glm::quat t_rot = Object().Get_Transform().Rotation();
 	RVec3 r_pos = RVec3(t_pos.x, t_pos.y, t_pos.z);
-	Quat r_quat = Quat(t_rot.x, t_rot.y, t_rot.z, t_rot.w);
-	create_Rigidbody(BodyCreationSettings(m_shape_settings, r_pos, r_quat, EMotionType::Static, Layers::NON_MOVING));
+	Quat r_quat = Quat::sIdentity();
+	bool normalizsed = r_quat.IsNormalized();
+	BodyCreationSettings create_settings = BodyCreationSettings(m_shape_settings, r_pos, r_quat, EMotionType::Static, Layers::NON_MOVING);
+	create_Rigidbody(create_settings);
 
 
 	//Body* rigidbody = Physics::GetBodyInterface().CreateBody(BodyCreationSettings(m_shape_settings, r_pos, r_quat, EMotionType::Static, Layers::NON_MOVING));

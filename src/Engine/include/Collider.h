@@ -58,6 +58,7 @@ private:
 	bool m_has_rigidbody{ false };
 	glm::vec3 m_pos;
 	glm::quat m_rot;
+	uint32_t m_col_id{ 0 };
 #endif
 
 	std::mutex m_lock;

@@ -77,7 +77,7 @@ void CharacterCollider::Set_Location(glm::vec3 pos)
 
 void CharacterCollider::FixedUpdate(float dt)
 {
-
+	//Logger::LogDebug(LOG_POS("FixedUpdate"), "call fixed update.");
 
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	if (m_charCon == nullptr)
@@ -95,6 +95,8 @@ void CharacterCollider::FixedUpdate(float dt)
 		m_reset_character = false;
 		mCharacter = new CharacterVirtual(mSettings, m_reset_pos, Quat::sIdentity(), 0, &Physics::GetPhysicsSystem());
 		mCharacter->SetCharacterVsCharacterCollision(&mCharacterVsCharacterCollision);
+		m_has_character = true;
+		Logger::LogDebug(LOG_POS("FixedUpdate"), "Refreshed character controller.");
 	}
 
 	if (mCharacter.GetPtr() == nullptr)
@@ -146,7 +148,7 @@ void CharacterCollider::OnDestroy()
 	m_shape.reset();
 #else
 	
-
+	m_has_character = false;
 
 
 
@@ -205,11 +207,15 @@ void CharacterCollider::OnRefresh()
 #endif
 
 	Logger::LogDebug(LOG_POS("OnRefresh"), "Created character collider components.");
+	//assert(false);
 }
 
 
 void CharacterCollider::HandleMovement(Vec3 move_vec, float dt)
 {
+	if (!m_has_character || mCharacter.GetPtr() == nullptr)
+		return;
+
 	bool player_controls_horizontal_velocity = sControlMovementDuringJump || mCharacter->IsSupported();
 	if (player_controls_horizontal_velocity)
 	{

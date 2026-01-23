@@ -142,8 +142,8 @@ void Engine::game_loop()
 
 		process_input();
 
-		if (!MULTITHREADED_PHYSICS)
-			Physics::Instance().update_internal(m_deltaTime);
+		//if (!MULTITHREADED_PHYSICS)
+		//	Physics::Instance().update_internal(m_deltaTime);
 
 		if (Graphics::Instance().Render_ImgUI()) {
 			ZoneScopedN("ImgUI begin frame.");

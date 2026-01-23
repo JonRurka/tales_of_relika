@@ -7,7 +7,8 @@
 #define DRAW_DEBUG_BOX false
 #define DRAW_DEBUG_COLLISION_BOX true
 #define DEBUG_DRAW_VERTICES false
-#define DESPAWN_ENABLE true
+#define DESPAWN_ENABLE false
+#define COLLISION_ENABLED true
 #define COLLISION_DISTANCE 2
 
 void TerrainChunk::Init()
@@ -116,6 +117,11 @@ void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts, MeshUpdateMode mode)
 
 	//Logger::LogDebug(LOG_POS("Process_Mesh_Update"), "Process update.");
 
+	/*if (mode == MeshUpdateMode::Graphic || mode == MeshUpdateMode::Both) {
+		Logger::LogDebug(LOG_POS("Process_Mesh_Update"), "Render %s: %d", 
+			Object().Name().c_str(), counts.x);
+	}*/
+
 	double vbo_time_start = Utilities::Get_Time();
 	m_vbo_stitch->Process(*m_voxel_opaque_mesh.get(), counts, false, mode == MeshUpdateMode::Graphic || mode == MeshUpdateMode::Both);
 	double vbo_time_end = Utilities::Get_Time();
@@ -170,7 +176,7 @@ bool TerrainChunk::Collision_Available()
 	if (chunk_dist <= m_collision_distance) {
 		//Logger::LogDebug(LOG_POS("Collision_Enabled"), "(%i, %i, %i) - (%i, %i, %i): %f",
 		//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z, target.x, target.y, target.z, chunk_dist);
-		return true;
+		return COLLISION_ENABLED;
 	}
 	return false;
 }
@@ -248,14 +254,7 @@ void TerrainChunk::Update(float dt)
 	if (Collision_Available() && !Collision_Enabled())
 	{
 		//Logger::LogDebug(LOG_POS("Update"), "(%d, %d): Enabling collider...", m_chunk_coords.x, m_chunk_coords.z);
-
-
-		// to keep this from triggering more than once, as 
-		// it might take another frame or two to actually enable.
-		m_has_collision = true;
-
-		// trigger regeneration of the chunk.
-		Refresh(MeshUpdateMode::Collision);
+		Enable_Collision();
 		
 	}
 	else if (!Collision_Available() && Collision_Enabled())

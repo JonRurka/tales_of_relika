@@ -50,7 +50,7 @@ void LocalPlayerCharacter::Update(float dt)
 {
 	assert(!m_capsule_collider.expired());
 
-	CharacterCollider& char_col = *m_capsule_collider.lock().get();
+	//CharacterCollider& char_col = *m_capsule_collider.lock().get();
 
 
 	if (Input::GetKeyDown(KeyCode::Escape)) {
@@ -79,6 +79,11 @@ void LocalPlayerCharacter::FixedUpdate(float dt)
 
 	assert(!m_capsule_collider.expired());
 	CharacterCollider& char_col = *m_capsule_collider.lock().get();
+
+	if (!char_col.Character_Inited())
+	{
+		return;
+	}
 
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	if (m_do_move) {
@@ -140,6 +145,11 @@ void LocalPlayerCharacter::jump_control(float dt)
 {
 	assert(!m_capsule_collider.expired());
 
+	if (!m_capsule_collider.lock()->Character_Inited())
+	{
+		return;
+	}
+
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	if (Input::GetKeyDown(KeyCode::Space) && 
 		m_capsule_collider.lock()->Get_Controller().onGround())
@@ -160,7 +170,12 @@ void LocalPlayerCharacter::move_control(float dt)
 	assert(!m_cam_trans.expired());
 	assert(!m_capsule_collider.expired());
 
-	CharacterCollider& char_col = *m_capsule_collider.lock().get();
+	if (!m_capsule_collider.lock()->Character_Inited())
+	{
+		return;
+	}
+
+	//CharacterCollider& char_col = *m_capsule_collider.lock().get();
 
 	glm::vec3 dir_forward = m_cam_trans.lock()->Forward();
 	glm::vec3 dir_right = m_cam_trans.lock()->Right();
@@ -225,7 +240,7 @@ void LocalPlayerCharacter::move_control(float dt)
 		if (m_do_move)
 		{
 			glm::vec3 new_pos = glm::mix(m_location.load(), pred_server_pos, dt * 2);
-			char_col.Set_Location(new_pos);
+			//char_col.Set_Location(new_pos);
 			m_body_trans.lock()->Position(new_pos);
 			m_cam_trans.lock()->Position(new_pos + cam_offset);
 			m_location = new_pos;
@@ -248,7 +263,7 @@ void LocalPlayerCharacter::move_control(float dt)
 		{
 			move_dt += dt;
 			glm::vec3 new_pos = glm::mix(m_location.load(), pred_server_pos, move_dt);
-			char_col.Set_Location(new_pos);
+			//char_col.Set_Location(new_pos);
 			m_body_trans.lock()->Position(new_pos);
 			m_cam_trans.lock()->Position(new_pos + cam_offset);
 			m_location = new_pos;

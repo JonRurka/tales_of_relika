@@ -95,9 +95,13 @@ void WorldObject::DoUpdate(float dt)
 
 void WorldObject::DoFixedUpdate(float dt)
 {
+	//Logger::LogDebug(LOG_POS("DoFixedUpdate"), "call fixed update (%s): %d", Name().c_str(), Enabled());
+
 	if (!Enabled()) {
 		return;
 	}
+
+	//Logger::LogDebug(LOG_POS("DoFixedUpdate"), "call fixed update.");
 
 	std::vector<std::shared_ptr<Component>> comp_list;
 	threadSafeComponentsCopy(m_component_lock, m_components, comp_list);

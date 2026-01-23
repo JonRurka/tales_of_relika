@@ -7,16 +7,25 @@
 
 void Collider::base_Init()
 {
+	m_col_id = Physics::Instance().Add_Collider(std::dynamic_pointer_cast<Collider>(shared_from_this()));
+
+	Transform& obj_trans = Object().Get_Transform();
+
+	m_pos = obj_trans.Position();
+	m_rot = obj_trans.Rotation();
 }
 
 void Collider::base_Update(float dt)
 {
-	Transform& obj_trans = Object().Get_Transform();
+	if (m_has_rigidbody && Is_Dynamic())
+	{
+		Transform& obj_trans = Object().Get_Transform();
 
-	m_lock.lock();
-	obj_trans.Position(m_pos);
-	obj_trans.Rotation(m_rot);
-	m_lock.unlock();
+		m_lock.lock();
+		obj_trans.Position(m_pos);
+		obj_trans.Rotation(m_rot);
+		m_lock.unlock();
+	}
 }
 
 void Collider::base_FixedUpdate(float dt)
@@ -40,9 +49,10 @@ void Collider::base_FixedUpdate(float dt)
 		//	Object()->Name().c_str(), m_mass, pos.x(), pos.y(), pos.z());
 	}
 #else
-	if (Is_Dynamic())
+	if (m_has_rigidbody && Is_Dynamic())
 	{
-		
+		assert(m_rigidbody != nullptr);
+
 		RVec3 pos = m_rigidbody->GetPosition();
 		Quat rot = m_rigidbody->GetRotation();
 
@@ -65,6 +75,8 @@ void Collider::Destroy_Collider()
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	
 #else
+
+	Physics::Instance().Remove_Collider(m_col_id);
 
 #endif
 }
