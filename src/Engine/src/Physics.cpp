@@ -336,8 +336,8 @@ void Physics::update_internal(float fixed_dt)
 
 	if (m_debug_print_timer <= 0)
 	{
-		Logger::LogDebug(LOG_POS("update_internal"), "Physics frame time (%d / %d): %lf sec, sub from sleep: %lf ms, sleep_amount: %d ms", 
-			in_broadphase_cnt, total_body_cnt, 1.0f / actual_dt, durr_ms, sleep_ms);
+		//Logger::LogDebug(LOG_POS("update_internal"), "Physics frame time (%d / %d): %lf sec, sub from sleep: %lf ms, sleep_amount: %d ms", 
+		//	in_broadphase_cnt, total_body_cnt, 1.0f / actual_dt, durr_ms, sleep_ms);
 		m_debug_print_timer = 0.5f;
 	}
 
@@ -553,8 +553,8 @@ void Physics::add_rigidbody_internal(std::weak_ptr<Collider> col, Body* body)
 {
 	assert(!col.expired());
 
-	Logger::LogDebug(LOG_POS("add_rigidbody_internal"), "Adding rigidbody(%d): %s", 
-		body->GetID(), col.lock()->Object().Name().c_str());
+	//Logger::LogDebug(LOG_POS("add_rigidbody_internal"), "Adding rigidbody(%d): %s", 
+	//	body->GetID(), col.lock()->Object().Name().c_str());
 	
 	body_ref body_obj{};
 	body_obj.RBody = body;
@@ -577,8 +577,8 @@ bool Physics::remove_rigidbody_internal(Body* body)
 
 	body_ref b_ref = m_bodies[body->GetID().GetIndex()];
 
-	Logger::LogDebug(LOG_POS("remove_rigidbody_internal"), "Removing rigidbody(%d): %s", 
-		body->GetID(), b_ref.Object_Name.c_str());
+	//Logger::LogDebug(LOG_POS("remove_rigidbody_internal"), "Removing rigidbody(%d): %s", 
+	//	body->GetID(), b_ref.Object_Name.c_str());
 	
 	//GetBodyInterface().RemoveBody(body->GetID());
 	if (body->IsInBroadPhase()) {
@@ -615,8 +615,8 @@ uint32_t Physics::Add_Collider(std::weak_ptr<Collider> col, bool do_lock)
 	std::mutex dummyMutex;
 	std::lock_guard<std::mutex> lock(do_lock ? m_lock : dummyMutex);
 
-	Logger::LogDebug(LOG_POS("Add_Character_Controller"), "Adding collider: %s",
-		col.lock()->Object().Name().c_str());
+	//Logger::LogDebug(LOG_POS("Add_Character_Controller"), "Adding collider: %s",
+	//	col.lock()->Object().Name().c_str());
 
 	collider_ref body_obj{};
 	body_obj.Object_Name = col.lock()->Object().Name();

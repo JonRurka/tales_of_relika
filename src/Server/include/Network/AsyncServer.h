@@ -34,7 +34,7 @@ class SocketUser;
 
 #define SERVER_LOCAL true
 
-#define VAST_AI_PORT_MAPPING true
+#define VAST_AI_PORT_MAPPING false
 
 class AsyncServer {
 	friend class SocketUser;
@@ -87,7 +87,7 @@ public:
 	//void Process(SocketUser* socket_user, Data data);
 	void Process(SocketUser* socket_user, uint8_t command, uint8_t* data, int size, Protocal type);
 	
-	int GetExternalPort(int port);
+	int GetExternalPort(uint16_t port);
 
 	static AsyncServer* GetInstance() {
 		return m_instance;

@@ -160,6 +160,12 @@ AABB Mesh::CalculateBounds()
 	return m_bounds;
 }
 
+void Mesh::Clear()
+{
+	Set_Raw_Vertex_Data(std::vector<float>());
+	m_active = false;
+}
+
 void Mesh::Set_Raw_Vertex_Data(std::vector<float> data, bool delete_old)
 {
 	if (delete_old)

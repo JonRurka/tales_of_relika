@@ -139,6 +139,8 @@ public:
 		return m_num_indices > 0;
 	}
 
+	void Clear();
+
 	AABB Bounds() const { return m_bounds; }
 	void SetBounds(AABB new_bounds) { m_bounds = new_bounds; }
 	AABB CalculateBounds();

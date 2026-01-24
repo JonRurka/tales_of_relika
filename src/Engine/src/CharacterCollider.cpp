@@ -72,6 +72,12 @@ void CharacterCollider::Set_Location(glm::vec3 pos)
 	Get_Controller().warp(bt_new_pos);
 #else
 	Get_Controller().SetPosition(Vec3(pos.x, pos.y, pos.z));
+
+	m_lock.lock();
+	m_pos = mCharacter->GetPosition();
+	m_rot = mCharacter->GetRotation();
+	m_lock.unlock();
+
 #endif
 }
 

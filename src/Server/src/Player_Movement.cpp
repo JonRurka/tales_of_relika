@@ -156,7 +156,7 @@ void Player_Movement::Update(float dt)
 
 	Vec3 move_vec = Vec3(m_move_state.Move_Dir.x, 0, m_move_state.Move_Dir.y);
 
-	if (m_move_state.Do_Move)
+	if (!m_move_state.Do_Move)
 		move_vec = Vec3(0, 0, 0);
 
 	if (move_vec != Vec3::sZero()) {
@@ -225,6 +225,21 @@ void Player_Movement::Update(float dt)
 
 	// Update character velocity
 	mCharacter->SetLinearVelocity(new_velocity);
+
+	CharacterVirtual::ExtendedUpdateSettings update_settings;
+	// Update the character position
+	mCharacter->ExtendedUpdate(dt, //m_current_world->Physics()->Fixed_DeltaTime(),
+		-mCharacter->GetUp() * m_current_world->Physics()->GetPhysicsSystem().GetGravity().Length(),
+		update_settings,
+		m_current_world->Physics()->GetPhysicsSystem().GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
+		m_current_world->Physics()->GetPhysicsSystem().GetDefaultLayerFilter(Layers::MOVING),
+		{ },
+		{ },
+		m_current_world->Physics()->GetTempAllocator());
+
+	RVec3 new_pos = mCharacter->GetPosition();
+	m_position = glm::vec3(new_pos.GetX(), new_pos.GetY(), new_pos.GetZ());
+	m_velocity = glm::vec3(new_velocity.GetX(), new_velocity.GetY(), new_velocity.GetZ());
 }
 
 

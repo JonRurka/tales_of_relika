@@ -61,6 +61,8 @@ void SocketUser::HandleStartConnect_Finished(bool successfull)
 		
 		uint16_t udp_port = _server->GetExternalPort(EnableUdp());
 
+		assert(udp_port != 0);
+
 		uint8_t* udp_buf = reinterpret_cast<uint8_t*>(&udp_id);
 		uint8_t* udp_port_buf = reinterpret_cast<uint8_t*>(&udp_port);
 
@@ -91,9 +93,11 @@ void SocketUser::HandleStartConnect_Finished(bool successfull)
 uint16_t SocketUser::EnableUdp()
 {
 	udp_connection_client = _server->m_udp_server->create(TcpEndPoint.address());
-	UdpEndPoint.port(udp_connection_client->GetPort());
+	uint16_t port = udp_connection_client->GetPort();
+	assert(port != 0);
+	UdpEndPoint.port(port);
 	UdpEnabled = true;
-	return UdpEndPoint.port();
+	return port;
 
 	//Logger.Log("UDP end point: {0}:{1}", udpEndPoint.Address.ToString(), udpEndPoint.Port);
 	//UdpEnabled = true;

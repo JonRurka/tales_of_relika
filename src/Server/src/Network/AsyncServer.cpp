@@ -159,13 +159,16 @@ void AsyncServer::LoadPublicPortMap()
     }
 }
 
-int AsyncServer::GetExternalPort(int port)
+int AsyncServer::GetExternalPort(uint16_t port)
 {
     if (!m_load_port_map) {
         return port;
     }
 
-    return m_port_map[port];
+    assert(m_port_map.contains(port));
+    port = m_port_map[port];
+    assert(port != 0);
+    return port;
 }
 
 bool AsyncServer::IsUdpPortAvailable(int port)

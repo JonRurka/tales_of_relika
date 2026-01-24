@@ -109,6 +109,7 @@ void Player::WorldUpdate(float dt)
 		//Add_Player_Event(OpCodes::Player_Events::Jump);
 	}
 
+	//Logger::LogDebug(LOG_POS("WorldUpdate"), "player update");
 	move_control(dt);
 
 	if (m_trigger_save) {
@@ -307,6 +308,9 @@ void Player::move_control(float dt)
 	m_old_location = m_location;
 	m_location = m_player_movement.Position();
 	m_velocity = m_player_movement.Velocity();
+
+	//Logger::LogDebug(LOG_POS("move_control"), "(%.2lf, %.2lf, %.2lf)",
+	//	m_location.x, m_location.y, m_location.z);
 }
 
 void Player::update_nearby_players()
@@ -339,7 +343,7 @@ void Player::refresh_character_controller()
 	m_player_movement.Position(m_location);
 	m_player_movement.Refresh();
 
-	Logger::LogDebug(LOG_POS("refresh_character_controller"), "Creat character controller: (%f, %f, %f)",
+	Logger::LogInfo(LOG_POS("refresh_character_controller"), "Creat character controller: (%f, %f, %f)",
 		m_location.x, m_location.y, m_location.z);
 }
 

@@ -7,7 +7,7 @@
 #define DRAW_DEBUG_BOX false
 #define DRAW_DEBUG_COLLISION_BOX true
 #define DEBUG_DRAW_VERTICES false
-#define DESPAWN_ENABLE false
+#define DESPAWN_ENABLE true
 #define COLLISION_ENABLED true
 #define COLLISION_DISTANCE 2
 
@@ -88,6 +88,7 @@ void TerrainChunk::Unassign()
 
 	m_assigned = false;
 
+	m_voxel_opaque_mesh->Clear();
 	m_voxel_opaque_mesh->SetBounds(AABB());
 	
 	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Active(false);

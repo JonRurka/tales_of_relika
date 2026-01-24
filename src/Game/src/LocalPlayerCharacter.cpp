@@ -29,7 +29,7 @@ void LocalPlayerCharacter::Init()
 	m_body_trans.lock()->Position(glm::vec3(0, 15, 0));
 
 	m_location = m_body_trans.lock()->Position();
-	m_old_location = m_location;
+	m_old_location = m_location.load();
 	
 
 	m_capsule_collider = Object().Add_Component<CharacterCollider>();
@@ -62,14 +62,23 @@ void LocalPlayerCharacter::Update(float dt)
 	move_control(dt);
 	look_control(dt);
 
-	if (Utilities::Get_Time() - m_debug_time > 2.0f)
+	if (Utilities::Get_Time() - m_debug_time > 1.0f)
 	{
 		m_debug_time = Utilities::Get_Time();
+
+		//glm::vec3 pos = m_body_trans.lock()->Position();
+		//Logger::LogDebug(LOG_POS("Update"), "(%.2lf, %.2lf, %.2lf) == (%.2lf, %.2lf, %.2lf), %.2lf",
+		//	m_server_loc.x, m_server_loc.y, m_server_loc.z,
+		//	pos.x, pos.y, pos.z, glm::distance(m_server_loc, pos));
+
+
+
 		//Logger::LogDebug(LOG_POS("Update"), "Current Pos: (%f, %f, %f), Current Velocity: (%f, %f, %f), Server Pos: (%f, %f, %f)",
 		//	m_body_trans->Position().x, m_body_trans->Position().y, m_body_trans->Position().z,
 		//	m_velocity.x, m_velocity.y, m_velocity.z,
 		//	m_server_loc.x, m_server_loc.y, m_server_loc.z);
 	}
+	//Graphics::DrawDebugRay(m_server_loc, glm::vec3(0, 3, 0), glm::vec3(1, 1, 0));
 }
 
 void LocalPlayerCharacter::FixedUpdate(float dt)
@@ -124,6 +133,7 @@ void LocalPlayerCharacter::FixedUpdate(float dt)
 
 	Vec3 pos = char_col.Get_Controller().GetPosition();
 	Vec3 c_up = char_col.Get_Controller().GetUp();
+	m_old_location = m_location.load();
 	m_location = glm::fvec3(pos.GetX(), pos.GetY(), pos.GetZ());
 	glm::vec3 up = glm::vec3(c_up.GetX(), c_up.GetY(), c_up.GetZ());
 
@@ -132,6 +142,11 @@ void LocalPlayerCharacter::FixedUpdate(float dt)
 
 	Vec3 vel = char_col.Get_Controller().GetLinearVelocity();
 	m_velocity = glm::fvec3(vel.GetX(), vel.GetY(), vel.GetZ());
+
+
+	glm::vec3 pred_server_pos = (m_server_loc + glm::vec3(0, 0.0f, 0)) + (m_velocity.load() * (float)m_move_trip_time);
+	glm::vec3 new_pos = glm::mix(m_location.load(), pred_server_pos, dt * 2);
+	char_col.Set_Location(new_pos);
 
 #endif
 
@@ -209,10 +224,6 @@ void LocalPlayerCharacter::move_control(float dt)
 	}
 	m_move_vec = m_vec;
 
-
-	m_old_location = m_location;
-
-	return;
 	double curr_time = Utilities::Get_Time();
 	if (curr_time - m_last_send_move >= MOVE_SEND_TIMEOUT)
 	{
@@ -233,7 +244,9 @@ void LocalPlayerCharacter::move_control(float dt)
 	}
 
 	
-	if (m_received_server_pos && m_do_move)
+
+	return;
+	/*if (m_received_server_pos && m_do_move)
 	{
 		glm::vec3 pred_server_pos = (m_server_loc + glm::vec3(0, 0.0f, 0)) + (m_velocity.load() * (float)m_move_trip_time);
 
@@ -273,7 +286,7 @@ void LocalPlayerCharacter::move_control(float dt)
 				Logger::LogDebug(LOG_POS("move_control"), "Stop syncing position now.");
 			}
 		}
-	}
+	}*/
 
 	//Graphics::DrawDebugRay(m_body_trans->Position(), forward * 5.0f, glm::vec3(1, 0, 0));
 
@@ -281,7 +294,7 @@ void LocalPlayerCharacter::move_control(float dt)
 
 void LocalPlayerCharacter::OnOrientationSync(Data data)
 {
-	return;
+	//return;
 
 	auto data_buf = data.Buffer;
 	//float* orientation_buff = (float*)(data.Buffer.data());

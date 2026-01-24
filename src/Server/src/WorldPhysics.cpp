@@ -272,6 +272,8 @@ void WorldPhysics::Update(float dt)
 
 	mPhysicsSystem->Update(time, JOLT_SIMULATION_STEPS, mTempAllocator, mJobSystem);
 
+	//Logger::LogDebug(LOG_POS("Update"), "physics update.");
+
 #endif
 }
 

@@ -97,6 +97,11 @@ void NetClient::Start_TCP()
 
 void NetClient::Start_UDP(uint16_t port)
 {
+    Logger::LogDebug(LOG_POS("Start_UDP"), "Start UDP with host %s:%u", 
+        m_host.c_str(), port);
+
+    assert(port != 0);
+
     m_server_port_udp = port;
 
     boost::system::error_code ec;
@@ -302,7 +307,8 @@ void NetClient::read_socket_tcp()
     }
     catch (boost::system::system_error e)
     {
-        Logger::LogWarning(LOG_POS("read_socket_tcp"), "System error.");
+        Logger::LogWarning(LOG_POS("read_socket_tcp"), "%s:%u - System error (%d): %s",
+            m_host.c_str(), m_server_port_tcp, e.code().value(), e.what());
     }
 }
 
@@ -317,11 +323,14 @@ void NetClient::read_socket_udp()
         //std::vector<uint8_t> buffer(data_ptr, data_ptr + size);
         std::vector<uint8_t> buffer(g_udp_message.begin() + 2, g_udp_message.begin() + 2 + size);
 
+        //Logger::LogDebug(LOG_POS("read_socket_udp"), "Received a UDP packet.");
+
         add_received_packet(buffer, Protocal_Udp);
     }
     catch (boost::system::system_error e)
     {
-        Logger::LogWarning(LOG_POS("read_socket_udp"), "System error.");
+        Logger::LogWarning(LOG_POS("read_socket_udp"), "%s:%u - System error (%d): %s", 
+            m_host.c_str(), m_server_endpoint_udp.port(), e.code().value(), e.what());
     }
 }
 
@@ -376,6 +385,7 @@ void NetClient::process_cmd(std::vector<uint8_t> data, Protocal type)
         Data data_obj = Data(type, command, dst);
 
         NetCommand net_cmd = m_commands[command];
+        //if (type == Protocal_Udp) Logger::LogDebug(LOG_POS("process_cmd"), "Received UDP: %d", command);
         net_cmd.Callback(net_cmd.Obj_Ptr, data_obj);
     }
     else {
