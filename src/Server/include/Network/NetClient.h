@@ -6,6 +6,7 @@
 #include <functional>
 #include <unordered_map>
 #include <queue>
+#include <unordered_set>
 
 #include "OpCodes.h"
 #include "Data.h"
@@ -36,6 +37,8 @@ public:
     ~NetClient();
 
     void AddCommand(OpCodes::Client cmd, CommandActionPtr callback, void* obj);
+
+    void IgnoreCommand(OpCodes::Client cmd);
 
     bool Connected() {
         return m_tcp_socket_connected;
@@ -123,6 +126,7 @@ private:
 
 
     std::unordered_map<uint8_t, NetCommand> m_commands;
+    std::unordered_set<uint8_t> m_ignored_commands;
 
     void send_ping();
 

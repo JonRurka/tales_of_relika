@@ -68,6 +68,18 @@ void NetClient::AddCommand(OpCodes::Client cmd, CommandActionPtr callback, void*
         m_commands[(uint8_t)cmd] = command;
     }
 
+    if (m_ignored_commands.contains((uint8_t)cmd))
+    {
+        m_ignored_commands.erase((uint8_t)cmd);
+    }
+}
+
+void NetClient::IgnoreCommand(OpCodes::Client cmd)
+{
+    if (m_ignored_commands.contains((uint8_t)cmd))
+        return;
+
+    m_ignored_commands.insert((uint8_t)cmd);
 }
 
 void NetClient::Connect()
@@ -379,6 +391,11 @@ void NetClient::process_cmd(std::vector<uint8_t> data, Protocal type)
 
     int8_t command = data[0];
     std::vector<uint8_t> dst = BufferUtils::RemoveFront(Remove_CMD, data);
+
+    if (m_ignored_commands.contains(command)) {
+        Logger::LogWarning(LOG_POS("process_cmd"), "Received ignored command: %d", command);
+        return;
+    }
 
     if (m_commands.contains(command)) {
 

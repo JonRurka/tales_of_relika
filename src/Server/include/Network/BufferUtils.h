@@ -13,11 +13,14 @@ typedef unsigned int Remove;
 #define Remove_IS_SERVER	1
 #define Remove_UDP_ID		2
 #define Remove_Float		sizeof(float)
+#define Remove_Int32		sizeof(int32_t)
+#define Remove_UInt32		sizeof(uint32_t)
+#define Remove_Int64		sizeof(int64_t)
 #define Remove_UInt64		sizeof(uint64_t)
 
 class BufferUtils {
 public:
-	static std::vector<uint8_t> AddLength(std::vector<uint8_t>& data) {
+	static std::vector<uint8_t> AddLength(std::vector<uint8_t> const & data) {
 		uint16_t len = data.size();
 		uint8_t* len_buff = (uint8_t*)&len;
 		uint8_t lo = len_buff[0];// len & 0xFF;
@@ -29,9 +32,9 @@ public:
 		return Add(len_v, data);
 	}
 
-	static std::vector<uint8_t> Add_UDP_ID(uint16_t udp_id, std::vector<uint8_t> data) {
+	static std::vector<uint8_t> Add_Short(uint16_t val, std::vector<uint8_t> const & data) {
 		//uint16_t len = data.size();
-		uint8_t* udp_id_buff = (uint8_t*)&udp_id;
+		uint8_t* udp_id_buff = (uint8_t*)&val;
 		uint8_t lo = udp_id_buff[0];// len & 0xFF;
 		uint8_t hi = udp_id_buff[1];// len >> 8;
 		std::vector<uint8_t> id_v;// {lo, hi};
@@ -41,7 +44,23 @@ public:
 		return Add(id_v, data);
 	}
 
-	static std::vector<uint8_t> RemoveFront(Remove numToRemove, std::vector<uint8_t>& origin)
+	static std::vector<uint8_t> Add_Int(int32_t val, std::vector<uint8_t> const& data)
+	{
+		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(int32_t));
+		return Add(val_data, data);
+	}
+
+	static std::vector<uint8_t> Add_UInt(uint32_t val, std::vector<uint8_t> const& data)
+	{
+		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(uint32_t));
+		return Add(val_data, data);
+	}
+
+	static std::vector<uint8_t> Add_UDP_ID(uint16_t udp_id, std::vector<uint8_t> const & data) {
+		return Add_Short(udp_id, data);
+	}
+
+	static std::vector<uint8_t> RemoveFront(Remove numToRemove, std::vector<uint8_t> const & origin)
 	{
 		std::vector<uint8_t> res;
 		if ((int)numToRemove > origin.size())
@@ -53,12 +72,12 @@ public:
 		/*res.assign(origin.begin() + numToRemove, origin.end());
 		return res;*/
 
-		uint8_t* data = origin.data();
+		const uint8_t* data = origin.data();
 
 		return std::vector<uint8_t>(data + numToRemove, data + origin.size());
 	}
 
-	static std::vector<uint8_t> AddFirst(uint8_t byteToAdd, std::vector<uint8_t> origin)
+	static std::vector<uint8_t> AddFirst(uint8_t byteToAdd, std::vector<uint8_t> const & origin)
 	{
 		std::vector<uint8_t> add_f;
 		add_f.push_back(byteToAdd);
@@ -69,20 +88,44 @@ public:
 		//return origin;
 	}
 
-	static std::vector<uint8_t> AppendFloat(std::vector<uint8_t> data, float val)
+	static std::vector<uint8_t> AppendFloat(std::vector<uint8_t> const & data, float val)
 	{
 		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(float));
 		return Add(data, val_data);
 	}
 
-	static std::vector<uint8_t> AppendByte(std::vector<uint8_t> data, uint8_t val)
+	static std::vector<uint8_t> AppendByte(std::vector<uint8_t> const & data, uint8_t val)
 	{
 		std::vector<uint8_t> val_data;
 		val_data.push_back(val);
 		return Add(data, val_data);
 	}
 
-	static std::vector<uint8_t> Append_UInt64(std::vector<uint8_t> data, uint64_t val)
+	static std::vector<uint8_t> AppendUShort(std::vector<uint8_t> const& data, uint16_t val)
+	{
+		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(uint16_t));
+		return Add(data, val_data);
+	}
+
+	static std::vector<uint8_t> AppendShort(std::vector<uint8_t> const& data, int16_t val)
+	{
+		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(int16_t));
+		return Add(data, val_data);
+	}
+
+	static std::vector<uint8_t> Append_UInt32(std::vector<uint8_t> const& data, uint32_t val)
+	{
+		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(uint32_t));
+		return Add(data, val_data);
+	}
+
+	static std::vector<uint8_t> Append_Int32(std::vector<uint8_t> const& data, int32_t val)
+	{
+		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(int32_t));
+		return Add(data, val_data);
+	}
+
+	static std::vector<uint8_t> Append_UInt64(std::vector<uint8_t> const & data, uint64_t val)
 	{
 		std::vector<uint8_t> val_data((uint8_t*)&val, ((uint8_t*)&val) + sizeof(uint64_t));
 		return Add(data, val_data);

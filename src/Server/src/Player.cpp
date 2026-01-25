@@ -19,6 +19,56 @@ using json = nlohmann::json;
 
 #define SEND_DEBUG_JUMP 3000
 #define PLAYER_SCAN_TIME 5000
+#define MAX_SEND_EVENT_SIZE 1024
+
+namespace
+{
+	template<typename T>
+	void send_events(Player& player, std::queue<T>& event_queue, OpCodes::Client command, int max_message_size = MAX_SEND_EVENT_SIZE)
+	{
+		std::vector<uint8_t> events_buff;
+		events_buff.reserve(event_queue.size() * (4 + 256));
+
+		uint16_t player_inst_id = player.Get_WorldInstanceID();
+
+		if (event_queue.empty())
+			return;
+
+		uint8_t num_events = 0;
+		while (!event_queue.empty()) {
+			T active_event = event_queue.front();
+			event_queue.pop();
+
+			if ((uint8_t)active_event.Command == 0) {
+				continue;
+			}
+
+			events_buff = BufferUtils::AppendByte(events_buff, player_inst_id); //BufferUtils::AppendUShort(events_buff, player.Get_WorldInstanceID()); // TODO: Support shorts
+			events_buff.push_back((uint8_t)active_event.Command);
+			events_buff.push_back((uint8_t)active_event.Data.size());
+
+			//events_buff.push_back((uint8_t)m_world_instance_id); // TODO: Increase to 16bit for more than 256 players
+			//events_buff.push_back((uint8_t)active_event.Command);
+			//events_buff.push_back((uint8_t)active_event.Data.size());
+
+			if (active_event.Data.size() > 0) {
+				events_buff = BufferUtils::Add(events_buff, active_event.Data);
+			}
+
+			//Logger::Log("Adding player event to send: " + std::to_string((uint8_t)active_event.Command));
+			num_events++;
+
+			if (events_buff.size() >= max_message_size)
+				break;
+		}
+
+		//Logger::LogDebug("send_events", "Sending %d events.", num_events);
+
+		events_buff = BufferUtils::AddFirst(num_events, events_buff);
+
+		player.Send(command, events_buff);
+	}
+}
 
 Player::Player()
 {
@@ -154,7 +204,7 @@ void Player::CreatePlayerData()
 
 }
 
-void Player::Add_Player_Event(PlayerEvent p_event)
+void Player::Add_Player_Event(ServerPlayerEvent p_event)
 {
 	//Logger::LogDebug(LOG_POS("Add_Player_Event"), "Received Player Event for player %s: %i", 
 	//	Get_UserName().c_str(), p_event.Command);
@@ -174,6 +224,25 @@ void Player::Add_Player_Event(PlayerEvent p_event)
 	}
 }
 
+void Player::Send_Chunk_Event(OpCodes::Player_Chunk_Events event_cmd, std::vector<uint8_t> data)
+{
+	ChunkEvent p_event;
+	p_event.Command = event_cmd;
+	p_event.Data = data;
+	m_active_chunk_events.push(p_event);
+}
+
+void Player::Send_Chunk_Event(OpCodes::Player_Chunk_Events event_cmd, int hash)
+{
+	Send_Chunk_Event(event_cmd, hash, std::vector<uint8_t>());
+}
+
+void Player::Send_Chunk_Event(OpCodes::Player_Chunk_Events event_cmd, int hash, std::vector<uint8_t> data)
+{
+	data = BufferUtils::Add_Int(hash, data);
+	Send_Chunk_Event(event_cmd, data);
+}
+
 void Player::SyncNearbyOrientations()
 {
 	uint8_t num_orientations = m_nearby_players.size();
@@ -188,7 +257,7 @@ void Player::SyncNearbyOrientations()
 	for (const auto& p : m_nearby_players)
 	{
 		int buffer_index = (p_index * player_entry_size) + 1;
-		m_orientation_send_buffer[buffer_index] = Get_WorldInstanceID();
+		m_orientation_send_buffer[buffer_index] = (uint8_t)Get_WorldInstanceID(); // TODO: Support 16bit id
 		p->Serialize_Orientation(&m_orientation_send_buffer[buffer_index + 1]);
 		p_index++;
 	}
@@ -216,6 +285,16 @@ void Player::SyncOwnOrientation()
 	//std::vector<uint8_t> send_buff(m_orientation_send_buffer, m_orientation_send_buffer + OrientationSize());
 	Send(OpCodes::Client::Sync_Player_Orientation, send_buff, Protocal_Udp);
 	//delete[] m_orientation_send_buffer;
+}
+
+void Player::SyncPlayerEvents()
+{
+	send_events(*this, m_forward_player_events, OpCodes::Client::Player_Events);
+}
+
+void Player::SyncChunkEvents()
+{
+	send_events(*this, m_active_chunk_events, OpCodes::Client::Chunk_Events);
 }
 
 void Player::PlayerMutexLock()
@@ -267,7 +346,7 @@ std::string Player::PlayerSpawnData::To_String()
 	return res.dump();
 }
 
-void Player::process_controll_event(PlayerEvent p_event)
+void Player::process_controll_event(ServerPlayerEvent p_event)
 {
 	auto data = p_event.Data;
 
@@ -296,10 +375,13 @@ void Player::process_controll_event(PlayerEvent p_event)
 	//	(do_move ? 1 : 0), move_x, move_z);
 }
 
-void Player::process_jump_event(PlayerEvent p_event)
+void Player::process_jump_event(ServerPlayerEvent p_event)
 {
 	m_player_movement.Jump();
-	Forward_Player_Event(p_event);
+	ClientPlayerEvent new_event;
+	new_event.Command = p_event.Command;
+	new_event.Data = p_event.Data;
+	Forward_Player_Event(new_event);
 }
 
 void Player::move_control(float dt) 
@@ -381,6 +463,7 @@ void Player::update_terrain_chunks()
 			chunk = m_current_terrain->Spawn_Chunk(c);
 		chunk->Iterate();
 
+		Send_Chunk_Event(OpCodes::Player_Chunk_Events::NotifyLoaded, hash);
 		m_simulated_terrain_chunks[hash] = chunk;
 	}
 

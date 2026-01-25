@@ -11,6 +11,9 @@
 #include "Opaque_Chunk_Material.h"
 #include "Standard_Material.h"
 
+#include "Network/Data.h"
+#include "Network/OpCodes.h"
+
 #include <unordered_map>
 #include <vector>
 #include <queue>
@@ -24,6 +27,7 @@ class TerrainChunk;
 class Stitch_VBO;
 class TerrainModifications;
 class ISO_Sampler;
+class GameClient;
 
 #define DEFAULT_METER_SIZE 32.0f
 #define DEFAULT_VOXELS_PER_METER 1.0f
@@ -33,6 +37,8 @@ class ISO_Sampler;
 #define MAX_BATCH_SIZE 4
 #define DEFAULT_PROCESS_TIME_INIT_CREATE_MS 250.0
 #define DEFAULT_PROCESS_TIME_RUNTIME_CREATE_MS 8.0
+
+typedef void(*ChunkActionPtr)(void*, int, std::vector<uint8_t>);
 
 class WorldGenController : public Component
 {
@@ -90,6 +96,10 @@ public:
 			Change_Type = true;
 		}
 	};
+
+	void InitCommands(std::weak_ptr<GameClient> client);
+
+	void AddCommand(OpCodes::Player_Chunk_Events cmd, ChunkActionPtr callback, void* obj);
 
 	void SetTarget(Transform::Weak target);
 
@@ -171,6 +181,18 @@ public:
 		return m_k_key_hit;
 	}
 
+	static void OnChunkEvent_cb(void* obj, Data data) {
+		WorldGenController* cntrl = (WorldGenController*)obj;
+		cntrl->OnChunkEvent(data);
+	}
+	void OnChunkEvent(Data data);
+
+	static void OnChunkEvent_NotifyLoaded_cb(void* obj, int hash, std::vector<uint8_t> data) {
+		WorldGenController* cntrl = (WorldGenController*)obj;
+		cntrl->OnChunkEvent_NotifyLoaded(hash, data);
+	}
+	void OnChunkEvent_NotifyLoaded(int hash, std::vector<uint8_t> data);
+
 
 protected:
 	void Init() override;
@@ -178,6 +200,11 @@ protected:
 	void Update(float dt) override;
 
 private:
+
+	struct ChunkCommand {
+		void* Obj_Ptr;
+		ChunkActionPtr Callback;
+	};
 
 	struct ChunkRef {
 		glm::ivec3 chunk_coord;
@@ -194,6 +221,8 @@ private:
 	Transform::Weak mTarget;
 
 	static WorldGenController* m_Instance;
+
+	std::unordered_map<uint8_t, ChunkCommand> m_commands;
 
 	IVoxelBuilder_private::Shared m_builder;
 	TerrainModifications::Shared m_terrain_mods;

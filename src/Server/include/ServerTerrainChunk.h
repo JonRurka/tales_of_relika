@@ -37,6 +37,8 @@ public:
 
 	void VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float iso, bool Type_changed, int type);
 
+
+
 private:
 
 	glm::ivec3 m_chunk_coords;

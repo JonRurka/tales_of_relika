@@ -6,6 +6,9 @@
 #include "TerrainChunk.h"
 #include "Game_Resources.h"
 #include "Material_Types.h"
+#include "GameClient.h"
+#include "Network/NetClient.h"
+#include "Network/BufferUtils.h"
 
 #include <algorithm>
 
@@ -80,6 +83,8 @@ void WorldGenController::Init()
 
 	initialize_voxel_engine();
 
+
+
 	m_initialized = true;
 }
 
@@ -133,6 +138,80 @@ void WorldGenController::Update(float dt)
 			}
 		}
 	}
+}
+
+void WorldGenController::InitCommands(std::weak_ptr<GameClient> client)
+{
+	assert(!client.expired());
+
+	// add network command (Calls chunk commands).
+	client.lock()->Net_Client().AddCommand(OpCodes::Client::Chunk_Events, OnChunkEvent_cb, this);
+
+	// add chunk commands.
+	AddCommand(OpCodes::Player_Chunk_Events::NotifyLoaded, OnChunkEvent_NotifyLoaded_cb, this);
+
+
+}
+
+void WorldGenController::AddCommand(OpCodes::Player_Chunk_Events cmd, ChunkActionPtr callback, void* obj)
+{
+	if (!m_commands.contains((uint8_t)cmd)) {
+		ChunkCommand command;
+		command.Callback = callback;
+		command.Obj_Ptr = obj;
+		m_commands[(uint8_t)cmd] = command;
+	}
+}
+
+void WorldGenController::OnChunkEvent(Data data)
+{
+	uint8_t num_updates = data.Buffer[0];
+	data.Buffer = BufferUtils::RemoveFront(1, data.Buffer);
+
+	//Logger::LogDebug(LOG_POS("OnChunkEvent"), "Processing %d chunk events.", num_updates);
+
+	using difference_type = std::vector<uint8_t>::difference_type;
+
+	const difference_type header_size = 3;
+	difference_type index = 0;
+
+	for (int i = 0; i < num_updates; i++) {
+
+		assert((index + header_size - 1) < data.Buffer.size());
+
+		std::array<uint8_t, 3> packet_header;
+		std::copy(data.Buffer.begin() + index, data.Buffer.begin() + index + header_size, packet_header.begin());
+
+		uint8_t player_inst_id = packet_header[0]; // TODO: Change to support 16bit
+		OpCodes::Player_Chunk_Events event_cmd = (OpCodes::Player_Chunk_Events)packet_header[1];
+		uint8_t data_size = packet_header[2];
+
+		std::vector<uint8_t> event_data;
+		if (data_size > 0) {
+			event_data = std::vector<uint8_t>(data.Buffer.begin() + index + header_size, data.Buffer.begin() + index + header_size + data_size);
+		}
+
+		index += header_size + data_size;
+
+		if (m_commands.contains((uint8_t)event_cmd))
+		{
+			int hash = *event_data.data();
+			event_data = BufferUtils::RemoveFront(Remove_Int32, event_data);
+			ChunkCommand net_cmd = m_commands[(uint8_t)event_cmd];
+			net_cmd.Callback(net_cmd.Obj_Ptr, hash, event_data);
+		}
+		else
+		{
+			Logger::LogWarning(LOG_POS("OnChunkEvent"), "Invalid chunk event cmd: %d", event_cmd);
+		}
+	}
+}
+
+void WorldGenController::OnChunkEvent_NotifyLoaded(int hash, std::vector<uint8_t> data)
+{
+	Logger::LogDebug(LOG_POS("OnChunkEvent_NotifyLoaded"), "Received chunk load: %d", hash);
+
+
 }
 
 void WorldGenController::SetTarget(Transform::Weak target)

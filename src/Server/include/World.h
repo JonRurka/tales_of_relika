@@ -46,6 +46,8 @@ public:
 
 	void SubmitPlayerEvent(Player& user, OpCodes::Player_Events, std::vector<uint8_t> data);
 
+	void SubmitChunkEvent(Player& user, OpCodes::Player_Chunk_Events, int chunk_hash, std::vector<uint8_t> data);
+
 	static World* New_World(WorldCreationOptions options);
 
 	static World* Load_World(uint64_t world_id);
@@ -142,9 +144,7 @@ private:
 
 	void UpdatePlayers(float dt);
 
-	void SendOrientationUpdates();
-
-	void SendPlayerEvents();
+	void SendPlayerUpdates();
 
 	void ProcessNetCommands();
 

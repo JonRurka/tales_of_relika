@@ -52,6 +52,11 @@ void World::SubmitPlayerEvent(Player& player, OpCodes::Player_Events event_cmd, 
 	}
 }
 
+void World::SubmitChunkEvent(Player& user, OpCodes::Player_Chunk_Events, int chunk_hash, std::vector<uint8_t> data)
+{
+
+}
+
 World* World::New_World(WorldCreationOptions options)
 {
 	World* world = new World();
@@ -341,8 +346,14 @@ void World::AsynUpdate(float dt)
 
 	ProcessNetCommands();
 	UpdatePlayers(dt);
-	SendOrientationUpdates();
-	SendPlayerEvents();
+
+
+	double now = Utilities::Get_Time();
+	if ((now - m_last_orientation_update) > ORIENTATION_SEND_RATE) {
+		m_last_orientation_update = now;
+
+		SendPlayerUpdates();
+	}
 
 
 	test_set_spawn_point();
@@ -357,24 +368,18 @@ void World::UpdatePlayers(float dt)
 	}
 }
 
-void World::SendOrientationUpdates()
+void World::SendPlayerUpdates()
 {
-	double now = Utilities::Get_Time();
-	if ((now - m_last_orientation_update) > ORIENTATION_SEND_RATE) {
-		m_last_orientation_update = now;
+	std::vector<Player::pointer> current_players = GetPlayers();
 
-		std::vector<Player::pointer> current_players = GetPlayers();
-
-		for (const auto& p : current_players) {
-			p->SyncNearbyOrientations();
-			p->SyncOwnOrientation();
-		}
+	for (const auto& p : current_players) {
+		if (!p->Client_Ready())
+			continue;
+		p->SyncNearbyOrientations();
+		p->SyncOwnOrientation();
+		p->SyncPlayerEvents();
+		p->SyncChunkEvents();
 	}
-}
-
-void World::SendPlayerEvents()
-{
-	
 }
 
 void World::ProcessNetCommands()
@@ -410,7 +415,7 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 		return;
 	}
 
-	Player* player = m_players[user].get();
+	Player& player = *m_players[user].get();
 
 	//Logger::LogDebug(LOG_POS("ExecuteNetCommand"), "Received world command for player.");
 
@@ -421,24 +426,27 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 
 		switch (sub_command) {
 		case OpCodes::Server_World::Update_Orientation:
-			UpdateOrientation_NetCmd(*player, data);
+			UpdateOrientation_NetCmd(player, data);
 			break;
 		case OpCodes::Server_World::Player_Event:
 			if (data.Buffer.size() > 0)
 			{
 				OpCodes::Player_Events event_cmd = (OpCodes::Player_Events)data.Buffer[0];
 				data.Buffer = BufferUtils::RemoveFront(Remove_CMD, data.Buffer);
-				SubmitPlayerEvent(*player, event_cmd, data.Buffer);
+				SubmitPlayerEvent(player, event_cmd, data.Buffer);
 			}
 			else {
-				Logger::LogWarning(LOG_POS("ExecuteNetCommand"), "Received malformed World Player Event from '" + player->Get_UserName() + "': Missing command!");
+				Logger::LogWarning(LOG_POS("ExecuteNetCommand"), "Received malformed World Player Event from '" + player.Get_UserName() + "': Missing command!");
 			}
 			break;
 		case OpCodes::Server_World::Request_World_Player_Data:
-			RequestWorldPlayerData_NetCmd(*player, data);
+			RequestWorldPlayerData_NetCmd(player, data);
 			break;
 		case OpCodes::Server_World::Request_Players:
-			RequestPlayers_NetCmd(*player, data);
+			RequestPlayers_NetCmd(player, data);
+			break;
+		case OpCodes::Server_World::Notify_Player_Ready:
+			player.Client_Ready(true);
 			break;
 		}
 	}

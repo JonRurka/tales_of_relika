@@ -20,7 +20,7 @@ void NetPlayerManager::RegisterLocalPlayer(LocalPlayerCharacter::Weak local_play
 
 void NetPlayerManager::OnUpdateOrientations(Data data)
 {
-	return;
+	return; // TODO: remove return!
 
 
 	uint8_t num_orientations = data.Buffer[0];
@@ -51,7 +51,8 @@ void NetPlayerManager::OnUpdateOrientations(Data data)
 
 void NetPlayerManager::OnPlayerEvent(Data data)
 {
-	return;
+	return; // TODO: remove return!
+
 	uint8_t num_updates = data.Buffer[0];
 	data.Buffer = BufferUtils::RemoveFront(1, data.Buffer);
 
@@ -59,7 +60,7 @@ void NetPlayerManager::OnPlayerEvent(Data data)
 
 		uint8_t* packet = &data.Buffer.data()[index];
 
-		uint8_t player_inst_id = packet[0];
+		uint8_t player_inst_id = packet[0]; // TODO: Change to support 16bit
 		uint8_t event_cmd = packet[1];
 		uint8_t data_size = packet[2];
 
@@ -220,4 +221,5 @@ void NetPlayerManager::add_net_commands()
 {
 	GameClient::Instance()->Net_Client().AddCommand(OpCodes::Client::Update_Orientations, NetPlayerManager::OnUpdateOrientations_cb, this);
 	GameClient::Instance()->Net_Client().AddCommand(OpCodes::Client::Player_Events, NetPlayerManager::OnPlayerEvent_cb, this);
+	//assert(false);
 }

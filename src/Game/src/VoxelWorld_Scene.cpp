@@ -98,6 +98,7 @@ void VoxelWorld_Scene::startup_squence()
 		{
 			m_loading_screen->Hide();
 			local_player_character.lock()->LockOrientation(false);
+			game_client.lock()->Send_World(OpCodes::Server_World::Notify_Player_Ready);
 			m_loading_hidden = true;
 		}
 	}
@@ -119,6 +120,12 @@ void VoxelWorld_Scene::setup_game_client()
 	game_client.lock()->Init(username, host, user_id, m_remote_connection);
 	game_client.lock()->SetOnConnectSuccess(OnGameConnect, this);
 	game_client.lock()->Net_Client().AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
+
+	// Idealy these should be redundant and not sent until the client is ready to receive them.
+	game_client.lock()->Net_Client().IgnoreCommand(OpCodes::Client::Update_Orientations);
+	game_client.lock()->Net_Client().IgnoreCommand(OpCodes::Client::Player_Events);
+	game_client.lock()->Net_Client().IgnoreCommand(OpCodes::Client::Chunk_Events);
+
 	game_client.lock()->Connect();
 	Logger::LogInfo(LOG_POS("setup_game_client"), "Connecting to game server...");
 }
@@ -191,6 +198,7 @@ void VoxelWorld_Scene::setup_chunk_gen(json world_data)
 {
 	world_gen_controller_obj = Instantiate("World_Gen_Controller");
 	world_gen_controller = world_gen_controller_obj.lock()->Add_Component<WorldGenController>();
+	world_gen_controller.lock()->InitCommands(game_client);
 }
 
 // STEP 3b

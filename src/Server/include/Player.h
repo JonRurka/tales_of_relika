@@ -35,9 +35,19 @@ public:
 		uint32_t Distributor;
 	};
 
-	struct PlayerEvent {
+	struct ServerPlayerEvent {
+	public:
+		OpCodes::Player_Events Command; // this might be specialized to server/client player events
+		std::vector<uint8_t> Data;
+	};
+	struct ClientPlayerEvent {
 	public:
 		OpCodes::Player_Events Command;
+		std::vector<uint8_t> Data;
+	};
+
+	struct ChunkEvent {
+		OpCodes::Player_Chunk_Events Command;
 		std::vector<uint8_t> Data;
 	};
 
@@ -151,6 +161,9 @@ public:
 		return m_world_instance_id;
 	}
 
+	bool Client_Ready() { return m_client_ready; }
+	void Client_Ready(bool val) { m_client_ready = val; }
+
 	void Set_MatchInstanceID(uint8_t id) {
 		m_world_instance_id = id;
 	}
@@ -181,17 +194,22 @@ public:
 	}
 
 	void Add_Player_Event(OpCodes::Player_Events event_cmd, std::vector<uint8_t> data) {
-		PlayerEvent p_event;
+		ServerPlayerEvent p_event;
 		p_event.Command = event_cmd;
 		p_event.Data = data;
 		Add_Player_Event(p_event);
 	}
 
-	void Add_Player_Event(PlayerEvent p_event);
+	void Add_Player_Event(ServerPlayerEvent p_event);
 
-	void Forward_Player_Event(PlayerEvent p_event) {
-		m_active_events.push(p_event);
+	void Forward_Player_Event(ClientPlayerEvent p_event) {
+		m_forward_player_events.push(p_event);
 	}
+	
+	void Send_Chunk_Event(OpCodes::Player_Chunk_Events event_cmd, int hash, std::vector<uint8_t> data);
+
+	void Send_Chunk_Event(OpCodes::Player_Chunk_Events event_cmd, int hash);
+
 
 	std::vector<uint8_t> Serialize_Orientation(uint8_t* out_buff) {
 
@@ -220,34 +238,13 @@ public:
 		return PLAYER_ORIENTATION_SIZE;
 	}
 
-	int SerializePlayerEvents(std::vector<uint8_t>& events_buff) {
-
-		int num_events = 0;
-		while (!m_active_events.empty()) {
-			PlayerEvent active_event = m_active_events.front();
-			m_active_events.pop();
-
-			if (active_event.Command == OpCodes::Player_Events::None) {
-				continue;
-			}
-
-			events_buff.push_back(m_world_instance_id);
-			events_buff.push_back((uint8_t)active_event.Command);
-			events_buff.push_back((uint8_t)active_event.Data.size());
-
-			if (active_event.Data.size() > 0) {
-				events_buff = BufferUtils::Add(events_buff, active_event.Data);
-			}
-
-			//Logger::Log("Adding player event to send: " + std::to_string((uint8_t)active_event.Command));
-			num_events++;
-		}
-		return num_events;
-	}
-
 	void SyncNearbyOrientations();
 
 	void SyncOwnOrientation();
+
+	void SyncPlayerEvents();
+
+	void SyncChunkEvents();
 
 	void PlayerMutexLock();
 
@@ -280,7 +277,8 @@ private:
 
 	uint16_t m_world_instance_id{ 0 };
 
-	std::queue<PlayerEvent> m_active_events;
+	std::queue<ClientPlayerEvent> m_forward_player_events;
+	std::queue<ChunkEvent> m_active_chunk_events;
 
 	glm::vec3 m_old_location{ glm::vec3() };
 	glm::vec3 m_location{ glm::vec3() };
@@ -304,13 +302,16 @@ private:
 
 
 	bool m_trigger_save{ false };
+	bool m_client_ready{ false };
 
 
 	double m_debug_timer{ 0 };
 
-	void process_controll_event(PlayerEvent p_event);
+	void Send_Chunk_Event(OpCodes::Player_Chunk_Events event_cmd, std::vector<uint8_t> data);
 
-	void process_jump_event(PlayerEvent p_event);
+	void process_controll_event(ServerPlayerEvent p_event);
+
+	void process_jump_event(ServerPlayerEvent p_event);
 
 	void move_control(float dt);
 
@@ -325,5 +326,6 @@ private:
 
 	void update_terrain_chunks();
 
+	
 	inline static const std::string LOG_LOC{ "SERVER_PLAYER" };
 };
