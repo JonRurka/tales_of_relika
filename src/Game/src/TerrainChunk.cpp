@@ -56,6 +56,7 @@ void TerrainChunk::Assign(glm::ivec3 chunk_coord)
 	m_assigned = true;
 	m_should_despawn = false;
 	m_has_collision = false;
+	m_server_loaded = false;
 
 	m_test_timer = 10;
 
@@ -87,6 +88,7 @@ void TerrainChunk::Unassign()
 	assert(!m_opaque_chunk_obj.expired());
 
 	m_assigned = false;
+	m_server_loaded = false;
 
 	m_voxel_opaque_mesh->Clear();
 	m_voxel_opaque_mesh->SetBounds(AABB());
@@ -228,6 +230,21 @@ void TerrainChunk::Refresh(MeshUpdateMode mode)
 	m_controller.lock()->Refresh_Chunk(m_chunk_coords, (WorldGenController::MeshUpdateMode)mode);
 }
 
+void TerrainChunk::OnServerChunkLoaded()
+{
+	m_server_loaded = true;
+	//draw_debug_cube(glm::vec3(1, 0, 0), 1000);
+	//Logger::LogDebug(LOG_POS("OnServerChunkLoaded"), "Received chunk load (%d, %d, %d)",
+	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
+}
+
+void TerrainChunk::OnServerChunkUnloaded()
+{
+	m_server_loaded = false;
+	//Logger::LogDebug(LOG_POS("OnServerChunkUnloaded"), "Received chunk unload (%d, %d, %d)",
+	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
+}
+
 void TerrainChunk::Update(float dt)
 {
 	if (!m_assigned) {
@@ -242,6 +259,11 @@ void TerrainChunk::Update(float dt)
 
 	if (m_should_despawn) {
 		return;
+	}
+
+	if (m_server_loaded)
+	{
+		//draw_debug_cube(glm::vec3(1, 0, 0));
 	}
 
 	/*m_test_timer -= dt;
@@ -267,7 +289,7 @@ void TerrainChunk::Update(float dt)
 	{
 		if (DRAW_DEBUG_COLLISION_BOX)
 		{
-			draw_debug_cube(glm::vec3(1, 0, 0));
+			//draw_debug_cube(glm::vec3(1, 0, 0));
 		}
 	}
 

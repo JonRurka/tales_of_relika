@@ -74,6 +74,9 @@ private:
 	ElementDocument m_loading_screen;
 	bool m_loading_hidden{ false };
 
+	float d_max_fps{ 0 };
+	float d_min_fps{ 10000000 };
+
 	Cubemap::Shared m_skybox_cubmap;
 
 	WorldObject::Weak light_obj_dir;

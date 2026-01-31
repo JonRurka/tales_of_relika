@@ -147,6 +147,12 @@ void Player_Movement::Jump()
 {
 	if (!m_initialized)
 		return;
+
+	if (mCharacter->IsSupported()) {
+		Vec3 vel = mCharacter->GetLinearVelocity();
+		vel.SetY(vel.GetY() + m_jump_force);
+		mCharacter->SetLinearVelocity(vel);
+	}
 }
 
 void Player_Movement::Update(float dt)

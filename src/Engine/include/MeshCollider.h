@@ -67,6 +67,7 @@ private:
 	
 	static void RunShapeWorker(ShapeBuildRequest* req);
 
+	void gen_rigidbody();
 
 
 	inline static const std::string LOG_LOC{ "MESH_COLLIDER" };

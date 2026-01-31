@@ -26,10 +26,11 @@ void LocalPlayerCharacter::Init()
 
 	m_body_trans = Object().Get_Transform_Ptr();
 	//m_body_trans->Position(glm::vec3(100, 50, 100));
-	m_body_trans.lock()->Position(glm::vec3(0, 15, 0));
+	//m_body_trans.lock()->Position(glm::vec3(0, 15, 0));
 
-	m_location = m_body_trans.lock()->Position();
+	m_location = m_body_trans.lock()->Position() + glm::vec3(0, 0.1f, 0);
 	m_old_location = m_location.load();
+
 	
 
 	m_capsule_collider = Object().Add_Component<CharacterCollider>();
@@ -94,6 +95,12 @@ void LocalPlayerCharacter::FixedUpdate(float dt)
 		return;
 	}
 
+	if (m_is_locked && m_received_server_pos)
+	{
+		char_col.Set_Location(m_server_loc);
+		return;
+	}
+
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	if (m_do_move) {
 		glm::vec3 tr_move_vec = glm::vec3(move_vec.x, 0, move_vec.z);
@@ -140,6 +147,12 @@ void LocalPlayerCharacter::FixedUpdate(float dt)
 	//Logger::LogDebug(LOG_POS("move_control"), "Position(%i): (%f, %f, %f)",
 	//	(int)char_col.Get_Controller().IsSupported(), up.x, up.y, up.z);
 
+	if (m_should_jump.load()) {
+		char_col.Jump(5.0);
+		m_should_jump = false;
+	}
+
+
 	Vec3 vel = char_col.Get_Controller().GetLinearVelocity();
 	m_velocity = glm::fvec3(vel.GetX(), vel.GetY(), vel.GetZ());
 
@@ -154,6 +167,16 @@ void LocalPlayerCharacter::FixedUpdate(float dt)
 
 void LocalPlayerCharacter::OnDestroy()
 {
+}
+
+void LocalPlayerCharacter::OnEnabled()
+{
+
+}
+
+void LocalPlayerCharacter::OnDisabled()
+{
+
 }
 
 void LocalPlayerCharacter::jump_control(float dt)
@@ -174,7 +197,11 @@ void LocalPlayerCharacter::jump_control(float dt)
 		//m_capsule_collider->RigidBody()->applyCentralImpulse(btVector3(0, m_jump_force, 0));
 	}
 #else
-
+	if (Input::GetKeyDown(input::KeyCode::Space))
+	{
+		SendJumpEvent();
+		m_should_jump = true;
+	}
 
 
 #endif
@@ -187,6 +214,12 @@ void LocalPlayerCharacter::move_control(float dt)
 
 	if (!m_capsule_collider.lock()->Character_Inited())
 	{
+		return;
+	}
+
+	if (m_is_locked && m_received_server_pos)
+	{
+		m_body_trans.lock()->Position(m_server_loc + glm::vec3(0, 0.1f, 0));
 		return;
 	}
 
@@ -401,6 +434,7 @@ void LocalPlayerCharacter::Set_Camera_Object(WorldObject::Weak cam_object)
 void LocalPlayerCharacter::LockOrientation(bool locked)
 {
 	assert(!m_capsule_collider.expired());
+	m_is_locked = locked;
 	m_capsule_collider.lock()->Enabled(!locked);
 }
 

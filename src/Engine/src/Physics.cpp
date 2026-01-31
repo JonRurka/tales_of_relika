@@ -184,6 +184,16 @@ void Physics::RunAsync(Physics* phy)
 	}
 }
 
+void Physics::AddRigidbodiesAsync(Physics* phy)
+{
+	while (phy->m_running)
+	{
+		// Doesn't have to be synchronised exactly.
+		Utilities::Sleep(16, Utilities::Sleep_Mode::Millisecond);
+		phy->add_rigidbodies_async();
+	}
+}
+
 void Physics::update_internal(float fixed_dt)
 {
 	ZoneScopedN("Client Physics");
@@ -224,50 +234,11 @@ void Physics::update_internal(float fixed_dt)
 	//Logger::LogDebug(LOG_POS("update_internal"), "physics update: %f", time * 1000);
 	
 
-	// TODO: process queue to create rigidbodies from shapes.
-	double create_body_start = Utilities::Get_Time();
-	std::vector<Body*> added_bodies;
-	added_bodies.reserve(m_rigidbody_req_queue.size());
-	int num_body_created = 0;
-	while (!m_rigidbody_req_queue.empty())
-	{
-		auto req = m_rigidbody_req_queue.front();
-		m_rigidbody_req_queue.pop();
-
-		assert(!req.Col.expired());
-
-		Body* rigidbody = GetBodyInterface().CreateBody(req.ShapeSettings);
-		req.Col.lock()->OnSetRigidbody(rigidbody);
-		add_rigidbody_internal(req.Col, rigidbody);
-		added_bodies.push_back(rigidbody);
-
-		num_body_created++;
-
-		double create_b_time_ms = (Utilities::Get_Time() - create_body_start) * 1000.0;
-		if (create_b_time_ms > 10.0) {
-			break;
-		}
-	}
-	double create_body_end = Utilities::Get_Time();
-	double create_body_durration_ms = (create_body_end - create_body_start) * 1000.0f;
+	
 
 
-	// Process added rigidbodies. Will probably need to rework to spread out the work.
-	double add_body_start = Utilities::Get_Time();
-	int num_bodies_add = m_bodies_to_add.size();
-	if (num_bodies_add > 0 && true)
-	{
-		auto ids = std::span<JPH::BodyID>(m_bodies_to_add);
-		//BodyID* ids = new BodyID[num_bodies_add];
-		//memcpy((void*)ids, (void*)m_bodies_to_add.data(), sizeof(BodyID) * num_bodies_add);
-		m_bodies_to_add.clear();
-
-		BodyInterface::AddState add_state = GetBodyInterface().AddBodiesPrepare(ids.data(), num_bodies_add);
-		GetBodyInterface().AddBodiesFinalize(ids.data(), num_bodies_add, add_state, EActivation::Activate);
-		//delete[] ids;
-	}
-	double add_body_end = Utilities::Get_Time();
-	double add_body_durration_ms = (add_body_end - add_body_start) * 1000.0f;
+	
+	
 
 	// TODO: A FixedUpdate function should probably be called here for each object.
 	for (const auto& pair : m_colliders)
@@ -276,28 +247,17 @@ void Physics::update_internal(float fixed_dt)
 	}
 
 	// Trigger update
+	double update_time_start = Utilities::Get_Time();
 	mPhysicsSystem->Update(actual_dt, JOLT_SIMULATION_STEPS, mTempAllocator, mJobSystem);
+	double update_time_end = Utilities::Get_Time();
+	double update_durr_ms = (update_time_end - update_time_start) / 1000.0f;
 
 	/*for (const auto& b : added_bodies)
 	{
 		assert(b->IsInBroadPhase());
 	}*/
 
-	std::vector<Body*> remove_next_frame;
-	while (!m_rigidbody_rem_queue.empty())
-	{
-		auto body = m_rigidbody_rem_queue.front();
-		m_rigidbody_rem_queue.pop();
-
-		if (!remove_rigidbody_internal(body)) {
-			Logger::LogDebug(LOG_POS("update_internal"), "failed to remove rigidbody: adding again to queue.");
-			//remove_next_frame.push_back(body);
-		}
-	}
-	for (const auto& b : remove_next_frame)
-	{
-		//m_rigidbody_rem_queue.push(b);
-	}
+	
 
 
 	int in_broadphase_cnt = 0;
@@ -323,8 +283,8 @@ void Physics::update_internal(float fixed_dt)
 
 	if (sleep_ms <= 0)
 	{
-		Logger::LogWarning(LOG_POS("update_internal"), "physics timestep exceeded %d ms by %d ms (total time: %lf ms, %lf, %d)", 
-			static_cast<int>(fixed_target_ms), -sleep_ms, durr_ms, create_body_durration_ms, num_body_created);
+		Logger::LogWarning(LOG_POS("update_internal"), "physics timestep exceeded %d ms by %d ms (total time: %lf ms, %lf)", 
+			static_cast<int>(fixed_target_ms), -sleep_ms, durr_ms, update_durr_ms);
 		//assert(false);
 	}
 
@@ -347,6 +307,75 @@ void Physics::update_internal(float fixed_dt)
 
 
 	
+}
+
+void Physics::add_rigidbodies_async()
+{
+	// TODO: process queue to create rigidbodies from shapes.
+	double create_body_start = Utilities::Get_Time();
+	std::vector<Body*> added_bodies;
+	added_bodies.reserve(m_rigidbody_req_queue.size());
+	int num_body_created = 0;
+	while (!m_rigidbody_req_queue.empty())
+	{
+		auto req = m_rigidbody_req_queue.front();
+		m_rigidbody_req_queue.pop();
+
+		assert(!req.Col.expired());
+
+		Body* rigidbody = GetBodyInterface().CreateBody(req.ShapeSettings);
+		req.Col.lock()->OnSetRigidbody(rigidbody);
+		add_rigidbody_internal(req.Col, rigidbody);
+		added_bodies.push_back(rigidbody);
+
+		num_body_created++;
+
+		double create_b_time_ms = (Utilities::Get_Time() - create_body_start) * 1000.0;
+		if (create_b_time_ms > 16.0) {
+			break;
+		}
+	}
+	double create_body_end = Utilities::Get_Time();
+	double create_body_durration_ms = (create_body_end - create_body_start) * 1000.0f;
+
+	// Process added rigidbodies. Will probably need to rework to spread out the work.
+	double add_body_start = Utilities::Get_Time();
+	int num_bodies_add = m_bodies_to_add.size();
+	if (num_bodies_add > 0 && true)
+	{
+		auto ids = std::span<JPH::BodyID>(m_bodies_to_add);
+		//BodyID* ids = new BodyID[num_bodies_add];
+		//memcpy((void*)ids, (void*)m_bodies_to_add.data(), sizeof(BodyID) * num_bodies_add);
+		m_bodies_to_add.clear();
+
+		BodyInterface::AddState add_state = GetBodyInterface().AddBodiesPrepare(ids.data(), num_bodies_add);
+		GetBodyInterface().AddBodiesFinalize(ids.data(), num_bodies_add, add_state, EActivation::Activate);
+		//delete[] ids;
+	}
+	double add_body_end = Utilities::Get_Time();
+	double add_body_durration_ms = (add_body_end - add_body_start) * 1000.0f;
+
+	std::vector<Body*> remove_next_frame;
+	while (!m_rigidbody_rem_queue.empty())
+	{
+		auto body = m_rigidbody_rem_queue.front();
+		m_rigidbody_rem_queue.pop();
+
+		if (!remove_rigidbody_internal(body)) {
+			//Logger::LogDebug(LOG_POS("update_internal"), "failed to remove rigidbody: adding again to queue.");
+			//remove_next_frame.push_back(body);
+		}
+	}
+	for (const auto& b : remove_next_frame)
+	{
+		//m_rigidbody_rem_queue.push(b);
+	}
+
+	if (num_body_created > 0)
+	{
+		Logger::LogDebug(LOG_POS("add_rigidbodies_async"), "Added %d rigidbodies. Create: %0.2lf ms. Add: %0.2lf ms",
+			num_body_created, create_body_durration_ms, add_body_durration_ms);
+	}
 }
 
 
@@ -425,6 +454,7 @@ void Physics::Init(bool async)
 	if (m_is_async)
 	{
 		m_thread = std::thread(RunAsync, this);
+		m_thread_rbadd = std::thread(AddRigidbodiesAsync, this);
 	}
 
 }
@@ -562,10 +592,11 @@ void Physics::add_rigidbody_internal(std::weak_ptr<Collider> col, Body* body)
 	body_obj.Col = col;
 	body_obj.Obj = col.lock()->Object_Ptr().lock();
 
-	//m_lock.lock();
+	m_lock.lock();
 	m_bodies[body->GetID().GetIndex()] = body_obj;
+	m_lock.unlock();
+
 	m_bodies_to_add.push_back(body->GetID());
-	//m_lock.unlock();
 }
 
 bool Physics::remove_rigidbody_internal(Body* body)
@@ -573,9 +604,12 @@ bool Physics::remove_rigidbody_internal(Body* body)
 	
 	//m_lock.lock();
 	assert(body != nullptr);
-	assert(m_bodies.contains(body->GetID().GetIndex()));
 
+	m_lock.lock();
+	assert(m_bodies.contains(body->GetID().GetIndex()));
 	body_ref b_ref = m_bodies[body->GetID().GetIndex()];
+	m_bodies.erase(body->GetID().GetIndex());
+	m_lock.unlock();
 
 	//Logger::LogDebug(LOG_POS("remove_rigidbody_internal"), "Removing rigidbody(%d): %s", 
 	//	body->GetID(), b_ref.Object_Name.c_str());
@@ -591,9 +625,6 @@ bool Physics::remove_rigidbody_internal(Body* body)
 	}
 
 	GetPhysicsSystem().GetBodyInterfaceNoLock().DestroyBody(body->GetID());
-
-	m_bodies.erase(body->GetID().GetIndex());
-
 
 	//m_lock.unlock();
 
@@ -640,11 +671,35 @@ void Physics::Remove_Collider(uint32_t id, bool do_lock)
 
 Physics::RayHit Physics::raycast_jolt(glm::vec3 from, glm::vec3 dir)
 {
-	const BroadPhaseQuery& broadphase = Instance().mPhysicsSystem->GetBroadPhaseQuery();
-	
+	RayHit res{};
+	res.did_hit = false;
+	res.start = from;
 
+	if (!m_initialied) {
+		return res;
+	}
 
-	return RayHit();
+	RRayCast ray = RRayCast(Vec3(from.x, from.y, from.z), Vec3(dir.x, dir.y, dir.z));
+	const BroadPhaseQuery& broadphase = mPhysicsSystem->GetBroadPhaseQuery();
+	const NarrowPhaseQuery& narrowphase = mPhysicsSystem->GetNarrowPhaseQuery();
+	RayCastResult hit_result;
+	bool did_hit = narrowphase.CastRay(ray, hit_result);
+
+	if (!did_hit)
+	{
+		return res;
+	}
+
+	assert(m_bodies.contains(hit_result.mBodyID.GetIndex()));
+	const JPH::Body* body = m_bodies[hit_result.mBodyID.GetIndex()].RBody;
+	Vec3 hit_point = ray.GetPointOnRay(hit_result.mFraction);
+
+	res.did_hit = true;
+	res.start = from;
+	res.hit_point = to_glm_vector(hit_point);
+	res.normal = to_glm_vector(body->GetWorldSpaceSurfaceNormal(hit_result.mSubShapeID2, hit_point));
+
+	return res;
 }
 
 Physics::RayHitList Physics::raycastAll_jolt(glm::vec3 from, glm::vec3 dir)
@@ -670,6 +725,7 @@ Physics::~Physics()
 	if (m_is_async) {
 		m_running = false;
 		m_thread.join();
+		m_thread_rbadd.join();
 	}
 	delete mPhysicsSystem;
 	delete mJobSystemValidating;

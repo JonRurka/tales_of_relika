@@ -260,6 +260,8 @@ void WorldPhysics::Update(float dt)
 	int num_bodies_add = m_bodies_to_add.size();
 	if (num_bodies_add > 0)
 	{
+
+
 		BodyID* ids = new BodyID[num_bodies_add];
 		memcpy((void*)ids, (void*)m_bodies_to_add.data(), sizeof(BodyID) * num_bodies_add);
 		m_bodies_to_add.clear();
@@ -399,7 +401,31 @@ void WorldPhysics::Remove_Rigidbody(Body* body)
 {
 	assert(body != nullptr);
 
-	GetBodyInterface().RemoveBody(body->GetID());
+	if (body->IsInBroadPhase())
+	{
+		GetBodyInterface().RemoveBody(body->GetID());
+	}
+
+	m_block_add[body->GetID()] = 0;
+
+	
+	bool was_found = false;
+	int idx = 0;
+	for (const auto& b : m_bodies_to_add)
+	{
+		if (b == body->GetID())
+		{
+			was_found = true;
+			break;
+		}
+		idx++;
+	}
+	if (was_found)
+		m_bodies_to_add.erase(m_bodies_to_add.begin() + idx); // Body hasn't actually been added yet.
+	
+	GetBodyInterface().DestroyBody(body->GetID());
+	
+
 	if (m_bodies.contains(body->GetID().GetIndex()))
 	{
 		m_bodies.erase(body->GetID().GetIndex());
@@ -413,6 +439,7 @@ WorldPhysics::RayHit WorldPhysics::raycast_jolt(glm::vec3 from, glm::vec3 dir)
 	res.start = from;
 
 	if (!m_initialied) {
+		assert(false);
 		return res;
 	}
 

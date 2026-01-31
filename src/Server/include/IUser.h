@@ -2,7 +2,7 @@
 
 #include "Network/AsyncServer.h"
 
-class IUser {
+class IUser : public std::enable_shared_from_this<IUser> {
 	friend class SocketUser;
 private:
 	

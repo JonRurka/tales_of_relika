@@ -59,7 +59,14 @@ void VoxelWorld_Scene::Update(float dt)
 		tc = world_gen_controller.lock()->Target_Chunk();
 	}
 
-	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()) + " || (" + std::to_string(tc.x) + ", " + std::to_string(tc.y) + ", " + std::to_string(tc.z) + ")");
+	if (m_loading_hidden) {
+		float fps = Engine::FPS();
+		d_max_fps = std::max(d_max_fps, fps);
+		d_min_fps = std::min(d_min_fps, fps);
+	}
+
+
+	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()) + " || (" + std::to_string(tc.x) + ", " + std::to_string(tc.y) + ", " + std::to_string(tc.z) + ") || h: " + std::to_string(d_max_fps) + ", l: " + std::to_string(d_min_fps));
 	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 

@@ -15,6 +15,7 @@
 
 class WorldTerrain;
 class World;
+class Player;
 
 class ServerTerrainChunk {
 public:
@@ -27,6 +28,10 @@ public:
 
 	void Iterate();
 	void Deiterate();
+
+	void Register(std::weak_ptr<Player> player);
+	void Deregister(std::weak_ptr<Player> player);
+
 	int Usages() { return m_usages; }
 	void KeepAlive(bool val) { m_keep_alive = val; }
 	bool KeepAlive() { return m_keep_alive; }
@@ -59,6 +64,7 @@ private:
 	uint64_t m_last_applied_col{ 0 };
 	ColliderGenerator::Request* m_current_col_req{ nullptr };
 
+	std::unordered_map<uint16_t, std::weak_ptr<Player>> m_registered_players;
 
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 

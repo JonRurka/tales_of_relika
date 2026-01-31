@@ -56,14 +56,14 @@ public:
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 		return raycast_bullet(from, dir);
 #else
-		return raycast_jolt(from, dir);
+		return Instance().raycast_jolt(from, dir);
 #endif
 	}
 	static RayHitList	RaycastAll(glm::vec3 from, glm::vec3 dir) {
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 		return raycast_bullet(from, dir);
 #else
-		return raycastAll_jolt(from, dir);
+		return Instance().raycastAll_jolt(from, dir);
 #endif
 	}
 
@@ -166,6 +166,7 @@ private:
 	PhysicsSettings	mPhysicsSettings;
 
 	std::vector<BodyID> m_bodies_to_add;
+	//std::queue<BodyID> m_bodies_to_add; // yet another queue to actually create the rigidbodies.
 
 	struct rigidbody_request {
 		BodyCreationSettings ShapeSettings;
@@ -176,8 +177,8 @@ private:
 
 	std::queue<Body*> m_rigidbody_rem_queue;
 
-	static RayHit		raycast_jolt(glm::vec3 from, glm::vec3 dir);
-	static RayHitList	raycastAll_jolt(glm::vec3 from, glm::vec3 dir);
+	RayHit		raycast_jolt(glm::vec3 from, glm::vec3 dir);
+	RayHitList	raycastAll_jolt(glm::vec3 from, glm::vec3 dir);
 
 	static void optimize_jolt();
 
@@ -198,12 +199,14 @@ private:
 	bool m_initialied{ false };
 	volatile bool m_running{ false };
 	std::thread m_thread;
+	std::thread m_thread_rbadd;
 
 	double m_debug_print_timer{ .5 };
 	
 	static void RunAsync(Physics* phy);
+	static void AddRigidbodiesAsync(Physics* phy);
 	void update_internal(float dt);
-
+	void add_rigidbodies_async();
 
 
 	inline static const std::string LOG_LOC{ "PHYSICS" };

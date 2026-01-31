@@ -162,6 +162,17 @@ void Player::WorldUpdate(float dt)
 	//Logger::LogDebug(LOG_POS("WorldUpdate"), "player update");
 	move_control(dt);
 
+	//if (m_location.y > 0.0f) {
+		//Logger::LogDebug(LOG_POS("WorldUpdate"), "Pos: (%.2lf, %.2lf, %.2lf)",
+		//	m_location.x, m_location.y, m_location.z);
+	//}
+
+	if (m_current_chunk_location != m_current_terrain->WorldPosToChunkCoord(m_location))
+	{
+		on_change_chunk();
+		m_current_chunk_location = m_current_terrain->WorldPosToChunkCoord(m_location);
+	}
+
 	if (m_trigger_save) {
 		save_player_data();
 		m_trigger_save = false;
@@ -175,10 +186,15 @@ void Player::Set_Current_World(World* world, uint8_t inst_id)
 	m_world_instance_id = inst_id;
 	m_trigger_save = true;
 	m_current_terrain = world->Terrain();
-
+	
 	load_world_profile();
 	refresh_character_controller();
 	update_terrain_chunks();
+
+	Logger::LogDebug(LOG_POS("Set_Current_World"), "New Player Pos set: (%.2lf, %.2lf, %.2lf)",
+		m_location.x, m_location.y, m_location.z);
+
+	m_current_chunk_location = m_current_terrain->ChunkCoordToWorldPos(m_location);
 }
 
 void Player::AssignPlayer(World* world)
@@ -222,6 +238,12 @@ void Player::Add_Player_Event(ServerPlayerEvent p_event)
 		process_jump_event(p_event);
 		break;
 	}
+}
+
+void Player::on_change_chunk()
+{
+	update_terrain_chunks();
+
 }
 
 void Player::Send_Chunk_Event(OpCodes::Player_Chunk_Events event_cmd, std::vector<uint8_t> data)
@@ -348,6 +370,9 @@ std::string Player::PlayerSpawnData::To_String()
 
 void Player::process_controll_event(ServerPlayerEvent p_event)
 {
+	if (!m_client_ready)
+		return;
+
 	auto data = p_event.Data;
 
 	bool do_move = data[0] == 0x01 ? true : false;
@@ -377,6 +402,9 @@ void Player::process_controll_event(ServerPlayerEvent p_event)
 
 void Player::process_jump_event(ServerPlayerEvent p_event)
 {
+	if (!m_client_ready)
+		return;
+
 	m_player_movement.Jump();
 	ClientPlayerEvent new_event;
 	new_event.Command = p_event.Command;
@@ -386,12 +414,15 @@ void Player::process_jump_event(ServerPlayerEvent p_event)
 
 void Player::move_control(float dt) 
 {
+	if (!m_client_ready)
+		return;
+
 	m_player_movement.Update(dt);
 	m_old_location = m_location;
 	m_location = m_player_movement.Position();
 	m_velocity = m_player_movement.Velocity();
 
-	//Logger::LogDebug(LOG_POS("move_control"), "(%.2lf, %.2lf, %.2lf)",
+	//Logger::LogDebug(LOG_POS("move_control"), "server (%.2lf, %.2lf, %.2lf)",
 	//	m_location.x, m_location.y, m_location.z);
 }
 
@@ -461,9 +492,9 @@ void Player::update_terrain_chunks()
 			chunk = m_current_terrain->Get_Chunk(c);
 		else 
 			chunk = m_current_terrain->Spawn_Chunk(c);
-		chunk->Iterate();
+		chunk->Register(get_shared_ref());
 
-		Send_Chunk_Event(OpCodes::Player_Chunk_Events::NotifyLoaded, hash);
+		//Send_Chunk_Event(OpCodes::Player_Chunk_Events::NotifyLoaded, hash);
 		m_simulated_terrain_chunks[hash] = chunk;
 	}
 
@@ -471,7 +502,7 @@ void Player::update_terrain_chunks()
 	for (const auto& pair : m_simulated_terrain_chunks) 
 	{
 		if (!List_Contains(valid_chunks, pair.first)) {
-			m_simulated_terrain_chunks[pair.first]->Deiterate();
+			m_simulated_terrain_chunks[pair.first]->Deregister(get_shared_ref());
 			remove_chunks.push_back(pair.first);
 		}
 	}
@@ -481,6 +512,11 @@ void Player::update_terrain_chunks()
 		m_simulated_terrain_chunks.erase(hash);
 	}
 	
+}
+
+std::shared_ptr<Player> Player::get_shared_ref()
+{
+	return std::dynamic_pointer_cast<Player>(shared_from_this());
 }
 
 

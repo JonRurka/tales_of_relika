@@ -54,6 +54,7 @@ private:
 	PlayerMoveState m_move_state{};
 	World* m_current_world{ nullptr };
 	bool m_initialized{ false };
+	float m_jump_force{ 5.0f };
 
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	btCollisionShape* m_shape{ nullptr };
@@ -108,6 +109,7 @@ private:
 	// True when the player is pressing movement controls
 	bool mAllowSliding = false;
 
+	inline static const std::string LOG_LOC{ "SERVER_PLAYER_MOVEMENT" };
 
 #endif
 };

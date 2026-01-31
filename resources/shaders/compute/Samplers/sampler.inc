@@ -51,6 +51,14 @@ struct IsoNormalSample{
 	fvec3 normal;
 };
 
+// y = target_max as x approaches infinity
+float fade_clamp(float target_max, float strength, float x){
+	float a = 1.0f / strength;
+	int flip = 1;
+	if (x < 0)
+		flip = -1;
+	return flip * target_max * FABS(x) / (a + FABS(x));
+}
 
 #include "samplers/Terrain_Sampler.inc"
 //#include "samplers/Sphere_Sampler.inc"
@@ -58,6 +66,9 @@ struct IsoNormalSample{
 #ifdef INCLUDE_COMBINE_ISO
 STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos, float iso_3D, float height, fvec4 edit)
 {
+	
+	// TODO: Plot distance underground as x in f(x) = .... in one of the functions below.
+	// https://math.stackexchange.com/a/57433
 	
 	if (edit.x > 0.1){
 		//Print_4("changed ISO 1 (%i, %i, %i): %f \n", voxel_pos.x, voxel_pos.y, voxel_pos.z, edit.y);
@@ -74,21 +85,24 @@ STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos
 	float iso_result = 0;
 	int type_res = grass(); //grass
 	
-	float raw_height_iso = height - world_pos.y;
-	float height_iso = clamp(raw_height_iso, -2.0f, 2.0f);
+	float raw_height_iso = height - world_pos.y;// fade_clamp(2, 8, height - world_pos.y);
+	float height_iso = fade_clamp(1, 0.5, raw_height_iso);// clamp(raw_height_iso, -2.0f, 2.0f);
 	//height_iso = iso_invert(height_iso);
 	
 	float raw_cave_iso = iso_3D;//;sphere_sample_5(10, FVEC3(5, 17, 0), world_pos.x, world_pos.y, world_pos.z);
-	float cave_iso = clamp(raw_cave_iso, -5.0f, 5.0f);
+	float cave_iso = raw_cave_iso;// clamp(raw_cave_iso, -5.0f, 5.0f);
 	//cave_iso = iso_invert(cave_iso);
 	
-	if (raw_cave_iso > 0.0 && world_pos.y < (height - 0.0f)){
-		iso_result = clamp(clamp(height_iso, -5.0f, 5.0f) - cave_iso, -5.0f, 5.0f);
+	//iso_result = height_iso - cave_iso;
+	
+	if (raw_cave_iso > 0.0 && world_pos.y < (height + 0.3f)){
+		//iso_result = clamp(clamp(height_iso, -5.0f, 5.0f) - cave_iso, -5.0f, 5.0f);
+		iso_result = height_iso - cave_iso;
 	}
 	else{
 		iso_result = height_iso;
 	}
-	iso_result = height_iso;
+	//iso_result = height_iso;
 	
 	
 	if (change_iso){

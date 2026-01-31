@@ -35,7 +35,7 @@ float GetHeight(STRUCT Settings s, float x, float y)
 {
 	//return x / 1.0;
 	//return 5 + x / 10.0;
-	return 4.5;
+	//return 4.5f;
 	
 	x /= 100.0f;
 	y /= 100.0f;
@@ -108,7 +108,7 @@ float Sample_2D(STRUCT Settings s, float x, float y)
 
 float Sample_3D(STRUCT Settings s, float x, float y, float z)
 {
-	return CaveSample(s, x, y, z, 14.0f, 5.0f, 1.0f);
+	return CaveSample(s, x, y, z, 14.0f, 1.0f, 1.0f);
 }
 
 

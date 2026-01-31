@@ -44,6 +44,7 @@ public:
 	enum class Player_Chunk_Events : uint8_t {
 		None = 0x00,
 		NotifyLoaded,
+		NotifyUnloaded,
 	};
 
 };

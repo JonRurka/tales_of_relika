@@ -38,6 +38,15 @@ class GameClient;
 #define DEFAULT_PROCESS_TIME_INIT_CREATE_MS 250.0
 #define DEFAULT_PROCESS_TIME_RUNTIME_CREATE_MS 8.0
 
+#ifndef DECLARE_CHUNK_COMMAND
+#define	DECLARE_CHUNK_COMMAND(type, func_name) 										 \
+	static void func_name##_cb(void* obj, int hash, std::vector<uint8_t> data) {	 \
+		type* cntrl = (type*)obj;													 \
+		cntrl->func_name(hash, data);												 \
+	}																				 \
+	void func_name(int hash, std::vector<uint8_t> data); 
+#endif
+
 typedef void(*ChunkActionPtr)(void*, int, std::vector<uint8_t>);
 
 class WorldGenController : public Component
@@ -181,17 +190,24 @@ public:
 		return m_k_key_hit;
 	}
 
-	static void OnChunkEvent_cb(void* obj, Data data) {
+
+	DECLARE_NET_CLIENT_COMMAND(WorldGenController, OnChunkEvent)
+
+	/*static void OnChunkEvent_cb(void* obj, Data data) {
 		WorldGenController* cntrl = (WorldGenController*)obj;
 		cntrl->OnChunkEvent(data);
 	}
-	void OnChunkEvent(Data data);
+	void OnChunkEvent(Data data);*/
 
-	static void OnChunkEvent_NotifyLoaded_cb(void* obj, int hash, std::vector<uint8_t> data) {
+
+	DECLARE_CHUNK_COMMAND(WorldGenController, OnChunkEvent_NotifyLoaded)
+	DECLARE_CHUNK_COMMAND(WorldGenController, OnChunkEvent_NotifyUnloaded)
+
+	/*static void OnChunkEvent_NotifyLoaded_cb(void* obj, int hash, std::vector<uint8_t> data) {
 		WorldGenController* cntrl = (WorldGenController*)obj;
 		cntrl->OnChunkEvent_NotifyLoaded(hash, data);
 	}
-	void OnChunkEvent_NotifyLoaded(int hash, std::vector<uint8_t> data);
+	void OnChunkEvent_NotifyLoaded(int hash, std::vector<uint8_t> data);*/
 
 
 protected:

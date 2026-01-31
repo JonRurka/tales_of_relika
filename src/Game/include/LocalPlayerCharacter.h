@@ -53,6 +53,9 @@ protected:
 
 	void OnDestroy() override;
 
+	virtual void OnEnabled() override;
+	virtual void OnDisabled() override;
+
 private:
 
 	static LocalPlayerCharacter* m_instance;
@@ -62,6 +65,7 @@ private:
 	std::atomic<glm::vec3> m_velocity{ glm::vec3() };
 	glm::vec3 m_server_loc{ glm::vec3() };
 	bool m_do_move{ false };
+	bool m_is_locked{ false };
 	uint64_t m_move_send_id{ 0 };
 
 	std::unordered_map<uint64_t, double> m_net_trip_times;
@@ -86,6 +90,8 @@ private:
 	float m_cam_horizontalAngle{ 0 };
 	float m_cam_verticalAngle{ 0 };
 	glm::vec3 m_cam_euler{ glm::vec3() };
+
+	std::atomic<bool> m_should_jump{ false };
 
 	glm::vec3 cam_offset{ CAM_OFFSET_DEFAULT };
 	float m_jump_power{ JUMP_POWER_DEFAULT };

@@ -24,7 +24,14 @@ public:
 
 	static Component* Load_Component(WorldObject* obj, json data);
 
-	void Enabled(bool val) { m_enabled = val; }
+	void Enabled(bool val) 
+	{ 
+		m_enabled = val;
+		if (val)
+			OnEnabled();
+		else
+			OnDisabled();
+	}
 	bool Enabled() { return m_enabled; }
 
 	void Destroy();
@@ -47,6 +54,8 @@ protected:
 	virtual void Init() = 0;
 	virtual void Update(float dt) = 0;
 	virtual void FixedUpdate(float dt) {};
+	virtual void OnEnabled() {};
+	virtual void OnDisabled() {};
 	virtual void OnDestroy() {};
 
 	std::weak_ptr<WorldObject> Instantiate();

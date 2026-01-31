@@ -27,9 +27,17 @@ public:
 #else
 	CharacterVirtual& Get_Controller() { return *mCharacter.GetPtr(); }
 
+	void Jump(float force);
+
 	bool Character_Inited() { return m_has_character; }
 
 	void HandleMovement(Vec3 move_vec, float dt);
+
+	void ControllerEnabled(bool val);
+	bool ControllerEnabled()
+	{
+		return m_contrl_enabled;
+	}
 
 #endif
 
@@ -43,6 +51,7 @@ protected:
 
 	
 	float m_height{ DEFAULT_CAPSUE_HEIGHT };
+	bool m_contrl_enabled{ true };
 
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	std::unique_ptr<btPairCachingGhostObject> m_ghostObject;

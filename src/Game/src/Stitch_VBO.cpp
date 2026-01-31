@@ -89,6 +89,9 @@ void Stitch_VBO::Process(Mesh& mesh, glm::ivec4 count, bool gpu_copy, bool apply
 		return;
 	}
 
+	double gframe_start = Utilities::Get_Time();
+
+
 	auto start = std::chrono::high_resolution_clock::now();
 	v_builder->Extract(
 		Input_Vertex_Buffer(),
@@ -228,6 +231,10 @@ void Stitch_VBO::Process(Mesh& mesh, glm::ivec4 count, bool gpu_copy, bool apply
 
 		times.w += load_mesh_duration;
 	}
+
+
+	double gframe_end = Utilities::Get_Time();
+	g_frame_time += (gframe_end = gframe_start) / 1000; // ms
 }
 
 void Stitch_VBO::Reset()

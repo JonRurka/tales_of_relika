@@ -7,6 +7,15 @@ typedef unsigned int Protocal;
 #define Protocal_Tcp (Protocal)0
 #define Protocal_Udp (Protocal)1
 
+#ifndef DECLARE_NET_CLIENT_COMMAND
+#define DECLARE_NET_CLIENT_COMMAND(type, func_name) 									 \
+	static void func_name##_cb(void* obj, Data data) {	                                     \
+		type* cntrl = (type*)obj;													 \
+		cntrl->func_name(data);												 \
+	}																				 \
+	void func_name(Data data); 
+#endif
+
 class Data {
 public:
     Protocal Type = 0;

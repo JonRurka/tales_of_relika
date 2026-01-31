@@ -109,6 +109,7 @@ private:
 	PhysicsSettings	mPhysicsSettings;
 
 	std::vector<BodyID> m_bodies_to_add;
+	std::unordered_map<BodyID, int> m_block_add; // if removed before it can be added to physics.
 
 	RayHit		raycast_jolt(glm::vec3 from, glm::vec3 dir);
 	RayHitList	raycastAll_jolt(glm::vec3 from, glm::vec3 dir);

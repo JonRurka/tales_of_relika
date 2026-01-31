@@ -24,6 +24,11 @@ void CharacterCollider::Init()
 #endif
 }
 
+void CharacterCollider::ControllerEnabled(bool val)
+{
+	m_contrl_enabled = val;
+}
+
 void CharacterCollider::Update(float dt)
 {
 	m_lock.lock();
@@ -108,16 +113,19 @@ void CharacterCollider::FixedUpdate(float dt)
 	if (mCharacter.GetPtr() == nullptr)
 		return;
 
-	CharacterVirtual::ExtendedUpdateSettings update_settings;
-	// Update the character position
-	mCharacter->ExtendedUpdate(Physics::Fixed_DeltaTime(),
-		-mCharacter->GetUp() * Physics::GetPhysicsSystem().GetGravity().Length(),
-		update_settings,
-		Physics::GetPhysicsSystem().GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
-		Physics::GetPhysicsSystem().GetDefaultLayerFilter(Layers::MOVING),
-		{ },
-		{ },
-		Physics::GetTempAllocator());
+	if (m_contrl_enabled)
+	{
+		CharacterVirtual::ExtendedUpdateSettings update_settings;
+		// Update the character position
+		mCharacter->ExtendedUpdate(Physics::Fixed_DeltaTime(),
+			-mCharacter->GetUp() * Physics::GetPhysicsSystem().GetGravity().Length(),
+			update_settings,
+			Physics::GetPhysicsSystem().GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
+			Physics::GetPhysicsSystem().GetDefaultLayerFilter(Layers::MOVING),
+			{ },
+			{ },
+			Physics::GetTempAllocator());
+	}
 
 	m_lock.lock();
 	m_pos = mCharacter->GetPosition();
@@ -216,10 +224,25 @@ void CharacterCollider::OnRefresh()
 	//assert(false);
 }
 
+void CharacterCollider::Jump(float force)
+{
+	if (!m_has_character || mCharacter.GetPtr() == nullptr)
+		return;
+	if (!m_contrl_enabled)
+		return;
+
+	if (mCharacter->IsSupported()) {
+		Vec3 vel = mCharacter->GetLinearVelocity();
+		vel.SetY(vel.GetY() + force);
+		mCharacter->SetLinearVelocity(vel);
+	}
+}
 
 void CharacterCollider::HandleMovement(Vec3 move_vec, float dt)
 {
 	if (!m_has_character || mCharacter.GetPtr() == nullptr)
+		return;
+	if (!m_contrl_enabled)
 		return;
 
 	bool player_controls_horizontal_velocity = sControlMovementDuringJump || mCharacter->IsSupported();

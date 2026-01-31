@@ -149,18 +149,18 @@ void WorldGenController::InitCommands(std::weak_ptr<GameClient> client)
 
 	// add chunk commands.
 	AddCommand(OpCodes::Player_Chunk_Events::NotifyLoaded, OnChunkEvent_NotifyLoaded_cb, this);
-
+	AddCommand(OpCodes::Player_Chunk_Events::NotifyUnloaded, OnChunkEvent_NotifyUnloaded_cb, this);
 
 }
 
 void WorldGenController::AddCommand(OpCodes::Player_Chunk_Events cmd, ChunkActionPtr callback, void* obj)
 {
-	if (!m_commands.contains((uint8_t)cmd)) {
-		ChunkCommand command;
-		command.Callback = callback;
-		command.Obj_Ptr = obj;
-		m_commands[(uint8_t)cmd] = command;
-	}
+	assert(!m_commands.contains((uint8_t)cmd));
+
+	ChunkCommand command;
+	command.Callback = callback;
+	command.Obj_Ptr = obj;
+	m_commands[(uint8_t)cmd] = command;
 }
 
 void WorldGenController::OnChunkEvent(Data data)
@@ -195,7 +195,7 @@ void WorldGenController::OnChunkEvent(Data data)
 
 		if (m_commands.contains((uint8_t)event_cmd))
 		{
-			int hash = *event_data.data();
+			int hash = *((int32_t*)event_data.data());
 			event_data = BufferUtils::RemoveFront(Remove_Int32, event_data);
 			ChunkCommand net_cmd = m_commands[(uint8_t)event_cmd];
 			net_cmd.Callback(net_cmd.Obj_Ptr, hash, event_data);
@@ -209,9 +209,22 @@ void WorldGenController::OnChunkEvent(Data data)
 
 void WorldGenController::OnChunkEvent_NotifyLoaded(int hash, std::vector<uint8_t> data)
 {
-	Logger::LogDebug(LOG_POS("OnChunkEvent_NotifyLoaded"), "Received chunk load: %d", hash);
+	if (m_chunk_map.contains(hash))
+	{
+		ChunkRef ref = m_chunk_map[hash];
+		assert(!ref.chunk_comp.expired());
+		ref.chunk_comp.lock().get()->OnServerChunkLoaded();
+	}
+}
 
-
+void WorldGenController::OnChunkEvent_NotifyUnloaded(int hash, std::vector<uint8_t> data)
+{
+	if (m_chunk_map.contains(hash))
+	{
+		ChunkRef ref = m_chunk_map[hash];
+		assert(!ref.chunk_comp.expired());
+		ref.chunk_comp.lock().get()->OnServerChunkUnloaded();
+	}
 }
 
 void WorldGenController::SetTarget(Transform::Weak target)

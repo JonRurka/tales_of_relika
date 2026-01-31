@@ -40,6 +40,17 @@ void World::Update(float dt)
 {
 }
 
+void World::AddCommand(OpCodes::Server_World cmd, WorldActionPtr callback, void* obj)
+{
+	assert(!m_commands.contains((uint8_t)cmd));
+
+	WorldCommand command;
+	command.Callback = callback;
+	command.Obj_Ptr = obj;
+	m_commands[(uint8_t)cmd] = command;
+	
+}
+
 void World::SubmitPlayerEvent(Player& player, OpCodes::Player_Events event_cmd, std::vector<uint8_t> data)
 {
 	if (player.Socket_User()->Get_Authenticated()) 
@@ -146,7 +157,7 @@ Player::PlayerWorldProfile World::Create_World_Profile(uint32_t player_id)
 {
 	Player::PlayerWorldProfile player_profile{};
 
-	player_profile.Location = m_spawn_point;
+	player_profile.Location = m_spawn_point + glm::vec3(0, 1, 0);
 
 	return player_profile;
 }
@@ -187,6 +198,13 @@ void World::async_init()
 	m_running = true;
 	m_last_orientation_update = Utilities::Get_Time();
 	m_last_frame = Utilities::Get_Time();
+
+	AddCommand(OpCodes::Server_World::Update_Orientation, UpdateOrientation_NetCmd_cb, this);
+	AddCommand(OpCodes::Server_World::Player_Event, PlayerEvent_NetCmd_cb, this);
+	AddCommand(OpCodes::Server_World::Request_World_Player_Data, RequestWorldPlayerData_NetCmd_cb, this); 
+	AddCommand(OpCodes::Server_World::Request_Players, RequestPlayers_NetCmd_cb, this);
+	AddCommand(OpCodes::Server_World::Notify_Player_Ready, NotifyPlayerReady_NetCmd_cb, this);
+
 
 	m_world_physics = new WorldPhysics();
 	m_world_physics->Init();
@@ -306,12 +324,13 @@ bool World::remove_player(Player::pointer player, bool trigger_events)
 void World::create_new(WorldCreationOptions options)
 {
 	m_world_id = HashHelper::RandomNumber_u64(0, UINT64_MAX - 1);
+	m_spawn_point = glm::vec3(5.0, 0.0, 5.0);
 }
 
 void World::load(uint64_t id)
 {
 	m_world_id = id;
-
+	m_spawn_point = glm::vec3(5.0, 0.0, 5.0);
 }
 
 void World::GameLoop()
@@ -347,6 +366,12 @@ void World::AsynUpdate(float dt)
 	ProcessNetCommands();
 	UpdatePlayers(dt);
 
+	WorldPhysics::RayHit hit = m_world_physics->Raycast(glm::vec3(5.0, 20.0f, 5.0f), glm::vec3(0, -1.0f, 0) * 50.0f);
+	if (hit.did_hit)
+	{
+		//Logger::LogDebug(LOG_POS("AsynUpdate"), "Hit (%0.2lf, %0.2lf, %0.2lf)",
+		//	hit.hit_point.x, hit.hit_point.y, hit.hit_point.z);
+	}
 
 	double now = Utilities::Get_Time();
 	if ((now - m_last_orientation_update) > ORIENTATION_SEND_RATE) {
@@ -419,12 +444,14 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 
 	//Logger::LogDebug(LOG_POS("ExecuteNetCommand"), "Received world command for player.");
 
-	if (data.Buffer.size() > 0) 
+	if (data.Buffer.size() <= 0) 
 	{
-		OpCodes::Server_World sub_command = (OpCodes::Server_World)data.Buffer[0];
-		data.Buffer = BufferUtils::RemoveFront(Remove_CMD, data.Buffer);
+		Logger::LogError(LOG_POS("ExecuteNetCommand"), "Received malformed World command: Missing command!");
 
-		switch (sub_command) {
+		//OpCodes::Server_World sub_command = (OpCodes::Server_World)data.Buffer[0];
+		//data.Buffer = BufferUtils::RemoveFront(Remove_CMD, data.Buffer);
+
+		/*switch (sub_command) {
 		case OpCodes::Server_World::Update_Orientation:
 			UpdateOrientation_NetCmd(player, data);
 			break;
@@ -448,13 +475,29 @@ void World::ExecuteNetCommand(uint32_t user, Data data)
 		case OpCodes::Server_World::Notify_Player_Ready:
 			player.Client_Ready(true);
 			break;
-		}
+		}*/
 	}
 	else 
 	{
-		Logger::LogError(LOG_POS("ExecuteNetCommand"), "Received malformed World command: Missing command!");
+		//Logger::LogError(LOG_POS("ExecuteNetCommand"), "Received malformed World command: Missing command!");
 	}
+
+	OpCodes::Server_World sub_command = (OpCodes::Server_World)data.Buffer[0];
+	data.Buffer = BufferUtils::RemoveFront(Remove_CMD, data.Buffer);
+
+	if (m_commands.contains((uint8_t)sub_command))
+	{
+		WorldCommand net_cmd = m_commands[(uint8_t)sub_command];
+		net_cmd.Callback(net_cmd.Obj_Ptr, player, data);
+	}
+	else
+	{
+		Logger::LogWarning(LOG_POS("OnChunkEvent"), "Invalid world cmd: %d", sub_command);
+	}
+
 }
+
+
 
 void World::UpdateOrientation_NetCmd(Player& player, Data data)
 {
@@ -480,6 +523,19 @@ void World::UpdateOrientation_NetCmd(Player& player, Data data)
 	std::string rot_str = "(" + std::to_string(rot_x) + ", " + std::to_string(rot_y) + ", " + std::to_string(rot_z) + ", " + std::to_string(rot_w) + ")";
 
 	//Logger::Log("Received orientation update ("+std::to_string(data.Buffer.size()) + "): " + loc_str + ", " + rot_str + ", " + std::to_string(data.Type));
+}
+
+void World::PlayerEvent_NetCmd(Player& player, Data data)
+{
+	if (data.Buffer.size() > 0)
+	{
+		OpCodes::Player_Events event_cmd = (OpCodes::Player_Events)data.Buffer[0];
+		data.Buffer = BufferUtils::RemoveFront(Remove_CMD, data.Buffer);
+		SubmitPlayerEvent(player, event_cmd, data.Buffer);
+	}
+	else {
+		Logger::LogWarning(LOG_POS("Player_Event_NetCmd"), "Received malformed World Player Event from '" + player.Get_UserName() + "': Missing command!");
+	}
 }
 
 void World::RequestWorldPlayerData_NetCmd(Player& user, Data data)
@@ -519,14 +575,23 @@ void World::RequestPlayers_NetCmd(Player& user, Data data)
 	user.Spawn_Surrounding_Players();
 }
 
+void World::NotifyPlayerReady_NetCmd(Player& user, Data data)
+{
+	user.Client_Ready(true);
+}
+
+
+
 void World::test_set_spawn_point()
 {
 	if (m_spawn_point_set)
 		return;
 
-	WorldPhysics::RayHit hit = m_world_physics->Raycast(glm::fvec3(m_spawn_point.x, 200, m_spawn_point.z), glm::vec3(0, -400, 0));
+	WorldPhysics::RayHit hit = m_world_physics->Raycast(glm::fvec3(m_spawn_point.x, 200, m_spawn_point.z), glm::vec3(0, -1, 0) * 400.0f);
 	if (hit.did_hit) 
 	{
+		Logger::LogInfo(LOG_POS("test_set_spawn_point"), "test spawn HIT : (%f, %f, %f)",
+			hit.hit_point.x, hit.hit_point.y, hit.hit_point.z);
 		m_spawn_point = hit.hit_point + glm::vec3(0, 6, 0);
 		m_spawn_point_set = true;
 		Logger::LogInfo(LOG_POS("test_set_spawn_point"), "Found new Spawn Point: (%f, %f, %f)",

@@ -157,7 +157,7 @@ public:
 		return m_identity.UserID;
 	}
 
-	uint16_t Get_WorldInstanceID() {
+	uint16_t Get_WorldInstanceID() const {
 		return m_world_instance_id;
 	}
 
@@ -280,6 +280,7 @@ private:
 	std::queue<ClientPlayerEvent> m_forward_player_events;
 	std::queue<ChunkEvent> m_active_chunk_events;
 
+	glm::ivec3 m_current_chunk_location{glm::ivec3()};
 	glm::vec3 m_old_location{ glm::vec3() };
 	glm::vec3 m_location{ glm::vec3() };
 	glm::vec3 m_velocity{ glm::vec3() };
@@ -307,6 +308,8 @@ private:
 
 	double m_debug_timer{ 0 };
 
+	void on_change_chunk();
+
 	void Send_Chunk_Event(OpCodes::Player_Chunk_Events event_cmd, std::vector<uint8_t> data);
 
 	void process_controll_event(ServerPlayerEvent p_event);
@@ -326,6 +329,7 @@ private:
 
 	void update_terrain_chunks();
 
+	std::shared_ptr<Player> get_shared_ref();
 	
 	inline static const std::string LOG_LOC{ "SERVER_PLAYER" };
 };

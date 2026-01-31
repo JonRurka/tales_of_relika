@@ -41,6 +41,12 @@ public:
 
 	static Mesh::VertexAttributeList Get_Vertex_Attributes();
 
+	static double ClearFrame() {
+		double ret = g_frame_time;
+		g_frame_time = 0;
+		return ret;
+	}
+
 private:
 	std::string kernel_name = "main_cl";
 	int m_elements{ 0 };
@@ -69,6 +75,9 @@ private:
 	glm::dvec4 times{ glm::dvec4(0.0) };
 
 	void compute_triangles();
+
+	inline static double g_frame_time{ 0 };
+	
 
 	std::unordered_map<int, std::vector<glm::vec4>> debug_vert_data;
 

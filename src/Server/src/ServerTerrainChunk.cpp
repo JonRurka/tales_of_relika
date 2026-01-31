@@ -60,6 +60,40 @@ void ServerTerrainChunk::Deiterate()
 	m_usages = std::max(m_usages - 1, 0);
 }
 
+void ServerTerrainChunk::Register(std::weak_ptr<Player> player)
+{
+	assert(!player.expired());
+	Player& p = *player.lock();
+	assert(!m_registered_players.contains(p.Get_WorldInstanceID()));
+
+	Iterate();
+
+	int hash = WorldTerrain::Hash_Chunk(m_chunk_coords);
+
+	m_registered_players[p.Get_WorldInstanceID()] = player;
+	p.Send_Chunk_Event(OpCodes::Player_Chunk_Events::NotifyLoaded, hash);
+
+	//Logger::LogDebug(LOG_POS("Register"), "Player present in chunk (%d, %d, %d)",
+	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
+}
+
+void ServerTerrainChunk::Deregister(std::weak_ptr<Player> player)
+{
+	assert(!player.expired());
+	Player& p = *player.lock();
+	assert(m_registered_players.contains(p.Get_WorldInstanceID()));
+
+	Deiterate();
+
+	int hash = WorldTerrain::Hash_Chunk(m_chunk_coords);
+
+	m_registered_players.erase(p.Get_WorldInstanceID());
+	p.Send_Chunk_Event(OpCodes::Player_Chunk_Events::NotifyUnloaded, hash);
+
+	//Logger::LogDebug(LOG_POS("Deregister"), "Player out of chunk (%d, %d, %d)",
+	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
+}
+
 void ServerTerrainChunk::Process_Mesh_Update(std::vector<glm::vec4> vert, std::vector<unsigned int> tris, glm::ivec4 counts)
 {
 	if (vert.size() <= 0)

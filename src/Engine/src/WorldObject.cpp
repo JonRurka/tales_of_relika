@@ -165,6 +165,7 @@ void WorldObject::Initialize_Component(std::shared_ptr<Component> comp)
 	m_component_lock.unlock();
 
 	comp->Init();
+	comp->Enabled(true);
 }
 
 void WorldObject::Remove_Component(int comp_idx)

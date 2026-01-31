@@ -10,10 +10,23 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
+
+
 class SocketUser;
 class Player;
 class WorldTerrain;
 class WorldPhysics;
+
+#ifndef DECLARE_WORLD_COMMAND
+#define DECLARE_WORLD_COMMAND(type, func_name) 										 \
+	static void func_name##_cb(void* obj, Player& player, Data data) {	             \
+		type* cntrl = (type*)obj;													 \
+		cntrl->func_name(player, data);												 \
+	}																				 \
+	void func_name(Player& player, Data data); 
+#endif
+
+typedef void(*WorldActionPtr)(void*, Player&, Data);
 
 class World {
 public:
@@ -43,6 +56,8 @@ public:
 	void Stop(bool trigger_events = true);
 
 	void Update(float dt);
+
+	void AddCommand(OpCodes::Server_World cmd, WorldActionPtr callback, void* obj);
 
 	void SubmitPlayerEvent(Player& user, OpCodes::Player_Events, std::vector<uint8_t> data);
 
@@ -89,6 +104,12 @@ private:
 		uint32_t user;
 		Data data;
 	};
+
+	struct WorldCommand {
+		void* Obj_Ptr;
+		WorldActionPtr Callback;
+	};
+	std::unordered_map<uint8_t, WorldCommand> m_commands;
 
 	std::thread m_thread;
 	std::mutex m_world_mtx;
@@ -152,11 +173,17 @@ private:
 
 	void ExecuteNetCommand(uint32_t user, Data data);
 
-	void UpdateOrientation_NetCmd(Player& user, Data data);
+	DECLARE_WORLD_COMMAND(World, UpdateOrientation_NetCmd)
+	DECLARE_WORLD_COMMAND(World, RequestWorldPlayerData_NetCmd)
+	DECLARE_WORLD_COMMAND(World, RequestPlayers_NetCmd)
+	DECLARE_WORLD_COMMAND(World, PlayerEvent_NetCmd)
+	DECLARE_WORLD_COMMAND(World, NotifyPlayerReady_NetCmd);
 
-	void RequestWorldPlayerData_NetCmd(Player& user, Data data);
+	//void UpdateOrientation_NetCmd(Player& user, Data data);
 
-	void RequestPlayers_NetCmd(Player& user, Data data);
+	//void RequestWorldPlayerData_NetCmd(Player& user, Data data);
+
+	//void RequestPlayers_NetCmd(Player& user, Data data);
 
 
 	void test_set_spawn_point();

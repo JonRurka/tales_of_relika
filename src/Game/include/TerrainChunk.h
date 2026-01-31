@@ -63,6 +63,10 @@ public:
 
 	void Refresh(MeshUpdateMode mode);
 
+	void OnServerChunkLoaded();
+
+	void OnServerChunkUnloaded();
+
 protected:
 	void Init() override;
 
@@ -80,6 +84,7 @@ private:
 	bool m_assigned{ false };
 	bool m_has_collision{ false };
 	bool m_should_despawn{ false };
+	bool m_server_loaded{ false };
 	int m_collision_distance{ 0 };
 	glm::vec4* m_col_vert_data{ nullptr };
 

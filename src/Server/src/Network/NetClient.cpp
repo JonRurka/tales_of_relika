@@ -61,13 +61,13 @@ NetClient::~NetClient()
 
 void NetClient::AddCommand(OpCodes::Client cmd, CommandActionPtr callback, void* obj)
 {
-    if (!m_commands.contains((uint8_t)cmd)) {
-        NetCommand command;
-        command.Callback = callback;
-        command.Obj_Ptr = obj;
-        m_commands[(uint8_t)cmd] = command;
-    }
+    assert(!m_commands.contains((uint8_t)cmd));
 
+    NetCommand command;
+    command.Callback = callback;
+    command.Obj_Ptr = obj;
+    m_commands[(uint8_t)cmd] = command;
+    
     if (m_ignored_commands.contains((uint8_t)cmd))
     {
         m_ignored_commands.erase((uint8_t)cmd);
@@ -378,15 +378,20 @@ void NetClient::add_received_packet(std::vector<uint8_t> data, Protocal type)
 
 void NetClient::process_cmd(std::vector<uint8_t> data, Protocal type)
 {
+    if (type == Protocal_Udp && data.size() < 3 ||
+        type == Protocal_Tcp && data.size() < 1)
+    {
+        std::string packet_dump = "";
+        for (const auto& b : data) {
+            packet_dump += std::to_string(b) + ", ";
+        }
+        Logger::LogError(LOG_POS("process_cmd"), "Received malformed net command - packet: %s", packet_dump.c_str());
+        return;
+    }
+
     if (type == Protocal_Udp) {
         // Nothing to do currently with UDP ID.
         data = BufferUtils::RemoveFront(Remove_UDP_ID, data);
-    }
-
-    if (data.size() <= 0)
-    {
-        Logger::LogError(LOG_POS("process_cmd"), "Received malformed net command: Missing command!");
-        return;
     }
 
     int8_t command = data[0];

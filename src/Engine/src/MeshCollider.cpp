@@ -38,6 +38,7 @@ void MeshCollider::RunShapeWorker(ShapeBuildRequest* req)
 	//Logger::LogDebug(LOG_POS("RunShapeWorker"), "Finished building shape.");
 }
 
+
 void MeshCollider::Init()
 {
 	base_Init();
@@ -202,6 +203,7 @@ void MeshCollider::Update(float dt)
 	{
 		//Logger::LogDebug(LOG_POS("Update"), "Activating collision mesh...");
 		Activate();
+		gen_rigidbody();
 	}
 
 
@@ -227,14 +229,19 @@ void MeshCollider::OnRefresh()
 {
 	if (!Active())
 		return;
-	if (Has_Rigidbody()) {
+	/*if (Has_Rigidbody()) {
 		remove_rigidbody();
-	}
+	}*/
 
-	assert(m_shape_settings != nullptr);
-
-#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	
+
+
+}
+
+void MeshCollider::gen_rigidbody()
+{
+#if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
+
 
 	if (Is_Dynamic()) {
 		m_shape->calculateLocalInertia(Mass(), m_localInertia);
@@ -255,6 +262,8 @@ void MeshCollider::OnRefresh()
 	//	obj_trans->Position().x, obj_trans->Position().y, obj_trans->Position().z);
 #else
 
+	assert(m_shape_settings != nullptr);
+
 	glm::vec3 t_pos = Object().Get_Transform().Position();
 	glm::quat t_rot = Object().Get_Transform().Rotation();
 	RVec3 r_pos = RVec3(t_pos.x, t_pos.y, t_pos.z);
@@ -271,7 +280,9 @@ void MeshCollider::OnRefresh()
 	//Logger::LogDebug(LOG_POS("OnRefresh"), "Set rigidbody: %d", rigidbody->GetID());
 
 #endif
+
 }
+
 
 void MeshCollider::Clear()
 {

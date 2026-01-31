@@ -553,6 +553,8 @@ std::vector<glm::ivec3> WorldTerrain::get_columns_in_radius(int center_x, int ce
 
 glm::ivec3 WorldTerrain::worldPosToChunkCoord(glm::fvec3 pos)
 {
+	pos -= glm::vec3(m_chunkMeterSizeX / 2, m_chunkMeterSizeY / 2, m_chunkMeterSizeZ / 2);
+
 	return glm::ivec3(
 		std::round(pos.x / (m_chunkMeterSizeX + m_half)),
 		std::round(pos.y / (m_chunkMeterSizeY + m_half)),
