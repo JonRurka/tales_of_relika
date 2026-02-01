@@ -7,10 +7,112 @@
 
 #include <chrono>
 
+#include <glm/gtx/vector_angle.hpp>
+
 #define VBO_ELEMENTS 3
 #define FLOAT_STRIDE (VBO_ELEMENTS * 4)
 #define BYTE_STRIDE (FLOAT_STRIDE * 4)
 #define DEBUG_DRAW_NORMALS false
+
+
+
+namespace {
+
+	inline const glm::vec4 get_vert(float* vbo, int i) {
+		int vert_i = ((FLOAT_STRIDE * i) + 0);
+		return glm::vec4(
+			vbo[vert_i + 0],
+			vbo[vert_i + 1],
+			vbo[vert_i + 2],
+			vbo[vert_i + 3]
+		);
+	}
+	inline const glm::vec4 get_norm(float* vbo, int i) {
+		int norm_i = ((FLOAT_STRIDE * i) + 4);
+		return glm::vec4(
+			vbo[norm_i + 0],
+			vbo[norm_i + 1],
+			vbo[norm_i + 2], 
+			vbo[norm_i + 3]
+		);
+	}
+	inline void set_norm(float* vbo, int i, const glm::vec4& val) {
+		int norm_i = ((FLOAT_STRIDE * i) + 4);
+		vbo[norm_i + 0] = val.x;
+		vbo[norm_i + 1] = val.y;
+		vbo[norm_i + 2] = val.z;
+		vbo[norm_i + 3] = val.w;
+	}
+	inline int hash_vert(const glm::vec4& v) {
+		auto sv = glm::ivec3(
+			std::round(v.x * 10000),
+			std::round(v.x * 10000),
+			std::round(v.x * 10000)
+		);
+		return Utilities::Hash_Chunk_Coord(sv);
+	}
+
+
+	void smooth_normals(float* vbo, int num) {
+		const bool area_weighting = true;
+		std::unordered_map<int, std::vector<glm::vec4>> vert_norms;
+		for (int t = 0; t < num / 3; t++)
+		{
+			glm::vec4 n = get_norm(vbo, (t * 3) + 0);
+			const glm::vec4 p1 = get_vert(vbo, (t * 3) + 0);
+			const glm::vec4 p2 = get_vert(vbo, (t * 3) + 1);
+			const glm::vec4 p3 = get_vert(vbo, (t * 3) + 2);
+
+
+			//a1 = (p2 - p1).Angle(p3 - p1);    // p1 is the 'base' here
+			//a2 = (p3 - p2).Angle(p1 - p2);    // p2 is the 'base' here
+			//a3 = (p1 - p3).Angle(p2 - p3);    // p3 is the 'base' here
+
+			float a1 = glm::angle((p2 - p1), (p3 - p1));
+			float a2 = glm::angle((p3 - p2), (p1 - p2));
+			float a3 = glm::angle((p1 - p3), (p2 - p3));
+
+			if (!area_weighting) {
+				n = glm::normalize(n);
+			}
+
+			int key_vec_1 = hash_vert(p1);
+			int key_vec_2 = hash_vert(p1);
+			int key_vec_3 = hash_vert(p1);
+
+			if (!vert_norms.contains(key_vec_1)) {
+				vert_norms[key_vec_1] = std::vector<glm::vec4>();
+				vert_norms[key_vec_1].reserve(8);
+			}
+			if (!vert_norms.contains(key_vec_2)) {
+				vert_norms[key_vec_2] = std::vector<glm::vec4>();
+				vert_norms[key_vec_2].reserve(8);
+			}
+			if (!vert_norms.contains(key_vec_3)) {
+				vert_norms[key_vec_3] = std::vector<glm::vec4>();
+				vert_norms[key_vec_3].reserve(8);
+			}
+			vert_norms[key_vec_1].push_back(n);
+			vert_norms[key_vec_2].push_back(n);
+			vert_norms[key_vec_3].push_back(n);
+
+		}
+		for (int v_i = 0; v_i < num; v_i++) {
+			const glm::vec4 v = get_vert(vbo, v_i);
+			int key_vec = hash_vert(v);
+			glm::vec4 N_sum;
+
+			const auto& list = vert_norms[key_vec];
+			for (const auto& n : list) {
+				N_sum += n;
+			}
+
+			N_sum = glm::normalize(N_sum);
+			set_norm(vbo, v_i, N_sum);
+		}
+
+	}
+}
 
 void Stitch_VBO::Init(IVoxelBuilder_private::Shared builder, int elements)
 {
@@ -219,6 +321,10 @@ void Stitch_VBO::Process(Mesh& mesh, glm::ivec4 count, bool gpu_copy, bool apply
 					m_raw_vert_data[(j + 8)], m_raw_vert_data[j + 9], m_raw_vert_data[j + 10], m_raw_vert_data[j + 11]);
 			}*/
 
+			// https://stackoverflow.com/questions/45477806/general-method-for-calculating-smooth-vertex-normals-with-100-smoothness
+			// TODO: smooth normals;
+			//smooth_normals(m_raw_vert_data, count.x);
+
 			std::vector<float> raw_data(m_raw_vert_data, m_raw_vert_data + (count.x * FLOAT_STRIDE));
 			mesh.Set_Raw_Vertex_Data(raw_data, false);
 			mesh.Activate();
@@ -243,6 +349,13 @@ void Stitch_VBO::Reset()
 	//	times.x, times.y, times.z, times.w, (times.x + times.y + times.z + times.w));
 
 	times = glm::dvec4(0.0);
+}
+
+std::vector<float> Stitch_VBO::Output_VBO_Vector(int count)
+{
+	int vbo_size = count * BYTE_STRIDE;
+	Output_VBO_Buffer()->GetData(m_raw_vert_data, vbo_size);
+	return std::vector<float>(m_raw_vert_data, m_raw_vert_data + (count * FLOAT_STRIDE));
 }
 
 int Stitch_VBO::Byte_Stride()

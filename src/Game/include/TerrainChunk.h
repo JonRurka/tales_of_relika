@@ -47,6 +47,8 @@ public:
 
 	void Enable_Collision() 
 	{ 
+		if (m_chunk_coords.x == 3 && m_chunk_coords.y == 0 && m_chunk_coords.z == 1)
+			Logger::LogDebug(LOG_POS("Enable_Collision"), "collision enabled 1");
 		// to keep this from triggering more than once, as 
 		// it might take another frame or two to actually enable.
 		m_has_collision = true;
@@ -76,6 +78,16 @@ protected:
 
 private:
 
+	struct mesh_update {
+		Mesh::Shared mesh;
+		MeshUpdateMode mode;
+		int count;
+
+		std::vector<float> raw_vbo;
+		std::vector<glm::vec4> vert;
+		std::vector<unsigned int> tris;
+	};
+
 	glm::ivec3 m_chunk_coords;
 	glm::fvec3 m_chunk_world_pos;
 	glm::ivec4 m_counts;
@@ -88,7 +100,13 @@ private:
 	int m_collision_distance{ 0 };
 	glm::vec4* m_col_vert_data{ nullptr };
 
+
+	bool m_last_col_success{ false };
+
 	double m_test_timer = 0;
+
+	std::queue<mesh_update> m_mesh_update_queue;
+	std::mutex m_update_lock;
 
 	WorldObject::Weak m_opaque_chunk_obj;
 	Mesh::Shared m_voxel_opaque_mesh;
@@ -96,13 +114,18 @@ private:
 	MeshCollider::Weak m_mesh_collider;
 	Mesh::Shared m_collision_mesh;
 
+	void process_updates();
+
+	void process_mesh_update_internal(const mesh_update& update);
+
 	void VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float iso, bool Type_changed, int type);
 
 	bool test_despawn();
 
 	void draw_debug_cube(glm::vec3 color = glm::vec3(0, 1, 0), float time = 0);
 
-	void update_collision_mesh(IComputeBuffer* vert_buffer, unsigned int* tris_data, int num_vertices);
+	//void update_collision_mesh(IComputeBuffer* vert_buffer, unsigned int* tris_data, int num_vertices);
+	void update_collision_mesh(const std::vector<glm::vec4>& vert_buffer, const std::vector<unsigned int>& tris_data, int num_vertices);
 
 	inline static const std::string LOG_LOC{ "TERRAIN_CHUNK" };
 

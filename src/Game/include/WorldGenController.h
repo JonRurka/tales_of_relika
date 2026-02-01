@@ -215,6 +215,8 @@ protected:
 
 	void Update(float dt) override;
 
+	void OnDestroy() override;
+
 private:
 
 	struct ChunkCommand {
@@ -268,9 +270,15 @@ private:
 
 	double m_gen_start{ 0.0 };
 	double m_gen_stop{ 0.0 };
-	bool m_gen_finished{ false };
+	volatile bool m_gen_finished{ false };
 	bool m_initialized{ false };
 	bool m_world_gen_started{ false };
+
+
+	bool m_async{ false };
+	volatile bool m_running{ false };
+	std::thread m_process_thread;
+	std::mutex m_process_lock;
 	//int m_num_filled_chunks{ 0 };
 
 	double m_chunk_init_all_gen_time_ms{ 0 };
@@ -298,9 +306,24 @@ private:
 
 	bool m_voxel_engine_enabled{ false };
 
-	ChunkRef get_chunk(glm::ivec3 coord);
+	
+
+	ChunkRef get_chunk(glm::ivec3 coord, bool lock = false);
+
+	template<typename T>
+	T& get_chunk_comp(glm::ivec3 coord, bool do_lock = false) {
+		ChunkRef ref = get_chunk(coord, do_lock);
+		std::mutex dummyMutex;
+		std::lock_guard<std::mutex> lock(do_lock ? m_process_lock : dummyMutex);
+		assert(!ref.chunk_comp.expired());
+		return *ref.chunk_comp.lock();
+	}
 
 	void initialize_voxel_engine();
+
+	static void AsyncRun(WorldGenController* inst);
+
+	void process();
 
 	void process_additions();
 

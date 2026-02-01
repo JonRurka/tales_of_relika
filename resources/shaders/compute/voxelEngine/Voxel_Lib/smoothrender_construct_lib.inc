@@ -23,6 +23,9 @@
 #define GRID_PADDING HEIGHTMAP_PADDING
 #define GRID_OFFSET 1
 
+
+#define SAMPLE_NORMALS true
+
 read_buffer_struct(Static_Settings, 0, in_static_settings)
 readwrite_buffer_struct(Run_Settings, 1, in_run_settings)
 
@@ -231,10 +234,27 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
         fvec3 norm = -normalize(dir);
 		fvec4 norm_v4 = FVEC4(norm.x, norm.y, norm.z, 0.0f);
 		
-		fvec3 norm1 = GRID_VERTEX_NORMAL(gv_1, 0).xyz;// p1.normal.xyz;// normal_sample(s, index_pos, p1.globalPosition.xyz);
-		fvec3 norm2 = GRID_VERTEX_NORMAL(gv_2, 0).xyz;// p2.normal.xyz;// normal_sample(s, index_pos, p2.globalPosition.xyz);
-		fvec3 norm3 = GRID_VERTEX_NORMAL(gv_3, 0).xyz;// p3.normal.xyz;//normal_sample(s, index_pos, p3.globalPosition.xyz);
+		fvec3 norm1 = norm;
+		fvec3 norm2 = norm;
+		fvec3 norm3 = norm;
 		
+		if (SAMPLE_NORMALS)
+		{
+			norm1 = GRID_VERTEX_NORMAL(gv_1, 0).xyz;// p1.normal.xyz;// normal_sample(s, index_pos, p1.globalPosition.xyz);
+			norm2 = GRID_VERTEX_NORMAL(gv_2, 0).xyz;// p2.normal.xyz;// normal_sample(s, index_pos, p2.globalPosition.xyz);
+			norm3 = GRID_VERTEX_NORMAL(gv_3, 0).xyz;// p3.normal.xyz;//normal_sample(s, index_pos, p3.globalPosition.xyz);
+		
+			if (vector_angle(norm, norm1) > 45.0f){
+				norm1 = norm;
+			}
+			if (vector_angle(norm, norm2) > 45.0f){
+				norm2 = norm;
+			}
+			if (vector_angle(norm, norm3) > 45.0f){
+				norm3 = norm;
+			}
+		
+		}
 		//pos1.w = v_index;
 		//pos2.w = v_index;
 		//pos3.w = v_index;
@@ -254,15 +274,7 @@ void Process_Voxel(STRUCT Static_Settings static_settings, ivec4 batch, uint g_i
         //fvec3 norm = -normalize(dir);
 		//fvec4 norm_v4 = FVEC4(norm.x, norm.y, norm.z, 0.0f);
 		
-		if (vector_angle(norm, norm1) > 45.0f){
-			norm1 = norm;
-		}
-		if (vector_angle(norm, norm2) > 45.0f){
-			norm2 = norm;
-		}
-		if (vector_angle(norm, norm3) > 45.0f){
-			norm3 = norm;
-		}
+		
 
         //vec4 n1 = vec4(norm.x, norm.y, norm.z, 0);
         int t1 = INT(curTris) + 2;

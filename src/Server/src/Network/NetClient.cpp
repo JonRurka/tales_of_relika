@@ -321,6 +321,7 @@ void NetClient::read_socket_tcp()
     {
         Logger::LogWarning(LOG_POS("read_socket_tcp"), "%s:%u - System error (%d): %s",
             m_host.c_str(), m_server_port_tcp, e.code().value(), e.what());
+        trigger_stop = true;
     }
 }
 
@@ -385,7 +386,7 @@ void NetClient::process_cmd(std::vector<uint8_t> data, Protocal type)
         for (const auto& b : data) {
             packet_dump += std::to_string(b) + ", ";
         }
-        Logger::LogError(LOG_POS("process_cmd"), "Received malformed net command - packet: %s", packet_dump.c_str());
+        Logger::LogWarning(LOG_POS("process_cmd"), "Received malformed net command - packet: %s", packet_dump.c_str());
         return;
     }
 

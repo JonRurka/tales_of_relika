@@ -2,6 +2,8 @@
 
 #include <string>
 #include <vector>
+#include <queue>
+#include <mutex>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -86,6 +88,16 @@ public:
 	static int Hash_Chunk_Coord(int x, int y, int z);
 
 	static int Sleep(long long micro_sec, Sleep_Mode mode = Sleep_Mode::Microsecond);
+
+	template<typename T>
+	static void ThreadSafeQueueDuplicate(std::queue<T>& src, std::queue<T>& dst, std::mutex& lock_ref) 
+	{
+		std::lock_guard<std::mutex> lock(lock_ref);
+		while (!src.empty()) {
+			dst.push(src.front());
+			src.pop();
+		}
+	}
 
 	enum class Vertex_Limit_Mode : int 
 	{

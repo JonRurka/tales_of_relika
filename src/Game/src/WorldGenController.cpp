@@ -12,6 +12,7 @@
 
 #include <algorithm>
 
+#define ASYNC_PROCESS true
 #define DUMMY_TERRAIN false
 #define DUMMY_SURFACE_HEIGHT (4.5)
 #define DUMMY_SURFACE_THICKNESS (0.5)
@@ -41,6 +42,7 @@ int WorldGenController::Hash_Chunk(glm::ivec3 chunk)
 void WorldGenController::Init()
 {
 	m_Instance = this;
+	m_async = ASYNC_PROCESS;
 
 	std::string block_types_str = Resources::Get_Data_File_String(Game_Resources::Data_Files::BLOCK_TYPES);
 	//Logger::LogDebug(LOG_POS("Init"), "%s", block_types_str.c_str());
@@ -83,7 +85,10 @@ void WorldGenController::Init()
 
 	initialize_voxel_engine();
 
-
+	if (m_async)
+	{
+		m_process_thread = std::thread(AsyncRun, this);
+	}
 
 	m_initialized = true;
 }
@@ -105,13 +110,11 @@ void WorldGenController::Update(float dt)
 		}
 	}
 
+	if (!m_async)
+		process();
+
+	// Deletions can be processed on the main thread.
 	process_deletions();
-	process_additions();
-
-	if (m_gen_finished) {
-		process_modifications();
-	}
-
 	
 	if (Input::GetKeyDown(KeyCode::K))
 	{
@@ -137,6 +140,22 @@ void WorldGenController::Update(float dt)
 					x, z, m, c.lock()->Should_Update(), c.lock()->Collision_Available(), c.lock()->Collision_Enabled());
 			}
 		}
+	}
+}
+
+void WorldGenController::OnDestroy()
+{
+	if (m_async) {
+		m_running = false;
+		m_process_thread.join();
+	}
+}
+
+void WorldGenController::process()
+{
+	process_additions();
+	if (m_gen_finished) {
+		process_modifications();
 	}
 }
 
@@ -455,7 +474,10 @@ void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, TerrainMo
 	TerrainModEntry entry{};
 	entry.chunk = chunk;
 	entry.changes.push_back(value);
-	m_terrain_change_queue.push(entry);
+	{
+		std::lock_guard<mutex> lock(m_process_lock);
+		m_terrain_change_queue.push(entry);
+	}
 	//Logger::LogDebug(LOG_POS("Submit_Terrain_Modification"), "Submitted terrain change for chunk (%i, %i, %i).",
 	//	chunk.x, chunk.y, chunk.z);
 }
@@ -470,7 +492,12 @@ void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, std::vect
 	TerrainModEntry entry{};
 	entry.chunk = chunk;
 	entry.changes = values;
-	m_terrain_change_queue.push(entry);
+	{
+		std::lock_guard<mutex> lock(m_process_lock);
+		m_terrain_change_queue.push(entry);
+	}
+	if (chunk.x == 3 && chunk.y == 0 && chunk.z == 1)
+		Logger::LogDebug(LOG_POS("Enable_Collision"), "collision enabled 2");
 	//Logger::LogDebug(LOG_POS("Submit_Terrain_Modification_arr"), "Submitted terrain %i changes for chunk (%i, %i, %i).",
 	//	values.size(), chunk.x, chunk.y, chunk.z);
 }
@@ -502,8 +529,10 @@ glm::ivec3 WorldGenController::Target_Chunk()
 	return target_chunk;
 }
 
-WorldGenController::ChunkRef WorldGenController::get_chunk(glm::ivec3 chunk_coord)
+WorldGenController::ChunkRef WorldGenController::get_chunk(glm::ivec3 chunk_coord, bool do_lock)
 {
+	std::mutex dummyMutex;
+	std::lock_guard<std::mutex> lock(do_lock ? m_process_lock : dummyMutex);
 	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
 	return m_chunk_map[hash];
 }
@@ -537,9 +566,23 @@ void WorldGenController::initialize_voxel_engine()
 	m_voxel_engine_enabled = true;
 }
 
+void WorldGenController::AsyncRun(WorldGenController* inst)
+{
+	inst->m_running = true;
+	while (inst->m_running)
+	{
+		Utilities::Sleep(16, Utilities::Sleep_Mode::Millisecond);
+		inst->process();
+	}
+}
+
 void WorldGenController::process_additions()
 {
-	bool has_items = !m_create_queue.empty();
+	bool has_items;
+	{
+		std::lock_guard<std::mutex> lock(m_process_lock);
+		has_items = !m_create_queue.empty();
+	}
 
 	if (!has_items)
 		return;
@@ -570,8 +613,12 @@ void WorldGenController::process_additions()
 
 	if (m_world_gen_started && !m_gen_finished)
 	{
-
-		if (m_create_queue.empty()) {
+		bool is_empty;
+		{
+			std::lock_guard<std::mutex> lock(m_process_lock);
+			is_empty = m_create_queue.empty();
+		}
+		if (is_empty) {
 
 			double sum = 0;
 			for (const auto& elem : construct_times) {
@@ -627,17 +674,23 @@ bool WorldGenController::process_batch()
 	ChunkGenerationOptions gen_options;
 	ChunkRenderOptions render_options;
 
+	//std::queue<ChunkRef> dst_q;
+	//Utilities::ThreadSafeQueueDuplicate(m_create_queue, dst_q, m_process_lock);
+	
 	int num_additions = 0;
-	while (!m_create_queue.empty() && num_additions < m_batch_size) {
-		ChunkRef ref = m_create_queue.front();
-		m_create_queue.pop();
-		batch[num_additions] = ref;
-		num_additions++;
+	{
+		std::lock_guard<std::mutex> lock(m_process_lock);
+		while (!m_create_queue.empty() && num_additions < m_batch_size) {
+			ChunkRef ref = m_create_queue.front();
+			m_create_queue.pop();
+			batch[num_additions] = ref;
+			num_additions++;
 
-		glm::ivec4 chunk_loc = glm::ivec4(ref.chunk_coord, 0);
-		gen_options.locations.push_back(chunk_loc);
-		render_options.locations.push_back(chunk_loc);
+			glm::ivec4 chunk_loc = glm::ivec4(ref.chunk_coord, 0);
+			gen_options.locations.push_back(chunk_loc);
+			render_options.locations.push_back(chunk_loc);
 
+		}
 	}
 
 	if (num_additions <= 0) {
@@ -676,19 +729,37 @@ bool WorldGenController::process_batch()
 		}
 	}
 
-	return !m_create_queue.empty();
+	
+	bool is_empty;
+	{
+		std::lock_guard<std::mutex> lock(m_process_lock);
+		is_empty = m_create_queue.empty();
+	}
+	return is_empty;
 }
 
 void WorldGenController::process_modifications()
 {
-	if (m_terrain_change_queue.empty())
+	bool has_items;
+	{
+		std::lock_guard<std::mutex> lock(m_process_lock);
+		has_items = !m_terrain_change_queue.empty();
+	}
+	if (!has_items)
 		return;
+
+	Logger::LogDebug(LOG_POS("process_modifications"), "1 process %d", m_terrain_change_queue.size());
+
+	std::queue<TerrainModEntry> dst_q;
+	Utilities::ThreadSafeQueueDuplicate(m_terrain_change_queue, dst_q, m_process_lock);
+
+	Logger::LogDebug(LOG_POS("process_modifications"), "2 process %d", m_terrain_change_queue.size());
 
 	int num_processed = 0;
 	double gen_tm_start = Utilities::Get_Time();
 	double build_time = 0;
 	double apply_time = 0;
-	while (!m_terrain_change_queue.empty()) 
+	while (!dst_q.empty())
 	{
 		//Logger::LogDebug(LOG_POS("process_modifications"), "Items in mod queue: %i", m_terrain_change_queue.size());
 
@@ -696,14 +767,17 @@ void WorldGenController::process_modifications()
 		double gen_time = (gen_curr - gen_tm_start) * 1000.0;
 		if (gen_time >= 16)
 		{
-			break;
+			//break;
 		}
 
-		TerrainModEntry entry = m_terrain_change_queue.front();
-		m_terrain_change_queue.pop();
+		TerrainModEntry entry = dst_q.front();
+		dst_q.pop();
 
 		glm::ivec3 chunk = entry.chunk;
 		std::vector<TerrainMod> changes = entry.changes;
+
+		if (chunk.x == 3 && chunk.y == 0 && chunk.z == 1)
+			Logger::LogDebug(LOG_POS("Enable_Collision"), "collision enabled 3");
 
 		if (!Chunk_Exists(chunk)) {
 			continue;
@@ -740,11 +814,15 @@ void WorldGenController::process_modifications()
 		double build_time_end = Utilities::Get_Time();
 		build_time += (build_time_end - build_time_start) * 1000.0;
 
-		ChunkRef c_ref = get_chunk(chunk);
-		assert(!c_ref.chunk_comp.expired());
+		//ChunkRef c_ref = get_chunk(chunk);
+		//assert(!c_ref.chunk_comp.expired());
+		TerrainChunk& chunk_comp = get_chunk_comp<TerrainChunk>(chunk);
+
+		if (chunk.x == 3 && chunk.y == 0 && chunk.z == 1)
+			Logger::LogDebug(LOG_POS("Enable_Collision"), "collision enabled 4");
 
 		double apply_time_start = Utilities::Get_Time();
-		c_ref.chunk_comp.lock()->Process_Mesh_Update(counts[0], (TerrainChunk::MeshUpdateMode)mode);
+		chunk_comp.Process_Mesh_Update(counts[0], (TerrainChunk::MeshUpdateMode)mode);
 		double apply_time_end = Utilities::Get_Time();
 		apply_time += (apply_time_end - apply_time_start) * 1000.0;
 
@@ -843,9 +921,12 @@ bool WorldGenController::queue_chunk_create(glm::ivec3 chunk_coord)
 	chunk.chunk_comp.lock()->Assign(chunk_coord);
 	chunk.chunk_coord = chunk_coord;
 
-	m_chunk_map[hash] = chunk;
-
-	m_create_queue.push(chunk);
+	
+	{
+		std::lock_guard<std::mutex> lock(m_process_lock);
+		m_chunk_map[hash] = chunk;
+		m_create_queue.push(chunk);
+	}
 
 	return true;
 }
@@ -863,6 +944,7 @@ bool WorldGenController::chunk_exists(glm::ivec3 chunk_coord)
 
 void WorldGenController::remove_chunk(glm::ivec3 chunk_coord)
 {
+	std::lock_guard<std::mutex> lock(m_process_lock);
 	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
 	m_chunk_map.erase(hash);
 }

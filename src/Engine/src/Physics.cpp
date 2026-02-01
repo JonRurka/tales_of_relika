@@ -373,8 +373,8 @@ void Physics::add_rigidbodies_async()
 
 	if (num_body_created > 0)
 	{
-		Logger::LogDebug(LOG_POS("add_rigidbodies_async"), "Added %d rigidbodies. Create: %0.2lf ms. Add: %0.2lf ms",
-			num_body_created, create_body_durration_ms, add_body_durration_ms);
+		//Logger::LogDebug(LOG_POS("add_rigidbodies_async"), "Added %d rigidbodies. Create: %0.2lf ms. Add: %0.2lf ms",
+		//	num_body_created, create_body_durration_ms, add_body_durration_ms);
 	}
 }
 

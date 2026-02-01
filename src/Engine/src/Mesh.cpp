@@ -16,6 +16,14 @@
 
 #define TRIANGLE_NORMAL(v1, v2, v3) normalize(cross((v2 - v1), (v3 - v1)))
 
+Mesh::Mesh(std::string)
+{
+	// dummy mesh
+	m_initial_size = 0;
+	m_num_vertices = 0;
+	m_num_indices = 0;
+}
+
 Mesh::Mesh() : Mesh(0)
 {
 	m_attrib_list = VertexAttributeList::Default();
@@ -84,6 +92,11 @@ std::shared_ptr<Mesh> Mesh::Create()
 std::shared_ptr<Mesh> Mesh::Create(size_t size)
 {
 	return std::make_shared<Mesh>(size);
+}
+
+std::shared_ptr<Mesh> Mesh::CreateDummy()
+{
+	return std::make_shared<Mesh>(std::string());
 }
 
 void Mesh::Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size)
@@ -166,7 +179,7 @@ void Mesh::Clear()
 	m_active = false;
 }
 
-void Mesh::Set_Raw_Vertex_Data(std::vector<float> data, bool delete_old)
+void Mesh::Set_Raw_Vertex_Data(const std::vector<float>& data, bool delete_old)
 {
 	if (delete_old)
 		raw_vert_data.clear();

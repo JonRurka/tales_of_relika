@@ -96,7 +96,7 @@ private:
     bool m_udp_socket_connected{ false };
     bool m_tcp_socket_connected{ false };
     bool m_run{ false };
-    bool trigger_stop{ false };
+    volatile bool trigger_stop{ false };
     bool m_udp_started{ false };
     bool m_ping_enabled{ false };
 

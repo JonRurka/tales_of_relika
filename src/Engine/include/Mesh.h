@@ -68,6 +68,9 @@ public:
 		void process();
 	};
 
+
+	Mesh(std::string);
+
 	Mesh();
 	Mesh(size_t size);
 	~Mesh()
@@ -77,6 +80,8 @@ public:
 
 	static std::shared_ptr<Mesh> Create();
 	static std::shared_ptr<Mesh> Create(size_t size);
+
+	static std::shared_ptr<Mesh> CreateDummy();
 
 	void Set_Vertex_Attributes(VertexAttributeList list)
 	{
@@ -90,7 +95,7 @@ public:
 
 	void Load(DynamicCompute::Compute::IComputeBuffer* buffer, int size = -1);
 
-	void Vertices(std::vector<glm::vec4> value, bool sync = true)
+	void Vertices(const std::vector<glm::vec4>& value, bool sync = true)
 	{
 		m_vertices = value;
 		if (m_active && sync)
@@ -154,7 +159,7 @@ public:
 
 	GLuint Get_VAO() { return VAO; }
 
-	void Set_Raw_Vertex_Data(std::vector<float> data, bool delete_old = true);
+	void Set_Raw_Vertex_Data(const std::vector<float>& data, bool delete_old = true);
 
 	std::vector<float> Get_Raw_Vertex_Data() { return raw_vert_data; }
 
