@@ -47,8 +47,6 @@ public:
 
 	void Enable_Collision() 
 	{ 
-		if (m_chunk_coords.x == 3 && m_chunk_coords.y == 0 && m_chunk_coords.z == 1)
-			Logger::LogDebug(LOG_POS("Enable_Collision"), "collision enabled 1");
 		// to keep this from triggering more than once, as 
 		// it might take another frame or two to actually enable.
 		m_has_collision = true;

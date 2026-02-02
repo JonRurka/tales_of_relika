@@ -26,7 +26,7 @@
 #define SKYBOX_PROJECTION_LOC	10
 #define SKYBOX_VIEW_LOC			11
 
-#define FRUSTRUM_CULLING_ENABLED false
+#define FRUSTRUM_CULLING_ENABLED true
 
 std::weak_ptr<Camera> Camera::m_active_camera;
 std::shared_ptr<Shader> Camera::m_cubemap_shader{ nullptr };
@@ -403,18 +403,33 @@ Frustum Camera::createFrustumFromCamera()
 	glm::vec3 up = Object().Get_Transform().Up();
 	glm::vec cam_pos = Object().Get_Transform().Position();
 
-	const float halfVSide = m_far * tanf(m_FOV * .5f);
+	// glm::radians(m_FOV)
+	const float halfVSide = m_far * tanf(glm::radians(m_FOV) * .5f);
 	const float halfHSide = halfVSide * Aspect();
 	const glm::vec3 frontMultFar = m_far * front;
 
-	frustum.nearFace = { cam_pos + m_near * front, front };
-	frustum.farFace = { cam_pos + frontMultFar, -front };
+	//glm::vec3 left_pln = frontMultFar - right * halfHSide;
+	//glm::vec3 right_pointing_normal = glm::cross(frontMultFar - right * halfHSide, up);
 
-	frustum.rightFace = { cam_pos, glm::cross(frontMultFar - right * halfHSide, up) };
-	frustum.leftFace = { cam_pos, glm::cross(up, frontMultFar + right * halfHSide) };
+	// glm::cross(cam.Up,frontMultFar + cam.Right * halfHSide)
+	//glm::vec3 left_normal = glm::cross(up, frontMultFar + right * halfHSide);
+	//cam_pos + front + glm::vec3(0, -1.0f, 0)
+	//Graphics::DrawDebugRay(glm::vec3(0), left_pln, glm::vec3(1, 0, 1));
+	//Graphics::DrawDebugRay(glm::vec3(0), up, glm::vec3(0, 0, 1));
+	//Graphics::DrawDebugRay(glm::vec3(0), glm::cross(left_pln, up), glm::vec3(1, 0, 0));
+	//Graphics::DrawDebugRay(glm::vec3(0), glm::vec3(0, 0.01f, 0), glm::vec3(1, 0, 0));
 
-	frustum.topFace = { cam_pos, glm::cross(right, frontMultFar - up * halfVSide) };
-	frustum.bottomFace = { cam_pos, glm::cross(frontMultFar + up * halfVSide, right) };
+	//Graphics::DrawDebugRay(cam_pos + front + glm::vec3(0, -1.0f, 0), right_normal * 0.05f, glm::vec3(0, 0, 1));
+	//Graphics::DrawDebugRay(cam_pos + front + glm::vec3(0, -1.0f, 0), glm::vec3(0, 0.01f, 0), glm::vec3(1, 0, 0));
+
+	frustum.nearFace = { front, cam_pos + m_near * front };
+	frustum.farFace = { -front, cam_pos + frontMultFar };
+
+	frustum.rightFace = { glm::cross(frontMultFar - right * halfHSide, up), cam_pos };
+	frustum.leftFace = { glm::cross(up, frontMultFar + right * halfHSide), cam_pos };
+
+	frustum.topFace = { glm::cross(right, frontMultFar - up * halfVSide), cam_pos };
+	frustum.bottomFace = { glm::cross(frontMultFar + up * halfVSide, right), cam_pos };
 
 	return frustum;
 }

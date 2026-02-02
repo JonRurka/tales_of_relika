@@ -73,7 +73,7 @@ private:
 	bool has_default_mesh = true;
 	bool has_shader = false;
 	bool has_material = false;
-	bool do_frustrum_cull = true;
+	bool do_frustrum_cull{ false };
 
 	void update_model_matrix();
 

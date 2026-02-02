@@ -40,7 +40,7 @@ void TerrainChunk::Init(std::weak_ptr<WorldGenController> controller, Stitch_VBO
 
 	//controller.lock()->ChunkMeterSize()
 	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Active(false);
-	m_opaque_chunk_obj.lock()->Get_MeshRenderer().FrustumCull(false);
+	m_opaque_chunk_obj.lock()->Get_MeshRenderer().FrustumCull(true);
 	
 
 	m_col_vert_data = new glm::vec4[max_vert];
@@ -155,9 +155,6 @@ void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts, MeshUpdateMode mode)
 	}
 	double t_end = Utilities::Get_Time();
 	double get_vert_time = (t_end - t_start) * 1000.0;
-
-	if (m_chunk_coords.x == 3 && m_chunk_coords.y == 0 && m_chunk_coords.z == 1)
-		Logger::LogDebug(LOG_POS("Enable_Collision"), "collision enabled 5");
 
 	{
 		std::lock_guard<mutex> lock(m_update_lock);
@@ -489,8 +486,8 @@ void TerrainChunk::update_collision_mesh(const std::vector<glm::vec4>& vert_buff
 	glm::ivec3 target = m_controller.lock()->Target_Chunk();
 	float chunk_dist = glm::distance(glm::vec3(m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z), glm::vec3(target.x, target.y, target.z));
 	if (chunk_dist > m_collision_distance) {
-		Logger::LogDebug(LOG_POS("update_collision_mesh"), "(%d, %d, %d): collision not available: %.2lf",
-			m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z, chunk_dist);
+		//Logger::LogDebug(LOG_POS("update_collision_mesh"), "(%d, %d, %d): collision not available: %.2lf",
+		//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z, chunk_dist);
 		m_last_col_success = false;
 		return;
 	}

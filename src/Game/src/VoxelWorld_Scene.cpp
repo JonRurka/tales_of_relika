@@ -43,7 +43,7 @@ void VoxelWorld_Scene::Init()
 	//json world_data;
 	//setup_chunk_gen(world_data);
 
-	//create_test_items();
+	create_test_items();
 
 
 	m_start_time = Utilities::Get_Time();
@@ -488,7 +488,7 @@ void VoxelWorld_Scene::create_test_items()
 	standard_mat->Set_Shader(Shader::Get_Shader("standard"));
 	standard_mat->SetVec3("material_ambientColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	standard_mat->SetVec3("material_diffuseColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	standard_mat->SetVec2("material_scale", glm::vec2(32.0f, 32.0f));
+	standard_mat->SetVec2("material_scale", glm::vec2(1.0f, 1.0f));
 	standard_mat->setFloat("material_shininess", 32.0f);
 	standard_mat->setFloat("material_specular_intensity", 1.0f);
 	standard_mat->SetVec3("globalAmbientLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -501,19 +501,45 @@ void VoxelWorld_Scene::create_test_items()
 	cube_mesh->Normals(floor_normals);
 	cube_mesh->Colors(floor_cube_colors);
 	cube_mesh->TexCoords(floor_tex_coords);
+	cube_mesh->CalculateBounds();
 	cube_mesh->Activate();
+
+	
 
 	//btVector3 min, max;
 
 	WorldObject::Weak floor_obj = Instantiate("floor");
 	floor_obj.lock()->Get_MeshRenderer().Set_Mesh(cube_mesh);
 	floor_obj.lock()->Get_MeshRenderer().Set_Material(standard_mat);
-	floor_obj.lock()->Get_Transform().Translate(16.0f, 0.0f, 16.0f);
-	floor_obj.lock()->Get_Transform().Scale(glm::vec3(32.0f, 1.0f, 32.0f));
+	floor_obj.lock()->Get_MeshRenderer().FrustumCull(true);
+	floor_obj.lock()->Get_Transform().Translate(0.0f, 3.0f, 5.0f);
+	floor_obj.lock()->Get_Transform().Rotate(45.0f, 35.0f, -5.0f);
+	floor_obj.lock()->Get_Transform().Scale(glm::vec3(1.0f, 2.0f, 1.0f));
 	BoxCollider::Weak col = floor_obj.lock()->Add_Component<BoxCollider>();
-	col.lock()->Size(glm::vec3(16.0f, 0.5f, 16.0f));
+	col.lock()->Size(glm::vec3(1.0f, 1.0f, 1.0f));
 	col.lock()->Mass(0.0f);
 	col.lock()->Activate();
+
+	glm::vec3 pos = floor_obj.lock()->Get_Transform().Position();
+	Logger::LogDebug(LOG_POS("create_test_items"), "Position: (%.2lf, %.2lf, %.2lf)",
+		pos.x, pos.y, pos.z);
+
+	BoundsVolume::AABB aabb = cube_mesh->Bounds();
+	glm::vec3 lc = aabb.get_position();
+	glm::vec3 ls = aabb.get_size();
+
+	Logger::LogDebug(LOG_POS("create_test_items"), "bounds local: (%.2lf, %.2lf, %.2lf), (%.2lf, %.2lf, %.2lf)",
+		lc.x, lc.y, lc.z, ls.x, ls.y, ls.z);
+
+	aabb = floor_obj.lock()->Get_MeshRenderer().Bounds(); //cube_mesh->Bounds();
+	glm::vec3 gc = aabb.get_position();
+	glm::vec3 gs = aabb.get_size();
+
+	Logger::LogDebug(LOG_POS("create_test_items"), "bounds global: (%.2lf, %.2lf, %.2lf), (%.2lf, %.2lf, %.2lf)",
+		gc.x, gc.y, gc.z, gs.x, gs.y, gs.z);
+
+	aabb.DebugDraw(glm::vec3(0, 1, 0), 10000);
+
 	//col.lock()->RigidBody().forceActivationState(DISABLE_DEACTIVATION);
 	//col.lock()->RigidBody().getAabb(min, max);
 	//col->RigidBody()->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_STATIC_OBJECT);

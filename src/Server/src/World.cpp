@@ -324,13 +324,13 @@ bool World::remove_player(Player::pointer player, bool trigger_events)
 void World::create_new(WorldCreationOptions options)
 {
 	m_world_id = HashHelper::RandomNumber_u64(0, UINT64_MAX - 1);
-	m_spawn_point = glm::vec3(5.0, 0.0, 5.0);
+	m_spawn_point = glm::vec3(0.0, 0.0, 0.0);
 }
 
 void World::load(uint64_t id)
 {
 	m_world_id = id;
-	m_spawn_point = glm::vec3(5.0, 0.0, 5.0);
+	m_spawn_point = glm::vec3(0.0, 0.0, 0.0);
 }
 
 void World::GameLoop()

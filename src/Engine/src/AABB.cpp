@@ -1,6 +1,8 @@
 
 #include "AABB.h"
 
+#include "Graphics.h"
+
 #include <limits>
 
 //#include "core/string/ustring.h"
@@ -894,6 +896,16 @@ void AABB::grow_by(float p_amount) {
 }
 
 
+void AABB::DebugDraw(glm::vec3 color, float duration)
+{
+	for (int i = 0; i < 12; i++) {
+		glm::vec3 from; 
+		glm::vec3 to;
+		get_edge(i, from, to);
+		Graphics::DrawDebugLine(from, to, color, duration);
+	}
+}
+
 bool AABB::isOnOrForwardPlane(const Plane& plane) const
 {
 	// Compute the projection interval radius of b onto L(t) = b.c + t * p.n
@@ -905,12 +917,22 @@ bool AABB::isOnOrForwardPlane(const Plane& plane) const
 
 bool AABB::isOnFrustum(const Frustum& camFrustum) const
 {
-	return (isOnOrForwardPlane(camFrustum.leftFace) &&
-			isOnOrForwardPlane(camFrustum.rightFace) &&
-			isOnOrForwardPlane(camFrustum.topFace) &&
-			isOnOrForwardPlane(camFrustum.bottomFace) &&
-			isOnOrForwardPlane(camFrustum.nearFace) &&
-			isOnOrForwardPlane(camFrustum.farFace));
+	bool is_on_left = isOnOrForwardPlane(camFrustum.leftFace);
+	bool is_on_right = isOnOrForwardPlane(camFrustum.rightFace);
+	bool is_on_top = isOnOrForwardPlane(camFrustum.topFace);
+	bool is_on_bottom = isOnOrForwardPlane(camFrustum.bottomFace);
+	bool is_on_near = isOnOrForwardPlane(camFrustum.nearFace);
+	bool is_on_far = isOnOrForwardPlane(camFrustum.farFace);
+
+	//Logger::LogDebug(LOG_POS("isOnFrustum"), "left: %d, right: %d \t top: %d, bottom: %d \t near: %d, far: %d",
+	//	is_on_left, is_on_right, is_on_top, is_on_bottom, is_on_near, is_on_far);
+
+	return (is_on_left &&
+			is_on_right &&
+			is_on_top &&
+			is_on_bottom &&
+			is_on_near &&
+			is_on_far);
 }
 
 /*AABB::operator String() const {

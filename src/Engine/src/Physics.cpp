@@ -189,7 +189,7 @@ void Physics::AddRigidbodiesAsync(Physics* phy)
 	while (phy->m_running)
 	{
 		// Doesn't have to be synchronised exactly.
-		Utilities::Sleep(16, Utilities::Sleep_Mode::Millisecond);
+		Utilities::Sleep(8, Utilities::Sleep_Mode::Millisecond);
 		phy->add_rigidbodies_async();
 	}
 }

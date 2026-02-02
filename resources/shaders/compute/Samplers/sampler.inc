@@ -5,6 +5,8 @@
 #include "block_types.inc"
 #endif
 
+#define ENABLE_CAVES true
+
 struct Settings{
 	int column_index;
 	int modification_index;
@@ -95,7 +97,7 @@ STRUCT IsoSample Combine_ISO(STRUCT Settings s, ivec3 voxel_pos, fvec3 world_pos
 	
 	//iso_result = height_iso - cave_iso;
 	
-	if (raw_cave_iso > 0.0 && world_pos.y < (height + 0.3f)){
+	if (ENABLE_CAVES && raw_cave_iso > 0.0 && world_pos.y < (height + 0.3f)){
 		//iso_result = clamp(clamp(height_iso, -5.0f, 5.0f) - cave_iso, -5.0f, 5.0f);
 		iso_result = height_iso - cave_iso;
 	}

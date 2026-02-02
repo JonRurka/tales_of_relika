@@ -126,6 +126,8 @@ namespace BoundsVolume
 			size(p_size) {
 		}
 
+		void DebugDraw(glm::vec3 color, float duration);
+
 		bool isOnOrForwardPlane(const Plane& plane) const override;
 
 		bool isOnFrustum(const Frustum& camFrustum) const override;

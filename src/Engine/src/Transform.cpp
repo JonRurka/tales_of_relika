@@ -187,8 +187,10 @@ void Transform::set_model_mat(bool update_parent)
 	normal_mat = glm::transpose(glm::inverse(model));
 	m_position = model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	m_forward = glm::rotate(m_rotation, glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-	m_right = m_rotation * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-	m_up = m_rotation * glm::vec4(1.0f, 1.0f, 0.0f, 0.0f);
+	m_right = glm::normalize(glm::cross(m_forward, glm::vec3(0, 1, 0)));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+	m_up = glm::normalize(glm::cross(m_right, m_forward));
+	//m_right = m_rotation * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+	//m_up = m_rotation * glm::vec4(1.0f, 1.0f, 0.0f, 0.0f);
 
 	for (const auto& child : obj.Children())
 	{

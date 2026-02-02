@@ -496,8 +496,6 @@ void WorldGenController::Submit_Terrain_Modification(glm::ivec3 chunk, std::vect
 		std::lock_guard<mutex> lock(m_process_lock);
 		m_terrain_change_queue.push(entry);
 	}
-	if (chunk.x == 3 && chunk.y == 0 && chunk.z == 1)
-		Logger::LogDebug(LOG_POS("Enable_Collision"), "collision enabled 2");
 	//Logger::LogDebug(LOG_POS("Submit_Terrain_Modification_arr"), "Submitted terrain %i changes for chunk (%i, %i, %i).",
 	//	values.size(), chunk.x, chunk.y, chunk.z);
 }
@@ -748,12 +746,11 @@ void WorldGenController::process_modifications()
 	if (!has_items)
 		return;
 
-	Logger::LogDebug(LOG_POS("process_modifications"), "1 process %d", m_terrain_change_queue.size());
 
 	std::queue<TerrainModEntry> dst_q;
 	Utilities::ThreadSafeQueueDuplicate(m_terrain_change_queue, dst_q, m_process_lock);
 
-	Logger::LogDebug(LOG_POS("process_modifications"), "2 process %d", m_terrain_change_queue.size());
+	//Logger::LogDebug(LOG_POS("process_modifications"), "2 process %d", m_terrain_change_queue.size());
 
 	int num_processed = 0;
 	double gen_tm_start = Utilities::Get_Time();
@@ -775,9 +772,6 @@ void WorldGenController::process_modifications()
 
 		glm::ivec3 chunk = entry.chunk;
 		std::vector<TerrainMod> changes = entry.changes;
-
-		if (chunk.x == 3 && chunk.y == 0 && chunk.z == 1)
-			Logger::LogDebug(LOG_POS("Enable_Collision"), "collision enabled 3");
 
 		if (!Chunk_Exists(chunk)) {
 			continue;
@@ -817,9 +811,6 @@ void WorldGenController::process_modifications()
 		//ChunkRef c_ref = get_chunk(chunk);
 		//assert(!c_ref.chunk_comp.expired());
 		TerrainChunk& chunk_comp = get_chunk_comp<TerrainChunk>(chunk);
-
-		if (chunk.x == 3 && chunk.y == 0 && chunk.z == 1)
-			Logger::LogDebug(LOG_POS("Enable_Collision"), "collision enabled 4");
 
 		double apply_time_start = Utilities::Get_Time();
 		chunk_comp.Process_Mesh_Update(counts[0], (TerrainChunk::MeshUpdateMode)mode);

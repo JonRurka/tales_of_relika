@@ -1,4 +1,5 @@
 
+#define FLAT_TERRAIN false
 
 float cubic_exp(float val){
 	float a = -2.71828f;
@@ -35,7 +36,9 @@ float GetHeight(STRUCT Settings s, float x, float y)
 {
 	//return x / 1.0;
 	//return 5 + x / 10.0;
-	//return 4.5f;
+	
+	if (FLAT_TERRAIN)
+		return 1.0f;
 	
 	x /= 100.0f;
 	y /= 100.0f;

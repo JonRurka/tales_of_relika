@@ -122,7 +122,17 @@ AABB MeshRenderer::Bounds()
 	Transform trans = m_object.lock()->Get_Transform();
 	AABB bounds = m_mesh->Bounds();
 
-	const glm::vec3 globalCenter = trans.Position() + bounds.get_position();
+	const glm::vec3 PosCenter = trans.Position() + bounds.get_position();
+
+	AABB res_bounds = AABB(PosCenter, glm::vec3(0));
+	
+	for (int i = 0; i < 8; i++) {
+		res_bounds.expand_to(trans.Local_To_World_Point(bounds.get_endpoint(i)));
+	}
+
+	return res_bounds;
+
+	/*const glm::vec3 globalCenter = trans.Position() + bounds.get_position();
 	const glm::vec3 extents = bounds.size;
 
 	// Scaled orientation
@@ -143,9 +153,9 @@ AABB MeshRenderer::Bounds()
 	const float newIk = 
 		std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, right)) +
 		std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, up)) +
-		std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, forward));
+		std::abs(glm::dot(glm::vec3{ 0.f, 0.f, 1.f }, forward));*/
 
-	return AABB(globalCenter, glm::vec3(newIi, newIj, newIk));
+	//return AABB(globalCenter, glm::vec3(newIi, newIj, newIk));
 }
 
 bool MeshRenderer::Draw(std::weak_ptr<Camera> cam, float dt)
