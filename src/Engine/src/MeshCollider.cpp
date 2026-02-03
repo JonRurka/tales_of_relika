@@ -225,6 +225,16 @@ void MeshCollider::Load(json data)
 {
 }
 
+void MeshCollider::OnEnabled()
+{
+	base_OnEnabled();
+}
+
+void MeshCollider::OnDisabled()
+{
+	base_OnDisabled();
+}
+
 void MeshCollider::OnRefresh()
 {
 	if (!Active())
@@ -297,8 +307,11 @@ void MeshCollider::Clear()
 	mTriangleIndexVertexArray.reset();
 	m_shape.reset();
 #else
-	Destroy_Collider();
-
+	
+	if (Has_Rigidbody()) {
+		//Logger::LogDebug(LOG_POS("Destroy_Collider"), "Remove rigidbody");
+		remove_rigidbody();
+	}
 
 #endif
 }
@@ -306,4 +319,5 @@ void MeshCollider::Clear()
 void MeshCollider::OnDestroy()
 {
 	Clear();
+	Destroy_Collider();
 }

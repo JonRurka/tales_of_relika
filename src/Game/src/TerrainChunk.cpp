@@ -36,12 +36,15 @@ void TerrainChunk::Init(std::weak_ptr<WorldGenController> controller, Stitch_VBO
 	m_opaque_chunk_obj.lock()->Get_Transform().Position(glm::vec3(0.0, 1000.0, 0.0));
 	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Set_Material(std::static_pointer_cast<Material>(controller.lock()->Get_Chunk_Material()));
 	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Set_Mesh(m_voxel_opaque_mesh);
+	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Active(false);
 	m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
 
 	//controller.lock()->ChunkMeterSize()
 	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Active(false);
 	m_opaque_chunk_obj.lock()->Get_MeshRenderer().FrustumCull(true);
 	
+	m_mesh_collider = m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
+	//m_mesh_collider.lock()->Enabled(false);
 
 	m_col_vert_data = new glm::vec4[max_vert];
 
@@ -87,6 +90,7 @@ void TerrainChunk::Unassign()
 		return;
 
 	assert(!m_opaque_chunk_obj.expired());
+	assert(!m_mesh_collider.expired());
 
 	m_assigned = false;
 	m_server_loaded = false;
@@ -96,10 +100,8 @@ void TerrainChunk::Unassign()
 	
 	m_opaque_chunk_obj.lock()->Get_MeshRenderer().Active(false);
 
-	if (!m_mesh_collider.expired()) {
-		assert(!m_opaque_chunk_obj.expired());
-		m_mesh_collider.lock()->Clear();
-	}
+	m_mesh_collider.lock()->Clear();
+	//m_mesh_collider.lock()->Enabled(false);
 	m_has_collision = false;
 
 	Object().Name("Cached Voxel Chunk");
@@ -276,13 +278,9 @@ int TerrainChunk::Should_Update()
 
 void TerrainChunk::DisableCollision()
 {
-	if (m_mesh_collider.expired())
-	{
-		return;
-	}
+	assert(!m_mesh_collider.expired());
 
-	m_mesh_collider.lock()->Destroy();
-	m_mesh_collider.reset();
+	m_mesh_collider.lock()->Clear();
 	m_has_collision = false;
 
 	//Logger::LogInfo(LOG_POS("update_collision_mesh"), "Collision removed for chunk (%i, %i, %i)",
@@ -499,10 +497,10 @@ void TerrainChunk::update_collision_mesh(const std::vector<glm::vec4>& vert_buff
 	//Graphics::DrawDebugRay(m_chunk_world_pos + extent_size, glm::vec3(0, 10, 0), glm::vec3(0, 0, 1), 10000);
 
 	t_start = Utilities::Get_Time();
-	if (m_mesh_collider.expired()) {
-		assert(!m_opaque_chunk_obj.expired());
-		m_mesh_collider = m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
-	}
+	//if (m_mesh_collider.expired()) {
+		//assert(!m_opaque_chunk_obj.expired());
+		//m_mesh_collider = m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
+	//}
 	t_end = Utilities::Get_Time();
 	double add_coll_time = (t_end - t_start) * 1000.0;
 
@@ -556,6 +554,7 @@ void TerrainChunk::update_collision_mesh(const std::vector<glm::vec4>& vert_buff
 
 	t_start = Utilities::Get_Time();
 	//m_mesh_collider.lock()->Activate();
+	//m_mesh_collider.lock()->Enabled(true);
 	t_end = Utilities::Get_Time();
 	double activate_time = (t_end - t_start) * 1000.0;
 	

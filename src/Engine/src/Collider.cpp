@@ -65,12 +65,25 @@ void Collider::base_FixedUpdate(float dt)
 #endif
 }
 
+void Collider::base_OnEnabled()
+{
+	if (!m_has_rigidbody || m_rigidbody == nullptr)
+		return;
+
+	Physics::GetBodyInterface().RemoveBody(m_rigidbody->GetID());
+}
+
+void Collider::base_OnDisabled()
+{
+	if (!m_has_rigidbody || m_rigidbody == nullptr)
+		return;
+
+	Physics::GetBodyInterface().AddBody(m_rigidbody->GetID(), EActivation::Activate);
+}
+
 void Collider::Destroy_Collider()
 {
-	if (Has_Rigidbody()) {
-		//Logger::LogDebug(LOG_POS("Destroy_Collider"), "Remove rigidbody");
-		remove_rigidbody();
-	}
+	
 
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	
@@ -152,6 +165,7 @@ void Collider::remove_rigidbody()
 	//Physics::GetBodyInterface().RemoveBody(m_rigidbody->GetID());
 	Physics::Instance().Remove_Rigidbody(m_rigidbody);
 	m_rigidbody = nullptr;
+	m_has_rigidbody = false;
 }
 
 #endif

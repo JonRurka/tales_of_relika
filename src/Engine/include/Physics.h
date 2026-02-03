@@ -106,6 +106,10 @@ public:
 
 	~Physics();
 
+	static int Num_Valid_Rigidbodies() {
+		return Instance().m_num_valid_rigidbodies.load();
+	}
+
 	static void Gravity(float val) { Instance().m_gravity = val; }
 	static float Gravity() { return Instance().m_gravity; }
 	
@@ -200,6 +204,8 @@ private:
 	volatile bool m_running{ false };
 	std::thread m_thread;
 	std::thread m_thread_rbadd;
+
+	std::atomic<int> m_num_valid_rigidbodies;
 
 	double m_debug_print_timer{ .5 };
 	

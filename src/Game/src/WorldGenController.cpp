@@ -907,8 +907,8 @@ bool WorldGenController::queue_chunk_create(glm::ivec3 chunk_coord)
 	m_cached_chunks.pop();
 
 	assert(!chunk.chunk_obj.expired());
-	assert(!chunk.chunk_comp.expired());
 
+	assert(!chunk.chunk_comp.expired());
 	chunk.chunk_comp.lock()->Assign(chunk_coord);
 	chunk.chunk_coord = chunk_coord;
 

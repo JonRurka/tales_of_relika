@@ -268,7 +268,7 @@ void Physics::update_internal(float fixed_dt)
 			in_broadphase_cnt++;
 		}
 	}
-
+	m_num_valid_rigidbodies.store(in_broadphase_cnt);
 
 	m_lock.unlock();
 

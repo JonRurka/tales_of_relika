@@ -66,7 +66,7 @@ void VoxelWorld_Scene::Update(float dt)
 	}
 
 
-	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()) + " || (" + std::to_string(tc.x) + ", " + std::to_string(tc.y) + ", " + std::to_string(tc.z) + ") || h: " + std::to_string(d_max_fps) + ", l: " + std::to_string(d_min_fps));
+	Graphics::Update_Window_Title("Tales of Relica || FPS: " + std::to_string(Engine::FPS()) + " || (" + std::to_string(tc.x) + ", " + std::to_string(tc.y) + ", " + std::to_string(tc.z) + ") || rigidbodies: " + std::to_string(Physics::Num_Valid_Rigidbodies()));
 	//Logger::LogDebug(LOG_POS("Update"), "update");
 }
 
@@ -104,7 +104,7 @@ void VoxelWorld_Scene::startup_squence()
 		if (Game_Ready())
 		{
 			m_loading_screen->Hide();
-			local_player_character.lock()->LockOrientation(false);
+			local_player_character.lock()->GameStarted();
 			game_client.lock()->Send_World(OpCodes::Server_World::Notify_Player_Ready);
 			m_loading_hidden = true;
 		}

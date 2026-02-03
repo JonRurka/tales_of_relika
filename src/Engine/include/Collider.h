@@ -41,7 +41,7 @@ public:
 #else
 	Body& Rigidbody() { return *m_rigidbody; }
 	Body* Rigidbody_Ptr() { return m_rigidbody; }
-	bool Has_Rigidbody() { return m_rigidbody != nullptr; }
+	bool Has_Rigidbody() { return m_has_rigidbody && m_rigidbody != nullptr; }
 #endif
 
 	
@@ -55,7 +55,7 @@ private:
 #else
 	float m_mass{ 0.0 };
 	Body* m_rigidbody{ nullptr };
-	bool m_has_rigidbody{ false };
+	volatile bool m_has_rigidbody{ false };
 	glm::vec3 m_pos;
 	glm::quat m_rot;
 	uint32_t m_col_id{ 0 };
@@ -78,6 +78,8 @@ protected:
 	void base_Init();
 	void base_Update(float dt);
 	void base_FixedUpdate(float dt);
+	void base_OnEnabled();
+	void base_OnDisabled();
 
 #if (PHYSICS_BACKEND==PHYSICS_BACKEND_BULLET)
 	btTransform create_bt_transform();

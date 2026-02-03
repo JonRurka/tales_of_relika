@@ -431,6 +431,12 @@ void LocalPlayerCharacter::Set_Camera_Object(WorldObject::Weak cam_object)
 	m_hud.lock()->Init(Camera::Get_Active_Ptr());
 }
 
+void LocalPlayerCharacter::GameStarted()
+{
+	LockOrientation(false);
+	m_hud.lock()->HotBar_Visible(true);
+}
+
 void LocalPlayerCharacter::LockOrientation(bool locked)
 {
 	assert(!m_capsule_collider.expired());

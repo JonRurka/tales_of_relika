@@ -48,6 +48,8 @@ void Character_HUD::Init(Camera::Weak camera)
 
 	if (WorldGenController::Instance()->Voxel_Engine_Enabled())
 		m_iso_sampler = WorldGenController::Instance()->Get_ISO_Sampler();
+
+	m_hotbar_doc->Hide();
 }
 
 void Character_HUD::HotBar_Visible(bool visible)
@@ -218,15 +220,15 @@ void Character_HUD::left_click_block(glm::vec3 hit_point, glm::vec3 normal)
 {
 	Logger::LogDebug(LOG_POS("left_click_block"), "Block Click.");
 	glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit_point + (normal * 0.01f));
-	//left_click_terrain(hit_point, normal, voxel_coord);
-	left_click_structure(hit_point, normal, voxel_coord);
+	left_click_terrain(hit_point, normal, voxel_coord);
+	//left_click_structure(hit_point, normal, voxel_coord);
 }
 
 void Character_HUD::right_click_block(glm::vec3 hit_point, glm::vec3 normal)
 {
 	glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit_point + (normal * 0.01f));
-	//right_click_terrain(hit_point, normal, voxel_coord);
-	right_click_structure(hit_point, normal, voxel_coord);
+	right_click_terrain(hit_point, normal, voxel_coord);
+	//right_click_structure(hit_point, normal, voxel_coord);
 }
 
 void Character_HUD::left_click_terrain(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord)
@@ -238,8 +240,9 @@ void Character_HUD::left_click_terrain(glm::vec3 hit_point, glm::vec3 normal, gl
 	std::vector<WorldGenController::TerrainMod> changes;
 	changes.reserve(near_voxels.size());
 	for (const auto& nv : near_voxels) {
-		WorldGenController::TerrainMod mod(glm::ivec3(nv.x, nv.y, nv.z), (0.5f / (float)nv.w));
-		changes.push_back(mod);
+
+		//WorldGenController::TerrainMod mod(glm::ivec3(nv.x, nv.y, nv.z), (0.5f / (float)nv.w));
+		//changes.push_back(mod);
 	}
 	WorldGenController::Instance()->Modify_Voxel(changes);
 }
@@ -339,12 +342,33 @@ glm::ivec3 Character_HUD::get_closest_voxel(glm::ivec3 src_voxel, glm::fvec3 wor
 
 	if (closest_voxel_idx < 0) {
 		// shouldn't happen. error
-		Logger::LogError(LOG_POS("get_closest_voxel"), "Invalid selection.");
+		Logger::LogWarning(LOG_POS("get_closest_voxel"), "Invalid selection.");
 		return src_voxel;
 	}
 
 	return grid_global[closest_voxel_idx];
 }
+
+std::vector<Character_HUD::voxel_iso> Character_HUD::get_surrounding_voxels(glm::ivec3 src_voxel, int half_size)
+{
+	glm::ivec3 chunk = WorldGenController::VoxelToChunk(src_voxel);
+	//glm::ivec3 src_local = WorldGenController::GlobalToLocalChunkCoord(chunk, src_voxel);
+
+	for (int x = -half_size; x <= half_size; x++) {
+		for (int y = -half_size; y <= half_size; y++) {
+			for (int z = -half_size; z <= half_size; z++) {
+				glm::ivec3 v_chunk = WorldGenController::VoxelToChunk(src_voxel);
+				//glm::ivec3 v_local = WorldGenController::GlobalToLocalChunkCoord(chunk, src_voxel);
+				//glm::fvec3 v_world = 
+			}
+		}
+	}
+
+	return std::vector<voxel_iso>();
+}
+
+
+
 
 std::vector<glm::ivec4> Character_HUD::get_surrounding_voxels(glm::ivec3 src_voxel, bool inside)
 {

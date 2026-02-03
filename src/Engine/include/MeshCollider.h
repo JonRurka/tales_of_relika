@@ -82,6 +82,9 @@ protected:
 	void FixedUpdate(float dt) override;
 	void Load(json data) override;
 
+	virtual void OnEnabled() override;
+	virtual void OnDisabled() override;
+
 	//void OnUpdateMass(float mass) override;
 	void OnRefresh() override;
 

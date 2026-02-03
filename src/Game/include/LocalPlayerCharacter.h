@@ -31,6 +31,8 @@ public:
 
 	void Set_Camera_Object(WorldObject::Weak cam_object);
 
+	void GameStarted();
+
 	void LockOrientation(bool locked);
 
 	void SendJumpEvent();
