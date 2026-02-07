@@ -54,7 +54,8 @@ private:
 
 	int m_total_size{ 0 };
 
-	glm::ivec4* m_column_offsets{ nullptr };
+	//glm::ivec4* m_column_offsets{ nullptr };
+	std::vector<glm::ivec4> m_column_offsets;
 	std::unordered_map<int, int> m_column_map;
 
 	const std::string PROGRAM_GEN_HEIGHTMAP = "heightmap_gen";

@@ -48,10 +48,13 @@ private:
 
 	int m_total_size{ 0 };
 
-	glm::fvec4* clear_data{ nullptr };
+	//glm::fvec4* clear_data{ nullptr };
+	std::unordered_map<int, int> m_chunk_offset_map;
+	std::vector<glm::fvec4> clear_data;
 
-	glm::ivec4* m_chunk_offsets{ nullptr };
-	std::unordered_map<int, int> m_chunk_map;
+	//glm::ivec4* m_chunk_offsets{ nullptr };
+	std::vector<glm::ivec4> m_chunk_offsets;
+	
 
 	IComputeController* m_controller{ nullptr };
 	IComputeBuffer* m_modification_data{nullptr};

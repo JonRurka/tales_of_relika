@@ -17,8 +17,11 @@ HeightmapGenerator::HeightmapGenerator(
 	m_size_x{size_x}, m_size_z{ size_z },
 	m_max_columns{ max_columns }
 {
-	m_column_offsets = new glm::ivec4[m_max_columns];
-	memset(m_column_offsets, 0, m_max_columns * sizeof(glm::ivec4));
+	//m_column_offsets = new glm::ivec4[m_max_columns];
+	m_column_offsets.clear();
+	m_column_offsets.resize(m_max_columns);
+	std::fill(m_column_offsets.begin(), m_column_offsets.end(), glm::ivec4(0));
+	//memset(m_column_offsets, 0, m_max_columns * sizeof(glm::ivec4));
 
 	m_program_gen_heightmap = new VoxelComputeProgram(m_controller, BASE_RESOURCE_DIR + PROGRAM_GEN_HEIGHTMAP + extension, m_WorkGroups, type);
 

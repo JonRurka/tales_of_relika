@@ -20,9 +20,10 @@ TerrainModifications::TerrainModifications(IComputeController* controller, int s
 	m_size_x{ size_x }, m_size_y{ size_y }, m_size_z{ size_z },
 	m_max_chunks{ max_chunks }
 {
-	m_max_chunks = 10;
+	//m_max_chunks = 10;
 
-	m_chunk_offsets = new glm::ivec4[m_max_chunks];
+	//m_chunk_offsets = new glm::ivec4[m_max_chunks];
+	m_chunk_offsets.resize(m_max_chunks);
 	//memset(m_chunk_offsets, 0, m_max_chunks * sizeof(glm::ivec4));
 
 	m_total_size = (size_x + GRID_PADDING) * (size_y + GRID_PADDING) * (size_z + GRID_PADDING);
@@ -33,8 +34,10 @@ TerrainModifications::TerrainModifications(IComputeController* controller, int s
 	m_modification_data = m_controller->NewReadWriteBuffer(num_elements, sizeof(float) * 4);
 	mem_req += num_elements * 4;
 
-	clear_data = new glm::fvec4[m_total_size];
-	memset((void*)clear_data, 0, m_total_size * sizeof(float) * 4);
+	//clear_data = new glm::fvec4[m_total_size];
+	clear_data.resize(m_total_size);
+	std::fill(clear_data.begin(), clear_data.end(), glm::vec4(0));
+	//memset((void*)clear_data, 0, m_total_size * sizeof(float) * 4);
 
 	Logger::LogInfo(LOG_POS("NEW"), "Created for %i elements for %i chunks utilizing %i bytes.", num_elements, m_max_chunks, mem_req);
 }
@@ -46,7 +49,7 @@ void TerrainModifications::Finalize(IComputeBuffer* static_settings)
 bool TerrainModifications::Spawn_Chunk(glm::ivec3 chunk_coord)
 {
 	int chunk_coord_hash = Utilities::Hash_Chunk_Coord(chunk_coord);
-	if (m_chunk_map.contains(chunk_coord_hash)) {
+	if (m_chunk_offset_map.contains(chunk_coord_hash)) {
 		return false;
 	}
 
@@ -57,30 +60,32 @@ bool TerrainModifications::Spawn_Chunk(glm::ivec3 chunk_coord)
 		return false;
 	}
 
-	m_chunk_map[chunk_coord_hash] = index * m_total_size;
+	m_chunk_offset_map[chunk_coord_hash] = index * m_total_size;
 
-	m_modification_data->SetData(clear_data, m_chunk_map[chunk_coord_hash] * sizeof(float) * 4, m_total_size * sizeof(float) * 4);
+	m_modification_data->SetData(clear_data.data(), m_chunk_offset_map[chunk_coord_hash] * sizeof(float) * 4, m_total_size * sizeof(float) * 4);
 
-	//Logger::LogDebug(LOG_POS("Spawn_Column"), "(%i, %i, %i) given index %i.",
-	//	chunk_coord.x, chunk_coord.y, chunk_coord_hash, index);
+	Logger::LogDebug(LOG_POS("Spawn_Column"), "(%i, %i, %i) given index %i.",
+		chunk_coord.x, chunk_coord.y, chunk_coord_hash, index);
 
 	return true;
 }
 
 void TerrainModifications::Set_Chunk_Data(glm::ivec3 chunk_coord, glm::ivec3 voxel_coord, bool set_iso, float iso, bool set_type, int type)
 {
+
 	int chunk_coord_hash = Utilities::Hash_Chunk_Coord(chunk_coord);
-	if (!m_chunk_map.contains(chunk_coord_hash)) {
+	if (!m_chunk_offset_map.contains(chunk_coord_hash)) {
 		Logger::LogDebug(LOG_POS("Set_Chunk_Data"), "Chunk not found: (%i, %i, %i)",
 			chunk_coord.x, chunk_coord.y, chunk_coord.z);
-		return;
+		//return;
 	}
+	assert(m_chunk_offset_map.contains(chunk_coord_hash));
 
 	int f_size_x = m_size_x + GRID_PADDING;
 	int f_size_y = m_size_y + GRID_PADDING;
 
 	glm::vec4 data = glm::vec4(0, 0, 0, 0);
-	int chunk_start_index = m_chunk_map[chunk_coord_hash];
+	int chunk_start_index = m_chunk_offset_map[chunk_coord_hash];
 	int v_idx = C_3D_to_1D(voxel_coord.x, voxel_coord.y, voxel_coord.z, f_size_x, f_size_y);
 	int buffer_idx = chunk_start_index + v_idx;
 	m_modification_data->GetData(&data, buffer_idx * sizeof(float) * 4, sizeof(float) * 4);
@@ -111,39 +116,45 @@ void TerrainModifications::Set_Chunk_Data(glm::ivec3 chunk_coord, glm::ivec3 vox
 void TerrainModifications::Set_Chunk_Data(glm::ivec3 chunk_coord, std::vector<glm::vec4> data)
 {
 	int chunk_coord_hash = Utilities::Hash_Chunk_Coord(chunk_coord);
-	if (!m_chunk_map.contains(chunk_coord_hash)) {
-		return;
+	if (!m_chunk_offset_map.contains(chunk_coord_hash)) {
+		Logger::LogDebug(LOG_POS("Set_Chunk_Data"), "Chunk not found: (%i, %i, %i)",
+			chunk_coord.x, chunk_coord.y, chunk_coord.z);
+		//return;
 	}
+	assert(m_chunk_offset_map.contains(chunk_coord_hash));
 
 	// TODO: set on-edge chunks
 
-	int chunk_start_index = m_chunk_map[chunk_coord_hash];
+	int chunk_start_index = m_chunk_offset_map[chunk_coord_hash];
 	m_modification_data->SetData(data.data(), chunk_start_index, m_total_size * sizeof(float) * 4);
 }
 
 void TerrainModifications::Despawn_Chunk(glm::ivec3 column_coord)
 {
 	int chunk_coord_hash = Utilities::Hash_Chunk_Coord(column_coord);
-
-	if (!m_chunk_map.contains(chunk_coord_hash)) {
+	if (!m_chunk_offset_map.contains(chunk_coord_hash)) {
 		return;
 	}
 
-	int index = m_chunk_map[chunk_coord_hash];
+	int index = m_chunk_offset_map[chunk_coord_hash];
 	m_chunk_offsets[index].x = 0;
+	m_chunk_offset_map.erase(chunk_coord_hash);
 	m_num_active--;
 }
 
 bool TerrainModifications::Has_Chunk(glm::ivec3 chunk_coord)
 {
 	int chunk_coord_hash = Utilities::Hash_Chunk_Coord(chunk_coord);
-	return m_chunk_map.contains(chunk_coord_hash);
+	return m_chunk_offset_map.contains(chunk_coord_hash);
 }
 
 int TerrainModifications::Get_Chunk_Data_Offset(glm::ivec3 chunk_coord)
 {
+	if (!Has_Chunk(chunk_coord)) {
+		return -1;
+	}
 	int chunk_coord_hash = Utilities::Hash_Chunk_Coord(chunk_coord);
-	return m_chunk_map[chunk_coord_hash];
+	return m_chunk_offset_map[chunk_coord_hash];
 }
 
 int TerrainModifications::Grid_Padding()
@@ -159,6 +170,7 @@ int TerrainModifications::Grid_Offset()
 int TerrainModifications::find_next_index()
 {
 	if (m_num_active >= m_max_chunks) {
+		assert(false);
 		return -1;
 	}
 

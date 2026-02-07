@@ -870,15 +870,16 @@ void WorldGenController::process_modifications()
 				}
 				saved_voxels.insert(v_hash);
 
-				Logger::LogDebug(LOG_POS("process_modifications-changes"), "change (%d, %d, %d)-(%d, %d, %d): %0.2lf",
-					chunk.x, chunk.y, chunk.z,
-					voxel_coord.x, voxel_coord.y, voxel_coord.z,
-					v_change.ISO);
+				//Logger::LogDebug(LOG_POS("process_modifications-changes"), "change (%d, %d, %d)-(%d, %d, %d): %0.2lf",
+				//	chunk.x, chunk.y, chunk.z,
+				//	voxel_coord.x, voxel_coord.y, voxel_coord.z,
+				//	v_change.ISO);
 
 				voxel_coord.x += m_terrain_mods->Grid_Offset();
 				voxel_coord.y += m_terrain_mods->Grid_Offset();
 				voxel_coord.z += m_terrain_mods->Grid_Offset();
 
+				m_terrain_mods->Spawn_Chunk(chunk);
 				m_terrain_mods->Set_Chunk_Data(chunk, voxel_coord, v_change.Change_ISO, v_change.ISO, v_change.Change_Type, v_change.Type);
 			}
 		}
@@ -1025,6 +1026,7 @@ bool WorldGenController::chunk_exists(glm::ivec3 chunk_coord)
 void WorldGenController::remove_chunk(glm::ivec3 chunk_coord)
 {
 	std::lock_guard<std::mutex> lock(m_process_lock);
+	m_terrain_mods->Despawn_Chunk(chunk_coord);
 	int hash = Utilities::Hash_Chunk_Coord(chunk_coord.x, chunk_coord.y, chunk_coord.z);
 	m_chunk_map.erase(hash);
 }
