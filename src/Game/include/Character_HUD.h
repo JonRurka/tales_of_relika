@@ -33,11 +33,7 @@ protected:
 
 private:
 
-	struct voxel_iso {
-		glm::ivec3 voxel_index;
-		glm::vec3 world_position;
-		float iso;
-	};
+	
 
 	Camera::Weak m_camera;
 	ISO_Sampler::Shared m_iso_sampler;
@@ -69,7 +65,7 @@ private:
 
 	glm::ivec3 get_closest_voxel(glm::ivec3 src_voxel, glm::fvec3 world_pos, bool inside);
 
-	std::vector<voxel_iso> get_surrounding_voxels(glm::ivec3 src_voxel, int half_size);
+	//std::vector<voxel_iso> get_surrounding_voxels(glm::ivec3 src_voxel, int half_size);
 	std::vector<glm::ivec4> get_surrounding_voxels(glm::ivec3 src_voxel, bool inside);
 
 	void draw_voxel_box(glm::ivec3 voxel_coord);

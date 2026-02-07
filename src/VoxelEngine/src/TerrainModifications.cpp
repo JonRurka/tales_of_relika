@@ -100,10 +100,10 @@ void TerrainModifications::Set_Chunk_Data(glm::ivec3 chunk_coord, glm::ivec3 vox
 		voxel_coord.x, voxel_coord.y, voxel_coord.z, 
 		data.x, data.y, data.z, data.w, v_idx);*/
 
-	Logger::LogDebug(LOG_POS("Set_Chunk_Data"), "Setting voxel:(%i, %i, %i), size:(%i, %i), v_idx:%i, iso:%f",
-		voxel_coord.x, voxel_coord.y, voxel_coord.z,
-		f_size_x, f_size_y,
-		v_idx, data.y);
+	//Logger::LogDebug(LOG_POS("Set_Chunk_Data"), "Setting voxel:(%i, %i, %i), size:(%i, %i), v_idx:%i, iso:%f",
+	//	voxel_coord.x, voxel_coord.y, voxel_coord.z,
+	//	f_size_x, f_size_y,
+	//	v_idx, data.y);
 	
 	m_modification_data->SetData(&data, buffer_idx * sizeof(float) * 4, sizeof(float) * 4);
 }

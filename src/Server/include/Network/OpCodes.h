@@ -27,12 +27,13 @@ public:
 	enum class Client : uint8_t {
 		System_Reserved = 0xff,
 		Identify_Result = 0x01,
-		World_Player_Data_Result = 0x02,
-		Spawn_Players = 0x03,
-		Update_Orientations = 0x04,
-		Sync_Player_Orientation = 0x05,
-		Player_Events = 0x06,
-		Chunk_Events = 0x07,
+		World_Ready = 0x02,
+		World_Player_Data_Result = 0x03,
+		Spawn_Players = 0x04,
+		Update_Orientations = 0x05,
+		Sync_Player_Orientation = 0x06,
+		Player_Events = 0x07,
+		Chunk_Events = 0x08,
 	};
 
 	enum class Player_Events : uint8_t {

@@ -156,10 +156,21 @@ void LocalPlayerCharacter::FixedUpdate(float dt)
 	Vec3 vel = char_col.Get_Controller().GetLinearVelocity();
 	m_velocity = glm::fvec3(vel.GetX(), vel.GetY(), vel.GetZ());
 
+	Graphics::DrawDebugLine(m_location.load(), m_server_loc, glm::vec3(0, 1, 0));
 
-	glm::vec3 pred_server_pos = (m_server_loc + glm::vec3(0, 0.0f, 0)) + (m_velocity.load() * (float)m_move_trip_time);
-	glm::vec3 new_pos = glm::mix(m_location.load(), pred_server_pos, dt * 2);
-	char_col.Set_Location(new_pos);
+	float dist = glm::distance(m_server_loc, m_location.load());
+	
+
+	if (dist > 5.0f) {
+		char_col.Set_Location(m_server_loc + glm::vec3(0, 0.3f, 0));
+		char_col.Get_Controller().SetLinearVelocity(Vec3(0, 0, 0)); // TODO: Use server velocity.
+	}
+	else {
+		float mult = Clamp(2 + dist + dist * dist * dist, 0.0f, 1.0f);
+		glm::vec3 pred_server_pos = (m_server_loc + glm::vec3(0, 0.0f, 0)) + (m_velocity.load() * (float)m_move_trip_time);
+		glm::vec3 new_pos = glm::mix(m_location.load(), pred_server_pos, dt * mult);
+		char_col.Set_Location(new_pos);
+	}
 
 #endif
 

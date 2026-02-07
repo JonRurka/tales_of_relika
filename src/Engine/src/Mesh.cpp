@@ -286,6 +286,9 @@ bool Mesh::Draw(GLenum mode)
 {
 	ZoneScopedN("Mesh::Draw");
 
+	if (!m_active)
+		return false;
+
 	glBindVertexArray(VAO);
 
 	//printf("Process mesh: %s, verts: %i, indices: %i\n", m_name.c_str(), (int)m_num_vertices, (int)m_num_indices);

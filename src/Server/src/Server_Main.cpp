@@ -112,11 +112,11 @@ void Server_Main::PlayerJoined(std::shared_ptr<Player> player)
 	if (!has_data) {
 		player->CreatePlayerData();
 	}
+	Logger::LogInfo(LOG_POS("PlayerJoined"), "%s Joined.", player->Get_UserName().c_str());
 
 	uint64_t world_id = player->Player_Game_Data().CurrentWorldID;
-
 	if (WorldController::GetInstance()->World_Exists(world_id)) {
-		player->AssignPlayer(WorldController::GetInstance()->Get_World(world_id));
+		//player->AssignPlayer(WorldController::GetInstance()->Get_World(world_id));
 	}
 }
 
@@ -311,7 +311,6 @@ void Server_Main::Update(double dt)
 
 	m_com_executer->Process();
 	m_net_server->Update(dt);
-	m_world_controller->Update(dt);
 
 	if (m_executedCommand != "")
 	{
@@ -348,6 +347,8 @@ void Server_Main::Update(double dt)
 	{
 		Logger::Update();
 	}
+
+	game_update(dt);
 
 }
 
@@ -432,5 +433,40 @@ void Server_Main::UserIdentify(SocketUser& user, Data data)
 		//delete player;
 	}
 }
+
+// Put general game logic update here.
+void Server_Main::game_update(float dt)
+{
+	m_world_controller->Update(dt);
+
+	notify_game_ready();
+
+
+
+}
+
+void Server_Main::notify_game_ready()
+{
+	// TODO: Ideally, add clients to list on connected, and remove
+	// when sent ready.
+	for (auto& set : m_players) 
+	{
+		Player& p = *set.second.get();
+		if (!p.Connected())
+			continue;
+		if (p.Has_Sent_Worlds_Ready())
+			continue;
+
+		if (m_world_controller->Worlds_Ready()) {
+			uint64_t world_id = p.Player_Game_Data().CurrentWorldID;
+			assert(WorldController::GetInstance()->World_Exists(world_id));
+			p.AssignPlayer(WorldController::GetInstance()->Get_World(world_id));
+			p.Send_Worlds_Ready();
+		}
+
+	}
+
+}
+
 
 

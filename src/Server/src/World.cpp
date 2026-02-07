@@ -20,9 +20,9 @@ using json = nlohmann::json;
 
 #define ORIENTATION_SEND_RATE ((1.0 / 20.0)) // Seconds
 #define INITIAL_CHUNK_SIM_RADIUS 4
-#define INITIAL_CHUNK_SIM_DEPTH 4
+#define INITIAL_CHUNK_SIM_DEPTH 6
 
-#define WORLD_THREAD_SLEEP_MICRO_SEC 1000
+#define WORLD_THREAD_SLEEP_MICRO_SEC 16000
 
 					  
 void World::Init()
@@ -66,6 +66,18 @@ void World::SubmitPlayerEvent(Player& player, OpCodes::Player_Events event_cmd, 
 void World::SubmitChunkEvent(Player& user, OpCodes::Player_Chunk_Events, int chunk_hash, std::vector<uint8_t> data)
 {
 
+}
+
+void World::BroadcastClientCommand(OpCodes::Client cmd, Protocal prot)
+{
+	BroadcastClientCommand(cmd, std::vector<uint8_t>(), prot);
+}
+
+void World::BroadcastClientCommand(OpCodes::Client cmd, std::vector<uint8_t> data, Protocal prot)
+{
+	for (auto& p : m_players) {
+		p.second->Send(cmd, data, prot);
+	}
 }
 
 World* World::New_World(WorldCreationOptions options)
@@ -123,6 +135,15 @@ bool World::HasPlayer(uint32_t player_id)
 bool World::HasPlayer(Player::pointer player)
 {
 	return m_players.contains(player->Get_UserID());
+}
+
+bool World::IsWorldReady()
+{
+	if (!m_spawn_point_set) {
+		return false;
+	}
+
+	return true;
 }
 
 std::vector<Player::pointer> World::GetPlayers()
@@ -219,12 +240,15 @@ void World::async_init()
 
 void World::load_initial_terrain()
 {
+
 	auto chunk_coords = m_world_terrain->Get_Chunk_Coords(glm::vec3(m_spawn_point.x, 0, m_spawn_point.z), INITIAL_CHUNK_SIM_RADIUS, INITIAL_CHUNK_SIM_DEPTH);
 
 	Logger::LogInfo(LOG_POS("load_initial_terrain"), "Creating %i initial world chunks...", chunk_coords.size());
 
 	for (const auto& c : chunk_coords)
 	{
+		//Logger::LogDebug(LOG_POS("load_initial_terrain"), "Init chunk: (%d, %d, %d)",
+		//	c.x, c.y, c.z);
 		ServerTerrainChunk* chunk = m_world_terrain->Spawn_Chunk(c);
 		chunk->KeepAlive(true);
 		//break;
@@ -366,13 +390,6 @@ void World::AsynUpdate(float dt)
 	ProcessNetCommands();
 	UpdatePlayers(dt);
 
-	WorldPhysics::RayHit hit = m_world_physics->Raycast(glm::vec3(5.0, 20.0f, 5.0f), glm::vec3(0, -1.0f, 0) * 50.0f);
-	if (hit.did_hit)
-	{
-		//Logger::LogDebug(LOG_POS("AsynUpdate"), "Hit (%0.2lf, %0.2lf, %0.2lf)",
-		//	hit.hit_point.x, hit.hit_point.y, hit.hit_point.z);
-	}
-
 	double now = Utilities::Get_Time();
 	if ((now - m_last_orientation_update) > ORIENTATION_SEND_RATE) {
 		m_last_orientation_update = now;
@@ -380,8 +397,28 @@ void World::AsynUpdate(float dt)
 		SendPlayerUpdates();
 	}
 
+	//WorldPhysics::RayHit hit = m_world_physics->Raycast(glm::vec3(5.0, 20.0f, 5.0f), glm::vec3(0, -1.0f, 0) * 50.0f);
+	//if (hit.did_hit)
+	//{
+		//Logger::LogDebug(LOG_POS("AsynUpdate"), "Hit (%0.2lf, %0.2lf, %0.2lf)",
+		//	hit.hit_point.x, hit.hit_point.y, hit.hit_point.z);
+	//}
 
 	test_set_spawn_point();
+
+	/*if (!m_sent_ready_broadcast)
+	{
+		if (IsWorldReady())
+		{
+			Logger::LogDebug(LOG_POS("AsynUpdate"), "World ready!");
+			BroadcastClientCommand(OpCodes::Client::World_Ready);
+			m_sent_ready_broadcast = true;
+		}
+	}*/
+
+	if (!IsWorldReady()) {
+		return;
+	}
 }
 
 void World::UpdatePlayers(float dt)
@@ -587,15 +624,28 @@ void World::test_set_spawn_point()
 	if (m_spawn_point_set)
 		return;
 
+	if (m_world_terrain->Num_Chunks() <= ServerTerrainChunk::Num_Complete_Chunks()) {
+		return;
+	}
+
 	WorldPhysics::RayHit hit = m_world_physics->Raycast(glm::fvec3(m_spawn_point.x, 200, m_spawn_point.z), glm::vec3(0, -1, 0) * 400.0f);
 	if (hit.did_hit) 
 	{
-		Logger::LogInfo(LOG_POS("test_set_spawn_point"), "test spawn HIT : (%f, %f, %f)",
-			hit.hit_point.x, hit.hit_point.y, hit.hit_point.z);
+		//Logger::LogInfo(LOG_POS("test_set_spawn_point"), "test spawn HIT : (%f, %f, %f)",
+		//	hit.hit_point.x, hit.hit_point.y, hit.hit_point.z);
 		m_spawn_point = hit.hit_point + glm::vec3(0, 6, 0);
 		m_spawn_point_set = true;
-		Logger::LogInfo(LOG_POS("test_set_spawn_point"), "Found new Spawn Point: (%f, %f, %f)",
-			m_spawn_point.x, m_spawn_point.y, m_spawn_point.z);
+
+		glm::ivec3 chunk = m_world_terrain->WorldPosToChunkCoord(m_spawn_point);
+		
+		Logger::LogInfo(LOG_POS("test_set_spawn_point"), "Found new Spawn Point: (%f, %f, %f), chunk: (%d, %d, %d)",
+			m_spawn_point.x, m_spawn_point.y, m_spawn_point.z,
+			chunk.x, chunk.y, chunk.z);
+
+		
+	}
+	else {
+		//Logger::LogDebug(LOG_POS("test_set_spawn_point"), "Spawn not found.");
 	}
 }
 

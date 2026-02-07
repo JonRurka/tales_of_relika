@@ -63,6 +63,10 @@ public:
 
 	void SubmitChunkEvent(Player& user, OpCodes::Player_Chunk_Events, int chunk_hash, std::vector<uint8_t> data);
 
+	void BroadcastClientCommand(OpCodes::Client cmd, Protocal prot = Protocal_Tcp);
+
+	void BroadcastClientCommand(OpCodes::Client cmd, std::vector<uint8_t> data, Protocal prot = Protocal_Tcp);
+
 	static World* New_World(WorldCreationOptions options);
 
 	static World* Load_World(uint64_t world_id);
@@ -76,6 +80,8 @@ public:
 	bool HasPlayer(uint32_t player_id);
 
 	bool HasPlayer(Player::pointer player);
+
+	bool IsWorldReady();
 
 	std::vector<Player::pointer> GetPlayers();
 
@@ -141,8 +147,10 @@ private:
 	WorldTerrain* m_world_terrain{ nullptr };
 	WorldPhysics* m_world_physics{ nullptr };
 
-	glm::fvec3 m_spawn_point;
+	glm::fvec3 m_spawn_point{};
 	bool m_spawn_point_set{ false };
+	bool m_world_ready{ false };
+	bool m_sent_ready_broadcast{ false };
 
 	void async_init();
 

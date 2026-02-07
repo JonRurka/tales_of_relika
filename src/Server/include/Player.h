@@ -164,6 +164,9 @@ public:
 	bool Client_Ready() { return m_client_ready; }
 	void Client_Ready(bool val) { m_client_ready = val; }
 
+	bool Has_Sent_Worlds_Ready() const { return m_sent_ready; }
+	void Send_Worlds_Ready();
+
 	void Set_MatchInstanceID(uint8_t id) {
 		m_world_instance_id = id;
 	}
@@ -304,7 +307,7 @@ private:
 
 	bool m_trigger_save{ false };
 	bool m_client_ready{ false };
-
+	bool m_sent_ready{false};
 
 	double m_debug_timer{ 0 };
 

@@ -220,6 +220,15 @@ void Player::CreatePlayerData()
 
 }
 
+void Player::Send_Worlds_Ready()
+{
+	if (m_sent_ready)
+		return;
+
+	Send(OpCodes::Client::World_Ready, std::vector<uint8_t>());
+	m_sent_ready = true;
+}
+
 void Player::Add_Player_Event(ServerPlayerEvent p_event)
 {
 	//Logger::LogDebug(LOG_POS("Add_Player_Event"), "Received Player Event for player %s: %i", 
@@ -471,12 +480,16 @@ void Player::load_world_profile()
 
 	m_location = m_current_profile->Location;
 	m_old_location = m_location;
+
+
 	Logger::LogDebug(LOG_POS("load_world_profile"), "Loaded location from world profile: (%f, %f, %f)", 
 		m_location.x, m_location.y, m_location.z);
 }
 
 void Player::update_terrain_chunks()
 {
+	assert(m_current_terrain != nullptr);
+
 	auto chunk_coords = m_current_terrain->Get_Chunk_Coords(m_location, PLAYER_CHUNK_SIM_RADIUS, PLAYER_CHUNK_SIM_DEPTH);
 	std::vector<int> valid_chunks;
 	valid_chunks.reserve(chunk_coords.size());
@@ -488,10 +501,12 @@ void Player::update_terrain_chunks()
 			continue;
 
 		ServerTerrainChunk* chunk = nullptr;
-		if (m_current_terrain->Chunk_Exists(c))
+		if (m_current_terrain->Chunk_Exists(c)) {
 			chunk = m_current_terrain->Get_Chunk(c);
-		else 
+		}
+		else {
 			chunk = m_current_terrain->Spawn_Chunk(c);
+		}
 		chunk->Register(get_shared_ref());
 
 		//Send_Chunk_Event(OpCodes::Player_Chunk_Events::NotifyLoaded, hash);

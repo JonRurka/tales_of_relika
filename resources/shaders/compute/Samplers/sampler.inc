@@ -5,7 +5,7 @@
 #include "block_types.inc"
 #endif
 
-#define ENABLE_CAVES true
+
 
 struct Settings{
 	int column_index;

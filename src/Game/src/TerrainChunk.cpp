@@ -133,7 +133,8 @@ void TerrainChunk::Process_Mesh_Update(glm::ivec4 counts, MeshUpdateMode mode)
 	double vbo_time_start = Utilities::Get_Time();
 	m_vbo_stitch->Process(*m_update.mesh.get(), counts, false, false); //mode == MeshUpdateMode::Graphic || mode == MeshUpdateMode::Both
 
-	m_update.raw_vbo = m_vbo_stitch->Output_VBO_Vector(counts.x);
+	m_update.raw_vbo = m_vbo_stitch->Output_VBO_Vector(counts.x, false);
+
 	//auto raw_vert_data = new float[0];
 	//int vbo_size = counts.x * BYTE_STRIDE;
 	//m_vbo_stitch->Output_VBO_Buffer()->GetData(raw_vert_data, vbo_size);
@@ -409,6 +410,7 @@ bool TerrainChunk::test_despawn()
 	float dist = glm::distance(target_chunk_f, chunk_coord_f);
 	if (dist > m_controller.lock()->Chunk_Radius())
 	{
+		Unassign();
 		m_controller.lock()->Despawn_Chunk(m_chunk_coords);
 		//Logger::LogDebug(LOG_POS("test_despawn"), "Despawn chunk (%d, %d, %d)",
 		//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
@@ -469,8 +471,8 @@ void TerrainChunk::update_collision_mesh(const std::vector<glm::vec4>& vert_buff
 
 	double t_start = Utilities::Get_Time();
 	glm::vec3 extent_size = m_controller.lock()->ChunkMeterSize();
-	extent_size = glm::vec3(extent_size.x / 2, extent_size.y / 2, extent_size.z / 2);
-	m_voxel_opaque_mesh->SetBounds(AABB(extent_size, extent_size));
+	//extent_size = glm::vec3(extent_size.x / 2, extent_size.y / 2, extent_size.z / 2);
+	m_voxel_opaque_mesh->SetBounds(AABB(glm::vec3(0, 0, 0), extent_size));
 	double t_end = Utilities::Get_Time();
 	double bounds_time = (t_end - t_start) * 1000.0;
 

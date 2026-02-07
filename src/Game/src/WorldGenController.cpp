@@ -29,12 +29,10 @@ namespace {
 	const int max_times = 1000;
 
 
-	int floor_to_int(float val) {
-		return static_cast<int>(std::floor(val));
-	}
+	
 }
 
-int WorldGenController::Hash_Chunk(glm::ivec3 chunk)
+int WorldGenController::Hash_Chunk(const glm::ivec3& chunk)
 {
 	return Utilities::Hash_Chunk_Coord(chunk);
 }
@@ -283,11 +281,26 @@ void WorldGenController::Refresh_Chunk(glm::ivec3 chunk, MeshUpdateMode mode)
 {
 	if (!m_voxel_engine_enabled)
 		return;
+	if (!m_gen_finished)
+		return;
+
 	//Logger::LogDebug(LOG_POS("Refresh_Chunk"), "Refresh chunk (%i, %i, %i)",
 	//	chunk.x, chunk.y, chunk.z);
+
 	TerrainMod val(glm::vec3(0, 0, 0));
 	val.Mode = mode;
-	Modify_Voxel(chunk, val, false);
+	//Modify_Voxel(chunk, val, false);
+
+	std::vector<TerrainMod> values{ val };
+
+
+	TerrainModEntry entry{};
+	entry.chunk = chunk;
+	entry.changes = values;
+	{
+		std::lock_guard<mutex> lock(m_process_lock);
+		m_terrain_change_queue.push(entry);
+	}
 }
 
 void WorldGenController::Modify_Voxel_ISO(glm::ivec3 voxel, float iso)
@@ -341,11 +354,13 @@ void WorldGenController::Modify_Voxel(std::vector<TerrainMod> values)
 		return;
 
 	std::unordered_map<int, std::vector<TerrainMod>> mods;
+	std::unordered_set<int> add_voxels;
 
 	for (const auto& elem : values) 
 	{
 		glm::ivec3 chunk = voxelToChunk(elem.Voxel);
 		glm::ivec3 voxel_local = globalToLocalChunkCoord(chunk, elem.Voxel);
+		add_voxels.insert(Utilities::Hash_Chunk_Coord(elem.Voxel));
 
 		//int chunk_hash = 
 		int chunk_hash = Utilities::Hash_Chunk_Coord(chunk.x, chunk.y, chunk.z);
@@ -368,7 +383,7 @@ void WorldGenController::Modify_Voxel(std::vector<TerrainMod> values)
 	for (const auto& pair : mods) 
 	{
 		glm::ivec3 chunk = pair.second[0].chunk_coord;
-		Modify_Voxel(chunk, pair.second);
+		Modify_Voxel(chunk, pair.second, true, add_voxels);
 	}
 }
 
@@ -382,10 +397,16 @@ void WorldGenController::Modify_Voxel(glm::ivec3 chunk, TerrainMod value, bool u
 	Modify_Voxel(chunk, values, update_neighbor);
 }
 
-void WorldGenController::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> values, bool update_neighbor)
+void WorldGenController::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> values, bool update_neighbor, std::unordered_set<int> exclude_global)
 {
 	if (!m_voxel_engine_enabled)
 		return;
+
+	auto v1 = values[0].Voxel;
+	Logger::LogDebug(LOG_POS("Modify_Voxel"), "orig: (%d, %d, %d): (%d, %d, %d)",
+		chunk.x, chunk.y, chunk.z,
+		v1.x, v1.y, v1.z);
+
 
 	Submit_Terrain_Modification(chunk, values);
 
@@ -394,65 +415,110 @@ void WorldGenController::Modify_Voxel(glm::ivec3 chunk, std::vector<TerrainMod> 
 		std::unordered_map<int, std::vector<TerrainMod>> neighboor_updates;
 		for (const auto& val : values) 
 		{
+			struct neighboor_changes {
+				glm::ivec3 other_chunk;
+				glm::ivec3 other_chunk_voxel;
+			};
+			std::vector<neighboor_changes> neighboor_v_changes;
+			neighboor_v_changes.reserve(6);
 			glm::ivec3 voxel = val.Voxel;
 
-			glm::ivec3 other_chunk;
-			glm::ivec3 other_chunk_voxel;
+			
 			bool has_neighboor = false;
 
 			if (voxel.x == 0) {
-				other_chunk = glm::ivec3(chunk.x - 1, chunk.y, chunk.z);
-				other_chunk_voxel = glm::ivec3(m_chunk_size_x, voxel.y, voxel.z);
+				neighboor_changes chg;
+				chg.other_chunk = glm::ivec3(chunk.x - 1, chunk.y, chunk.z);
+				chg.other_chunk_voxel = glm::ivec3(m_chunk_size_x, voxel.y, voxel.z);
+				neighboor_v_changes.push_back(chg);
 				has_neighboor = true;
 				
 			}
 			if (voxel.x == (m_chunk_size_x - 1)) {
-				other_chunk = glm::ivec3(chunk.x + 1, chunk.y, chunk.z);
-				other_chunk_voxel = glm::ivec3(-1, voxel.y, voxel.z);
+				neighboor_changes chg;
+				chg.other_chunk = glm::ivec3(chunk.x + 1, chunk.y, chunk.z);
+				chg.other_chunk_voxel = glm::ivec3(-1, voxel.y, voxel.z);
+				neighboor_v_changes.push_back(chg);
 				has_neighboor = true;
 			}
 
 			if (voxel.y == 0) {
-				other_chunk = glm::ivec3(chunk.x, chunk.y - 1, chunk.z);
-				other_chunk_voxel = glm::ivec3(voxel.x, m_chunk_size_y, voxel.z);
+				neighboor_changes chg;
+				chg.other_chunk = glm::ivec3(chunk.x, chunk.y - 1, chunk.z);
+				chg.other_chunk_voxel = glm::ivec3(voxel.x, m_chunk_size_y, voxel.z);
+				neighboor_v_changes.push_back(chg);
 				has_neighboor = true;
 			}
 			if (voxel.y == (m_chunk_size_y - 1)) {
-				other_chunk = glm::ivec3(chunk.x, chunk.y + 1, chunk.z);
-				other_chunk_voxel = glm::ivec3(voxel.x, -1, voxel.z);
+				neighboor_changes chg;
+				chg.other_chunk = glm::ivec3(chunk.x, chunk.y + 1, chunk.z);
+				chg.other_chunk_voxel = glm::ivec3(voxel.x, -1, voxel.z);
+				neighboor_v_changes.push_back(chg);
 				has_neighboor = true;
 			}
 
 			if (voxel.z == 0) {
-				other_chunk = glm::ivec3(chunk.x, chunk.y, chunk.z - 1);
-				other_chunk_voxel = glm::ivec3(voxel.x, voxel.y, m_chunk_size_z);
+				neighboor_changes chg;
+				chg.other_chunk = glm::ivec3(chunk.x, chunk.y, chunk.z - 1);
+				chg.other_chunk_voxel = glm::ivec3(voxel.x, voxel.y, m_chunk_size_z);
+				neighboor_v_changes.push_back(chg);
 				has_neighboor = true;
 			}
 			if (voxel.z == (m_chunk_size_z - 1)) {
-				other_chunk = glm::ivec3(chunk.x, chunk.y, chunk.z + 1);
-				other_chunk_voxel = glm::ivec3(voxel.x, voxel.y, -1);
+				neighboor_changes chg;
+				chg.other_chunk = glm::ivec3(chunk.x, chunk.y, chunk.z + 1);
+				chg.other_chunk_voxel = glm::ivec3(voxel.x, voxel.y, -1);
+				neighboor_v_changes.push_back(chg);
 				has_neighboor = true;
 			}
+
+
+
+			// corners
+			if (voxel.x == 0 && voxel.y == 0) {
+				neighboor_changes chg;
+				chg.other_chunk = glm::ivec3(chunk.x - 1, chunk.y - 1, chunk.z);
+				chg.other_chunk_voxel = glm::ivec3(m_chunk_size_x, m_chunk_size_y, voxel.z);
+				neighboor_v_changes.push_back(chg);
+				has_neighboor = true;
+			}
+			// TODO: Other corners.
 
 			if (!has_neighboor) {
 				continue;
 			}
 
-			TerrainMod other_mod(other_chunk_voxel);
-			other_mod.ISO = val.ISO;
-			other_mod.Change_ISO = val.Change_ISO;
-			other_mod.Type = val.Type;
-			other_mod.Change_Type = val.Change_Type;
-			other_mod.chunk_coord = other_chunk_voxel;
-			other_mod.Mode = val.Mode;
+			//glm::ivec3 other_g = localToGlobalCoord(other_chunk, other_chunk_voxel);
+			//int o_h = Utilities::Hash_Chunk_Coord(other_g);
+			//if (exclude_global.contains(o_h)) {
+				//continue;
+			//}
 
-			int other_hash = Utilities::Hash_Chunk_Coord(other_chunk.x, other_chunk.y, other_chunk.z);
-			if (!neighboor_updates.contains(other_hash))
-			{
-				neighboor_updates[other_hash] = std::vector<TerrainMod>();
+			for (const auto& nc : neighboor_v_changes) {
+				glm::ivec3 other_chunk = nc.other_chunk;
+				glm::ivec3 other_chunk_voxel = nc.other_chunk_voxel;
+
+
+				Logger::LogDebug(LOG_POS("Modify_Voxel"), "extra: (%d, %d, %d): (%d, %d, %d)",
+					other_chunk.x, other_chunk.y, other_chunk.z,
+					other_chunk_voxel.x, other_chunk_voxel.y, other_chunk_voxel.z);
+
+				TerrainMod other_mod(other_chunk_voxel);
+				other_mod.ISO = val.ISO;
+				other_mod.Change_ISO = val.Change_ISO;
+				other_mod.Type = val.Type;
+				other_mod.Change_Type = val.Change_Type;
+				other_mod.chunk_coord = other_chunk;
+				other_mod.Mode = val.Mode;
+
+				int other_hash = Utilities::Hash_Chunk_Coord(other_chunk.x, other_chunk.y, other_chunk.z);
+				if (!neighboor_updates.contains(other_hash))
+				{
+					neighboor_updates[other_hash] = std::vector<TerrainMod>();
+				}
+
+				neighboor_updates[other_hash].push_back(other_mod);
 			}
-
-			neighboor_updates[other_hash].push_back(other_mod);
 		}
 
 		for (const auto& pair : neighboor_updates) {
@@ -562,6 +628,8 @@ void WorldGenController::initialize_voxel_engine()
 	vbo_stitch->Init(m_builder, max_vert);
 
 	m_voxel_engine_enabled = true;
+
+	m_iso_sampler = Get_ISO_Sampler();
 }
 
 void WorldGenController::AsyncRun(WorldGenController* inst)
@@ -658,7 +726,7 @@ void WorldGenController::process_deletions()
 		}
 
 		ChunkRef chunk = get_chunk(chunk_coord);
-		chunk.chunk_comp.lock()->Unassign();
+		//chunk.chunk_comp.lock()->Unassign();
 		remove_chunk(chunk_coord);
 		m_cached_chunks.push(chunk);
 	}
@@ -752,6 +820,8 @@ void WorldGenController::process_modifications()
 
 	//Logger::LogDebug(LOG_POS("process_modifications"), "2 process %d", m_terrain_change_queue.size());
 
+	std::unordered_set<int> saved_voxels;
+
 	int num_processed = 0;
 	double gen_tm_start = Utilities::Get_Time();
 	double build_time = 0;
@@ -773,6 +843,9 @@ void WorldGenController::process_modifications()
 		glm::ivec3 chunk = entry.chunk;
 		std::vector<TerrainMod> changes = entry.changes;
 
+		//Logger::LogDebug(LOG_POS("process_modifications"), "process 1 (%d, %d, %d)",
+		//	chunk.x, chunk.y, chunk.z);
+
 		if (!Chunk_Exists(chunk)) {
 			continue;
 		}
@@ -783,13 +856,29 @@ void WorldGenController::process_modifications()
 			mode = changes[0].Mode;
 		}
 
+		//Logger::LogDebug(LOG_POS("process_modifications"), "process 2 (%d, %d, %d)",
+		//	chunk.x, chunk.y, chunk.z);
+
 		for (const auto& v_change : changes)
 		{
 			if (v_change.Change_ISO || v_change.Change_Type) {
 				glm::ivec3 voxel_coord = v_change.Voxel;
+				glm::ivec3 g_coord = localToGlobalCoord(chunk, voxel_coord);
+				int v_hash = Hash_Chunk(g_coord);
+				if (saved_voxels.contains(v_hash)) {
+					//continue;
+				}
+				saved_voxels.insert(v_hash);
+
+				Logger::LogDebug(LOG_POS("process_modifications-changes"), "change (%d, %d, %d)-(%d, %d, %d): %0.2lf",
+					chunk.x, chunk.y, chunk.z,
+					voxel_coord.x, voxel_coord.y, voxel_coord.z,
+					v_change.ISO);
+
 				voxel_coord.x += m_terrain_mods->Grid_Offset();
 				voxel_coord.y += m_terrain_mods->Grid_Offset();
 				voxel_coord.z += m_terrain_mods->Grid_Offset();
+
 				m_terrain_mods->Set_Chunk_Data(chunk, voxel_coord, v_change.Change_ISO, v_change.ISO, v_change.Change_Type, v_change.Type);
 			}
 		}
@@ -1110,6 +1199,57 @@ void WorldGenController::create_dummy_terrain()
 	//col.lock()->RigidBody().getAabb(min, max);
 }
 
+std::vector<WorldGenController::Voxel_ISO> WorldGenController::GetSurroundingVoxels(const glm::ivec3& src_voxel, int half_size)
+{
+	//glm::ivec3 chunk = WorldGenController::VoxelToChunk(src_voxel);
+	//glm::ivec3 src_local = WorldGenController::GlobalToLocalChunkCoord(chunk, src_voxel);
+
+	const int size_x = half_size * 2 + 1;
+
+	std::unordered_map<int, std::vector<Voxel_ISO>> voxels_iso_map;
+	std::unordered_map<int, std::vector<glm::ivec3>> voxels_map;
+	std::unordered_map<int, glm::ivec3> chunk_map;
+
+	
+	for (int x = -half_size; x <= half_size; x++) {
+		for (int y = -half_size; y <= half_size; y++) {
+			for (int z = -half_size; z <= half_size; z++) {
+				auto v_iso = Voxel_ISO::From_Voxel_Coord(src_voxel + glm::ivec3(x, y, z), 0);
+				int ch_hash = WorldGenController::Hash_Chunk(v_iso.chunk_coord);
+
+				if (!chunk_map.contains(ch_hash)) {
+					chunk_map[ch_hash] = v_iso.chunk_coord;
+					voxels_iso_map[ch_hash] = std::vector<Voxel_ISO>();
+					voxels_map[ch_hash] = std::vector<glm::ivec3>();
+				}
+
+				voxels_iso_map[ch_hash].push_back(v_iso);
+				voxels_map[ch_hash].push_back(v_iso.local_voxel_coord);
+			}
+		}
+	}
+
+	auto res = std::vector<Voxel_ISO>();
+	res.reserve(size_x * size_x * size_x);
+
+	// Populate ISO values.
+	for (const auto& pair : chunk_map) {
+		int ch_hash = pair.first;
+		glm::ivec3 ch_coord = pair.second;
+
+		const auto& v_list = voxels_map[ch_hash];
+		auto& v_iso_list = voxels_iso_map[ch_hash];
+		std::vector<float> iso_vals = m_iso_sampler->Get_ISO(ch_coord, v_list);
+		for (int i = 0; i < iso_vals.size(); ++i) {
+			Voxel_ISO& v_iso = v_iso_list[i];
+			v_iso.iso = iso_vals[i];
+			res.push_back(v_iso);
+		}
+	}
+
+	return res;
+}
+
 std::vector<glm::ivec3> WorldGenController::get_columns_in_radius(int center_x, int center_z, int radius)
 {
 	const int padding = 1;
@@ -1146,74 +1286,4 @@ std::vector<glm::ivec3> WorldGenController::get_columns_in_radius(int center_x, 
 
 }
 
-glm::ivec3 WorldGenController::worldPosToChunkCoord(glm::fvec3 pos)
-{
-	pos -= glm::vec3(m_chunkMeterSizeX / 2, m_chunkMeterSizeY / 2, m_chunkMeterSizeZ / 2);
-
-	return glm::ivec3(
-		std::round(pos.x / (m_chunkMeterSizeX + m_half)), 
-		std::round(pos.y / (m_chunkMeterSizeY + m_half)),
-		std::round(pos.z / (m_chunkMeterSizeZ + m_half))
-	);
-}
-
-glm::fvec3 WorldGenController::chunkCoordToWorldPos(glm::ivec3 chunk_coord)
-{
-	return glm::fvec3(
-		std::round((chunk_coord.x * m_chunkMeterSizeX) - m_half),
-		std::round((chunk_coord.y * m_chunkMeterSizeY) - m_half),
-		std::round((chunk_coord.z * m_chunkMeterSizeZ) - m_half)
-	);
-}
-
-glm::ivec3 WorldGenController::voxelToChunk(glm::ivec3 location)
-{
-	int x = floor_to_int(location.x / (float)m_chunk_size_x);
-	int y = floor_to_int(location.y / (float)m_chunk_size_y);
-	int z = floor_to_int(location.z / (float)m_chunk_size_z);
-	return glm::ivec3(x, y, z);
-}
-
-glm::ivec3 WorldGenController::chunkToVoxel(glm::ivec3 location)
-{
-	int x = ((location.x) * m_chunk_size_x);
-	int y = ((location.y) * m_chunk_size_y);
-	int z = ((location.z) * m_chunk_size_z);
-	return glm::ivec3(x, y, z);
-}
-
-glm::ivec3 WorldGenController::globalToLocalChunkCoord(glm::ivec3 location) {
-	glm::ivec3 ChunkCoord = voxelToChunk(location);
-	return GlobalToLocalChunkCoord(ChunkCoord, location);
-}
-
-glm::ivec3 WorldGenController::globalToLocalChunkCoord(glm::ivec3 ChunkCoord, glm::ivec3 location) {
-	int x = location.x - (ChunkCoord.x * m_chunk_size_x);
-	int y = location.y - (ChunkCoord.y * m_chunk_size_y);
-	int z = location.z - (ChunkCoord.z * m_chunk_size_z);
-	return glm::ivec3(x, y, z);
-}
-
-glm::ivec3 WorldGenController::localToGlobalCoord(glm::ivec3 Chunk, glm::ivec3 location) {
-	int x = location.x + (Chunk.x * m_chunk_size_x);
-	int y = location.y + (Chunk.y * m_chunk_size_y);
-	int z = location.z + (Chunk.z * m_chunk_size_z);
-	return glm::ivec3(x, y, z);
-}
-
-glm::fvec3 WorldGenController::voxelToWorld(glm::ivec3 loc)
-{
-	float newX = (((loc.x / (float)m_voxelsPerMeter) - m_half));
-	float newY = (((loc.y / (float)m_voxelsPerMeter) - m_half));
-	float newZ = (((loc.z / (float)m_voxelsPerMeter) - m_half));
-	return glm::fvec3(newX, newY, newZ);
-}
-
-glm::ivec3 WorldGenController::worldToVoxel(glm::fvec3 worldPos)
-{
-	int x = floor_to_int(((worldPos.x) + m_half) * (float)m_voxelsPerMeter);
-	int y = floor_to_int(((worldPos.y) + m_half) * (float)m_voxelsPerMeter);
-	int z = floor_to_int(((worldPos.z) + m_half) * (float)m_voxelsPerMeter);
-	return glm::ivec3(x, y, z);
-}
 

@@ -30,6 +30,19 @@ namespace {
 		glm::ivec4(1, 1, 0, 0),
 		glm::ivec4(0, 1, 0, 0),
 	};
+
+	float fade_clamp(float target_max, float strength, float x) {
+		float a = 1.0f / strength;
+		int flip = 1;
+		if (x < 0)
+			flip = -1;
+		return flip * target_max * fabs(x) / (a + fabs(x));
+	}
+
+	float sphere_sample(float radius, glm::fvec3 center, float x, float y, float z) {
+		float val = radius - sqrt(pow(x - center.x, 2) + pow(y - center.y, 2) + pow(z - center.z, 2));
+		return val;// fade_clamp(1.0f, 0.5f, val);
+	}
 }
 
 void Character_HUD::Init(Camera::Weak camera)
@@ -168,6 +181,22 @@ void Character_HUD::Update(float dt)
 			//WorldGenController::Instance()->Modify_Voxel_ISO(selected_voxel, -1.0);
 		}
 
+		//left_click_block(hit.hit_point, hit.normal);
+
+	}
+
+	if (Input::GetKeyDown(input::KeyCode::N)) {
+
+		Logger::LogDebug(LOG_POS("Update"), "modify test.");
+
+		glm::ivec3 c = glm::ivec3(0, 0, 0);
+		glm::ivec3 lv = glm::vec3(0, 0, 5);
+
+		WorldGenController::TerrainMod mod(lv, 1.0f);
+		WorldGenController::Instance()->Modify_Voxel(c, mod, true);
+
+		glm::ivec3 w_v = WorldGenController::LocalToGlobalCoord(c, lv);
+		Graphics::DrawDebugRay(WorldGenController::VoxelToWorld(w_v), glm::vec3(0, 1, 0), glm::vec3(1, 0, 0), 10000);
 	}
 
 
@@ -218,7 +247,7 @@ void Character_HUD::draw_ui()
 
 void Character_HUD::left_click_block(glm::vec3 hit_point, glm::vec3 normal)
 {
-	Logger::LogDebug(LOG_POS("left_click_block"), "Block Click.");
+	//Logger::LogDebug(LOG_POS("left_click_block"), "Block Click.");
 	glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit_point + (normal * 0.01f));
 	left_click_terrain(hit_point, normal, voxel_coord);
 	//left_click_structure(hit_point, normal, voxel_coord);
@@ -233,16 +262,22 @@ void Character_HUD::right_click_block(glm::vec3 hit_point, glm::vec3 normal)
 
 void Character_HUD::left_click_terrain(glm::vec3 hit_point, glm::vec3 normal, glm::ivec3 voxel_coord)
 {
-	Logger::LogDebug(LOG_POS("Update"), "Voxel Clicked....");
+	//Logger::LogDebug(LOG_POS("Update"), "Voxel Clicked....");
 	glm::ivec3 selected_src_voxel = get_closest_voxel(voxel_coord, hit_point, true);
-	std::vector<glm::ivec4> near_voxels = get_surrounding_voxels(selected_src_voxel, true);
+	std::vector<WorldGenController::Voxel_ISO> near_voxels = WorldGenController::Instance()->GetSurroundingVoxels(selected_src_voxel, 1);
+	//std::vector<glm::ivec4> near_voxels = get_surrounding_voxels(selected_src_voxel, true);
 
 	std::vector<WorldGenController::TerrainMod> changes;
 	changes.reserve(near_voxels.size());
 	for (const auto& nv : near_voxels) {
-
-		//WorldGenController::TerrainMod mod(glm::ivec3(nv.x, nv.y, nv.z), (0.5f / (float)nv.w));
-		//changes.push_back(mod);
+		float sph_sample = sphere_sample(3.0f, hit_point + normal * 0.0f, nv.world_position.x, nv.world_position.y, nv.world_position.z);
+		if (sph_sample > 0.0f && nv.iso > 0)
+		{
+			glm::vec3 col = nv.iso < 0 ? glm::vec3(1, 0, 0) : glm::vec3(0, 0, 1); // Inside is positive
+			Graphics::DrawDebugRay(nv.world_position, glm::vec3(0, 0.2, 0), col, 0);
+			WorldGenController::TerrainMod mod(nv.global_voxel_coord, nv.iso + sph_sample);
+			changes.push_back(mod);
+		}
 	}
 	WorldGenController::Instance()->Modify_Voxel(changes);
 }
@@ -349,23 +384,7 @@ glm::ivec3 Character_HUD::get_closest_voxel(glm::ivec3 src_voxel, glm::fvec3 wor
 	return grid_global[closest_voxel_idx];
 }
 
-std::vector<Character_HUD::voxel_iso> Character_HUD::get_surrounding_voxels(glm::ivec3 src_voxel, int half_size)
-{
-	glm::ivec3 chunk = WorldGenController::VoxelToChunk(src_voxel);
-	//glm::ivec3 src_local = WorldGenController::GlobalToLocalChunkCoord(chunk, src_voxel);
 
-	for (int x = -half_size; x <= half_size; x++) {
-		for (int y = -half_size; y <= half_size; y++) {
-			for (int z = -half_size; z <= half_size; z++) {
-				glm::ivec3 v_chunk = WorldGenController::VoxelToChunk(src_voxel);
-				//glm::ivec3 v_local = WorldGenController::GlobalToLocalChunkCoord(chunk, src_voxel);
-				//glm::fvec3 v_world = 
-			}
-		}
-	}
-
-	return std::vector<voxel_iso>();
-}
 
 
 

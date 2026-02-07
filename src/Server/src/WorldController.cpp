@@ -86,6 +86,14 @@ bool WorldController::World_Exists(uint64_t world_id)
 	return m_loaded_worlds.contains(world_id);
 }
 
+bool WorldController::Worlds_Ready()
+{
+	if (m_default_world == nullptr)
+		return false;
+
+	return m_default_world->IsWorldReady();
+}
+
 World* WorldController::Get_World(uint64_t world_id)
 {
 	if (!World_Exists(world_id)) {

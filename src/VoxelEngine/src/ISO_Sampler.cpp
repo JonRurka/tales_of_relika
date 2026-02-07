@@ -60,10 +60,13 @@ float ISO_Sampler::Get_ISO(glm::ivec3 chunk, glm::ivec3 voxel)
 	return res;
 }
 
-std::vector<float> ISO_Sampler::Get_ISO(glm::ivec3 chunk, std::vector<glm::ivec3> voxels)
+std::vector<float> ISO_Sampler::Get_ISO(const glm::ivec3& chunk, const std::vector<glm::ivec3>& voxels)
 {
 	std::vector<Voxel_Location> locations;
 	locations.reserve(voxels.size());
+
+	int col_data_offset = m_heightmap_gen->Get_Column_Data_Offset(glm::ivec2(chunk.x, chunk.z));
+	int chunk_data_offset = m_terrain_mods->Get_Chunk_Data_Offset(chunk);
 
 	for (const auto& v : voxels) 
 	{
@@ -71,8 +74,8 @@ std::vector<float> ISO_Sampler::Get_ISO(glm::ivec3 chunk, std::vector<glm::ivec3
 		loc.chunk = glm::ivec4(chunk, 0.0);
 		loc.voxel = glm::ivec4(v.x + GRID_OFFSET, v.y + GRID_OFFSET, v.z + GRID_OFFSET, 0);
 		loc.int_data_1 = glm::ivec4(
-			m_heightmap_gen->Get_Column_Data_Offset(glm::ivec2(chunk.x, chunk.z)),
-			m_terrain_mods->Get_Chunk_Data_Offset(chunk),
+			col_data_offset,
+			chunk_data_offset,
 			0, 0
 		);
 		locations.push_back(loc);
@@ -81,7 +84,7 @@ std::vector<float> ISO_Sampler::Get_ISO(glm::ivec3 chunk, std::vector<glm::ivec3
 	return Get_ISO(chunk, locations);
 }
 
-std::vector<float> ISO_Sampler::Get_ISO(glm::ivec3 chunk, std::vector<Voxel_Location> voxels) 
+std::vector<float> ISO_Sampler::Get_ISO(const glm::ivec3& chunk, const std::vector<Voxel_Location>& voxels) 
 {
 	std::vector<float> res;
 	res.reserve(voxels.size());
@@ -97,9 +100,9 @@ std::vector<float> ISO_Sampler::Get_ISO(glm::ivec3 chunk, std::vector<Voxel_Loca
 	return res;
 }
 
-void ISO_Sampler::set_locations(std::vector<Voxel_Location> voxels)
+void ISO_Sampler::set_locations(const std::vector<Voxel_Location>& voxels)
 {
-	in_voxel_locations_data->SetData(voxels.data(), voxels.size() * sizeof(Voxel_Location));
+	in_voxel_locations_data->SetData((Voxel_Location*)voxels.data(), voxels.size() * sizeof(Voxel_Location));
 }
 
 void ISO_Sampler::execute(int elements)

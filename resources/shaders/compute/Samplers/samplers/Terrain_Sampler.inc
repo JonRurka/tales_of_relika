@@ -1,5 +1,6 @@
 
 #define FLAT_TERRAIN false
+#define ENABLE_CAVES true
 
 float cubic_exp(float val){
 	float a = -2.71828f;
@@ -38,7 +39,7 @@ float GetHeight(STRUCT Settings s, float x, float y)
 	//return 5 + x / 10.0;
 	
 	if (FLAT_TERRAIN)
-		return 1.0f;
+		return 8.0f;
 	
 	x /= 100.0f;
 	y /= 100.0f;
@@ -106,11 +107,16 @@ float GetHeight(STRUCT Settings s, float x, float y)
 
 float Sample_2D(STRUCT Settings s, float x, float y)
 {
+	s.seed = 11423;
 	return GetHeight(s, x, y);
 }
 
 float Sample_3D(STRUCT Settings s, float x, float y, float z)
 {
+	if (!ENABLE_CAVES)
+		return 0;
+	
+	//s.seed = 68437;
 	return CaveSample(s, x, y, z, 14.0f, 1.0f, 1.0f);
 }
 

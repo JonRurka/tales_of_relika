@@ -37,6 +37,9 @@ void ServerTerrainChunk::Assign(glm::ivec3 chunk_coord)
 	m_test_timer = 10;
 
 	m_chunk_world_pos = m_controller->ChunkCoordToWorldPos(chunk_coord);
+
+	//Logger::LogDebug(LOG_POS("Assign"), "chunk assigned: (%d, %d, %d)",
+	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 }
 
 void ServerTerrainChunk::Unassign() 
@@ -48,6 +51,9 @@ void ServerTerrainChunk::Unassign()
 	m_keep_alive = false;
 
 	clear_opaque_collision();
+
+	//Logger::LogDebug(LOG_POS("Unassign"), "chunk assigned: (%d, %d, %d)",
+	//	m_chunk_coords.x, m_chunk_coords.y, m_chunk_coords.z);
 }
 
 void ServerTerrainChunk::Iterate()
@@ -190,6 +196,7 @@ void ServerTerrainChunk::apply_collider(ColliderGenerator::Request* req)
 	//Logger::LogDebug(LOG_POS("apply_collider"), "Applied collider with %i vertices.", req->Num_Verts());
 
 	m_current_col_req = req;
+	g_num_complete++;
 }
 
 void ServerTerrainChunk::test_removal()
@@ -208,6 +215,7 @@ void ServerTerrainChunk::clear_opaque_collision()
 	if (m_opaque_rigidbody != nullptr) {
 		m_world_physics->Remove_Rigidbody(m_opaque_rigidbody);
 		m_opaque_rigidbody = nullptr;
+		g_num_complete--;
 	}
 }
 

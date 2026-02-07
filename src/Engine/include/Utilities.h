@@ -83,7 +83,7 @@ public:
 
 	static OpenCL_Device_Info Get_Recommended_Device();
 
-	static int Hash_Chunk_Coord(glm::ivec3 coord) { return Hash_Chunk_Coord(coord.x, coord.y, coord.z); }
+	static int Hash_Chunk_Coord(const glm::ivec3& coord) { return Hash_Chunk_Coord(coord.x, coord.y, coord.z); }
 
 	static int Hash_Chunk_Coord(int x, int y, int z);
 

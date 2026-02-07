@@ -83,7 +83,9 @@ private:
 
 	static QueueLengths m_queue_lengths;
 
-	
+	void game_update(float dt);
+
+	void notify_game_ready();
 
 public:
 

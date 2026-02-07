@@ -245,7 +245,7 @@ void WorldPhysics::Update(float dt)
 {
 	float time = Utilities::Get_Time() - m_last_update;
 	if (time < UPDATE_INTERVAL) {
-		return;
+		//return;
 	}
 	//Logger::LogDebug(LOG_POS("update_internal"), "physics update: %f", time * 1000);
 	m_last_update = Utilities::Get_Time();

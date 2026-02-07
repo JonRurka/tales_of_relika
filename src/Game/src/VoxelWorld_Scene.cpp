@@ -26,6 +26,7 @@
 
 #define SERVER_START_WAIT_TIME (4.0f)
 #define SERVER_DATA_REQUEST_WAIT_TIME (2.0f)
+#define SERVER_WORLD_READY_POLL_TIME (0.5f)
 
 void VoxelWorld_Scene::Init()
 {
@@ -51,7 +52,7 @@ void VoxelWorld_Scene::Init()
 
 void VoxelWorld_Scene::Update(float dt)
 {
-	startup_squence();
+	startup_squence(dt);
 
 	glm::ivec3 tc = glm::ivec3();
 	if (!world_gen_controller.expired())
@@ -76,7 +77,7 @@ void VoxelWorld_Scene::Deactivate()
 	m_loading_screen = nullptr;
 }
 
-void VoxelWorld_Scene::startup_squence()
+void VoxelWorld_Scene::startup_squence(float dt)
 {
 	if (!m_server_started) {
 
@@ -91,7 +92,14 @@ void VoxelWorld_Scene::startup_squence()
 
 	if (m_client_connected) {
 		if (!m_init_data_requested) {
-			if (Utilities::Get_Time() - m_connected_time > SERVER_DATA_REQUEST_WAIT_TIME) {
+
+			/*m_connected_time -= dt;
+			if (m_connected_time <= 0) {
+
+				m_connected_time = SERVER_WORLD_READY_POLL_TIME;
+			}*/
+
+			if (m_server_world_ready) { // m_server_world_ready  // Utilities::Get_Time() - m_connected_time > SERVER_DATA_REQUEST_WAIT_TIME
 				m_init_data_requested = true;
 				Logger::LogInfo(LOG_POS("Update"), "Requesting world player data...");
 				game_client.lock()->Send_World(OpCodes::Server_World::Request_World_Player_Data);
@@ -127,6 +135,7 @@ void VoxelWorld_Scene::setup_game_client()
 	game_client.lock()->Init(username, host, user_id, m_remote_connection);
 	game_client.lock()->SetOnConnectSuccess(OnGameConnect, this);
 	game_client.lock()->Net_Client().AddCommand(OpCodes::Client::World_Player_Data_Result, OnWorldPlayerDataResult_cb, this);
+	game_client.lock()->Net_Client().AddCommand(OpCodes::Client::World_Ready, OnWorldReady_cb, this);
 
 	// Idealy these should be redundant and not sent until the client is ready to receive them.
 	game_client.lock()->Net_Client().IgnoreCommand(OpCodes::Client::Update_Orientations);
@@ -141,7 +150,7 @@ void VoxelWorld_Scene::setup_game_client()
 void VoxelWorld_Scene::GameConnected()
 {
 	Logger::LogInfo(LOG_POS("GameConnected"), "Game server connected successfully.");
-	m_connected_time = Utilities::Get_Time();
+	m_connected_time = SERVER_WORLD_READY_POLL_TIME;//Utilities::Get_Time();
 	m_client_connected = true;
 	//game_client->Send_World(OpCodes::Server_World::Request_World_Player_Data);
 
@@ -179,6 +188,14 @@ void VoxelWorld_Scene::GameConnected()
 	obj->Get_Transform()->Translate(0.0f, 10.0f, 0.0f);
 	obj->Get_MeshRenderer()->Set_Mesh(cube_mesh);
 	obj->Get_MeshRenderer()->Set_Material(m_character_material);*/
+}
+
+// STEP 2b: Process connected result, and trigger count down to request player data.
+void VoxelWorld_Scene::OnWorldReady(Data data) 
+{
+	m_server_world_ready = true;
+
+	Logger::LogInfo(LOG_POS("OnWorldReady"), "Server worlds ready!");
 }
 
 // STEP 3: Receive player data, setup chunk/structure gen, setup local player and net player manager.

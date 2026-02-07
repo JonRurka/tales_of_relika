@@ -323,7 +323,7 @@ void Stitch_VBO::Process(Mesh& mesh, glm::ivec4 count, bool gpu_copy, bool apply
 
 			// https://stackoverflow.com/questions/45477806/general-method-for-calculating-smooth-vertex-normals-with-100-smoothness
 			// TODO: smooth normals;
-			//smooth_normals(m_raw_vert_data, count.x);
+			smooth_normals(m_raw_vert_data, count.x);
 
 			std::vector<float> raw_data(m_raw_vert_data, m_raw_vert_data + (count.x * FLOAT_STRIDE));
 			mesh.Set_Raw_Vertex_Data(raw_data, false);
@@ -351,10 +351,13 @@ void Stitch_VBO::Reset()
 	times = glm::dvec4(0.0);
 }
 
-std::vector<float> Stitch_VBO::Output_VBO_Vector(int count)
+std::vector<float> Stitch_VBO::Output_VBO_Vector(int count, bool do_smooth_normals)
 {
 	int vbo_size = count * BYTE_STRIDE;
 	Output_VBO_Buffer()->GetData(m_raw_vert_data, vbo_size);
+	if (do_smooth_normals) {
+		smooth_normals(m_raw_vert_data, count);
+	}
 	return std::vector<float>(m_raw_vert_data, m_raw_vert_data + (count * FLOAT_STRIDE));
 }
 

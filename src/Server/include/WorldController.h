@@ -32,6 +32,8 @@ public:
 
 	bool World_Exists(uint64_t world_id);
 
+	bool Worlds_Ready();
+
 	World* Get_World(uint64_t world_id);
 
 	World* Default_World() { return m_default_world; }

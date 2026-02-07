@@ -137,7 +137,7 @@ void MeshCollider::SetMesh(Mesh::Shared mesh, bool activate)
 	//if (activate)
 	//	Activate();
 
-	
+	Clear();
 
 	if (s_num_threads < MAX_SHAPE_THREADS)
 	{

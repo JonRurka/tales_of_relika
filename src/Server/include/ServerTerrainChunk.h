@@ -42,7 +42,9 @@ public:
 
 	void VoxelChanged(glm::ivec3 local_voxel, bool ISO_changed, float iso, bool Type_changed, int type);
 
-
+	static int Num_Complete_Chunks() {
+		return g_num_complete;
+	}
 
 private:
 
@@ -88,6 +90,8 @@ private:
 	void test_removal();
 
 	void clear_opaque_collision();
+
+	inline static int g_num_complete { 0 };
 
 	inline static const std::string LOG_LOC{ "SERVER_TERRAIN_CHUNK" };
 };

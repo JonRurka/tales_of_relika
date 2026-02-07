@@ -34,7 +34,7 @@ public:
 	IComputeBuffer* Input_Mat_Buffer() { return mat_buffer; }
 	IComputeBuffer* Output_VBO_Buffer() { return vbo_buffer; }
 
-	std::vector<float> Output_VBO_Vector(int count);
+	std::vector<float> Output_VBO_Vector(int count, bool smooth_normals = false);
 
 	std::vector<unsigned int> Triangle_Data() { return m_triangles; }
 

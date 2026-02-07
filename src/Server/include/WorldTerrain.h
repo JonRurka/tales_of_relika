@@ -103,6 +103,8 @@ public:
 
 	bool Chunk_Exists(glm::ivec3 chunk_coord) { return chunk_exists(chunk_coord); }
 
+	int Num_Chunks() { return m_chunk_map.size(); }
+
 	void Refresh_Chunk(glm::ivec3 chunk);
 	void Modify_Voxel_ISO(glm::ivec3 voxel, float iso);
 	void Modify_Voxel_Type(glm::ivec3 voxel, int type);

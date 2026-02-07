@@ -43,11 +43,16 @@ public:
 	}
 	void GameConnected();
 
-	static void OnWorldPlayerDataResult_cb(void* obj, Data data) {
+	/*static void OnWorldPlayerDataResult_cb(void* obj, Data data) {
 		VoxelWorld_Scene* game_client = (VoxelWorld_Scene*)obj;
 		game_client->OnWorldPlayerDataResult(data);
 	}
-	void OnWorldPlayerDataResult(Data data);
+	void OnWorldPlayerDataResult(Data data);*/
+
+	DECLARE_NET_CLIENT_COMMAND(VoxelWorld_Scene, OnWorldPlayerDataResult)
+	DECLARE_NET_CLIENT_COMMAND(VoxelWorld_Scene, OnWorldReady)
+
+	//DECLARE_NET_CLIENT_COMMAND(WorldGenController, OnChunkEvent)
 
 	bool Game_Ready();
 
@@ -67,6 +72,7 @@ private:
 	bool m_remote_connection{ false };
 	bool m_server_started{ false };
 	bool m_client_connected{ false };
+	bool m_server_world_ready{ false };
 	bool m_init_data_requested{ false };
 
 	double m_connected_time{ 0 };
@@ -102,7 +108,7 @@ private:
 	WorldObject::Weak net_player_manager_obj;
 	NetPlayerManager::Weak net_player_manager;
 
-	void startup_squence();
+	void startup_squence(float dt);
 
 	void setup_camera();
 

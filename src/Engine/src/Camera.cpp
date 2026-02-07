@@ -26,6 +26,8 @@
 #define SKYBOX_PROJECTION_LOC	10
 #define SKYBOX_VIEW_LOC			11
 
+#define FRUSTUM_MARGIN_PERCENT 1.2
+
 #define FRUSTRUM_CULLING_ENABLED true
 
 std::weak_ptr<Camera> Camera::m_active_camera;
@@ -404,7 +406,7 @@ Frustum Camera::createFrustumFromCamera()
 	glm::vec cam_pos = Object().Get_Transform().Position();
 
 	// glm::radians(m_FOV)
-	const float halfVSide = m_far * tanf(glm::radians(m_FOV) * .5f);
+	const float halfVSide = m_far * tanf(glm::radians(m_FOV * FRUSTUM_MARGIN_PERCENT) * .5f);
 	const float halfHSide = halfVSide * Aspect();
 	const glm::vec3 frontMultFar = m_far * front;
 

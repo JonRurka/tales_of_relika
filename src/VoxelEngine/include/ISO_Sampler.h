@@ -34,9 +34,9 @@ public:
 
 	float Get_ISO(glm::ivec3 chunk, glm::ivec3 voxel);
 
-	std::vector<float> Get_ISO(glm::ivec3 chunk, std::vector<glm::ivec3> voxels);
+	std::vector<float> Get_ISO(const glm::ivec3& chunk, const std::vector<glm::ivec3>& voxels);
 
-	std::vector<float> Get_ISO(glm::ivec3 chunk, std::vector<Voxel_Location> voxels);
+	std::vector<float> Get_ISO(const glm::ivec3& chunk, const std::vector<Voxel_Location>& voxels);
 
 private:
 
@@ -57,7 +57,7 @@ private:
 	IComputeBuffer* in_voxel_locations_data{ nullptr };
 	IComputeBuffer* out_iso_data{ nullptr };
 
-	void set_locations(std::vector<Voxel_Location> voxels);
+	void set_locations(const std::vector<Voxel_Location>& voxels);
 	void execute(int elements);
 	std::vector<glm::fvec4> get_iso_data(int elements);
 
