@@ -7,6 +7,11 @@ Inventory_Item Inventory_Item::Empty()
 	return Inventory_Item();
 }
 
+Inventory_Item Inventory_Item::From(Item_Type::Shared type)
+{
+	return Inventory_Item(type, 1);
+}
+
 Inventory_Item::Inventory_Item(Item_Type::Shared type, int stack_size)
 	: m_type{type}, m_stack_size{stack_size}
 {

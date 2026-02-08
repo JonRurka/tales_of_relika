@@ -52,12 +52,10 @@ void Character_HUD::Init(Camera::Weak camera)
 	m_hotbar_doc = UI_Engine::Instance().Load_Document_Resource("hot_bar", Game_Resources::UI::Documents::HUD::HOT_BAR);
 	m_hotbar_doc->Show();
 
-	Set_HotBar_Tile_ID(0, 4);
-	Set_Active_HotBar_Tile(0);
-
-	m_iter_hotbar_tile = 0;
-
 	m_hot_bar_items = std::vector<Inventory_Item>(10, Inventory_Item());
+
+	populate_hotbar();
+	Set_Active_HotBar_Tile(0);
 
 	if (WorldGenController::Instance()->Voxel_Engine_Enabled())
 		m_iso_sampler = WorldGenController::Instance()->Get_ISO_Sampler();
@@ -86,13 +84,13 @@ Inventory_Item Character_HUD::Get_Hotbar_Item(int hotbar_id)
 	return m_hot_bar_items[hotbar_id];
 }
 
-void Character_HUD::Set_HotBar_Tile_ID(int hotbar_id, int material_id)
+void Character_HUD::Set_HotBar_Tile_ID(int hotbar_id, int item_id)
 {
 	std::string img_id = "item_img_" + std::to_string(hotbar_id);
 
 	Rml::Element* img_elem = m_hotbar_doc->GetElementById(img_id);
 
-	std::string tile_img_src = IMAGE_DIR + std::string("/") + std::to_string(material_id) + IMAGE_EXT;
+	std::string tile_img_src = IMAGE_DIR + std::string("/") + std::to_string(item_id) + IMAGE_EXT;
 	img_elem->SetAttribute("src", tile_img_src);
 	img_elem->SetProperty("visibility", "visible");
 }
@@ -116,6 +114,7 @@ void Character_HUD::Set_Active_HotBar_Tile(int hotbar_id)
 	}
 
 	m_last_active_hotbar_tile = hotbar_id;
+	m_iter_hotbar_tile = hotbar_id;
 }
 
 void Character_HUD::Init()
@@ -243,6 +242,16 @@ void Character_HUD::draw_ui()
 			show_another_window = false;
 		ImGui::End();
 	}*/
+}
+
+void Character_HUD::populate_hotbar()
+{
+
+
+	Set_Hotbar_Item(0, Inventory_Item::From(Item_Type::Brick()));
+
+
+
 }
 
 void Character_HUD::left_click_block(glm::vec3 hit_point, glm::vec3 normal)

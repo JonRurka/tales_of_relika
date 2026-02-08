@@ -8,6 +8,8 @@ public:
 	struct Item_Data {
 		int ID;
 		std::string Item_Name;
+		int Category;
+
 	};
 
 	static Item_Loader& Instance() 
@@ -26,4 +28,5 @@ private:
 	std::unordered_map<int, Item_Data> m_item_data;
 	std::unordered_map<std::string, int> m_item_name_to_id;
 
+	inline static const std::string LOG_LOC{ "ITEM_LOADER" };
 };

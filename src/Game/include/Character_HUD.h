@@ -52,6 +52,8 @@ private:
 
 	void draw_ui();
 
+	void populate_hotbar();
+
 	void Set_HotBar_Tile_ID(int hotbar_id, int material_id);
 
 	void left_click_block(glm::vec3 hit_point, glm::vec3 normal);

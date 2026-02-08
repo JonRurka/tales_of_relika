@@ -21,6 +21,7 @@ void Item_Type::Init()
     Item_Loader::Item_Data empty_item{};
     empty_item.ID = 0;
     empty_item.Item_Name = "empty";
+    empty_item.Category = (int)Item_Category::None;
     load_item(empty_item);
 
 	for (auto m : data) {
@@ -72,5 +73,6 @@ Item_Type::Item_Type(Item_Loader::Item_Data data)
 {
     m_ID = data.ID;
     m_name = data.Item_Name;
+    m_category = (Item_Category)data.Category;
 }
 
