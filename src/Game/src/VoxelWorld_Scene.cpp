@@ -13,6 +13,7 @@
 
 #include "Item_Loader.h"
 #include "Item_Type.h"
+#include "Held_Item_Action.h"
 
 #include "HashHelper.h"
 #include "Network/NetClient.h"
@@ -237,6 +238,7 @@ void VoxelWorld_Scene::setup_local_player(json player_data)
 {
 	Item_Loader::Instance().Load_Items(Game_Resources::Data_Files::ITEM_TYPES);
 	Item_Type::Init();
+	Held_Item_Action::Load();
 
 	json location_obj = player_data["location"];
 	float x = location_obj["x"];

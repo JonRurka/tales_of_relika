@@ -56,11 +56,11 @@ public:
 	static Item_Type::Shared Empty();
 
 	// Terrain
-	static Item_Type::Shared Grass() { return m_name_map["Grass"]; }
-	static Item_Type::Shared Dirt() { return m_name_map["Dirt"]; }
-	static Item_Type::Shared Stone() { return m_name_map["Stone"]; }
+	static Item_Type::Shared Grass() { return m_name_map.at("grass"); }
+	static Item_Type::Shared Dirt() { return m_name_map.at("girt"); }
+	static Item_Type::Shared Stone() { return m_name_map.at("stone"); }
 
 	// Structural
-	static Item_Type::Shared Brick() { return m_name_map["Brick"]; }
+	static Item_Type::Shared Brick() { return m_name_map.at("brick"); }
 
 };

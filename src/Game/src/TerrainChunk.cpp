@@ -11,6 +11,9 @@
 #define COLLISION_ENABLED true
 #define COLLISION_DISTANCE 2
 
+// TODO: Unify the collider user data types
+#define TERRAIN_COLLIDER_TYPE_ID  2
+
 void TerrainChunk::Init()
 {
 	
@@ -44,6 +47,7 @@ void TerrainChunk::Init(std::weak_ptr<WorldGenController> controller, Stitch_VBO
 	m_opaque_chunk_obj.lock()->Get_MeshRenderer().FrustumCull(true);
 	
 	m_mesh_collider = m_opaque_chunk_obj.lock()->Add_Component<MeshCollider>();
+	m_mesh_collider.lock()->SetUserData(TERRAIN_COLLIDER_TYPE_ID);
 	//m_mesh_collider.lock()->Enabled(false);
 
 	m_col_vert_data = new glm::vec4[max_vert];

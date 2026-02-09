@@ -22,11 +22,12 @@ void Item_Type::Init()
     empty_item.ID = 0;
     empty_item.Item_Name = "empty";
     empty_item.Category = (int)Item_Category::None;
-    load_item(empty_item);
+    //load_item(empty_item);
 
 	for (auto m : data) {
 		load_item(m);
 	}
+
 }
 
 bool Item_Type::Type_Exists(int type_id) 
@@ -66,7 +67,7 @@ void Item_Type::load_item(Item_Loader::Item_Data data)
 
     Item_Type::Shared block_type = std::make_shared<Item_Type>(data);
     m_types[id] = block_type;
-    m_name_map[Utilities::toLowerCase(data.Item_Name)] = block_type;
+    m_name_map[data.Item_Name] = block_type; //Utilities::toLowerCase(data.Item_Name)
 }
 
 Item_Type::Item_Type(Item_Loader::Item_Data data)

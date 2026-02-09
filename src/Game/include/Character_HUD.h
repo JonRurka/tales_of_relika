@@ -4,6 +4,7 @@
 
 #include "Inventory_Item.h"
 #include "ISO_Sampler.h"
+#include "held_Item.h"
 
 namespace Rml {
 	class Context;
@@ -37,6 +38,7 @@ private:
 
 	Camera::Weak m_camera;
 	ISO_Sampler::Shared m_iso_sampler;
+	Held_Item::Weak m_held_item;
 	double m_edit_timer{0};
 
 	bool show_demo_window = true;

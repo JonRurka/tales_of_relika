@@ -32,6 +32,17 @@ void Item_Loader::Load_Items(std::string resource_file_name)
         return;
     }
 
+    const std::unordered_set<std::string> ignore{
+            "ID", "Category", "Held_Mesh", "held_Mesh_Tex", "held_Mesh_Normal_Tex"
+    };
+
+    Item_Data empty_item{};
+    empty_item.Item_Name = "empty";
+    empty_item.ID = 0;
+    empty_item.Category = (int)Item_Type::Item_Category::None;
+    m_item_data[empty_item.ID] = empty_item;
+    m_item_name_to_id[empty_item.Item_Name] = empty_item.ID;
+
     std::vector<std::string> sections = reader.Sections();
     for (const auto& elem : sections) {
         Item_Data item{};
@@ -41,6 +52,10 @@ void Item_Loader::Load_Items(std::string resource_file_name)
         std::string cat_str = reader.GetString(elem, "Category", "Unknown");
         assert(g_category_names.contains(cat_str));
 
+        item.Held_Mesh = reader.GetString(elem, "Held_Mesh", "Unknown");
+        item.held_Mesh_Tex = reader.GetString(elem, "held_Mesh_Tex", "Unknown");
+        item.held_Mesh_Normal_Tex = reader.GetString(elem, "held_Mesh_Normal_Tex", "Unknown");
+
         item.Category = (int)g_category_names.at(cat_str);
 
         if (item.ID == -1) {
@@ -49,15 +64,25 @@ void Item_Loader::Load_Items(std::string resource_file_name)
 
         m_item_data[item.ID] = item;
         m_item_name_to_id[elem] = item.ID;
+
+        
+        auto all_sec_keys = reader.Keys(elem);
+        for (const auto& k : all_sec_keys) {
+            if (ignore.contains(k)) {
+                continue;
+            }
+            item.Other_Attributes[k] = reader.GetString(elem, k, "");
+        }
+    }
+
+    m_item_cache.clear();
+    m_item_cache.reserve(m_item_data.size());
+    for (const auto& elem : m_item_data) {
+        m_item_cache.push_back(elem.second);
     }
 }
 
-std::vector<Item_Loader::Item_Data> Item_Loader::Get_Item_Data()
+const std::vector<Item_Loader::Item_Data>& Item_Loader::Get_Item_Data()
 {
-    std::vector<Item_Loader::Item_Data> res;
-    res.reserve(m_item_data.size());
-    for (const auto& elem : m_item_data) {
-        res.push_back(elem.second);
-    }
-    return res;
+    return m_item_cache;
 }

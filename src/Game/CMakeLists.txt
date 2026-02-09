@@ -36,6 +36,13 @@ set(${module}_headers
 	include/Item_Loader.h
 	include/Item_Type.h
 	include/Inventory_Item.h
+	include/Held_Item.h
+	
+	
+	include/Held_Item_Action.h
+	include/Held_Empty_Action.h
+	include/Held_Terrain_Mat_Action.h
+	include/Held_Structure_Mat_Action.h
 )
 
 set(${module}_sources
@@ -71,6 +78,13 @@ set(${module}_sources
 	src/Item_Loader.cpp
 	src/Item_Type.cpp
 	src/Inventory_Item.cpp
+	src/Held_Item.cpp
+	
+	
+	src/Held_Item_Action.cpp
+	src/Held_Empty_Action.cpp
+	src/Held_Terrain_Mat_Action.cpp
+	src/Held_Structure_Mat_Action.cpp
 )
 
 add_library(${module} STATIC ${${module}_headers} ${${module}_sources})

@@ -52,7 +52,8 @@ void Character_HUD::Init(Camera::Weak camera)
 	m_hotbar_doc = UI_Engine::Instance().Load_Document_Resource("hot_bar", Game_Resources::UI::Documents::HUD::HOT_BAR);
 	m_hotbar_doc->Show();
 
-	m_hot_bar_items = std::vector<Inventory_Item>(10, Inventory_Item());
+	m_hot_bar_items = std::vector<Inventory_Item>();
+	m_hot_bar_items.resize(10);
 
 	populate_hotbar();
 	Set_Active_HotBar_Tile(0);
@@ -115,11 +116,15 @@ void Character_HUD::Set_Active_HotBar_Tile(int hotbar_id)
 
 	m_last_active_hotbar_tile = hotbar_id;
 	m_iter_hotbar_tile = hotbar_id;
+
+	m_held_item.lock()->Set_Held_Item(m_hot_bar_items[m_last_active_hotbar_tile]);
 }
 
 void Character_HUD::Init()
 {
 	m_edit_timer = Utilities::Get_Time();
+
+	m_held_item = Object().Add_Component<Held_Item>();
 }
 
 void Character_HUD::Update(float dt)
@@ -172,11 +177,13 @@ void Character_HUD::Update(float dt)
 
 		if (Input::GetMouseKeyDown(input::MouseButton::Left)) {
 			Logger::LogDebug(LOG_POS("Update"), "Left Click.");
-			left_click_block(hit.hit_point, hit.normal);
+			m_held_item.lock()->Left_Use(m_hot_bar_items[m_last_active_hotbar_tile], { hit });
+			//left_click_block(hit.hit_point, hit.normal);
 			//WorldGenController::Instance()->Modify_Voxel_ISO(selected_voxel, 1.0);
 		}
 		if (Input::GetMouseKeyDown(input::MouseButton::Right)) {
-			right_click_block(hit.hit_point, hit.normal);
+			m_held_item.lock()->Right_Use(m_hot_bar_items[m_last_active_hotbar_tile], { hit });
+			//right_click_block(hit.hit_point, hit.normal);
 			//WorldGenController::Instance()->Modify_Voxel_ISO(selected_voxel, -1.0);
 		}
 
@@ -247,25 +254,70 @@ void Character_HUD::draw_ui()
 void Character_HUD::populate_hotbar()
 {
 
-
-	Set_Hotbar_Item(0, Inventory_Item::From(Item_Type::Brick()));
+	Inventory_Item itm = Inventory_Item::From(Item_Type::Brick());
+	Set_Hotbar_Item(0, itm);
 
 
 
 }
 
+// Remove block, use tool/weapon
 void Character_HUD::left_click_block(glm::vec3 hit_point, glm::vec3 normal)
 {
 	//Logger::LogDebug(LOG_POS("left_click_block"), "Block Click.");
+
+	Inventory_Item& held_itm = m_hot_bar_items[m_last_active_hotbar_tile];
+	switch (held_itm.Get_Type()->Get_Category()) {
+		case Item_Type::Item_Category::None:
+			break;
+		case Item_Type::Item_Category::Structural_Material:
+			break;
+		case Item_Type::Item_Category::Terrain_Material:
+			break;
+		case Item_Type::Item_Category::Tool:
+			break;
+		case Item_Type::Item_Category::Weapon:
+			break;
+		case Item_Type::Item_Category::Other:
+			break;
+		case Item_Type::Item_Category::Unknown:
+			break;
+	}
+
+
 	glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit_point + (normal * 0.01f));
-	left_click_terrain(hit_point, normal, voxel_coord);
+
+
+	//left_click_terrain(hit_point, normal, voxel_coord);
 	//left_click_structure(hit_point, normal, voxel_coord);
 }
 
+// place block, tool/weapon second action
 void Character_HUD::right_click_block(glm::vec3 hit_point, glm::vec3 normal)
 {
+	Inventory_Item& held_itm = m_hot_bar_items[m_last_active_hotbar_tile];
+	switch (held_itm.Get_Type()->Get_Category()) {
+	case Item_Type::Item_Category::None:
+		break;
+	case Item_Type::Item_Category::Structural_Material:
+		break;
+	case Item_Type::Item_Category::Terrain_Material:
+		break;
+	case Item_Type::Item_Category::Tool:
+		break;
+	case Item_Type::Item_Category::Weapon:
+		break;
+	case Item_Type::Item_Category::Other:
+		break;
+	case Item_Type::Item_Category::Unknown:
+		break;
+	}
+
+
 	glm::ivec3 voxel_coord = WorldGenController::WorldToVoxel(hit_point + (normal * 0.01f));
-	right_click_terrain(hit_point, normal, voxel_coord);
+
+
+	//right_click_terrain(hit_point, normal, voxel_coord);
 	//right_click_structure(hit_point, normal, voxel_coord);
 }
 

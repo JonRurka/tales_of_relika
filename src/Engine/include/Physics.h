@@ -22,7 +22,8 @@ public:
 
 	struct RayHit {
 		bool did_hit{ false };
-		Collider* collider{ nullptr };
+		Collider::Weak collider;
+		Body* rigidbody{ nullptr };
 		glm::vec3 start{glm::vec3()};
 		glm::vec3 hit_point{ glm::vec3() };
 		glm::vec3 normal{ glm::vec3() };

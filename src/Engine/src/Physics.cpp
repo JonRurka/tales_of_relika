@@ -691,11 +691,14 @@ Physics::RayHit Physics::raycast_jolt(glm::vec3 from, glm::vec3 dir)
 	}
 
 	assert(m_bodies.contains(hit_result.mBodyID.GetIndex()));
-	const JPH::Body* body = m_bodies[hit_result.mBodyID.GetIndex()].RBody;
+	JPH::Body* body = m_bodies[hit_result.mBodyID.GetIndex()].RBody;
+	Collider::Weak col = m_bodies[hit_result.mBodyID.GetIndex()].Col;
 	Vec3 hit_point = ray.GetPointOnRay(hit_result.mFraction);
 
 	res.did_hit = true;
 	res.start = from;
+	res.collider = col;
+	res.rigidbody = body;
 	res.hit_point = to_glm_vector(hit_point);
 	res.normal = to_glm_vector(body->GetWorldSpaceSurfaceNormal(hit_result.mSubShapeID2, hit_point));
 

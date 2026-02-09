@@ -42,6 +42,18 @@ public:
 	Body& Rigidbody() { return *m_rigidbody; }
 	Body* Rigidbody_Ptr() { return m_rigidbody; }
 	bool Has_Rigidbody() { return m_has_rigidbody && m_rigidbody != nullptr; }
+
+	void SetUserData(uint64_t val) {
+		m_user_data = val;
+		if (m_rigidbody != nullptr) {
+			m_rigidbody->SetUserData(m_user_data);
+		}
+	}
+
+	uint64_t GetUserData() {
+		return m_user_data;
+	}
+
 #endif
 
 	
@@ -61,6 +73,7 @@ private:
 	uint32_t m_col_id{ 0 };
 #endif
 
+	uint64_t m_user_data{ 0 };
 	std::mutex m_lock;
 
 	bool m_active{ false };
@@ -68,6 +81,7 @@ private:
 	void OnSetRigidbody(Body* body) // TODO Callback from physics engine with rigidbody.
 	{
 		m_rigidbody = body;
+		m_rigidbody->SetUserData(m_user_data);
 		m_has_rigidbody = true;
 	}
 
